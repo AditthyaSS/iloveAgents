@@ -1,0 +1,236 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== Base Resets ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Dark mode defaults */
+.dark body {
+  background-color: #0a0a0a;
+  color: #f4f4f5;
+}
+
+/* Light mode */
+html:not(.dark) body {
+  background-color: #fafafa;
+  color: #18181b;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #111111;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}
+
+html:not(.dark) ::-webkit-scrollbar-track {
+  background: #f4f4f5;
+}
+
+html:not(.dark) ::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 3px;
+}
+
+/* ===== Selection ===== */
+::selection {
+  background-color: rgba(99, 102, 241, 0.3);
+  color: #f4f4f5;
+}
+
+/* ===== Focus Ring ===== */
+*:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* ===== Transitions ===== */
+.transition-theme {
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* ===== Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.95); opacity: 0.5; }
+  50% { transform: scale(1.05); opacity: 0.3; }
+  100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInLeft 0.25s ease-out forwards;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ===== Markdown Output Styling ===== */
+.markdown-output h1 {
+  @apply text-xl font-bold mb-3 mt-4;
+}
+
+.markdown-output h2 {
+  @apply text-lg font-semibold mb-2 mt-4;
+}
+
+.markdown-output h3 {
+  @apply text-base font-semibold mb-2 mt-3;
+}
+
+.markdown-output p {
+  @apply mb-3 leading-relaxed;
+}
+
+.markdown-output ul {
+  @apply list-disc pl-5 mb-3 space-y-1;
+}
+
+.markdown-output ol {
+  @apply list-decimal pl-5 mb-3 space-y-1;
+}
+
+.markdown-output li {
+  @apply leading-relaxed;
+}
+
+.markdown-output code {
+  @apply text-sm px-1.5 py-0.5 rounded;
+}
+
+.dark .markdown-output code {
+  @apply bg-[#1a1a1a] text-indigo-300;
+}
+
+html:not(.dark) .markdown-output code {
+  @apply bg-gray-100 text-indigo-600;
+}
+
+.markdown-output pre {
+  @apply mb-4 rounded-lg overflow-x-auto;
+}
+
+.markdown-output pre code {
+  @apply bg-transparent p-0;
+}
+
+.markdown-output blockquote {
+  @apply border-l-2 border-accent pl-4 italic my-3;
+}
+
+.dark .markdown-output blockquote {
+  @apply text-text-secondary;
+}
+
+.markdown-output strong {
+  @apply font-semibold;
+}
+
+.markdown-output hr {
+  @apply my-4 border-border;
+}
+
+.markdown-output table {
+  @apply w-full mb-4 border-collapse;
+}
+
+.markdown-output th,
+.markdown-output td {
+  @apply px-3 py-2 text-left text-sm;
+}
+
+.dark .markdown-output th {
+  @apply border-b border-border font-semibold text-text-primary;
+}
+
+.dark .markdown-output td {
+  @apply border-b border-border/50 text-text-secondary;
+}
+
+/* ===== Circular Score ===== */
+.score-circle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-circle svg {
+  transform: rotate(-90deg);
+}
+
+.score-circle .score-value {
+  position: absolute;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+/* ===== Light mode overrides ===== */
+html:not(.dark) .light-surface {
+  background-color: #ffffff;
+}
+
+html:not(.dark) .light-surface-page {
+  background-color: #fafafa;
+}
+
+html:not(.dark) .light-border {
+  border-color: #e4e4e7;
+}
+
+html:not(.dark) .light-text-primary {
+  color: #18181b;
+}
+
+html:not(.dark) .light-text-secondary {
+  color: #52525b;
+}
