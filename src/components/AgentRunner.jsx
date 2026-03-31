@@ -107,7 +107,12 @@ export default function AgentRunner({ agent }) {
 
     try {
       const actualProvider = agent.provider === 'any' ? provider : agent.provider
-      const model = agent.model || MODEL_MAP[actualProvider] || MODEL_MAP.openai
+      // For 'any' provider agents: use the correct model for whichever provider the user picked
+      // Only use the agent's configured model if it matches the selected provider
+      const agentDefaultProvider = agent.defaultProvider || agent.provider
+      const model = (agent.provider === 'any' && actualProvider !== agentDefaultProvider)
+        ? MODEL_MAP[actualProvider]
+        : (agent.model || MODEL_MAP[actualProvider] || MODEL_MAP.openai)
 
       const result = await runAgent({
         provider: actualProvider,
