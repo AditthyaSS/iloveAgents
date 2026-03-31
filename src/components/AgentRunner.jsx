@@ -12,7 +12,7 @@ const providerLabels = { openai: 'OpenAI', anthropic: 'Anthropic', gemini: 'Gemi
 const MODEL_MAP = {
   openai: 'gpt-4o',
   anthropic: 'claude-opus-4-20250514',
-  gemini: 'gemini-2.0-flash',
+  gemini: 'gemini-2.5-flash',
 }
 
 export default function AgentRunner({ agent }) {
@@ -24,6 +24,12 @@ export default function AgentRunner({ agent }) {
   const [loading, setLoading] = useState(false)
   const [tokensUsed, setTokensUsed] = useState(null)
   const [duration, setDuration] = useState(null)
+  const [selectedModel, setSelectedModel] = useState(MODEL_MAP[provider] || MODEL_MAP.openai)
+
+  // Auto-update model when provider changes
+  useEffect(() => {
+    setSelectedModel(MODEL_MAP[provider] || MODEL_MAP.openai)
+  }, [provider])
 
   // Reset state when agent changes
   useEffect(() => {
@@ -107,12 +113,8 @@ export default function AgentRunner({ agent }) {
 
     try {
       const actualProvider = agent.provider === 'any' ? provider : agent.provider
-      // For 'any' provider agents: use the correct model for whichever provider the user picked
-      // Only use the agent's configured model if it matches the selected provider
-      const agentDefaultProvider = agent.defaultProvider || agent.provider
-      const model = (agent.provider === 'any' && actualProvider !== agentDefaultProvider)
-        ? MODEL_MAP[actualProvider]
-        : (agent.model || MODEL_MAP[actualProvider] || MODEL_MAP.openai)
+      // Use the user-selected model from the dropdown
+      const model = selectedModel || MODEL_MAP[actualProvider] || MODEL_MAP.openai
 
       const result = await runAgent({
         provider: actualProvider,
@@ -188,6 +190,8 @@ export default function AgentRunner({ agent }) {
         saveForSession={saveForSession}
         setSaveForSession={setSaveForSession}
         agentProvider={agent.provider}
+        model={selectedModel}
+        setModel={setSelectedModel}
       />
 
       {/* Input Form */}

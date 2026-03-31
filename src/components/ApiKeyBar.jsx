@@ -7,6 +7,30 @@ const PROVIDERS = [
   { value: 'gemini', label: 'Gemini' },
 ]
 
+const MODELS = {
+  openai: [
+    { value: 'gpt-4o', label: 'GPT-4o' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'gpt-4.1', label: 'GPT-4.1' },
+    { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
+    { value: 'gpt-4.1-nano', label: 'GPT-4.1 Nano' },
+    { value: 'o3-mini', label: 'o3-mini' },
+  ],
+  anthropic: [
+    { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
+    { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
+  ],
+  gemini: [
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite' },
+    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
+  ],
+}
+
 export default function ApiKeyBar({
   provider,
   setProvider,
@@ -15,6 +39,8 @@ export default function ApiKeyBar({
   saveForSession,
   setSaveForSession,
   agentProvider,
+  model,
+  setModel,
 }) {
   const [showKey, setShowKey] = useState(false)
 
@@ -24,10 +50,12 @@ export default function ApiKeyBar({
       ? PROVIDERS
       : PROVIDERS.filter((p) => p.value === agentProvider)
 
+  const availableModels = MODELS[provider] || []
+
   return (
     <div className="rounded-lg border p-3 mb-4 transition-theme
       dark:bg-surface-card dark:border-border bg-white border-gray-200">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         {/* Provider Select */}
         <select
           value={provider}
@@ -44,8 +72,24 @@ export default function ApiKeyBar({
           ))}
         </select>
 
+        {/* Model Select */}
+        <select
+          value={model}
+          onChange={(e) => setModel(e.target.value)}
+          className="h-8 px-2.5 rounded-md text-xs font-medium transition-colors cursor-pointer
+            dark:bg-surface-input dark:border-border dark:text-text-primary
+            bg-gray-50 border border-gray-200 text-gray-900
+            focus:ring-1 focus:ring-accent focus:border-accent outline-none"
+        >
+          {availableModels.map((m) => (
+            <option key={m.value} value={m.value}>
+              {m.label}
+            </option>
+          ))}
+        </select>
+
         {/* API Key Input */}
-        <div className="flex-1 min-w-[200px] relative">
+        <div className="flex-1 min-w-[180px] relative">
           <input
             type={showKey ? 'text' : 'password'}
             value={apiKey}
