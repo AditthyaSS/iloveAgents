@@ -4,7 +4,9 @@
 
 [![GSSoC 2026](https://img.shields.io/badge/GSSoC-2026-blue?style=flat-square)](https://gssoc.girlscript.tech/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Deploy with Vercel](https://img.shields.io/badge/Deploy-Vercel-black?style=flat-square&logo=vercel)](https://vercel.com)
+[![Deployed on Vercel](https://img.shields.io/badge/Live-Vercel-black?style=flat-square&logo=vercel)](https://iloveagents.vercel.app)
+
+🔗 **Live Demo → [iloveagents.vercel.app](https://iloveagents.vercel.app)**
 
 ---
 
@@ -52,9 +54,11 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ## Deploy
 
-### Vercel (recommended)
+✅ **Currently deployed at [iloveagents.vercel.app](https://iloveagents.vercel.app)**
 
-1. Push to GitHub
+To deploy your own fork:
+
+1. Fork this repo
 2. Import to [Vercel](https://vercel.com/new)
 3. Deploy — it's a static site, zero config needed
 
