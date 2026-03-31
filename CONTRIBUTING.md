@@ -1,4 +1,4 @@
-# Contributing to I Love Agents
+# Contributing to iloveAgents
 
 Thanks for your interest in contributing! The easiest and most impactful way to contribute is by **adding a new agent**.
 
