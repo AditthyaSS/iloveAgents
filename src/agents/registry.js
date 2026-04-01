@@ -220,6 +220,50 @@ Be concise and factual.`,
 }`,
     outputType: 'json',
   },
+  // ─── Agent 6: LinkedIn Post Writer ───
+{
+  id: 'linkedin-post-writer',
+  name: 'LinkedIn Post Writer',
+  description: 'Generate ready-to-post LinkedIn content with a strong hook and hashtags.',
+  category: 'Marketing',
+  icon: 'PenLine',
+  provider: 'any',
+  defaultProvider: 'openai',
+  model: 'gpt-4o-mini',
+
+  inputs: [
+    {
+      id: 'topic',
+      label: 'Topic',
+      type: 'text',
+      placeholder: 'e.g. Lessons from building my first startup',
+      required: true,
+    },
+    {
+      id: 'tone',
+      label: 'Tone',
+      type: 'select',
+      options: ['Thought-leader', 'Story', 'Data-driven'],
+      defaultValue: 'Story',
+      required: true,
+    },
+  ],
+
+  systemPrompt: `You are an expert LinkedIn content creator.
+
+Write a LinkedIn post about the given topic using the selected tone.
+
+Requirements:
+- Start with a strong hook
+- Write in clear short paragraphs
+- Deliver value or insight
+- End with a takeaway or call to action
+- Include 3–5 relevant hashtags
+
+Return ONLY the LinkedIn post ready to copy and publish.`,
+
+  outputType: 'markdown',
+},
 ]
 
 export default agents
