@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Sun, Moon, Github, Menu, X } from 'lucide-react'
+import Logo from './Logo'
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const [darkMode, setDarkMode] = useState(true)
@@ -38,14 +39,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-sm
-            group-hover:scale-105 transition-transform">
-            O
-          </div>
-          <span className="font-semibold text-sm dark:text-text-primary text-gray-900 tracking-tight">
-            I Love Agents
-          </span>
+        <Link to="/" className="flex items-center group hover:opacity-80 transition-opacity">
+          <Logo height={26} className="dark:text-white text-gray-900" />
         </Link>
       </div>
 
