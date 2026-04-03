@@ -23,6 +23,8 @@ I Love Agents is a clean, modern web platform where you can run AI agents direct
 | ✉️ Cold Email Writer | Personalized B2B cold emails | OpenAI |
 | 🔧 Code Reviewer | Senior-level code review with scoring | Anthropic |
 | 👤 Resume Screener | Candidate evaluation with visual scorecard | OpenAI |
+| 👤 Resume Screener | Candidate evaluation with visual scorecard | OpenAI |
+|📄LinkedIn Post Writer Agent|generates ready-to-post LinkedIn content based on a topic and tone| OpenAI |
 
 ### Supported Providers
 
