@@ -48,6 +48,8 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 8 | **SQL Query Generator** | Converts plain English questions into optimized SQL with explanations | Engineering | Anthropic |
 | 9 | **Regex Generator** | Translates plain English descriptions into tested regex patterns with breakdowns | Engineering | OpenAI |
 | 10 | **Startup Idea Validator** | Analyzes startup ideas with market potential, competition, risks, and viability scoring | Business | OpenAI |
+| 11 | **ELI5 Explainer** | Explains complex topics in plain language at your chosen difficulty level | Education | OpenAI |
+| 12 | **API Doc Generator** | Paste code and get clean, professional API documentation with examples | Engineering | Anthropic |
 
 > **Want to add your own?** See the [Contributing](#contributing) section below — it takes ~5 minutes.
 
