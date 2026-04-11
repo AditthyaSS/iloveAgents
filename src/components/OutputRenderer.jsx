@@ -15,7 +15,6 @@ function CopyButton({ text, label }) {
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      // Fallback
       const ta = document.createElement('textarea')
       ta.value = text
       document.body.appendChild(ta)
@@ -30,6 +29,7 @@ function CopyButton({ text, label }) {
   return (
     <button
       onClick={handleCopy}
+      title="Copy to clipboard"
       className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
         dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
         bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
@@ -37,7 +37,7 @@ function CopyButton({ text, label }) {
       {copied ? (
         <>
           <Check size={12} className="text-success" />
-          Copied
+          Copied!
         </>
       ) : (
         <>
@@ -45,6 +45,30 @@ function CopyButton({ text, label }) {
           {label || 'Copy'}
         </>
       )}
+    </button>
+  )
+}
+
+function DownloadButton({ text, agentName }) {
+  const handleDownload = () => {
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${agentName || 'output'}.txt`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      title="Download as .txt"
+      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+        dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+        bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+    >
+      ⬇ Download
     </button>
   )
 }
@@ -64,6 +88,7 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
         <div className="flex items-center gap-2">
           <CopyButton text={content} label="Copy output" />
           <CopyButton text={shareText} label="Share" />
+          <DownloadButton text={content} agentName={agentName} />
         </div>
       </div>
 
