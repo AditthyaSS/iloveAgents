@@ -15,6 +15,17 @@ const MODEL_MAP = {
   gemini: 'gemini-2.5-flash',
 }
 
+const LOADING_MESSAGES = [
+  "⚙️ Agent is grinding for you...",
+  "🧠 Big brain moment loading...",
+  "✨ Cooking something fire...",
+  "🤖 Agent is in its era...",
+  "💀 This might actually go crazy...",
+  "🔥 Almost done, hold tight...",
+  "🚀 Sending it...",
+  "👀 Your agent is locked in...",
+]
+
 export default function AgentRunner({ agent }) {
   const { provider, setProvider, apiKey, setApiKey, saveForSession, setSaveForSession } = useApiKey()
 
@@ -25,6 +36,7 @@ export default function AgentRunner({ agent }) {
   const [tokensUsed, setTokensUsed] = useState(null)
   const [duration, setDuration] = useState(null)
   const [selectedModel, setSelectedModel] = useState(MODEL_MAP[provider] || MODEL_MAP.openai)
+  const [msgIndex, setMsgIndex] = useState(0)
 
   // Auto-update model when provider changes
   useEffect(() => {
@@ -58,6 +70,15 @@ export default function AgentRunner({ agent }) {
       setProvider(agent.defaultProvider)
     }
   }, [agent.id])
+
+  // Rotate loading messages while agent is running
+  useEffect(() => {
+    if (!loading) return
+    const interval = setInterval(() => {
+      setMsgIndex(prev => (prev + 1) % LOADING_MESSAGES.length)
+    }, 2500)
+    return () => clearInterval(interval)
+  }, [loading])
 
   const updateInput = (id, value) => {
     setInputs((prev) => ({ ...prev, [id]: value }))
@@ -110,10 +131,10 @@ export default function AgentRunner({ agent }) {
     setOutput(null)
     setTokensUsed(null)
     setDuration(null)
+    setMsgIndex(0)
 
     try {
       const actualProvider = agent.provider === 'any' ? provider : agent.provider
-      // Use the user-selected model from the dropdown
       const model = selectedModel || MODEL_MAP[actualProvider] || MODEL_MAP.openai
 
       const result = await runAgent({
@@ -333,6 +354,15 @@ export default function AgentRunner({ agent }) {
 
       {/* Error */}
       {error && <ErrorCard message={error} />}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
+          <p className="text-sm dark:text-text-secondary text-gray-500 transition-all duration-500">
+            {LOADING_MESSAGES[msgIndex]}
+          </p>
+        </div>
+      )}
 
       {/* Output */}
       {output && (
