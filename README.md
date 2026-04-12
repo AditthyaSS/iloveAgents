@@ -54,6 +54,8 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 14 | **Bug Report Generator** |Describe a bug in plain English and get a complete, structured bug report ready to paste into GitHub Issues or Jira.|Engineering| Any |
 | 15 | **Performance Review Writer** | Turn bullet notes about an employee into a structured, fair, and specific performance review.| HR| Any |
 | 16 | **Cover Letter Writer** | Paste a job description and your background. Get a tailored cover letter that doesn't sound like every other cover letter.| HR| Any |
+| 16 | **Incident Post-Mortem Writer** | Turn rough incident notes into a blameless post-mortem with timeline, root cause analysis, and action items.| Engineering| Any |
+
 
 
 > **Want to add your own?** See the [Contributing](#contributing) section below — it takes ~5 minutes.
