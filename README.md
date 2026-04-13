@@ -56,7 +56,7 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 16 | **Cover Letter Writer** | Paste a job description and your background. Get a tailored cover letter that doesn't sound like every other cover letter.| HR| Any |
 | 17 | **Incident Post-Mortem Writer** | Turn rough incident notes into a blameless post-mortem with timeline, root cause analysis, and action items.| Engineering| Any |
 | 18 | **Changelog Generator** | Paste your git commits or PR titles and get a clean, user-facing changelog in Keep a Changelog format.| Engineering| Any |
-
+| 19 | **Unit Test Generator** | Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios.| Engineering| Any |
 
 > **Want to add your own?** See the [Contributing](#contributing) section below — it takes ~5 minutes.
 
