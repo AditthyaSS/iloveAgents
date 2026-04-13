@@ -63,6 +63,8 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 23 | **Social Media Thread Writer** |Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action.| Marketing| Any|
 | 24 | **Privacy Policy Generator** |Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights.|Legal| Any|
 | 24 | **Cron Expression Builder** |Describe when you want a job to run in plain English and get a correct cron expression with a human-readabl  explanation.|Engineering| Any|
+| 24 | **Color Palette Generator** |Describe a mood, brand, or use case and get a complete color palette with hex codes, CSS variables, and accessibility contrast ratios.|Design| Any|
+
 
 
 
