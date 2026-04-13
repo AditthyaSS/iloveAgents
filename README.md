@@ -57,6 +57,8 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 17 | **Incident Post-Mortem Writer** | Turn rough incident notes into a blameless post-mortem with timeline, root cause analysis, and action items.| Engineering| Any |
 | 18 | **Changelog Generator** | Paste your git commits or PR titles and get a clean, user-facing changelog in Keep a Changelog format.| Engineering| Any |
 | 19 | **Unit Test Generator** | Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios.| Engineering| Any |
+| 20 | **Flashcard Generator** | Paste any study material, notes, or topic and get ready-to-use flashcards in Q&A format. Export for Anki or Quizlet.| Engineering| Any |
+
 
 > **Want to add your own?** See the [Contributing](#contributing) section below — it takes ~5 minutes.
 
