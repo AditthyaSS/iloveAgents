@@ -58,6 +58,9 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 18 | **Changelog Generator** | Paste your git commits or PR titles and get a clean, user-facing changelog in Keep a Changelog format.| Engineering| Any |
 | 19 | **Unit Test Generator** | Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios.| Engineering| Any |
 | 20 | **Flashcard Generator** | Paste any study material, notes, or topic and get ready-to-use flashcards in Q&A format. Export for Anki or Quizlet.| Engineering| Any |
+| 21 | **Invoice Description Generator** | Turn rough notes about work you did into polished invoice line items and a professional project summary.| Engineering| Any|
+| 22 | **Grant Proposal Writer** |Describe your project or research and get a structured grant proposal with problem statement, objectives, methodology, and impact.| Education| Any|
+
 
 
 > **Want to add your own?** See the [Contributing](#contributing) section below — it takes ~5 minutes.
