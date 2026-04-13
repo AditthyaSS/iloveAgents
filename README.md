@@ -61,6 +61,7 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 21 | **Invoice Description Generator** | Turn rough notes about work you did into polished invoice line items and a professional project summary.| Engineering| Any|
 | 22 | **Grant Proposal Writer** |Describe your project or research and get a structured grant proposal with problem statement, objectives, methodology, and impact.| Education| Any|
 | 23 | **Social Media Thread Writer** |Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action.| Marketing| Any|
+| 24 | **Privacy Policy Generator** |Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights.|Legal| Any|
 
 
 
