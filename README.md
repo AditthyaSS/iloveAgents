@@ -62,9 +62,9 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 22 | **Grant Proposal Writer** |Describe your project or research and get a structured grant proposal with problem statement, objectives, methodology, and impact.| Education| Any|
 | 23 | **Social Media Thread Writer** |Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action.| Marketing| Any|
 | 24 | **Privacy Policy Generator** |Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights.|Legal| Any|
-| 24 | **Cron Expression Builder** |Describe when you want a job to run in plain English and get a correct cron expression with a human-readabl  explanation.|Engineering| Any|
-| 24 | **Color Palette Generator** |Describe a mood, brand, or use case and get a complete color palette with hex codes, CSS variables, and accessibility contrast ratios.|Design| Any|
-| 25 | **User Story Writer** |Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes.|Product| Any|
+| 25 | **Cron Expression Builder** |Describe when you want a job to run in plain English and get a correct cron expression with a human-readabl  explanation.|Engineering| Any|
+| 26 | **Color Palette Generator** |Describe a mood, brand, or use case and get a complete color palette with hex codes, CSS variables, and accessibility contrast ratios.|Design| Any|
+| 27 | **User Story Writer** |Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes.|Product| Any|
 
 
 
