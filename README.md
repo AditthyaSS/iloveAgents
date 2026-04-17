@@ -65,9 +65,11 @@ Each agent is a focused tool that does one thing well: summarize meeting notes, 
 | 25 | **Cron Expression Builder** |Describe when you want a job to run in plain English and get a correct cron expression with a human-readabl  explanation.|Engineering| Any|
 | 26 | **Color Palette Generator** |Describe a mood, brand, or use case and get a complete color palette with hex codes, CSS variables, and accessibility contrast ratios.|Design| Any|
 | 27 | **User Story Writer** |Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes.|Product| Any|
-
-
-
+| 28 | **Persona Generator** | Describe your product and get detailed, realistic user personas with demographics, goals, frustrations, and behavioral patterns. | Product | OpenAI |
+| 29 | **Competitive Analysis Generator** | Name your product and competitors to get a structured competitive analysis with feature comparisons, positioning, and strategic recommendations. | Business | OpenAI |
+| 30 | **Tone Rewriter** | Paste any text and select a target tone. Get your message rewritten — from formal to casual, harsh to diplomatic, or verbose to concise. | Productivity | Anthropic |
+| 31 | **Data Dictionary Generator** | Paste your database schema, CSV headers, or table descriptions and get a complete data dictionary with field definitions, types, and relationships. | Engineering | Anthropic |
+| 32 | **Accessibility Audit Generator** | Paste your HTML or component code and get a detailed WCAG accessibility audit with issues, severity ratings, and corrected code snippets. | Engineering | Anthropic |
 
 > **Want to add your own?** See the [Contributing](#contributing) section below — it takes ~5 minutes.
 
