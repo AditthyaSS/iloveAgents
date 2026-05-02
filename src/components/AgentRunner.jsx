@@ -228,6 +228,15 @@ export default function AgentRunner({ agent }) {
     setInputs(defaults)
   }
 
+  const handleFillExample = () => {
+    if (!agent.exampleInputs) return;
+
+    setInputs((prev) => ({
+      ...prev,
+      ...agent.exampleInputs,
+    }));
+  };
+
   const IconComponent = Icons[agent.icon] || Icons.Bot
 
   // Determine what to show in the output area
@@ -348,10 +357,9 @@ export default function AgentRunner({ agent }) {
                       key={opt}
                       onClick={() => toggleMultiselect(input.id, opt)}
                       className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all border
-                        ${
-                          selected
-                            ? 'bg-accent/15 text-accent border-accent/30'
-                            : 'dark:bg-surface-input dark:text-text-secondary dark:border-border dark:hover:border-accent/30 bg-gray-50 text-gray-500 border-gray-200 hover:border-indigo-300'
+                        ${selected
+                          ? 'bg-accent/15 text-accent border-accent/30'
+                          : 'dark:bg-surface-input dark:text-text-secondary dark:border-border dark:hover:border-accent/30 bg-gray-50 text-gray-500 border-gray-200 hover:border-indigo-300'
                         }`}
                     >
                       {selected && '✓ '}{opt}
@@ -362,6 +370,15 @@ export default function AgentRunner({ agent }) {
             )}
           </div>
         ))}
+      </div>
+
+      <div className="mb-4">
+        <button
+          onClick={handleFillExample}
+          className="text-xs font-medium text-accent hover:underline transition-colors"
+        >
+          Try an example →
+        </button>
       </div>
 
       {/* ── Prompt Playground ── */}

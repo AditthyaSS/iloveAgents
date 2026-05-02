@@ -19,6 +19,10 @@ const agents = [
     icon: 'FileText',
     provider: 'anthropic',
     model: 'claude-opus-4-20250514',
+    exampleInputs: {
+      pdf_text: "ABSTRACT\n\nRecent advancements in Large Language Models (LLMs) have revolutionized the field of Natural Language Processing. This paper explores the performance of transformer-based architectures in zero-shot learning scenarios across diverse linguistic tasks. Our findings indicate that model scale significantly correlates with emergent capabilities, particularly in reasoning and symbolic manipulation. However, the presence of hallucinatory outputs remains a critical challenge for production-ready deployments.\n\nMETHODOLOGY\n\nWe evaluated three variants of the 'GigaChat' model on the benchmarks GLUE, SuperGLUE, and MMLU. Data was collected over a six-month period...",
+      focus: "methodology and main findings",
+    },
     inputs: [
       {
         id: 'pdf_text',
@@ -52,6 +56,11 @@ Be concise and factual.`,
     icon: 'Search',
     provider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      topic: "The impact of microplastics on deep-sea hydrothermal vent ecosystems",
+      depth: "Detailed",
+      format: "Report",
+    },
     inputs: [
       {
         id: 'topic',
@@ -91,6 +100,13 @@ Be concise and factual.`,
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o-mini',
+    exampleInputs: {
+      product: "Nexura - An AI-powered platform that automates lead generation by analyzing social signals and intent data in real-time.",
+      persona: "VP of Sales at B2B SaaS companies",
+      pain_point: "Sales teams spending too much time on manual prospecting and low conversion rates from cold outreach.",
+      tone: "Friendly",
+      length: "Medium (5-7 lines)",
+    },
     inputs: [
       {
         id: 'product',
@@ -144,6 +160,11 @@ Be concise and factual.`,
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-opus-4-20250514',
+    exampleInputs: {
+      code: "function processData(items) {\n  let result = [];\n  for (var i = 0; i < items.length; i++) {\n    var item = items[i];\n    if (item.status == 'active') {\n      let data = eval(item.config);\n      result.push(data);\n    }\n  }\n  return result;\n}",
+      language: "JavaScript",
+      focus: ["Security", "Best Practices", "Bugs"],
+    },
     inputs: [
       {
         id: 'code',
@@ -183,6 +204,11 @@ Be concise and factual.`,
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      job_description: "We are looking for a Senior React Developer with 5+ years of experience. Required skills: React, TypeScript, Redux, and experience with micro-frontends. Nice to have: Node.js and AWS.",
+      resume: "Summary: Passionate Frontend Engineer with 6 years of experience building scalable web apps.\nExperience: TechLead at FinCorp (2020-Present). Led the migration of a legacy dashboard to React/TypeScript. Used Redux Toolkit for state management.\nSkills: React, TypeScript, Next.js, GraphQL, AWS S3/Lambda.",
+      criteria: ["Technical skills", "Experience years"],
+    },
     inputs: [
       {
         id: 'job_description',
@@ -221,35 +247,40 @@ Be concise and factual.`,
     outputType: 'json',
   },
   // ─── Agent 6: LinkedIn Post Writer ───
-{
-  id: 'linkedin-post-writer',
-  name: 'LinkedIn Post Writer',
-  description: 'Generate ready-to-post LinkedIn content with a strong hook and hashtags.',
-  category: 'Marketing',
-  icon: 'PenLine',
-  provider: 'any',
-  defaultProvider: 'openai',
-  model: 'gpt-4o-mini',
+  {
+    id: 'linkedin-post-writer',
+    name: 'LinkedIn Post Writer',
+    description: 'Generate ready-to-post LinkedIn content with a strong hook and hashtags.',
+    category: 'Marketing',
+    icon: 'PenLine',
+    provider: 'any',
+    defaultProvider: 'openai',
+    model: 'gpt-4o-mini',
 
-  inputs: [
-    {
-      id: 'topic',
-      label: 'Topic',
-      type: 'text',
-      placeholder: 'e.g. Lessons from building my first startup',
-      required: true,
+    exampleInputs: {
+      topic: "Why I stopped using 'ASAP' in my professional communications and what I use instead.",
+      tone: "Story",
     },
-    {
-      id: 'tone',
-      label: 'Tone',
-      type: 'select',
-      options: ['Thought-leader', 'Story', 'Data-driven'],
-      defaultValue: 'Story',
-      required: true,
-    },
-  ],
 
-  systemPrompt: `You are an expert LinkedIn content creator.
+    inputs: [
+      {
+        id: 'topic',
+        label: 'Topic',
+        type: 'text',
+        placeholder: 'e.g. Lessons from building my first startup',
+        required: true,
+      },
+      {
+        id: 'tone',
+        label: 'Tone',
+        type: 'select',
+        options: ['Thought-leader', 'Story', 'Data-driven'],
+        defaultValue: 'Story',
+        required: true,
+      },
+    ],
+
+    systemPrompt: `You are an expert LinkedIn content creator.
 
 Write a LinkedIn post about the given topic using the selected tone.
 
@@ -262,8 +293,8 @@ Requirements:
 
 Return ONLY the LinkedIn post ready to copy and publish.`,
 
-  outputType: 'markdown',
-},
+    outputType: 'markdown',
+  },
 
   // ─── Agent 7: Meeting Notes Summarizer ───
   {
@@ -275,6 +306,11 @@ Return ONLY the LinkedIn post ready to copy and publish.`,
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      notes: "- Discussed the new dashboard layout\n- Sarah thinks we should use a sidebar instead of top nav\n- Budget for Q3 is approved, extra $10k for marketing\n- Action: Mike to update the Figma by Wednesday\n- Action: Priya to send the budget breakdown to the board",
+      meetingTitle: "Weekly Design & Budget Sync",
+      attendees: "Sarah, Mike, Priya, David",
+    },
     inputs: [
       {
         id: 'notes',
@@ -336,6 +372,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      question: "Find the total revenue generated by each product category in the last 6 months, but only for orders that have been shipped.",
+      schema: "products (id, name, category_id, price)\ncategories (id, name)\norders (id, user_id, status, created_at)\norder_items (id, order_id, product_id, quantity, unit_price)",
+      dialect: "PostgreSQL",
+    },
     inputs: [
       {
         id: 'question',
@@ -404,6 +445,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      description: "Extract the amount and currency symbol from strings like '$1,234.56' or '£99.00', handling commas and different currency symbols.",
+      testStrings: "$1,500.25\n£45.00\n€1,000,000\n¥500",
+      flavor: "JavaScript",
+    },
     inputs: [
       {
         id: 'description',
@@ -473,6 +519,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      idea: "A subscription-based platform that provides AI-generated personalized bedtime stories for children based on their interests and daily activities, narrated by AI voices that sound like their parents.",
+      audience: "Working parents with children aged 3-8 who value storytelling but have limited time.",
+      monetization: "Subscription",
+    },
     inputs: [
       {
         id: 'idea',
@@ -554,6 +605,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      topic: "Zero-Knowledge Proofs in Cryptography",
+      level: "High school student",
+      context: "I know basic math and have heard about Bitcoin.",
+    },
     inputs: [
       {
         id: 'topic',
@@ -621,6 +677,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      code: "/**\n * Calculates the compounding interest for a principal amount.\n */\nfunction calculateInterest(principal, rate, years, frequency = 12) {\n  if (principal < 0 || rate < 0 || years < 0) {\n    throw new Error('Inputs must be positive');\n  }\n  return principal * Math.pow((1 + (rate / frequency)), (frequency * years));\n}",
+      language: "JavaScript",
+      style: "JSDoc / Docstring",
+    },
     inputs: [
       {
         id: 'code',
@@ -707,6 +768,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      originalEmail: "Hi Aditthya,\n\nHope you're doing well. We were really impressed with the initial demo of the reporting tool. We'd like to move forward, but our budget for this phase is capped at $5,000. Is there any way we can adjust the scope or the price to fit this?\n\nBest,\nMark",
+      intent: "Agree to the budget but remove the 'custom integrations' and 'unlimited users' features for this phase.",
+      tone: "Professional",
+      senderName: "Aditthya",
+    },
     inputs: [
       {
         id: 'originalEmail',
@@ -774,6 +841,13 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      description: "When a user tries to upload an image larger than 5MB on the profile settings page, the progress bar hangs at 100% and no error message is shown. The profile picture doesn't update.",
+      expected: "The app should show a 'File too large' validation error and reset the upload state.",
+      environment: "Production, Chrome 124 on macOS Sonoma",
+      errorLogs: "POST /api/upload 413 (Payload Too Large)\nUncaught (in promise) Error: Request failed with status code 413",
+      tracker: "GitHub Issues",
+    },
     inputs: [
       {
         id: 'description',
@@ -870,6 +944,13 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      employeeName: "Priya Sharma, Senior Frontend Engineer",
+      period: "Q1 2026",
+      achievements: "Successfully led the migration of the core dashboard to Next.js 14, improving LCP by 35%. Mentored two junior developers who are now contributing independently to the design system. Delivered the 'Smart Search' feature two weeks ahead of schedule.",
+      improvements: "Estimation accuracy for complex UI tasks could be better. Sometimes focuses too much on micro-optimizations at the expense of broader architecture discussions.",
+      rating: "Exceeds Expectations",
+    },
     inputs: [
       {
         id: 'employeeName',
@@ -959,6 +1040,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      jobDescription: "We are seeking a Product-Focused Software Engineer to join our core team. You will build tools that help millions of people understand their carbon footprint. Experience with React, Node.js, and a passion for sustainability is a must.",
+      background: "4 years of experience as a Full-stack Engineer at a high-growth startup. Built a data visualization platform for energy consumption. Proficient in React and Node.js. Active volunteer for local environmental initiatives.",
+      companyName: "TerraPulse",
+      tone: "Confident and direct",
+    },
     inputs: [
       {
         id: 'jobDescription',
@@ -1036,6 +1123,13 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      incidentSummary: "The 'Order History' service experienced a 100% failure rate for approximately 45 minutes. Users could browse products and add to cart but could not view past orders or track current shipments.",
+      timeline: "14:10 UTC - First automated alert for 5xx errors on /api/orders\n14:15 UTC - On-call engineer acknowledged\n14:22 UTC - Identified that the DB connection pool was exhausted\n14:35 UTC - Found a missing index on the 'order_history_logs' table after a recent schema migration\n14:50 UTC - Index added manually; service recovered",
+      rootCause: "A database migration script was interrupted and failed to create a critical index. A background cleanup job triggered a full table scan, locking the table and exhausting the connection pool.",
+      impact: "100% of users unable to access order history for 45 mins. ~450 support tickets generated.",
+      severity: "SEV2 / P1",
+    },
     inputs: [
       {
         id: 'incidentSummary',
@@ -1140,6 +1234,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      commits: "feat: add multi-language support for the dashboard\nfix: resolve race condition in auth middleware\nfeat: implement CSV export for audit logs\nchore: update dependencies for security fixes\nrefactor: optimize database queries for the reports page",
+      version: "v1.4.2",
+      audience: "End users",
+      productName: "Nexura Admin",
+    },
     inputs: [
       {
         id: 'commits',
@@ -1232,6 +1332,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      code: "export const formatCurrency = (amount, currency = 'USD', locale = 'en-US') => {\n  if (typeof amount !== 'number') return '-';\n  return new Intl.NumberFormat(locale, {\n    style: 'currency',\n    currency: currency,\n  }).format(amount);\n};",
+      framework: "Vitest",
+      context: "The function should handle zero and negative values gracefully. Also, verify that it defaults to USD if no currency is provided.",
+    },
     inputs: [
       {
         id: 'code',
@@ -1301,6 +1406,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      content: "The Roman Empire was one of the largest empires in history. At its height under Trajan, it covered 5 million square kilometers. Key institutions included the Senate and the Legions. The Fall of the Western Roman Empire occurred in 476 AD when Romulus Augustulus was deposed by Odoacer.",
+      count: "5",
+      difficulty: "Intermediate",
+      exportFormat: "Anki (TSV)",
+    },
     inputs: [
       {
         id: 'content',
@@ -1394,6 +1505,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      workDone: "- Developed the new user authentication flow\n- Integrated Stripe for subscription billing\n- Fixed several bugs in the reporting dashboard\n- Attended 3 weekly sync meetings\n- Documented the API for the mobile team",
+      clientName: "GlobalTech Solutions",
+      projectName: "E-commerce Platform Phase 2",
+      currency: "USD",
+    },
     inputs: [
       {
         id: 'workDone',
@@ -1472,6 +1589,13 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      projectDescription: "Our project aims to install solar-powered internet kiosks in 20 remote villages in the Himalayan region to provide digital literacy training and access to telemedicine services for approximately 5,000 residents.",
+      organization: "Digital Reach Foundation",
+      fundingBody: "The Global Connectivity Fund",
+      budget: "$75,000",
+      duration: "24 months",
+    },
     inputs: [
       {
         id: 'projectDescription',
@@ -1582,6 +1706,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      topic: "How I built an AI agent that manages my entire calendar and saved me 5 hours a week.",
+      threadLength: "Medium (8-10 tweets)",
+      platform: "X / Twitter",
+      tone: "Storytelling",
+    },
     inputs: [
       {
         id: 'topic',
@@ -1671,6 +1801,13 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      appDescription: "Nexura is a social media management platform. We collect user names, emails, and social media handles. We process payments via Stripe and track site usage through Plausible Analytics. Users can schedule posts and upload images.",
+      companyName: "Nexura Labs Inc.",
+      dataCollected: ["Names & emails", "Payment info", "Usage analytics", "File uploads"],
+      regulations: ["GDPR (EU)", "CCPA (California)"],
+      contactEmail: "privacy@nexura.io",
+    },
     inputs: [
       {
         id: 'appDescription',
@@ -1783,6 +1920,11 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      schedule: "Run every Sunday at 2:00 AM, but only if it's the first or third Sunday of the month.",
+      platform: "GitHub Actions",
+      timezone: "UTC",
+    },
     inputs: [
       {
         id: 'schedule',
@@ -1869,6 +2011,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      description: "A professional and sleek dark mode theme for a crypto trading platform. Needs to feel high-tech, trustworthy, and energetic. Think deep navy backgrounds with neon cyan and lime green accents.",
+      paletteType: "Dark mode",
+      outputFormat: "Tailwind config",
+      baseColor: "#0F172A",
+    },
     inputs: [
       {
         id: 'description',
@@ -1963,6 +2111,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      feature: "As a user, I want to be able to tag my agents with custom labels so that I can organize them by project or client.",
+      persona: "Power user with 50+ agents",
+      priority: "Should-have (P1)",
+      tracker: "Linear",
+    },
     inputs: [
       {
         id: 'feature',
@@ -2056,6 +2210,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      product: "A mobile-first 'habit tracker' that uses gamification and community challenges to help people quit smoking.",
+      targetMarket: "Young adults (20-35) who have tried to quit multiple times and find traditional methods boring or isolating.",
+      personaCount: "2",
+      includeScenario: "Yes",
+    },
     inputs: [
       {
         id: 'product',
@@ -2168,6 +2328,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'openai',
     model: 'gpt-4o',
+    exampleInputs: {
+      product: "A privacy-focused browser extension that automatically blocks all trackers and provides a 'clean' version of news articles without ads or clickbait.",
+      competitors: "uBlock Origin, Brave Browser, Pocket, Reader Mode",
+      industry: "Consumer Privacy / Productivity",
+      analysisDepth: "Detailed analysis",
+    },
     inputs: [
       {
         id: 'product',
@@ -2275,6 +2441,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      text: "Hey, I saw the draft you sent over. It's okay but honestly the intro is kind of boring and the data you cited is like two years old. Can you fix this by tomorrow? We have the client meeting at 10 AM.",
+      targetTone: "Diplomatic & tactful",
+      context: "Slack message to a junior designer on my team.",
+      preserveLength: "Keep same length",
+    },
     inputs: [
       {
         id: 'text',
@@ -2370,6 +2542,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      schema: "users (id, email, password_hash, status, created_at)\nprofiles (user_id, bio, avatar_url, twitter_handle, website)\nposts (id, author_id, title, content, published_at, tags)",
+      context: "This is the backend schema for a minimal blogging platform where users can have profiles and publish posts with tags.",
+      outputFormat: "Markdown tables",
+      includeRelationships: "Yes",
+    },
     inputs: [
       {
         id: 'schema',
@@ -2477,6 +2655,12 @@ Rules:
     provider: 'any',
     defaultProvider: 'anthropic',
     model: 'claude-sonnet-4-6',
+    exampleInputs: {
+      code: "<button onClick={() => setIsOpen(!isOpen)}>\n  <img src='/icons/menu.svg' />\n</button>\n<div style={{ color: '#DDD', backgroundColor: '#FFF' }}>\n  Click here to see more options\n</div>",
+      standard: "WCAG 2.1 AA (recommended)",
+      framework: "React / JSX",
+      focusAreas: ["All"],
+    },
     inputs: [
       {
         id: 'code',
