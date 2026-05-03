@@ -16,14 +16,14 @@ const MODEL_MAP = {
 }
 
 const LOADING_MESSAGES = [
-  "⚙️ Agent is grinding for you...",
-  "🧠 Big brain moment loading...",
-  "✨ Cooking something fire...",
-  "🤖 Agent is in its era...",
-  "💀 This might actually go crazy...",
-  "🔥 Almost done, hold tight...",
-  "🚀 Sending it...",
-  "👀 Your agent is locked in...",
+  '⚙️ Agent is grinding for you...',
+  '🧠 Big brain moment loading...',
+  '✨ Cooking something fire...',
+  '🤖 Agent is in its era...',
+  '💀 This might actually go crazy...',
+  '🔥 Almost done, hold tight...',
+  '🚀 Sending it...',
+  '👀 Your agent is locked in...',
 ]
 
 export default function AgentRunner({ agent }) {
@@ -35,26 +35,20 @@ export default function AgentRunner({ agent }) {
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [tokensUsed, setTokensUsed] = useState(null)
   const [duration, setDuration] = useState(null)
   const [selectedModel, setSelectedModel] = useState(MODEL_MAP[provider] || MODEL_MAP.openai)
-
-  // Prompt Playground state
   const [playgroundOpen, setPlaygroundOpen] = useState(false)
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt)
-  const isPromptModified = customPrompt !== agent.systemPrompt
   const [msgIndex, setMsgIndex] = useState(0)
 
+  const isPromptModified = customPrompt !== agent.systemPrompt
   const abortControllerRef = useRef(null)
 
-  // Auto-update model when provider changes
   useEffect(() => {
     setSelectedModel(MODEL_MAP[provider] || MODEL_MAP.openai)
   }, [provider])
 
-  // Reset state when agent changes
   useEffect(() => {
-    // Cancel any in-progress stream
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
@@ -63,12 +57,10 @@ export default function AgentRunner({ agent }) {
     setStreamingOutput('')
     setIsStreaming(false)
     setError(null)
-    setTokensUsed(null)
     setDuration(null)
     setCustomPrompt(agent.systemPrompt)
     setPlaygroundOpen(false)
 
-    // Set defaults
     const defaults = {}
     agent.inputs.forEach((input) => {
       if (input.defaultValue !== undefined) {
@@ -81,7 +73,6 @@ export default function AgentRunner({ agent }) {
     })
     setInputs(defaults)
 
-    // Set provider
     if (agent.provider !== 'any') {
       setProvider(agent.provider)
     } else if (agent.defaultProvider) {
@@ -89,11 +80,10 @@ export default function AgentRunner({ agent }) {
     }
   }, [agent.id])
 
-  // Rotate loading messages while agent is running (only before stream starts)
   useEffect(() => {
     if (!loading || isStreaming) return
     const interval = setInterval(() => {
-      setMsgIndex(prev => (prev + 1) % LOADING_MESSAGES.length)
+      setMsgIndex((prev) => (prev + 1) % LOADING_MESSAGES.length)
     }, 2500)
     return () => clearInterval(interval)
   }, [loading, isStreaming])
@@ -114,24 +104,19 @@ export default function AgentRunner({ agent }) {
     })
   }
 
-  // Build the user message from inputs
   const buildUserMessage = () => {
     const parts = []
     agent.inputs.forEach((input) => {
       const val = inputs[input.id]
       if (!val || (Array.isArray(val) && val.length === 0)) return
-
-      const label = input.label
-      if (Array.isArray(val)) {
-        parts.push(`${label}: ${val.join(', ')}`)
-      } else {
-        parts.push(`${label}: ${val}`)
-      }
+      parts.push(Array.isArray(val)
+        ? `${input.label}: ${val.join(', ')}`
+        : `${input.label}: ${val}`
+      )
     })
     return parts.join('\n\n')
   }
 
-  // Validate required inputs
   const canRun = () => {
     if (!apiKey) return false
     return agent.inputs
@@ -143,8 +128,17 @@ export default function AgentRunner({ agent }) {
       })
   }
 
+  const hasInputContent = () => {
+    if (output || streamingOutput || error) return true
+    return agent.inputs.some((input) => {
+      const v = inputs[input.id]
+      if (Array.isArray(v)) return v.length > 0
+      return v && v !== (input.defaultValue ?? '')
+    })
+  }
+
   const handleChunk = useCallback((chunk) => {
-    setStreamingOutput(prev => prev + chunk)
+    setStreamingOutput((prev) => prev + chunk)
     setIsStreaming(true)
   }, [])
 
@@ -154,11 +148,9 @@ export default function AgentRunner({ agent }) {
     setOutput(null)
     setStreamingOutput('')
     setIsStreaming(false)
-    setTokensUsed(null)
     setDuration(null)
     setMsgIndex(0)
 
-    // Create an AbortController for cancellation
     const controller = new AbortController()
     abortControllerRef.current = controller
 
@@ -176,7 +168,6 @@ export default function AgentRunner({ agent }) {
         signal: controller.signal,
       })
 
-      // Stream complete — move to final output
       setOutput(result.content)
       setStreamingOutput('')
       setIsStreaming(false)
@@ -196,7 +187,6 @@ export default function AgentRunner({ agent }) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
-    // Preserve whatever has streamed so far as the final output
     setOutput(streamingOutput)
     setStreamingOutput('')
     setIsStreaming(false)
@@ -204,7 +194,6 @@ export default function AgentRunner({ agent }) {
   }
 
   const handleClear = () => {
-    // Cancel any in-progress stream
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
@@ -213,8 +202,8 @@ export default function AgentRunner({ agent }) {
     setStreamingOutput('')
     setIsStreaming(false)
     setError(null)
-    setTokensUsed(null)
     setDuration(null)
+
     const defaults = {}
     agent.inputs.forEach((input) => {
       if (input.defaultValue !== undefined) {
@@ -229,18 +218,11 @@ export default function AgentRunner({ agent }) {
   }
 
   const handleFillExample = () => {
-    if (!agent.exampleInputs) return;
-
-    setInputs((prev) => ({
-      ...prev,
-      ...agent.exampleInputs,
-    }));
-  };
+    if (!agent.exampleInputs) return
+    setInputs((prev) => ({ ...prev, ...agent.exampleInputs }))
+  }
 
   const IconComponent = Icons[agent.icon] || Icons.Bot
-
-  // Determine what to show in the output area
-  const displayContent = output || (isStreaming ? streamingOutput : null)
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
@@ -341,9 +323,7 @@ export default function AgentRunner({ agent }) {
                   focus:ring-1 focus:ring-accent focus:border-accent outline-none"
               >
                 {input.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
+                  <option key={opt} value={opt}>{opt}</option>
                 ))}
               </select>
             )}
@@ -381,10 +361,9 @@ export default function AgentRunner({ agent }) {
         </button>
       </div>
 
-      {/* ── Prompt Playground ── */}
+      {/* Prompt Playground */}
       <div className="mb-4 rounded-lg border transition-all duration-200
         dark:bg-surface-card dark:border-border bg-white border-gray-200">
-        {/* Toggle header */}
         <button
           onClick={() => setPlaygroundOpen(!playgroundOpen)}
           className="w-full flex items-center justify-between px-4 py-3 text-left group"
@@ -412,7 +391,6 @@ export default function AgentRunner({ agent }) {
           </div>
         </button>
 
-        {/* Expandable content */}
         {playgroundOpen && (
           <div className="px-4 pb-4 animate-fade-in">
             <div className="mb-2 flex items-center justify-between">
@@ -456,7 +434,7 @@ export default function AgentRunner({ agent }) {
         )}
       </div>
 
-      {/* Action buttons */}
+      {/* Action Buttons */}
       <div className="flex items-center gap-2 mb-6">
         {loading ? (
           <button
@@ -483,37 +461,26 @@ export default function AgentRunner({ agent }) {
 
         <button
           onClick={handleClear}
+          disabled={!hasInputContent()}
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
             dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover
-            text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            text-gray-500 hover:text-gray-900 hover:bg-gray-100
+            disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
         >
           <RotateCcw size={14} />
           Clear
         </button>
 
-        {/* Stats */}
-        {(tokensUsed || duration) && (
-          <div className="flex items-center gap-3 ml-auto">
-            {tokensUsed > 0 && (
-              <span className="flex items-center gap-1 text-[11px] dark:text-text-muted text-gray-400">
-                <Zap size={11} />
-                {tokensUsed.toLocaleString()} tokens
-              </span>
-            )}
-            {duration && (
-              <span className="flex items-center gap-1 text-[11px] dark:text-text-muted text-gray-400">
-                <Clock size={11} />
-                {(duration / 1000).toFixed(1)}s
-              </span>
-            )}
+        {duration && (
+          <div className="flex items-center gap-1 text-[11px] dark:text-text-muted text-gray-400 ml-auto">
+            <Clock size={11} />
+            {(duration / 1000).toFixed(1)}s
           </div>
         )}
       </div>
 
-      {/* Error */}
       {error && <ErrorCard message={error} />}
 
-      {/* Loading State — only before stream starts */}
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -526,22 +493,19 @@ export default function AgentRunner({ agent }) {
         </div>
       )}
 
-      {/* Streaming Output — live as tokens arrive */}
       {isStreaming && streamingOutput && (
         <div className="animate-fade-in">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
-                Output
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+              Output
+            </span>
+            <span className="flex items-center gap-1.5 text-[11px] font-medium text-accent">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-accent">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                </span>
-                Streaming...
-              </span>
-            </div>
+              Streaming...
+            </span>
           </div>
           <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
             <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
@@ -554,7 +518,6 @@ export default function AgentRunner({ agent }) {
         </div>
       )}
 
-      {/* Final Output — rendered with full markdown after stream completes */}
       {output && !isStreaming && (
         <OutputRenderer
           content={output}
