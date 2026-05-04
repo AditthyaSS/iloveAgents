@@ -226,6 +226,14 @@ export default function AgentRunner({ agent }) {
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
+      {/* Breadcrumb */}
+      <a
+        href="/"
+        className="inline-block mb-4 text-xs dark:text-text-muted text-gray-400 hover:underline"
+      >
+        ← All agents
+      </a>
+      
       {/* Agent Header */}
       <div className="flex items-start gap-4 mb-5">
         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
