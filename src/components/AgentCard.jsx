@@ -23,6 +23,14 @@ export default function AgentCard({ agent }) {
   const provLabel = providerLabels[agent.provider] || agent.provider
   const { isFavorite, toggleFavorite } = useFavorites()
   const favorited = isFavorite(agent.id)
+  
+  // Check if agent was added in the last 7 days
+  const isNew = agent.createdAt && (() => {
+    const created = new Date(agent.createdAt)
+    const now = new Date()
+    const diffDays = (now - created) / (1000 * 60 * 60 * 24)
+    return diffDays <= 7
+  })()
 
   const handleFavorite = (e) => {
     e.preventDefault()  // prevent Link navigation
@@ -48,6 +56,11 @@ export default function AgentCard({ agent }) {
             bg-gray-100 text-gray-500 border dark:border-border border-gray-200">
             {agent.category}
           </span>
+          {isNew && (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/20">
+              New
+            </span>
+          )}
           <button
             onClick={handleFavorite}
             className={`p-1 rounded-md transition-all duration-200
