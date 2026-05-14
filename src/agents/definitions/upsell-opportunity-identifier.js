@@ -1,0 +1,38 @@
+export default {
+  id: 'upsell-opportunity-identifier',
+  createdAt: '2026-05-14',
+  name: 'Upsell Opportunity Identifier',
+  description: "CSMs and AEs often miss upsell opportunities because they don't know how to spot the signals. This agent takes a customer's current plan, usage patterns, and business description as input and returns a structured upsell pitch with specific features to recommend and business justification. Real world use case: a CSM turns a routine renewal call into an expansion deal.",
+  category: 'General',
+  icon: 'Handshake',
+  provider: 'openai',
+  defaultProvider: 'openai',
+  model: 'gpt-4o-mini',
+  inputs: [
+    {
+      name: 'context',
+      label: 'Context',
+      type: 'textarea',
+      placeholder: 'Describe the situation, audience, and goal',
+      required: true,
+    },
+    {
+      name: 'details',
+      label: 'Key details',
+      type: 'textarea',
+      placeholder: 'Add any examples, constraints, or source material',
+      required: false,
+    },
+    {
+      name: 'tone',
+      label: 'Tone',
+      type: 'select',
+      options: ['professional', 'friendly', 'concise', 'detailed'],
+      defaultValue: 'professional',
+      required: false,
+    },
+  ],
+  systemPrompt: `You are an expert assistant for Upsell Opportunity Identifier. Produce a practical, structured markdown response using the supplied context and details. Keep the tone appropriate, avoid generic filler, and include concrete next steps when useful.`,
+  userPrompt: `Context:\n{{context}}\n\nDetails:\n{{details}}\n\nTone:\n{{tone}}`,
+  outputType: 'markdown',
+};
