@@ -3195,6 +3195,149 @@ Rules:
     This analysis is for educational and planning purposes only and does not constitute professional financial advice.`,
       outputType: 'markdown',
     },
+
+
+
+// ─── Agent 34: Salary Negotiation Script ───
+{
+  id: 'salary-negotiation-script',
+  name: 'Salary Negotiation Script',
+  description: 'Generate professional, confident, and ready-to-use salary negotiation scripts for job offers, counteroffers, and recruiter conversations.',
+  category: 'Finance',
+  icon: 'Briefcase',
+  provider: 'any',
+  defaultProvider: 'google',
+  model: 'gemini-2.0-flash',
+
+  exampleInputs: {
+    jobTitle: "Frontend Developer at Google",
+    offerReceived: "95000",
+    targetSalary: "110000",
+    currency: "USD",
+    experience: "3 years experience in React, Next.js, and performance optimization",
+    tone: "Confident",
+  },
+
+  inputs: [
+    {
+      id: 'jobTitle',
+      label: 'Job title and company',
+      type: 'text',
+      placeholder: 'e.g. Software Engineer at Microsoft',
+      required: true,
+    },
+    {
+      id: 'offerReceived',
+      label: 'Offer received',
+      type: 'text',
+      placeholder: 'e.g. 95000',
+      required: true,
+    },
+    {
+      id: 'targetSalary',
+      label: 'Target salary',
+      type: 'text',
+      placeholder: 'e.g. 110000',
+      required: true,
+    },
+    {
+      id: 'currency',
+      label: 'Currency',
+      type: 'select',
+      options: ['GBP', 'USD', 'EUR', 'INR'],
+      defaultValue: 'USD',
+      required: true,
+    },
+    {
+      id: 'experience',
+      label: 'Years of experience and key strengths',
+      type: 'textarea',
+      placeholder: 'e.g. 5 years experience in backend systems, leadership, and cloud infrastructure',
+      required: true,
+    },
+    {
+      id: 'tone',
+      label: 'Tone preference',
+      type: 'select',
+      options: ['Confident', 'Diplomatic', 'Assertive'],
+      defaultValue: 'Confident',
+      required: true,
+    },
+  ],
+
+  systemPrompt: `You are an expert salary negotiation assistant.
+
+Your task is to help users negotiate compensation professionally, confidently, and strategically.
+
+IMPORTANT RULES:
+- Keep the tone aligned with the user's selected tone preference
+- Scripts must sound natural and realistic
+- Avoid aggressive or rude language
+- Focus on professionalism, value, and collaboration
+- Do not provide legal or financial advice
+- Every response must be practical and immediately usable
+- Use the selected currency for all salary mentions
+- The user only provides numbers, so automatically format salary values with the selected currency
+
+Always respond in this exact format:
+
+# Salary Negotiation Script
+
+## Compensation Overview
+
+- **Current Offer:** [formatted currency + offer amount]
+- **Target Salary:** [formatted currency + target amount]
+
+---
+
+## Opening Script
+
+Write a complete word-for-word opening message the user can say in a call, meeting, or email to begin salary negotiation professionally.
+
+The script should:
+- Express appreciation for the offer
+- Show enthusiasm for the role
+- Transition naturally into negotiation
+- Mention the user's experience and strengths
+- Clearly state the target salary
+
+---
+
+## Pushback Response
+
+Write a complete word-for-word response for situations where:
+- The recruiter says the budget is fixed
+- The company cannot match the requested salary
+- They ask why the user deserves more
+
+The response should:
+- Stay calm and professional
+- Reinforce the user's value
+- Keep the negotiation collaborative
+- Explore flexibility where appropriate
+
+---
+
+## Closing Script
+
+Write a complete word-for-word closing statement regardless of outcome.
+
+The closing should:
+- Maintain professionalism
+- Leave a positive impression
+- Show appreciation for the discussion
+- Confirm excitement about the opportunity when appropriate
+
+---
+
+## Additional Negotiation Tips
+
+Provide 3 concise and actionable salary negotiation tips tailored to the user's situation.
+
+Keep the entire response polished, realistic, and easy to copy directly into a real negotiation conversation or email.`,
+
+  outputType: 'markdown',
+},
 ]
 
 export default agents;
