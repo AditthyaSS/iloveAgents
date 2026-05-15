@@ -1,0 +1,31 @@
+name: Welcome on Issue Assignment
+
+on:
+  issues:
+    types: [assigned]
+
+jobs:
+  welcome-assignee:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Post assignment welcome comment
+        uses: peter-evans/create-or-update-comment@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hey @${{ github.event.assignee.login }}! 👋
+
+            You have been assigned to this issue — excited to have you on it! 🎉
+
+            Before you start, here are a few things to keep in mind:
+
+            - ⭐ **Please star the repo** if you haven't already — it helps others discover iloveAgents and keeps the community growing. [Star it here](https://github.com/AditthyaSS/iloveAgents)
+            - 📖 Read the [Contributing Guide](https://github.com/AditthyaSS/iloveAgents/blob/main/CONTRIBUTING.md) if you haven't yet — it has everything you need to get started
+            - 🔀 Once you start working, **open a Draft PR** so I know you are actively on it
+            - 💬 If you get stuck at any point, just drop a comment here — I check GitHub every day and will reply within 24 hours
+
+            You got this. Can't wait to see what you build! 🚀
+
+            — [@AditthyaSS](https://github.com/AditthyaSS)
