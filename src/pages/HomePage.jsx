@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
-import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch } from 'lucide-react'
 import agents from '../agents/registry'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
@@ -24,9 +25,21 @@ const categoryMeta = {
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
 
 export default function HomePage() {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
+  
   const { favorites } = useFavorites()
+
+const recentAgents = useMemo(() => {
+  const recentIds = JSON.parse(
+    localStorage.getItem('recentAgents') || '[]'
+  )
+
+  return recentIds
+    .map((id) => agents.find((a) => a.id === id))
+    .filter(Boolean)
+}, [])
 
   // Resolve favorite agents (preserving the user's star order)
   const favoriteAgents = useMemo(() => {
@@ -61,9 +74,19 @@ export default function HomePage() {
         <h1 className="text-3xl sm:text-4xl font-bold dark:text-text-primary text-gray-900 mb-3 tracking-tight">
           AI Agents, ready to use.
         </h1>
-        <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md mx-auto leading-relaxed">
+        <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md mx-auto leading-relaxed mb-4">
           Open source. Community-built. Bring your own key.
         </p>
+        <button
+          onClick={() => navigate('/battle')}
+          className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold
+            bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-950
+            hover:from-yellow-400 hover:to-amber-400 transition-all duration-200
+            shadow-md shadow-yellow-500/20 hover:shadow-yellow-500/30 active:scale-[0.97]"
+        >
+          <Swords size={16} />
+          Enter Battle Mode
+        </button>
       </div>
 
       {/* Stat Cards */}
@@ -133,6 +156,34 @@ export default function HomePage() {
           </div>
         </div>
       )}
+      {/* ── Recently Used Section ── */}
+{recentAgents.length > 0 && !showingFiltered && (
+  <div className="mb-8 animate-fade-in">
+    <div className="flex items-center gap-2 mb-4">
+      <Heart size={14} className="text-pink-400 fill-pink-400" />
+
+      <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+        Recently Used
+      </h2>
+
+      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-pink-400/10 text-pink-500 border border-pink-400/20">
+        {recentAgents.length}
+      </span>
+    </div>
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {recentAgents.map((agent, idx) => (
+        <div
+          key={agent.id}
+          className="animate-fade-in"
+          style={{ animationDelay: `${idx * 40}ms` }}
+        >
+          <AgentCard agent={agent} />
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
       {/* ── Search & Category Filter Section ── */}
       <div className="mb-6 space-y-4">
@@ -243,6 +294,47 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* ── Workflows Section ── */}
+      {!showingFiltered && (
+        <div className="mb-8 animate-fade-in">
+          <div
+            className="rounded-xl border p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4
+              dark:bg-surface-card dark:border-border bg-white border-gray-200"
+          >
+            <div className="flex items-center gap-3 flex-1">
+              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <GitBranch size={20} className="text-accent" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold dark:text-text-primary text-gray-900">
+                  Workflows
+                </h2>
+                <p className="text-xs dark:text-text-secondary text-gray-500 mt-0.5">
+                  Community built AI workflows — connect agents and automate your process
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => navigate('/workflows')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+                  dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:text-text-primary
+                  bg-gray-100 border border-gray-200 text-gray-600 hover:text-gray-900"
+              >
+                Explore Workflows
+              </button>
+              <button
+                onClick={() => navigate('/workflows/build')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold text-white
+                  bg-accent hover:bg-accent-hover transition-all duration-200 active:scale-[0.97]"
+              >
+                Build a Workflow
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer CTA */}
       <div className="text-center py-8 border-t dark:border-border border-gray-200">

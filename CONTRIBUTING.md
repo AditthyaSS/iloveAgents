@@ -31,25 +31,45 @@ It takes about 5 minutes and you do not need to know much React at all.
 ### Step 1 — Fork and clone the repo
 
 ```bash
+# Fork the repo on GitHub first, then clone your fork
 git clone https://github.com/YOUR_USERNAME/iloveAgents.git
 cd iloveAgents
 npm install
 npm run dev
 ```
 
-### Step 2 — Open the registry
+### Step 2 — Create a feature branch
 
-Everything lives in one file:
-src/agents/registry.js
+Always create a new branch before making any changes.
+Never work directly on `main`.
 
-Scroll to the bottom and add your agent config.
+```bash
+# For a new agent
+git checkout -b agent/your-agent-name
 
-### Step 3 — Add your agent config
+# For a bug fix
+git checkout -b fix/what-you-are-fixing
 
-Copy this template and fill in your details:
+# For a UI change
+git checkout -b ui/what-you-are-changing
+```
+
+Keep the branch name short and clear so I know what the PR is about before I even open it.
+
+### Step 3 — Create your agent file
+
+Each agent now lives in its own file inside `src/agents/definitions/`.
+The registry picks it up automatically — no need to touch `registry.js` at all.
+
+Create a new file:
+src/agents/definitions/your-agent-name.js
+
+### Step 4 — Add your agent config
+
+Paste this template into your new file and fill in your details:
 
 ```js
-{
+const yourAgentName = {
   id: 'your-agent-id',           // lowercase, kebab-case, URL safe
   name: 'Your Agent Name',
   description: 'One line description of what this agent does.',
@@ -70,16 +90,21 @@ Copy this template and fill in your details:
   systemPrompt: `Write your system prompt here.
     Be specific about the output format you want.`,
   outputType: 'markdown',        // markdown | text | json
-}
+};
+
+export default yourAgentName;
 ```
 
-### Step 4 — Test it
+That is it. The registry automatically collects every file in `src/agents/definitions/` —
+just drop your file in and your agent appears in the sidebar.
+
+### Step 5 — Test it
 
 Run the app and find your agent in the sidebar.
 Test it with a real API key from at least one provider.
 Make sure the output looks right and the inputs make sense.
 
-### Step 5 — Open a PR
+### Step 6 — Open a PR
 
 Push your branch and open a pull request.
 Use the PR template that appears automatically — it is just a quick checklist.

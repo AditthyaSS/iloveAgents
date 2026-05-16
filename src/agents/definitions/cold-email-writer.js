@@ -1,0 +1,61 @@
+export default {
+  id: "cold-email-writer",
+  createdAt: "2025-05-06",
+  name: "Cold Email Writer",
+  description: "Generate highly personalized B2B cold emails that convert.",
+  category: "Marketing",
+  icon: "Mail",
+  provider: "any",
+  defaultProvider: "openai",
+  model: "gpt-4o-mini",
+  exampleInputs: {
+    product:
+      "Nexura - An AI-powered platform that automates lead generation by analyzing social signals and intent data in real-time.",
+    persona: "VP of Sales at B2B SaaS companies",
+    pain_point:
+      "Sales teams spending too much time on manual prospecting and low conversion rates from cold outreach.",
+    tone: "Friendly",
+    length: "Medium (5-7 lines)",
+  },
+  inputs: [
+    {
+      id: "product",
+      label: "Your product/service",
+      type: "textarea",
+      placeholder: "Describe your product or service...",
+      required: true,
+    },
+    {
+      id: "persona",
+      label: "Target persona",
+      type: "text",
+      placeholder: "e.g. SaaS CTOs, Marketing VPs at Series B startups",
+      required: true,
+    },
+    {
+      id: "pain_point",
+      label: "Pain point to address",
+      type: "text",
+      placeholder: "e.g. High customer churn, slow onboarding",
+      required: true,
+    },
+    {
+      id: "tone",
+      label: "Tone",
+      type: "select",
+      options: ["Professional", "Friendly", "Direct"],
+      defaultValue: "Professional",
+      required: true,
+    },
+    {
+      id: "length",
+      label: "Email length",
+      type: "select",
+      options: ["Short (3 lines)", "Medium (5-7 lines)", "Long (full pitch)"],
+      defaultValue: "Medium (5-7 lines)",
+      required: true,
+    },
+  ],
+  systemPrompt: `You are an expert B2B copywriter. Write a cold email that is highly personalised, addresses the pain point directly, and has a clear CTA. Do not use clichés. Output only the email — no explanation or commentary.`,
+  outputType: "text",
+};
