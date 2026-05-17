@@ -1,5 +1,5 @@
 /**
- * LLM Adapter — unified interface for calling OpenAI, Anthropic, and Gemini APIs
+ * LLM Adapter — unified interface for calling OpenAI, Anthropic, Gemini, and OpenRouter APIs
  * directly from the browser. No backend required.
  *
  * Supports both one-shot (`runAgent`) and streaming (`streamAgent`) modes.
@@ -139,6 +139,51 @@ const PROVIDER_CONFIGS = {
       }
     },
   },
+
+  openrouter: {
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    buildHeaders: (apiKey) => ({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': window.location.origin,
+      'X-Title': document.title || 'iloveAgents',
+    }),
+    buildBody: (model, systemPrompt, userMessage) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 4096,
+    }),
+    buildStreamBody: (model, systemPrompt, userMessage) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 4096,
+      stream: true,
+    }),
+    parseResponse: (data) => ({
+      content: data.choices?.[0]?.message?.content || '',
+      tokens:
+        (data.usage?.prompt_tokens || 0) +
+        (data.usage?.completion_tokens || 0),
+    }),
+    parseStreamChunk: (line) => {
+      if (line === 'data: [DONE]') return { content: '', done: true }
+      if (!line.startsWith('data: ')) return null
+      try {
+        const json = JSON.parse(line.slice(6))
+        const delta = json.choices?.[0]?.delta?.content || ''
+        const finished = json.choices?.[0]?.finish_reason === 'stop'
+        return { content: delta, done: finished }
+      } catch {
+        return null
+      }
+    },
+  },
 }
 
 const ERROR_MESSAGES = {
@@ -175,7 +220,7 @@ async function handleErrorResponse(response) {
  * Run an agent against the specified LLM provider (one-shot, non-streaming).
  *
  * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'} params.provider
+ * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
  * @param {string} params.model
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
@@ -238,7 +283,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * as it arrives so the UI can render progressively.
  *
  * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'} params.provider
+ * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
  * @param {string} params.model
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
