@@ -21,6 +21,7 @@ import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
+import { exportWorkflowAsMarkdown } from '../lib/exportMarkdown'
 
 const STATUS_COLORS = {
   waiting: 'dark:text-text-muted text-gray-400',
@@ -325,7 +326,19 @@ export default function WorkflowRunner() {
           </button>
         )}
 
-        {allDone && <CopyAllButton steps={steps} />}
+        {allDone && (
+           <>
+            <CopyAllButton steps={steps} />
+            <button
+              onClick={() => exportWorkflowAsMarkdown(workflow?.title ?? 'workflow', steps)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+               dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
+                bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
+            >
+              Export as Markdown
+            </button>
+          </>
+        )}
       </div>
 
       {/* Steps */}
