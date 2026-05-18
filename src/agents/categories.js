@@ -19,6 +19,7 @@ export const CATEGORIES = [
   "HR",
   "Legal",
   "Marketing",
+  "Personal Development",
   "Product",
   "Productivity",
   "Research",
