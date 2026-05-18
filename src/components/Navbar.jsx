@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { Sun, Moon, Github, Menu, X } from 'lucide-react'
 import Logo from './Logo'
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const [darkMode, setDarkMode] = useState(true)
+  const location = useLocation()
 
   useEffect(() => {
     const saved = localStorage.getItem('ila_theme')
@@ -26,6 +27,17 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
     }
   }
 
+  const handleLogoClick = (e) => {
+    if (location.pathname === '/') {
+      e.preventDefault()
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      window.scrollTo({
+        top: 0,
+        behavior: reduceMotion ? 'auto' : 'smooth'
+      })
+    }
+  }
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 border-b transition-theme
       dark:bg-surface dark:border-border bg-white border-gray-200">
@@ -39,7 +51,11 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <Link to="/" className="flex items-center group hover:opacity-80 transition-opacity">
+        <Link 
+          to="/" 
+          onClick={handleLogoClick}
+          className="flex items-center group hover:opacity-80 transition-opacity"
+        >
           <Logo height={26} className="dark:text-white text-gray-900" />
         </Link>
       </div>
