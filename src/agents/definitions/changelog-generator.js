@@ -96,4 +96,5 @@ Rules:
 - If audience is "End users", avoid technical jargon
 - If audience is "Developers", include technical details`,
   outputType: "markdown",
+  suggestedChainFrom: ["code-reviewer", "bug-report-generator"],
 };

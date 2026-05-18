@@ -132,4 +132,5 @@ Rules:
 - Internal linking suggestions should be specific and actionable.
 - If the optimization focus is not "Full optimization", only produce the requested sections.`,
   outputType: "markdown",
+  suggestedChainFrom: ["research-agent", "pdf-summarizer"],
 };

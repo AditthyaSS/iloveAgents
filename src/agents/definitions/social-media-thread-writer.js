@@ -104,4 +104,5 @@ Rules:
 - No hashtag spam — 1-2 hashtags max, only on the last tweet
 - Format contrarian takes as: "Unpopular opinion:" or "Hot take:"`,
   outputType: "markdown",
+  suggestedChainFrom: ["research-agent", "meeting-notes-summarizer"],
 };

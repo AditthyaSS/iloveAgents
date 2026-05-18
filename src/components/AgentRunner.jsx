@@ -15,6 +15,7 @@ import ApiKeyBar from "./ApiKeyBar";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
 import VoiceInput from "./VoiceInput";
+import SuggestedChainPills from "./SuggestedChainPills";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
 import { useHistory } from "../lib/useHistory";
@@ -421,6 +422,9 @@ export default function AgentRunner({ agent }) {
           </div>
         ))}
       </div>
+
+      {/* Suggested workflow chain pills */}
+      <SuggestedChainPills agent={agent} />
 
       <div className="mb-4">
         <button

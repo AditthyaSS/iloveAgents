@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
   Plus,
@@ -19,10 +19,17 @@ const MAX_AGENTS = 5
 
 export default function WorkflowBuilder() {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Pre-populate chain when navigating from a SuggestedChainPills click
+  const preselected = location.state?.preselectedAgents ?? []
+  const initialAgents = preselected
+    .map((id) => agents.find((a) => a.id === id))
+    .filter(Boolean)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [selectedAgents, setSelectedAgents] = useState([])
+  const [selectedAgents, setSelectedAgents] = useState(initialAgents)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)

@@ -58,4 +58,5 @@ export default {
   ],
   systemPrompt: `You are an expert B2B copywriter. Write a cold email that is highly personalised, addresses the pain point directly, and has a clear CTA. Do not use clichés. Output only the email — no explanation or commentary.`,
   outputType: "text",
+  suggestedChainFrom: ["research-agent", "competitive-analysis-generator"],
 };
