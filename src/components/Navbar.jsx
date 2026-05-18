@@ -56,7 +56,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
         </Link>
 
         <a
-          href="https://github.com"
+          href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors

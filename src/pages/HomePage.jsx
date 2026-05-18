@@ -370,7 +370,7 @@ export default function HomePage() {
           Built for GSSoC 2026
         </p>
         <a
-          href="https://github.com"
+          href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"

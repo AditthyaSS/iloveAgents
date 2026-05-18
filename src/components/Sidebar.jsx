@@ -73,7 +73,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="px-4 py-3 border-t dark:border-border border-gray-200">
           <div className="space-y-1.5">
             <a
-              href="https://github.com"
+              href="https://github.com/AditthyaSS/iloveAgents"
               target="_blank"
               rel="noopener noreferrer"
               className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
@@ -81,7 +81,7 @@ export default function Sidebar({ open, onClose }) {
               GitHub →
             </a>
             <a
-              href="https://github.com"
+              href="https://github.com/AditthyaSS/iloveAgents/issues"
               target="_blank"
               rel="noopener noreferrer"
               className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
