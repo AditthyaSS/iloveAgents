@@ -1,10 +1,23 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 
 export default function Sidebar({ open, onClose }) {
-  // Group agents by category
-  const categories = agents.reduce((acc, agent) => {
+  const [search, setSearch] = useState('')
+
+  // Filter agents based on search query
+  const filteredAgents = agents.filter((agent) => {
+    const query = search.toLowerCase()
+
+    return (
+      agent.name.toLowerCase().includes(query) ||
+      agent.category.toLowerCase().includes(query)
+    )
+  })
+
+  // Group filtered agents by category
+  const categories = filteredAgents.reduce((acc, agent) => {
     if (!acc[agent.category]) acc[agent.category] = []
     acc[agent.category].push(agent)
     return acc
@@ -32,20 +45,43 @@ export default function Sidebar({ open, onClose }) {
           <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
             Agents
           </span>
+
           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent">
-            {agents.length}
+            {filteredAgents.length}
           </span>
+        </div>
+
+        {/* Search Input */}
+        <div className="px-3 pb-3">
+          <input
+            type="text"
+            placeholder="Search agents..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-md border
+            dark:bg-surface dark:border-border dark:text-text-primary
+            bg-gray-50 border-gray-200 text-gray-700
+            focus:outline-none focus:ring-2 focus:ring-accent/30"
+          />
         </div>
 
         {/* Agent List */}
         <nav className="flex-1 overflow-y-auto px-2 pb-4">
+          {filteredAgents.length === 0 && (
+            <div className="px-3 py-2 text-sm text-gray-400 dark:text-text-muted">
+              No agents found.
+            </div>
+          )}
+
           {categoryOrder.map((category) => (
             <div key={category} className="mb-3">
               <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest dark:text-text-muted text-gray-400">
                 {category}
               </div>
+
               {categories[category].map((agent) => {
                 const IconComponent = Icons[agent.icon] || Icons.Bot
+
                 return (
                   <NavLink
                     key={agent.id}
@@ -61,6 +97,7 @@ export default function Sidebar({ open, onClose }) {
                     }
                   >
                     <IconComponent size={15} className="flex-shrink-0" />
+
                     <span className="truncate">{agent.name}</span>
                   </NavLink>
                 )
@@ -70,29 +107,31 @@ export default function Sidebar({ open, onClose }) {
         </nav>
 
         {/* Footer */}
-        <div className="px-4 py-3 border-t dark:border-border border-gray-200">
-          <div className="space-y-1.5">
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
-            >
-              GitHub →
-            </a>
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
-            >
-              Contribute →
-            </a>
-            <span className="block text-[10px] dark:text-text-muted/60 text-gray-300">
-              GSSoC 2026
-            </span>
-          </div>
-        </div>
+<div className="px-4 py-3 border-t dark:border-border border-gray-200">
+  <div className="space-y-1.5">
+    <a
+      href="https://github.com/AditthyaSS/iloveagents"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+    >
+      GitHub →
+    </a>
+
+    <a
+      href="https://github.com/AditthyaSS/iloveagents/issues"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+    >
+      Contribute →
+    </a>
+
+    <span className="block text-[10px] dark:text-text-muted/60 text-gray-300">
+      GSSoC 2026
+    </span>
+  </div>
+</div>
       </aside>
     </>
   )
