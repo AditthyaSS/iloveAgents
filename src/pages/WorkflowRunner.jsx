@@ -84,7 +84,7 @@ export default function WorkflowRunner() {
   const [loadingWorkflow, setLoadingWorkflow] = useState(!location.state?.workflow)
   const [fetchError, setFetchError] = useState(null)
 
-  const [userInput, setUserInput] = useState('')
+  const [userInput, setUserInput] = useState(location.state?.initialInput ?? '')
   const [running, setRunning] = useState(false)
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
