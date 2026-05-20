@@ -33,7 +33,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
       <div className="flex items-center gap-3">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors"
+          className=" p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors"
           aria-label="Toggle sidebar"
         >
           {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
