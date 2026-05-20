@@ -195,6 +195,8 @@ const ERROR_MESSAGES = {
   503: 'The API service is temporarily unavailable. Try again in a minute.',
 }
 
+const DEFAULT_REQUEST_TIMEOUT = 60000 // 60 seconds
+
 /**
  * Handle non-OK HTTP responses consistently.
  */
@@ -214,6 +216,25 @@ async function handleErrorResponse(response) {
   throw new Error(
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
   )
+}
+
+/**
+ * Creates an AbortController with automatic timeout cleanup support.
+ */
+
+// TODO: wire up to runAgent and streamAgent
+
+function createTimeoutController(timeoutMs = DEFAULT_REQUEST_TIMEOUT) {
+  const controller = new AbortController()
+
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, timeoutMs)
+
+  return {
+    controller,
+    cleanup: () => clearTimeout(timeoutId),
+  }
 }
 
 /**
