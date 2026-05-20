@@ -76,10 +76,7 @@ export default function ApiKeyBar({
         <select
           value={model}
           onChange={(e) => setModel(e.target.value)}
-          className="h-8 px-2.5 rounded-md text-xs font-medium transition-colors cursor-pointer
-            dark:bg-surface-input dark:border-border dark:text-text-primary
-            bg-gray-50 border border-gray-200 text-gray-900
-            focus:ring-1 focus:ring-accent focus:border-accent outline-none"
+          className="h-8 px-2 rounded-md border dark:bg-surface-input dark:border-border bg-white border-gray-200 text-sm focus:outline-none"
         >
           {availableModels.map((m) => (
             <option key={m.value} value={m.value} className="text-black">
