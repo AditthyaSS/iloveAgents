@@ -17,11 +17,12 @@ export default function Sidebar({ open, onClose }) {
       {/* Mobile overlay */}
       {open && (
         <div
-          className="fixed inset-0 z-30 bg-black/50"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={onClose}
         />
       )}
-    <aside className={`fixed top-14 left-0 bottom-0 z-40 flex flex-col border-r transition-all duration-300 ease-in-out overflow-hidden dark:bg-surface         dark:border-border bg-white border-gray-200 ${open ? 'w-60 translate-x-0' : 'w-0 -translate-x-full'}`}>
+
+    <aside className={`fixed top-14 left-0 bottom-0 z-40 flex flex-col border-r transition-all duration-300 ease-in-out overflow-hidden dark:bg-surface dark:border-border bg-white border-gray-200 ${open ? 'w-60 translate-x-0' : 'w-0 -translate-x-full'}`}>
         {/* Header */}
         <div className="px-4 py-3 flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
