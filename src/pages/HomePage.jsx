@@ -22,6 +22,7 @@ const categoryMeta = {
   Legal:        { color: 'from-red-500 to-rose-400',      ring: 'ring-red-500/30' },
   Design:       { color: 'from-fuchsia-500 to-pink-400',  ring: 'ring-fuchsia-500/30' },
   Product:      { color: 'from-teal-500 to-cyan-400',     ring: 'ring-teal-500/30' },
+  'Developer Tools': { color: 'from-slate-600 to-slate-400', ring: 'ring-slate-500/30' },
 }
 
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
