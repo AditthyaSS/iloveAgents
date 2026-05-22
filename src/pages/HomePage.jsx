@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch } from 'lucide-react'
 import agents from '../agents/registry'
@@ -31,6 +31,27 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
   
+ useEffect(() => {
+  const savedFilters = localStorage.getItem('homepageFilters')
+
+  if (savedFilters) {
+    const parsedFilters = JSON.parse(savedFilters)
+
+    setSearchQuery(parsedFilters.searchQuery || '')
+    setSelectedCategory(parsedFilters.selectedCategory || null)
+    }
+  }, [])
+
+  useEffect(() => {
+  localStorage.setItem(
+    'homepageFilters',
+    JSON.stringify({
+      searchQuery,
+      selectedCategory,
+     })
+   )
+  }, [searchQuery, selectedCategory])
+
   const { favorites } = useFavorites()
   const { history, deleteRun, clearHistory } = useHistory()
 
@@ -300,9 +321,11 @@ export default function HomePage() {
               </p>
               <button
                 onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory(null);
-                }}
+               setSearchQuery('')
+               setSelectedCategory(null)
+               localStorage.removeItem('homepageFilters')
+               }}
+               
                 className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
               >
                 Clear all filters <X size={12} />
