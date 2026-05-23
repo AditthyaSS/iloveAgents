@@ -26,7 +26,25 @@ export function loadAllAgents() {
   cachedAgentsPromise = Promise.all(
     Object.values(modules).map((loader) => loader())
   ).then((entries) => {
-    return entries.map((mod) => mod.default);
+    const agents = entries.map((mod) => mod.default).filter(Boolean);
+    
+    const seenIds = new Set();
+    const uniqueAgents = agents.filter((agent) => {
+      if (!agent?.id) {
+        console.warn('Skipping agent without an id:', agent);
+        return false;
+      }
+
+      if (seenIds.has(agent.id)) {
+        console.warn(`Skipping duplicate agent id "${agent.id}".`);
+        return false;
+      }
+
+      seenIds.add(agent.id);
+      return true;
+    });
+
+    return uniqueAgents;
   });
 
   return cachedAgentsPromise;
