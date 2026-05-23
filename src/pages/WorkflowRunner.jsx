@@ -19,6 +19,7 @@ import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
+import { executeMCPTool } from '../lib/mcpAdapter'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
 
 const MODEL_MAP = {
@@ -48,7 +49,10 @@ function CopyAllButton({ steps }) {
   const handleCopy = async () => {
     const text = steps
       .filter((s) => s.status === 'done' && s.output)
-      .map((s) => `=== ${s.agentName} ===\n\n${s.output}`)
+      .map((s) => {
+        const title = s.type === 'agent' ? s.agentName : `MCP: ${s.serverId}`
+        return `=== ${title} ===\n\n${s.output}`
+      })
       .join('\n\n---\n\n')
 
     try {
@@ -116,16 +120,42 @@ export default function WorkflowRunner() {
   // Initialize step states when workflow is ready
   useEffect(() => {
     if (!workflow) return
+    
+    // Handle both new format (steps) and legacy format (agents)
+    const workflowSteps = workflow.steps ?? []
+    const workflowAgents = workflow.agents ?? []
+    
+    let stepsToRun = workflowSteps
+    
+    // Fallback to legacy format if no steps defined
+    if (stepsToRun.length === 0 && workflowAgents.length > 0) {
+      stepsToRun = workflowAgents.map(agentId => ({ type: 'agent', id: agentId }))
+    }
+    
     setSteps(
-      (workflow.agents ?? []).map((agentId) => {
-        const agent = agents.find((a) => a.id === agentId)
-        return {
-          agentId,
-          agentName: agent?.name ?? agentId,
-          agent,
-          status: 'waiting',
-          output: null,
-          error: null,
+      stepsToRun.map((step) => {
+        if (step.type === 'agent') {
+          const agent = agents.find((a) => a.id === step.id)
+          return {
+            type: 'agent',
+            id: step.id,
+            agentName: agent?.name ?? step.id,
+            agent,
+            status: 'waiting',
+            output: null,
+            error: null,
+          }
+        } else if (step.type === 'mcp') {
+          return {
+            type: 'mcp',
+            serverId: step.serverId,
+            toolId: step.toolId,
+            credentials: step.credentials || {},
+            params: step.params || {},
+            status: 'waiting',
+            output: null,
+            error: null,
+          }
         }
       })
     )
@@ -149,35 +179,81 @@ export default function WorkflowRunner() {
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
-      if (!step.agent) {
-        setStepField(i, { status: 'failed', error: `Agent "${step.agentId}" not found in registry.` })
-        failed = true
-        break
-      }
 
-      setStepField(i, { status: 'running' })
+      if (step.type === 'agent') {
+        // ===== AGENT STEP =====
+        if (!step.agent) {
+          setStepField(i, { status: 'failed', error: `Agent "${step.id}" not found in registry.` })
+          failed = true
+          break
+        }
 
-      const actualProvider =
-        step.agent.provider === 'any'
-          ? provider
-          : step.agent.provider
+        setStepField(i, { status: 'running' })
 
-      const model = step.agent.model || MODEL_MAP[actualProvider] || MODEL_MAP.openai
+        const actualProvider =
+          step.agent.provider === 'any'
+            ? provider
+            : step.agent.provider
 
-      try {
-        const result = await runAgent({
-          provider: actualProvider,
-          model,
-          apiKey,
-          systemPrompt: step.agent.systemPrompt,
-          userMessage: currentInput,
-        })
-        setStepField(i, { status: 'done', output: result.content })
-        currentInput = result.content // pass output to next step
-      } catch (err) {
-        setStepField(i, { status: 'failed', error: err.message })
-        failed = true
-        break
+        const model = step.agent.model || MODEL_MAP[actualProvider] || MODEL_MAP.openai
+
+        try {
+          const result = await runAgent({
+            provider: actualProvider,
+            model,
+            apiKey,
+            systemPrompt: step.agent.systemPrompt,
+            userMessage: currentInput,
+          })
+          setStepField(i, { status: 'done', output: result.content })
+          currentInput = result.content // pass output to next step
+        } catch (err) {
+          setStepField(i, { status: 'failed', error: err.message })
+          failed = true
+          break
+        }
+      } else if (step.type === 'mcp') {
+        // ===== MCP STEP =====
+        if (!step.serverId || !step.toolId) {
+          setStepField(i, { status: 'failed', error: 'MCP step not fully configured. Please set server and tool.' })
+          failed = true
+          break
+        }
+
+        setStepField(i, { status: 'running' })
+
+        try {
+          // Auto-fill parameters with previous output if they have autoFill enabled
+          const finalParams = { ...step.params }
+          
+          // Check the MCP registry for which params should auto-fill
+          const { getMCPTool } = await import('../lib/mcpAdapter')
+          const toolConfig = getMCPTool(step.serverId, step.toolId)
+          
+          if (toolConfig) {
+            toolConfig.params.forEach(param => {
+              if (param.autoFill && (!finalParams[param.id] || finalParams[param.id].trim() === '')) {
+                finalParams[param.id] = currentInput
+              }
+            })
+          }
+
+          const result = await executeMCPTool({
+            serverId: step.serverId,
+            toolId: step.toolId,
+            credentials: step.credentials,
+            params: finalParams,
+          })
+
+          // Format result as readable output
+          const resultText = typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+          setStepField(i, { status: 'done', output: resultText })
+          currentInput = resultText // pass output to next step
+        } catch (err) {
+          setStepField(i, { status: 'failed', error: err.message })
+          failed = true
+          break
+        }
       }
     }
 
@@ -243,14 +319,17 @@ export default function WorkflowRunner() {
             {workflow?.title ?? 'Run Workflow'}
           </h1>
           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-            {steps.map((step, i) => (
-              <span key={step.agentId + i} className="flex items-center gap-1">
-                <span className="text-[11px] dark:text-text-muted text-gray-400">{step.agentName}</span>
-                {i < steps.length - 1 && (
-                  <ArrowRight size={10} className="dark:text-text-muted text-gray-400" />
-                )}
-              </span>
-            ))}
+            {steps.map((step, i) => {
+              const stepName = step.type === 'agent' ? step.agentName : `MCP: ${step.serverId}`
+              return (
+                <span key={i} className="flex items-center gap-1">
+                  <span className="text-[11px] dark:text-text-muted text-gray-400">{stepName}</span>
+                  {i < steps.length - 1 && (
+                    <ArrowRight size={10} className="dark:text-text-muted text-gray-400" />
+                  )}
+                </span>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -337,81 +416,159 @@ export default function WorkflowRunner() {
       {hasRun && (
         <div className="space-y-4">
           {steps.map((step, index) => {
-            const IconComponent = (step.agent && Icons[step.agent.icon]) || Icons.Bot
-            return (
-              <div
-                key={step.agentId + index}
-                className="rounded-lg border transition-all duration-200 animate-fade-in
-                  dark:bg-surface-card dark:border-border bg-white border-gray-200"
-                style={{ animationDelay: `${index * 60}ms` }}
-              >
-                {/* Step Header */}
-                <div className="flex items-center gap-3 p-3 border-b dark:border-border border-gray-100">
-                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent/10 text-[10px] font-bold text-accent flex-shrink-0">
-                    {index + 1}
-                  </div>
-                  <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <IconComponent size={13} className="text-accent" />
-                  </div>
-                  <div className="flex-1">
-                    <span className="text-sm font-medium dark:text-text-primary text-gray-900">
-                      {step.agentName}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <StepStatusIcon status={step.status} />
-                    <span className={`text-[11px] font-medium capitalize ${STATUS_COLORS[step.status] || ''}`}>
-                      {step.status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Step Body */}
-                {step.status === 'running' && (
-                  <div className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <Loader2 size={14} className="animate-spin text-accent" />
-                      <span className="text-xs dark:text-text-secondary text-gray-500">Processing...</span>
+            if (step.type === 'agent') {
+              const IconComponent = (step.agent && Icons[step.agent.icon]) || Icons.Bot
+              return (
+                <div
+                  key={`agent-${index}`}
+                  className="rounded-lg border transition-all duration-200 animate-fade-in
+                    dark:bg-surface-card dark:border-border bg-white border-gray-200"
+                  style={{ animationDelay: `${index * 60}ms` }}
+                >
+                  {/* Step Header */}
+                  <div className="flex items-center gap-3 p-3 border-b dark:border-border border-gray-100">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-accent/10 text-[10px] font-bold text-accent flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
+                      <IconComponent size={13} className="text-accent" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium dark:text-text-primary text-gray-900">
+                        {step.agentName}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <StepStatusIcon status={step.status} />
+                      <span className={`text-[11px] font-medium capitalize ${STATUS_COLORS[step.status] || ''}`}>
+                        {step.status}
+                      </span>
                     </div>
                   </div>
-                )}
 
-                {step.status === 'done' && step.output && (
-                  <div className="p-4">
-                    <OutputRenderer
-                      content={step.output}
-                      outputType={step.agent?.outputType ?? 'text'}
-                      agentName={step.agentName}
-                    />
-                  </div>
-                )}
-
-                {step.status === 'failed' && step.error && (
-                  <div className="p-4">
-                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                      <AlertCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-medium text-red-400 mb-1">Step failed</p>
-                        <p className="text-xs text-red-400/80">{step.error}</p>
+                  {/* Step Body */}
+                  {step.status === 'running' && (
+                    <div className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 size={14} className="animate-spin text-accent" />
+                        <span className="text-xs dark:text-text-secondary text-gray-500">Processing...</span>
                       </div>
                     </div>
-                    <button
-                      onClick={handleRunAgain}
-                      className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
-                    >
-                      <RotateCcw size={12} />
-                      Retry from start
-                    </button>
-                  </div>
-                )}
+                  )}
 
-                {step.status === 'waiting' && (
-                  <div className="px-4 py-3">
-                    <p className="text-[11px] dark:text-text-muted text-gray-400">Waiting for previous step...</p>
+                  {step.status === 'done' && step.output && (
+                    <div className="p-4">
+                      <OutputRenderer
+                        content={step.output}
+                        outputType={step.agent?.outputType ?? 'text'}
+                        agentName={step.agentName}
+                      />
+                    </div>
+                  )}
+
+                  {step.status === 'failed' && step.error && (
+                    <div className="p-4">
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <AlertCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-medium text-red-400 mb-1">Step failed</p>
+                          <p className="text-xs text-red-400/80">{step.error}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRunAgain}
+                        className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+                      >
+                        <RotateCcw size={12} />
+                        Retry from start
+                      </button>
+                    </div>
+                  )}
+
+                  {step.status === 'waiting' && (
+                    <div className="px-4 py-3">
+                      <p className="text-[11px] dark:text-text-muted text-gray-400">Waiting for previous step...</p>
+                    </div>
+                  )}
+                </div>
+              )
+            } else if (step.type === 'mcp') {
+              // MCP STEP RENDERING
+              return (
+                <div
+                  key={`mcp-${index}`}
+                  className="rounded-lg border transition-all duration-200 animate-fade-in
+                    dark:bg-surface-card dark:border-border bg-white border-gray-200"
+                  style={{ animationDelay: `${index * 60}ms` }}
+                >
+                  {/* Step Header */}
+                  <div className="flex items-center gap-3 p-3 border-b dark:border-border border-gray-100">
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-purple-600/10 text-[10px] font-bold text-purple-600 flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="w-7 h-7 rounded-md bg-purple-600/10 flex items-center justify-center flex-shrink-0">
+                      <Icons.Settings size={13} className="text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-sm font-medium dark:text-text-primary text-gray-900">
+                        MCP: {step.serverId} → {step.toolId}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <StepStatusIcon status={step.status} />
+                      <span className={`text-[11px] font-medium capitalize ${STATUS_COLORS[step.status] || ''}`}>
+                        {step.status}
+                      </span>
+                    </div>
                   </div>
-                )}
-              </div>
-            )
+
+                  {/* Step Body */}
+                  {step.status === 'running' && (
+                    <div className="p-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <Loader2 size={14} className="animate-spin text-purple-600" />
+                        <span className="text-xs dark:text-text-secondary text-gray-500">Executing MCP tool...</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {step.status === 'done' && step.output && (
+                    <div className="p-4">
+                      <OutputRenderer
+                        content={step.output}
+                        outputType="text"
+                        agentName={`MCP: ${step.serverId}`}
+                      />
+                    </div>
+                  )}
+
+                  {step.status === 'failed' && step.error && (
+                    <div className="p-4">
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <AlertCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-medium text-red-400 mb-1">MCP tool failed</p>
+                          <p className="text-xs text-red-400/80">{step.error}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRunAgain}
+                        className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+                      >
+                        <RotateCcw size={12} />
+                        Retry from start
+                      </button>
+                    </div>
+                  )}
+
+                  {step.status === 'waiting' && (
+                    <div className="px-4 py-3">
+                      <p className="text-[11px] dark:text-text-muted text-gray-400">Waiting for previous step...</p>
+                    </div>
+                  )}
+                </div>
+              )
+            }
           })}
         </div>
       )}
