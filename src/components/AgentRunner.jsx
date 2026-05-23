@@ -19,7 +19,8 @@ import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
-import { useApiKey } from "../lib/useApiKey";
+import ThoughtProcessPanel from "./ThoughtProcessPanel";
+import { useApiKeys } from "../contexts/ApiKeyContext";
 import { streamAgent } from "../lib/llmAdapter";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP } from "../lib/resolveAgentModel";
@@ -51,7 +52,7 @@ export default function AgentRunner({ agent }) {
     setApiKey,
     saveForSession,
     setSaveForSession,
-  } = useApiKey();
+  } = useApiKeys();
 
   const { saveRun } = useHistory();
   const navigate = useNavigate();
@@ -596,6 +597,12 @@ export default function AgentRunner({ agent }) {
       </div>
 
       {error && <ErrorCard message={error} />}
+
+      <ThoughtProcessPanel
+        isActive={loading}
+        isDone={!loading && !!output}
+        agentCategory={agent.category}
+      />
 
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
