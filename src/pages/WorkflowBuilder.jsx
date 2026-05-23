@@ -14,12 +14,14 @@ import {
 import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 import { saveWorkflow } from '../hooks/useWorkflows'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const MAX_AGENTS = 5
 
 export default function WorkflowBuilder() {
   const navigate = useNavigate()
   const location = useLocation()
+  useDocumentTitle('Build a Workflow')
 
   // Pre-populate chain when navigating from a SuggestedChainPills click
   const preselected = location.state?.preselectedAgents ?? []

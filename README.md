@@ -17,6 +17,30 @@
 </div>
 
 ---
+## Table of Contents
+
+- [What is iloveAgents?](#what-is-iloveagents)
+- [Why iloveAgents?](#why-iloveagents)
+- [Available Agents](#available-agents)
+- [Supported Providers](#supported-providers)
+- [Battle Mode](#battle-mode)
+- [AI Workflow Builder (New)](#-ai-workflow-builder-new)
+  - [What you can do](#what-you can-do)
+  - [How sequential execution works](#how-sequential-execution-works)
+  - [Navigation](#navigation)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Run Locally](#run-locally)
+  - [Deploy Your Own](#deploy-your-own)
+- [How It Works](#how-it-works)
+- [Contributing](#contributing)
+  - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
+  - [Other Ways to Help](#other-ways-to-help)
+- [Tech Stack](#tech-stack)
+- [Community](#community)
+- [License](#license)
+
+---
 
 ## What is iloveAgents?
 
@@ -196,12 +220,7 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 Note: AI provider API keys are still entered at runtime 
 and are never stored anywhere.
 
-However, local development may still require the following Supabase environment variables:
 
-```env
-VITE_SUPABASE_URL=...
-VITE_SUPABASE_ANON_KEY=...
-```
 ### Deploy Your Own
 
 1. Fork this repository

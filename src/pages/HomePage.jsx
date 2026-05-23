@@ -6,6 +6,7 @@ import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 // Derive unique sorted categories from the registry
 const allCategories = [...new Set(agents.map((a) => a.category))].sort()
@@ -22,6 +23,7 @@ const categoryMeta = {
   Legal:        { color: 'from-red-500 to-rose-400',      ring: 'ring-red-500/30' },
   Design:       { color: 'from-fuchsia-500 to-pink-400',  ring: 'ring-fuchsia-500/30' },
   Product:      { color: 'from-teal-500 to-cyan-400',     ring: 'ring-teal-500/30' },
+  'Developer Tools': { color: 'from-slate-600 to-slate-400', ring: 'ring-slate-500/30' },
 }
 
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
@@ -30,6 +32,7 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
+  useDocumentTitle()
   
   const { favorites } = useFavorites()
   const { history, deleteRun, clearHistory } = useHistory()

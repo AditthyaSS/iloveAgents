@@ -5,9 +5,9 @@ export default {
     'Paste any product document and get a full 12-section Product Requirements Document.',
   category: 'Product',
   icon: 'FileText',
-  provider: 'gemini',
+  provider: 'any',
   defaultProvider: 'gemini',
-  model: 'gemini-2.0-flash',
+  model: 'gemini-2.5-flash',
   inputs: [
     {
       id: 'product_text',

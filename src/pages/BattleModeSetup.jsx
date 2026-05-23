@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Settings, Key, Swords, ArrowLeft } from 'lucide-react'
 import agents from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function BattleModeSetup() {
   const navigate = useNavigate()
+  useDocumentTitle('Battle Mode Setup')
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
   const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })

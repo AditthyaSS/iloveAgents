@@ -2,10 +2,12 @@ import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import agents from '../agents/registry'
 import AgentRunner from '../components/AgentRunner'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function AgentPage() {
   const { id } = useParams()
   const agent = agents.find((a) => a.id === id)
+  useDocumentTitle(agent?.name ?? 'Agent')
 
   useEffect(() => {
     if (!agent) return
