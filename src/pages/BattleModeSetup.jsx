@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { Settings, Key, Swords, ArrowLeft } from 'lucide-react'
 import agents from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function BattleModeSetup() {
   const navigate = useNavigate()
+  useDocumentTitle('Battle Mode Setup')
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
   const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
@@ -15,7 +17,6 @@ export default function BattleModeSetup() {
     [selectedAgentId]
   )
 
-  // Initialize input defaults when agent changes
   const handleAgentChange = (agentId) => {
     setSelectedAgentId(agentId)
     const agent = agents.find((a) => a.id === agentId)
@@ -73,9 +74,9 @@ export default function BattleModeSetup() {
   }
 
   const keyFields = [
-    { id: 'openai',    label: 'OpenAI API Key',    color: 'yellow',  icon: Key, borderColor: 'border-yellow-400/30', focusColor: 'focus:ring-yellow-400/40 focus:border-yellow-400/50', focusBg: 'focus:bg-yellow-400/5' },
-    { id: 'anthropic', label: 'Anthropic API Key',  color: 'violet',  icon: Key, borderColor: 'border-violet-400/30', focusColor: 'focus:ring-violet-400/40 focus:border-violet-400/50', focusBg: 'focus:bg-violet-400/5' },
-    { id: 'gemini',    label: 'Google Gemini API Key', color: 'blue', icon: Key, borderColor: 'border-blue-400/30',   focusColor: 'focus:ring-blue-400/40 focus:border-blue-400/50', focusBg: 'focus:bg-blue-400/5' },
+    { id: 'openai',    label: 'OpenAI API Key',       color: 'yellow', icon: Key, borderColor: 'border-yellow-400/30', focusColor: 'focus:ring-yellow-400/40 focus:border-yellow-400/50', focusBg: 'focus:bg-yellow-400/5' },
+    { id: 'anthropic', label: 'Anthropic API Key',     color: 'violet', icon: Key, borderColor: 'border-violet-400/30', focusColor: 'focus:ring-violet-400/40 focus:border-violet-400/50', focusBg: 'focus:bg-violet-400/5' },
+    { id: 'gemini',    label: 'Google Gemini API Key', color: 'blue',   icon: Key, borderColor: 'border-blue-400/30',   focusColor: 'focus:ring-blue-400/40 focus:border-blue-400/50',   focusBg: 'focus:bg-blue-400/5' },
   ]
 
   return (
@@ -113,13 +114,15 @@ export default function BattleModeSetup() {
           <select
             value={selectedAgentId}
             onChange={(e) => handleAgentChange(e.target.value)}
-            className="w-full h-11 px-4 rounded-lg text-sm bg-gray-900/60 border border-gray-700/60
+            className="w-full h-11 px-4 rounded-lg text-sm bg-gray-900 border border-gray-700/60
               text-white cursor-pointer focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 
               outline-none hover:border-gray-600 transition-all duration-200 battle-select-highlight"
           >
-            <option value="">-- Choose an agent --</option>
+            <option value="" className="bg-gray-900 text-white">
+              -- Choose an agent --
+            </option>
             {agents.map((a) => (
-              <option key={a.id} value={a.id}>
+              <option key={a.id} value={a.id} className="bg-gray-900 text-white">
                 {a.name} ({a.category})
               </option>
             ))}
@@ -170,13 +173,13 @@ export default function BattleModeSetup() {
                   <select
                     value={inputs[input.id] || input.defaultValue || ''}
                     onChange={(e) => updateInput(input.id, e.target.value)}
-                    className="w-full h-10 px-4 rounded-lg text-sm bg-gray-900/60 border border-gray-700/60
+                    className="w-full h-10 px-4 rounded-lg text-sm bg-gray-900 border border-gray-700/60
                       text-white cursor-pointer hover:border-gray-600
-                      focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 focus:bg-gray-900/80
+                      focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 focus:bg-gray-900
                       outline-none transition-all duration-200"
                   >
                     {input.options?.map((opt) => (
-                      <option key={opt} value={opt}>{opt}</option>
+                      <option key={opt} value={opt} className="bg-gray-900 text-white">{opt}</option>
                     ))}
                   </select>
                 )}
@@ -211,7 +214,7 @@ export default function BattleModeSetup() {
           <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
             API Keys
           </h2>
-          {keyFields.map((field, idx) => (
+          {keyFields.map((field) => (
             <div key={field.id}>
               <label className="block text-xs font-medium text-gray-200 mb-2">
                 {field.label}

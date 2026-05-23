@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import {
   Loader2,
@@ -10,13 +11,18 @@ import {
   ChevronRight,
   Sparkles,
   RotateCw,
+  GitBranch,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
+import CharCounter from "./CharCounter";
 import VoiceInput from "./VoiceInput";
+import SuggestedChainPills from "./SuggestedChainPills";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
+import { useHistory } from "../lib/useHistory";
+import { resolveAgentModel, MODEL_MAP } from "../lib/resolveAgentModel";
 
 const providerLabels = {
   openai: "OpenAI",
@@ -25,11 +31,6 @@ const providerLabels = {
   any: "Any",
 };
 
-const MODEL_MAP = {
-  openai: "gpt-4o",
-  anthropic: "claude-opus-4-20250514",
-  gemini: "gemini-2.5-flash",
-};
 
 const LOADING_MESSAGES = [
   "⚙️ Agent is grinding for you...",
@@ -51,6 +52,9 @@ export default function AgentRunner({ agent }) {
     saveForSession,
     setSaveForSession,
   } = useApiKey();
+
+  const { saveRun } = useHistory();
+  const navigate = useNavigate();
 
   const [inputs, setInputs] = useState({});
   const [output, setOutput] = useState(null);
@@ -183,8 +187,7 @@ export default function AgentRunner({ agent }) {
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
-      const model =
-        selectedModel || MODEL_MAP[actualProvider] || MODEL_MAP.openai;
+      const model = resolveAgentModel(agent, actualProvider, selectedModel);
 
       const result = await streamAgent({
         provider: actualProvider,
@@ -200,6 +203,15 @@ export default function AgentRunner({ agent }) {
       setStreamingOutput("");
       setIsStreaming(false);
       setDuration(result.duration);
+
+      // Save to history
+      saveRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        inputs: { ...inputs },
+        output: result.content,
+        provider: actualProvider,
+      });
     } catch (err) {
       if (err.name !== "AbortError") {
         setError(err.message);
@@ -248,6 +260,15 @@ export default function AgentRunner({ agent }) {
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
     setInputs((prev) => ({ ...prev, ...agent.exampleInputs }));
+  };
+
+  const handleSendToWorkflow = () => {
+    navigate("/workflows/build", {
+      state: {
+        preSelectedAgent: agent,
+        preFilledOutput: output,
+      },
+    });
   };
 
   const IconComponent = Icons[agent.icon] || Icons.Bot;
@@ -323,12 +344,14 @@ export default function AgentRunner({ agent }) {
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 />
+                 
                 <VoiceInput
                   value={inputs[input.id] || ""}
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-1/2 -translate-y-1/2 right-1.5"
                 />
               </div>
+              
             )}
 
             {input.type === "textarea" && (
@@ -348,6 +371,10 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
+                <CharCounter
+      value={inputs[input.id] || ""}
+      maxLength={5000}
+    />
               </div>
             )}
 
@@ -369,6 +396,10 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
+                <CharCounter
+      value={inputs[input.id] || ""}
+      maxLength={5000}
+    />
               </div>
             )}
 
@@ -414,6 +445,9 @@ export default function AgentRunner({ agent }) {
           </div>
         ))}
       </div>
+
+      {/* Suggested workflow chain pills */}
+      <SuggestedChainPills agent={agent} />
 
       <div className="mb-4">
         <button
@@ -472,9 +506,10 @@ export default function AgentRunner({ agent }) {
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] dark:text-text-muted text-gray-400">
-                  {customPrompt.length} chars
-                </span>
+                <CharCounter
+  value={customPrompt}
+  maxLength={5000}
+/>
                 {isPromptModified && (
                   <button
                     onClick={() => setCustomPrompt(agent.systemPrompt)}
@@ -602,12 +637,24 @@ export default function AgentRunner({ agent }) {
       )}
 
       {output && !isStreaming && (
-        <OutputRenderer
-          content={output}
-          outputType={agent.outputType}
-          agentName={agent.name}
-          systemPrompt={customPrompt}
-        />
+        <div className="space-y-4">
+          <OutputRenderer
+            content={output}
+            outputType={agent.outputType}
+            agentName={agent.name}
+            systemPrompt={customPrompt}
+          />
+          <div className="flex justify-end">
+            <button
+              onClick={handleSendToWorkflow}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+                text-accent bg-accent/10 hover:bg-accent/20 transition-all border border-accent/20"
+            >
+              <GitBranch size={16} />
+              Send output to Workflow Builder →
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

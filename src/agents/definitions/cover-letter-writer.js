@@ -88,4 +88,5 @@ Rules:
   what makes the company compelling
 - Tone default: confident and direct`,
   outputType: "markdown",
+  suggestedChainFrom: ["resume-screener"],
 };

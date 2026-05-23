@@ -336,81 +336,90 @@ html:not(.dark) .light-text-secondary {
   box-shadow: 0 0 30px rgba(250, 204, 21, 0.15), 0 0 60px rgba(250, 204, 21, 0.05);
 }
 
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInFromRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+  50% { box-shadow: 0 0 35px rgba(234, 179, 8, 0.8), 0 0 60px rgba(234, 179, 8, 0.3); }
+}
+.battle-slide-left {
+  opacity: 0;
+  animation: slideInFromLeft 0.6s ease-out forwards;
+}
+.battle-slide-right {
+  opacity: 0;
+  animation: slideInFromRight 0.6s ease-out forwards;
+}
+.battle-slide-center {
+  opacity: 0;
+  animation: battleFadeIn 0.6s ease-out forwards;
+}
+.battle-glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
 .battle-glow-violet {
   box-shadow: 0 0 30px rgba(167, 139, 250, 0.15), 0 0 60px rgba(167, 139, 250, 0.05);
 }
-
 .battle-glow-blue {
   box-shadow: 0 0 30px rgba(96, 165, 250, 0.15), 0 0 60px rgba(96, 165, 250, 0.05);
 }
-
-/* Provider color cards - hover states */
 .battle-card-yellow {
   border-color: rgb(250, 204, 21, 0.3);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 .battle-card-yellow:hover {
   border-color: rgb(250, 204, 21, 0.6);
   box-shadow: 0 0 30px rgba(250, 204, 21, 0.25), 0 0 60px rgba(250, 204, 21, 0.1), 0 15px 35px rgba(250, 204, 21, 0.1);
   transform: translateY(-6px);
 }
-
 .battle-card-violet {
   border-color: rgb(167, 139, 250, 0.3);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 .battle-card-violet:hover {
   border-color: rgb(167, 139, 250, 0.6);
   box-shadow: 0 0 30px rgba(167, 139, 250, 0.25), 0 0 60px rgba(167, 139, 250, 0.1), 0 15px 35px rgba(167, 139, 250, 0.1);
   transform: translateY(-6px);
 }
-
 .battle-card-blue {
   border-color: rgb(96, 165, 250, 0.3);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
 .battle-card-blue:hover {
   border-color: rgb(96, 165, 250, 0.6);
   box-shadow: 0 0 30px rgba(96, 165, 250, 0.25), 0 0 60px rgba(96, 165, 250, 0.1), 0 15px 35px rgba(96, 165, 250, 0.1);
   transform: translateY(-6px);
 }
-
-/* Battle buttons - consistent styling with pulse and press effects */
 .battle-btn-primary {
   transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   position: relative;
 }
-
 .battle-btn-primary:hover {
   animation: buttonPulse 0.6s ease-out infinite;
 }
-
 .battle-btn-primary:active {
   animation: buttonPress 0.15s ease-out forwards;
 }
-
 .battle-btn-secondary {
   transition: all 0.2s ease-out;
   border-width: 2px;
 }
-
 .battle-btn-secondary:hover {
   background-color: rgba(255, 255, 255, 0.08);
   transform: translateY(-2px);
 }
-
 .battle-btn-secondary:active {
   transform: scale(0.97);
 }
-
-/* Select/dropdown smooth highlight */
 .battle-select-highlight {
   transition: all 0.2s ease-out;
 }
-
 .battle-select-highlight:focus {
   background-color: rgba(255, 255, 255, 0.03);
 }

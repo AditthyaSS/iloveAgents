@@ -14,6 +14,7 @@ import {
 import agents from '../agents/registry'
 import { fetchWorkflows, subscribeToAllWorkflows } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function AgentPill({ agentId }) {
   const agent = agents.find((a) => a.id === agentId)
@@ -133,6 +134,7 @@ function WorkflowCard({ workflow, onRun, onView }) {
 
 export default function WorkflowLibrary() {
   const navigate = useNavigate()
+  useDocumentTitle('Workflow Library')
   const [workflows, setWorkflows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
-import { Swords, ArrowLeft, Crosshair, PenLine, Cpu, Trophy } from 'lucide-react'
+import { Swords, ArrowLeft, Crosshair, PenLine, Cpu, Trophy, Bot } from 'lucide-react'
 import BattleNavbar from '../components/BattleNavbar'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const steps = [
   { icon: Crosshair, text: 'Pick any agent', number: '01' },
@@ -9,8 +10,15 @@ const steps = [
   { icon: Trophy,     text: 'You pick the winner', number: '04' },
 ]
 
+const providers = [
+  { name: 'GPT-4o',         label: 'OpenAI',   color: 'text-green-400',  border: 'border-green-400/30',  bg: 'bg-green-400/10',  side: 'battle-slide-left'   },
+  { name: 'Claude',         label: 'Anthropic', color: 'text-orange-400', border: 'border-orange-400/30', bg: 'bg-orange-400/10', side: 'battle-slide-right'  },
+  { name: 'Gemini',         label: 'Google',    color: 'text-blue-400',   border: 'border-blue-400/30',   bg: 'bg-blue-400/10',   side: 'battle-slide-right'  },
+]
+
 export default function BattleModeLanding() {
   const navigate = useNavigate()
+  useDocumentTitle('Battle Mode')
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
@@ -28,7 +36,7 @@ export default function BattleModeLanding() {
         </button>
 
         {/* Hero */}
-        <div className="text-center mb-12 battle-fade-in">
+<div className="text-center mb-12 battle-fade-in">
           <div className="w-20 h-20 rounded-2xl bg-yellow-400/10 border border-yellow-400/30
             flex items-center justify-center mx-auto mb-6 battle-glow-gold
             hover:border-yellow-400/60 hover:shadow-lg hover:shadow-yellow-400/30 
@@ -43,6 +51,60 @@ export default function BattleModeLanding() {
           <p className="text-sm text-gray-300 max-w-md mx-auto leading-relaxed font-medium">
             Pit three AI providers against each other. Same prompt, three outputs, you decide who wins.
           </p>
+        </div>
+
+        {/* Provider Cards */}
+        <div className="flex items-center justify-center gap-3 sm:gap-5 mb-10 w-full max-w-lg">
+          {/* GPT */}
+          <div
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border
+              ${providers[0].border} ${providers[0].bg} battle-slide-left`}
+            style={{ animationDelay: '200ms' }}
+          >
+            <Bot size={28} className={providers[0].color} />
+            <span className={`text-sm font-bold ${providers[0].color}`}>{providers[0].name}</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest">{providers[0].label}</span>
+          </div>
+
+          {/* VS */}
+          <div
+            className="flex flex-col items-center gap-1 battle-slide-center"
+            style={{ animationDelay: '400ms' }}
+          >
+            <Swords size={22} className="text-yellow-400" />
+            <span className="text-xs font-extrabold text-yellow-400 tracking-widest">VS</span>
+          </div>
+
+          {/* Claude */}
+          <div
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border
+              ${providers[1].border} ${providers[1].bg} battle-slide-center`}
+            style={{ animationDelay: '300ms' }}
+          >
+            <Bot size={28} className={providers[1].color} />
+            <span className={`text-sm font-bold ${providers[1].color}`}>{providers[1].name}</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest">{providers[1].label}</span>
+          </div>
+
+          {/* VS */}
+          <div
+            className="flex flex-col items-center gap-1 battle-slide-center"
+            style={{ animationDelay: '400ms' }}
+          >
+            <Swords size={22} className="text-yellow-400" />
+            <span className="text-xs font-extrabold text-yellow-400 tracking-widest">VS</span>
+          </div>
+
+          {/* Gemini */}
+          <div
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border
+              ${providers[2].border} ${providers[2].bg} battle-slide-right`}
+            style={{ animationDelay: '200ms' }}
+          >
+            <Bot size={28} className={providers[2].color} />
+            <span className={`text-sm font-bold ${providers[2].color}`}>{providers[2].name}</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest">{providers[2].label}</span>
+          </div>
         </div>
 
         {/* Steps */}
@@ -74,7 +136,7 @@ export default function BattleModeLanding() {
           })}
         </div>
 
-        {/* Start Button */}
+       {/* Start Button */}
         <button
           onClick={() => navigate('/battle/setup')}
           className="flex items-center gap-2.5 px-8 py-4 rounded-xl text-sm font-bold

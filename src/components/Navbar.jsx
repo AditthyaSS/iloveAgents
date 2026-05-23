@@ -39,7 +39,11 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        <Link to="/" className="flex items-center group hover:opacity-80 transition-opacity">
+        <Link
+          to="/"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="flex items-center group hover:opacity-80 transition-opacity"
+        >
           <Logo height={26} className="dark:text-white text-gray-900" />
         </Link>
       </div>
@@ -56,7 +60,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
         </Link>
 
         <a
-          href="https://github.com"
+          href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors

@@ -17,6 +17,30 @@
 </div>
 
 ---
+## Table of Contents
+
+- [What is iloveAgents?](#what-is-iloveagents)
+- [Why iloveAgents?](#why-iloveagents)
+- [Available Agents](#available-agents)
+- [Supported Providers](#supported-providers)
+- [Battle Mode](#battle-mode)
+- [AI Workflow Builder (New)](#-ai-workflow-builder-new)
+  - [What you can do](#what-you can-do)
+  - [How sequential execution works](#how-sequential-execution-works)
+  - [Navigation](#navigation)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Run Locally](#run-locally)
+  - [Deploy Your Own](#deploy-your-own)
+- [How It Works](#how-it-works)
+- [Contributing](#contributing)
+  - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
+  - [Other Ways to Help](#other-ways-to-help)
+- [Tech Stack](#tech-stack)
+- [Community](#community)
+- [License](#license)
+
+---
 
 ## What is iloveAgents?
 
@@ -39,7 +63,7 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 
 ## Available Agents
 
-33 agents and growing — built by the community. 🚀
+34 agents and growing — built by the community. 🚀
 
 | # | Agent | What It Does | Category |
 |---|-------|-------------|----------|
@@ -76,7 +100,7 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 | 31 | Data Dictionary Generator | Paste your schema and get a complete data dictionary with field definitions and relationships | Engineering |
 | 32 | Accessibility Audit Generator | Paste your HTML and get a detailed WCAG audit with issues, severity ratings, and fixes | Engineering |
 | 33 | Personal Budget Analyzer | Analyze monthly income and expenses to get savings rate, benchmarks, and financial recommendations | Finance |
-
+| 34 | K8s Manifest Generator | Generates a full Kubernetes manifest from your app name, container image, port, and optional config | DevOps |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
 
 ---
@@ -180,8 +204,22 @@ npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
+No API provider keys are required in a `.env` file because 
+they are entered at runtime and never stored anywhere.
 
-No `.env` file needed. API keys are entered at runtime and never stored anywhere.
+However, local development requires a `.env.local` file 
+for Supabase features like Workflows.
+
+Create a `.env.local` file in the root directory:
+
+```env
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+Note: AI provider API keys are still entered at runtime 
+and are never stored anywhere.
+
 
 ### Deploy Your Own
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { MODELS } from '../lib/resolveAgentModel'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
@@ -16,29 +17,7 @@ const providerLogos = {
   gemini: geminiLogo,
 };
 
-const MODELS = {
-  openai: [
-    { value: 'gpt-4o', label: 'GPT-4o' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gpt-4.1', label: 'GPT-4.1' },
-    { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
-    { value: 'gpt-4.1-nano', label: 'GPT-4.1 Nano' },
-    { value: 'o3-mini', label: 'o3-mini' },
-  ],
-  anthropic: [
-    { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
-    { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-  ],
-  gemini: [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite' },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-  ],
-}
+
 
 export default function ApiKeyBar({
   provider,
@@ -103,7 +82,7 @@ export default function ApiKeyBar({
             focus:ring-1 focus:ring-accent focus:border-accent outline-none"
         >
           {availableModels.map((m) => (
-            <option key={m.value} value={m.value}>
+            <option key={m.value} value={m.value} className="text-black">
               {m.label}
             </option>
           ))}

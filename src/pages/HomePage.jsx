@@ -4,6 +4,9 @@ import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, St
 import agents from '../agents/registry'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
+import { useHistory } from '../lib/useHistory'
+import RecentRuns from '../components/RecentRuns'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 // Derive unique sorted categories from the registry
 const allCategories = [...new Set(agents.map((a) => a.category))].sort()
@@ -20,6 +23,7 @@ const categoryMeta = {
   Legal:        { color: 'from-red-500 to-rose-400',      ring: 'ring-red-500/30' },
   Design:       { color: 'from-fuchsia-500 to-pink-400',  ring: 'ring-fuchsia-500/30' },
   Product:      { color: 'from-teal-500 to-cyan-400',     ring: 'ring-teal-500/30' },
+  'Developer Tools': { color: 'from-slate-600 to-slate-400', ring: 'ring-slate-500/30' },
 }
 
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
@@ -28,18 +32,20 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
+  useDocumentTitle()
   
   const { favorites } = useFavorites()
+  const { history, deleteRun, clearHistory } = useHistory()
 
-const recentAgents = useMemo(() => {
-  const recentIds = JSON.parse(
-    localStorage.getItem('recentAgents') || '[]'
-  )
+  const recentAgents = useMemo(() => {
+    const recentIds = JSON.parse(
+      localStorage.getItem('recentAgents') || '[]'
+    )
 
-  return recentIds
-    .map((id) => agents.find((a) => a.id === id))
-    .filter(Boolean)
-}, [])
+    return recentIds
+      .map((id) => agents.find((a) => a.id === id))
+      .filter(Boolean)
+  }, [])
 
   // Resolve favorite agents (preserving the user's star order)
   const favoriteAgents = useMemo(() => {
@@ -64,6 +70,14 @@ const recentAgents = useMemo(() => {
       )
     })
   }, [searchQuery, selectedCategory])
+
+  const handleRerun = (run) => {
+    navigate(`/agent/${run.agentId}`, { state: { prefill: run.inputs } })
+  }
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text)
+  }
 
   const showingFiltered = searchQuery.trim() || selectedCategory
 
@@ -252,47 +266,64 @@ const recentAgents = useMemo(() => {
       </div>
 
       {/* Agent Grid */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
-            {showingFiltered ? 'Matching Agents' : 'Available Agents'}
-          </h2>
-          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-            {filteredAgents.length} {filteredAgents.length === 1 ? 'agent' : 'agents'}
-          </span>
+      <div className="flex flex-col lg:flex-row gap-8 mb-8">
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+              {showingFiltered ? "Matching Agents" : "Available Agents"}
+            </h2>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+              {filteredAgents.length}{" "}
+              {filteredAgents.length === 1 ? "agent" : "agents"}
+            </span>
+          </div>
+
+          {filteredAgents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+              {filteredAgents.map((agent, idx) => (
+                <div
+                  key={agent.id}
+                  className="animate-fade-in"
+                  style={{ animationDelay: `${idx * 30}ms` }}
+                >
+                  <AgentCard agent={agent} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
+              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                <Search size={24} className="text-accent" />
+              </div>
+              <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
+                No agents found
+              </h3>
+              <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
+                Try adjusting your search or removing category filters
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory(null);
+                }}
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                Clear all filters <X size={12} />
+              </button>
+            </div>
+          )}
         </div>
 
-        {filteredAgents.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {filteredAgents.map((agent, idx) => (
-              <div
-                key={agent.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${idx * 30}ms` }}
-              >
-                <AgentCard agent={agent} />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
-            <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-              <Search size={24} className="text-accent" />
-            </div>
-            <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
-              No agents found
-            </h3>
-            <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
-              Try adjusting your search or removing category filters
-            </p>
-            <button
-              onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
-            >
-              Clear all filters <X size={12} />
-            </button>
-          </div>
-        )}
+        {/* Recent Runs Sidebar */}
+        <aside className="w-full lg:w-80 flex-shrink-0">
+          <RecentRuns
+            history={history}
+            onRerun={handleRerun}
+            onCopy={handleCopy}
+            onDelete={deleteRun}
+            onClearAll={clearHistory}
+          />
+        </aside>
       </div>
 
       {/* ── Workflows Section ── */}
@@ -342,7 +373,7 @@ const recentAgents = useMemo(() => {
           Built for GSSoC 2026
         </p>
         <a
-          href="https://github.com"
+          href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"

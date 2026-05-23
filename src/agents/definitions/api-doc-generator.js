@@ -104,4 +104,5 @@ Rules:
 - Keep descriptions concise — one sentence per parameter
 - Never skip parameters or return values`,
   outputType: "markdown",
+  suggestedChainFrom: ["code-reviewer", "env-doc-generator"],
 };

@@ -6,13 +6,9 @@ pull_request_rules:
       comment:
         message: |
           🎉 Your contribution has been merged and is now live on [iloveagents.vercel.app](https://iloveagents.vercel.app)!
-
           Thank you for taking the time to contribute to iloveAgents — it genuinely means a lot. Every contribution, big or small, makes this project better for everyone who uses it.
-
           If you haven't already, please consider ⭐ **starring the repo** — it helps others discover iloveAgents and keeps the community growing. [Star it here](https://github.com/AditthyaSS/iloveAgents)
-
           Hope to see you again soon. You are always welcome here. 🙌
-
           — [@AditthyaSS](https://github.com/AditthyaSS)
 
   - name: Welcome first time contributor
@@ -23,19 +19,26 @@ pull_request_rules:
       comment:
         message: |
           Hey @{{author}}! 👋
-
           Wow — your first contribution to iloveAgents! This is a big deal and I want you to know it means a lot. 🎊
-
           Every agent on this platform started exactly like this — someone like you deciding to spend their time building something useful for everyone. That is something to be proud of.
-
           A few things while you wait for the review:
-
           - ⭐ **Star the repo** if you haven't already. [Star it here](https://github.com/AditthyaSS/iloveAgents)
           - 📖 Check the [Contributing Guide](https://github.com/AditthyaSS/iloveAgents/blob/main/CONTRIBUTING.md)
           - 💬 Drop a comment if you get stuck — I reply within 24 hours
-
           Can't wait to ship this with you. 🚀
-
           Welcome to the iloveAgents family. 🙏
-
           — [@AditthyaSS](https://github.com/AditthyaSS)
+
+  # Auto-merge rule
+  # Vercel check is intentionally excluded from required conditions.
+  # Vercel preview deployment fails on all outside contributor PRs
+  # due to fork authorization restrictions — this is expected and
+  # should never block merging. Production deploys from main automatically.
+  - name: Auto merge when approved
+    conditions:
+      - "#approved-reviews-by>=1"
+      - check-success=Summary
+      # - check-success=Vercel  ← intentionally removed, see note above
+    actions:
+      merge:
+        method: merge

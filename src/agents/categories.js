@@ -9,18 +9,25 @@
 
 export const CATEGORIES = [
   "Business",
-  "Data Science",
+  "Content Writing",
   "Cybersecurity",
+  "Data Science",
   "Design",
+  "Developer Tools",
   "Education",
   "Engineering",
   "Finance",
   "HR",
   "Legal",
   "Marketing",
+  "Personal Development",
   "Product",
   "Productivity",
   "Research",
   "Healthcare",
-  "Sales"
+  "Sales",
+  "DevOps",
+  "Web3",
+  "Gaming",
+  "Real Estate"
 ];
