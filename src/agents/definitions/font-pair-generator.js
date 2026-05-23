@@ -4,7 +4,7 @@ const fontPairingAgent= {
   description: 'The agent takes in mood and industry as input and generates 3 font pairings for design',
   category: 'Design',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
   icon: 'ALargeSmall',              // Any icon from lucide.dev/icons
-  provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
+  provider: 'any',               // 'openai' | 'groq' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'openai',     // Only needed if provider is 'any'
   model: 'gpt-4o',
   inputs: [

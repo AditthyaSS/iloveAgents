@@ -9,6 +9,11 @@ const providerColors = {
     text: "text-emerald-400",
     border: "border-emerald-500/20",
   },
+  groq: {
+    bg: "bg-slate-500/10",
+    text: "text-slate-300",
+    border: "border-slate-500/20",
+  },
   anthropic: {
     bg: "bg-orange-500/10",
     text: "text-orange-400",
@@ -28,6 +33,7 @@ const providerColors = {
 
 const providerLabels = {
   openai: "OpenAI",
+  groq: "Groq",
   anthropic: "Anthropic",
   gemini: "Gemini",
   any: "Any Provider",

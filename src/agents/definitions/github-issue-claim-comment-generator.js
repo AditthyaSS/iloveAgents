@@ -4,7 +4,7 @@ const githubIssueClaimCommentGenerator = {
   description: 'Paste the github issue description and your approach to solve it and any additional notes and get the issue claim comment generated in seconds! ',
   category: 'Productivity',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
   icon: 'MessagesSquare',              // Any icon from lucide.dev/icons
-  provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
+  provider: 'any',               // 'openai' | 'groq' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'openai',     // Only needed if provider is 'any'
   model: 'gpt-4o',
   inputs: [

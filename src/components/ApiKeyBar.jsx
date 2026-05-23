@@ -4,15 +4,18 @@ import { MODELS } from '../lib/resolveAgentModel'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import groqLogo from "../assets/groq.svg";
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
+  { value: 'groq', label: 'Groq' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'gemini', label: 'Gemini' },
 ]
 
 const providerLogos = {
   openai: openaiLogo,
+  groq: groqLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
 };

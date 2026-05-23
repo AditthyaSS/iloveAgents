@@ -5,12 +5,19 @@ import agents from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
+const BATTLE_PROVIDERS = ['openai', 'groq', 'anthropic', 'gemini']
+
 export default function BattleModeSetup() {
   const navigate = useNavigate()
   useDocumentTitle('Battle Mode Setup')
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
-  const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
+  const [apiKeys, setApiKeys] = useState({
+    openai: '',
+    groq: '',
+    anthropic: '',
+    gemini: '',
+  })
 
   const selectedAgent = useMemo(
     () => agents.find((a) => a.id === selectedAgentId),
@@ -53,7 +60,7 @@ export default function BattleModeSetup() {
 
   const canStart = () => {
     if (!selectedAgent) return false
-    if (!apiKeys.openai || !apiKeys.anthropic || !apiKeys.gemini) return false
+    if (BATTLE_PROVIDERS.some((provider) => !apiKeys[provider])) return false
     return selectedAgent.inputs
       .filter((i) => i.required)
       .every((i) => {
@@ -75,6 +82,7 @@ export default function BattleModeSetup() {
 
   const keyFields = [
     { id: 'openai',    label: 'OpenAI API Key',       color: 'yellow', icon: Key, borderColor: 'border-yellow-400/30', focusColor: 'focus:ring-yellow-400/40 focus:border-yellow-400/50', focusBg: 'focus:bg-yellow-400/5' },
+    { id: 'groq',      label: 'Groq API Key',         color: 'slate',  icon: Key, borderColor: 'border-slate-300/30',  focusColor: 'focus:ring-slate-300/40 focus:border-slate-300/50',  focusBg: 'focus:bg-slate-300/5' },
     { id: 'anthropic', label: 'Anthropic API Key',     color: 'violet', icon: Key, borderColor: 'border-violet-400/30', focusColor: 'focus:ring-violet-400/40 focus:border-violet-400/50', focusBg: 'focus:bg-violet-400/5' },
     { id: 'gemini',    label: 'Google Gemini API Key', color: 'blue',   icon: Key, borderColor: 'border-blue-400/30',   focusColor: 'focus:ring-blue-400/40 focus:border-blue-400/50',   focusBg: 'focus:bg-blue-400/5' },
   ]

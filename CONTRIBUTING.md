@@ -75,7 +75,7 @@ const yourAgentName = {
   description: 'One line description of what this agent does.',
   category: 'Category',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
   icon: 'IconName',              // Any icon from lucide.dev/icons
-  provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
+  provider: 'any',               // 'openai' | 'groq' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'openai',     // Only needed if provider is 'any'
   model: 'gpt-4o',
   inputs: [

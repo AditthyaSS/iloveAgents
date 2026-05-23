@@ -8,6 +8,8 @@ import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
+const SUPPORTED_PROVIDERS = ['openai', 'groq', 'anthropic', 'gemini']
+
 // Derive unique sorted categories from the registry
 const allCategories = [...new Set(agents.map((a) => a.category))].sort()
 
@@ -124,7 +126,7 @@ export default function HomePage() {
             <Users size={20} className="text-accent" />
           </div>
           <div className="text-xl font-bold dark:text-text-primary text-gray-900">
-            3
+            {SUPPORTED_PROVIDERS.length}
           </div>
           <div className="text-[11px] dark:text-text-muted text-gray-400 font-medium">
             Providers

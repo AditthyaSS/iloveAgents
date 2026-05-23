@@ -28,6 +28,7 @@ const RecentRuns = ({ history, onRerun, onCopy, onDelete, onClearAll }) => {
   const getProviderStyle = (provider) => {
     const p = provider?.toLowerCase() || '';
     if (p.includes('gpt') || p.includes('openai')) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
+    if (p.includes('groq') || p.includes('llama') || p.includes('qwen') || p.includes('deepseek')) return 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/20';
     if (p.includes('claude') || p.includes('anthropic')) return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
     if (p.includes('gemini') || p.includes('google')) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
     return 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border-gray-500/20';

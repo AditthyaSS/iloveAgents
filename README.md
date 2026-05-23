@@ -56,7 +56,7 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 
 - **Your API key never leaves your browser.** It goes directly to OpenAI, Anthropic, or Google. No middleman, no storage, no tracking.
 - **Zero setup.** No `.env` files, no backend, no database. Clone and run in under a minute.
-- **Works with all major providers.** OpenAI, Anthropic, and Google Gemini — switch between them at runtime.
+- **Works with multiple major providers.** OpenAI, Anthropic, Google Gemini, and Groq — switch between them at runtime.
 - **Built for contributors.** Adding a new agent takes about 5 minutes and you don't need to know much React at all.
 
 ---
@@ -110,6 +110,7 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 | Provider | Logo | Models | Get Your Key |
 |----------|------|--------|--------------|
 | OpenAI | <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg" width="80"/> | GPT-4o, GPT-4o-mini | [platform.openai.com](https://platform.openai.com/api-keys) |
+| Groq | Groq | Llama 3.1 8B, Llama 3.3 70B, Qwen 2.5, DeepSeek R1 Distill | [console.groq.com/keys](https://console.groq.com/keys) |
 | Anthropic | <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" width="80"/> | Claude Opus, Claude Sonnet | [console.anthropic.com](https://console.anthropic.com/) |
 | Google Gemini | <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" width="80"/> | Gemini 2.5 Flash | [aistudio.google.com](https://aistudio.google.com/apikey) |
 
@@ -119,14 +120,14 @@ You can switch providers on any agent at runtime from the dropdown. No restart n
 
 ## Battle Mode
 
-Pit three AI providers against each other head-to-head.
+Pit four AI providers against each other head-to-head.
 
 1. **Pick any agent** from the full registry
-2. **Enter your input once** — same prompt goes to all three
-3. **GPT-4o vs Claude Sonnet vs Gemini Flash** generate outputs simultaneously
+2. **Enter your input once** — same prompt goes to all four
+3. **GPT-4o vs Groq vs Claude Sonnet vs Gemini Flash** generate outputs simultaneously
 4. **You pick the winner**
 
-Battle Mode has its own dark, dramatic UI with color-coded provider columns (gold for OpenAI, purple for Anthropic, blue for Gemini). Each provider loads independently — if one fails, the other two still work. Access it from the "Enter Battle Mode" button on the homepage or navigate directly to `/battle`.
+Battle Mode has its own dark, dramatic UI with color-coded provider cards and result panels. Each provider loads independently — if one fails, the others still work. Access it from the "Enter Battle Mode" button on the homepage or navigate directly to `/battle`.
 
 ---
 
@@ -273,7 +274,7 @@ src/
 ```
 
 1. **Registry** — Each agent is its own file in `src/agents/definitions/`. The registry auto-collects them via `import.meta.glob` — just drop a file in and it appears.
-2. **LLM Adapter** — A single `runAgent()` function in `llmAdapter.js` handles all three providers through one unified interface.
+2. **LLM Adapter** — A single `runAgent()` function in `llmAdapter.js` handles all supported providers through one unified interface.
 3. **Agent Runner** — `AgentRunner.jsx` builds the input form from the config, constructs the prompt, and renders the response.
 4. **Battle Mode** — `BattleModeArena.jsx` fires the same prompt to GPT-4o, Claude Sonnet, and Gemini Flash simultaneously and lets you pick the winner.
 5. **Workflow Builder** — `WorkflowRunner.jsx` chains agents sequentially using the same `runAgent()` adapter — output of step N becomes input of step N+1, with per-step status cards and real-time usage counters.
@@ -296,7 +297,7 @@ export default {
   description: 'One-line description.',
   category: 'Category',
   icon: 'IconName',               // from lucide.dev/icons
-  provider: 'any',                // 'openai' | 'anthropic' | 'gemini' | 'any'
+  provider: 'any',                // 'openai' | 'groq' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'openai',
   model: 'gpt-4o',
   inputs: [

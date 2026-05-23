@@ -21,6 +21,18 @@ const PROVIDERS = [
     loaderColor: 'text-yellow-400',
   },
   {
+    id: 'groq',
+    label: 'Groq',
+    model: 'llama-3.3-70b-versatile',
+    color: 'slate',
+    borderClass: 'border-slate-300/40',
+    glowClass: 'hover:shadow-slate-300/20',
+    headerBg: 'bg-slate-300/10 border-b border-slate-300/30',
+    textColor: 'text-slate-200',
+    btnBg: 'bg-slate-300/10 hover:bg-slate-300/20 text-slate-200 border-slate-300/40 border-2 hover:border-slate-200/60 battle-btn-secondary',
+    loaderColor: 'text-slate-200',
+  },
+  {
     id: 'anthropic',
     label: 'Claude Sonnet',
     model: 'claude-sonnet-4-6',
@@ -68,6 +80,7 @@ export default function BattleModeArena() {
 
   const [results, setResults] = useState({
     openai: { loading: true, content: null, error: null, duration: null },
+    groq: { loading: true, content: null, error: null, duration: null },
     anthropic: { loading: true, content: null, error: null, duration: null },
     gemini: { loading: true, content: null, error: null, duration: null },
   })
@@ -79,7 +92,7 @@ export default function BattleModeArena() {
     }
   }, [agent, inputs, apiKeys, navigate])
 
-  // Fire all three API calls simultaneously
+  // Fire all API calls simultaneously
   useEffect(() => {
     if (!agent || !inputs || !apiKeys) return
 
@@ -153,12 +166,12 @@ export default function BattleModeArena() {
             Battle Arena
           </h1>
           <p className="text-sm text-gray-300">
-            Running <span className="text-white font-semibold">{agent.name}</span> across three providers
+            Running <span className="text-white font-semibold">{agent.name}</span> across four providers
           </p>
         </div>
 
-        {/* Three Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        {/* Provider Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
           {PROVIDERS.map((prov, idx) => {
             const r = results[prov.id]
             return (

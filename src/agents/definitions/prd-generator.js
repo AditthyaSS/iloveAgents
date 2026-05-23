@@ -5,7 +5,7 @@ const prdGenerator = {
   description: 'Generates detailed Product Requirements Documents.',
   category: 'Product',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
   icon: 'FileText',              // Any icon from lucide.dev/icons
-  provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
+  provider: 'any',               // 'openai' | 'groq' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'gemini',     // Only needed if provider is 'any'
   model: 'gemini-2.5-flash',
   inputs: [

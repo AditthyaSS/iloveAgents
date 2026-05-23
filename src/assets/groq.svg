@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Groq logo">
+  <rect width="64" height="64" rx="14" fill="#0A0A0A" />
+  <path
+    fill="#FFFFFF"
+    d="M32 14c9.94 0 18 8.06 18 18v1.5H34.5v-7H43c-2.09-3.3-5.77-5.5-10-5.5-6.49 0-11.75 5.26-11.75 11.75S26.51 44.5 33 44.5c4.23 0 7.91-2.2 10-5.5H31v-7h19V32c0 9.94-8.06 18-18 18S14 41.94 14 32s8.06-18 18-18Z"
+  />
+</svg>

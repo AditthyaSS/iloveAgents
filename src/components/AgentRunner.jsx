@@ -26,6 +26,7 @@ import { resolveAgentModel, MODEL_MAP } from "../lib/resolveAgentModel";
 
 const providerLabels = {
   openai: "OpenAI",
+  groq: "Groq",
   anthropic: "Anthropic",
   gemini: "Gemini",
   any: "Any",
