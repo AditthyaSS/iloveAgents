@@ -56,9 +56,9 @@ function DownloadButton({ text, agentName }) {
     const a = document.createElement('a')
     a.href = url
     a.download = `${agentName || 'output'}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+a.click()
+setTimeout(() => URL.revokeObjectURL(url), 100)  
+}
 
   return (
     <button
