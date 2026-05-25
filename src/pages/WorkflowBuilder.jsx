@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
   Plus,
@@ -14,18 +14,39 @@ import {
 import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 import { saveWorkflow } from '../hooks/useWorkflows'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const MAX_AGENTS = 5
 
 export default function WorkflowBuilder() {
   const navigate = useNavigate()
+  const location = useLocation()
+  useDocumentTitle('Build a Workflow')
+
+  // Pre-populate chain when navigating from a SuggestedChainPills click
+  const preselected = location.state?.preselectedAgents ?? []
+  const initialAgents = preselected
+    .map((id) => agents.find((a) => a.id === id))
+    .filter(Boolean)
 
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [selectedAgents, setSelectedAgents] = useState([])
+  const [selectedAgents, setSelectedAgents] = useState(initialAgents)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+
+  // Pre-select agent if coming from AgentRunner
+  useEffect(() => {
+    if (location.state?.preSelectedAgent) {
+      const agent = location.state.preSelectedAgent
+      setSelectedAgents([agent])
+      setTitle(`${agent.name} Workflow`)
+      
+      // Clear location state to prevent re-adding on refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state])
 
   // Agents already in the chain — prevent duplicates
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
@@ -70,6 +91,7 @@ export default function WorkflowBuilder() {
           description: description.trim(),
           agents: selectedAgents.map((a) => a.id),
         },
+        initialInput: location.state?.preFilledOutput || '',
       },
     })
   }

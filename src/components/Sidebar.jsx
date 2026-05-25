@@ -1,10 +1,19 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 
 export default function Sidebar({ open, onClose }) {
+  const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
+
+  // Filter agents based on search query
+  const filteredAgents = agents.filter((agent) =>
+    agent.name.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
+    agent.category.toLowerCase().includes(sidebarSearchQuery.toLowerCase())
+  )
+
   // Group agents by category
-  const categories = agents.reduce((acc, agent) => {
+  const categories = filteredAgents.reduce((acc, agent) => {
     if (!acc[agent.category]) acc[agent.category] = []
     acc[agent.category].push(agent)
     return acc
@@ -29,8 +38,35 @@ export default function Sidebar({ open, onClose }) {
             Agents
           </span>
           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent">
-            {agents.length}
+            {filteredAgents.length}
           </span>
+        </div>
+
+        {/* Search Input */}
+        <div className="px-4 mb-2">
+          <div className="relative group">
+            <Icons.Search
+              size={14}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-text-muted group-focus-within:text-accent transition-colors"
+            />
+            <input
+              type="text"
+              placeholder="Search agents..."
+              value={sidebarSearchQuery}
+              onChange={(e) => setSidebarSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-8 py-1.5 text-[12px] rounded-md border transition-all
+                dark:bg-surface-hover dark:border-border dark:text-text-primary dark:focus:border-accent/40
+                bg-gray-50 border-gray-200 text-gray-900 focus:border-accent/40 focus:ring-1 focus:ring-accent/10 outline-none"
+            />
+            {sidebarSearchQuery && (
+              <button
+                onClick={() => setSidebarSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-text-muted dark:hover:text-text-primary transition-colors"
+              >
+                <Icons.X size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Agent List */}
@@ -63,13 +99,18 @@ export default function Sidebar({ open, onClose }) {
               })}
             </div>
           ))}
+          {filteredAgents.length === 0 && (
+            <div className="px-4 py-8 text-center text-xs text-gray-400 dark:text-text-muted">
+              No agents found
+            </div>
+          )}
         </nav>
 
         {/* Footer */}
         <div className="px-4 py-3 border-t dark:border-border border-gray-200">
           <div className="space-y-1.5">
             <a
-              href="https://github.com"
+              href="https://github.com/AditthyaSS/iloveAgents"
               target="_blank"
               rel="noopener noreferrer"
               className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
@@ -77,7 +118,7 @@ export default function Sidebar({ open, onClose }) {
               GitHub →
             </a>
             <a
-              href="https://github.com"
+              href="https://github.com/AditthyaSS/iloveAgents/issues"
               target="_blank"
               rel="noopener noreferrer"
               className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"

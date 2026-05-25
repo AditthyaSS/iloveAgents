@@ -13,16 +13,21 @@ export const CATEGORIES = [
   "Cybersecurity",
   "Data Science",
   "Design",
+  "Developer Tools",
   "Education",
   "Engineering",
   "Finance",
   "HR",
   "Legal",
   "Marketing",
+  "Personal Development",
   "Product",
   "Productivity",
   "Research",
   "Healthcare",
   "Sales",
-  "DevOps"
+  "DevOps",
+  "Web3",
+  "Gaming",
+  "Real Estate"
 ];

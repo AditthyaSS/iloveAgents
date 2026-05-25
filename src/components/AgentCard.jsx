@@ -60,9 +60,9 @@ export default function AgentCard({ agent }) {
     <Link
       to={`/agent/${agent.id}`}
       className="group block rounded-lg border p-4 transition-all duration-200
-        dark:bg-surface-card dark:border-border dark:hover:border-accent/40
-        bg-white border-gray-200 hover:border-indigo-300 hover:shadow-lg hover:shadow-accent/5"
-    >
+  dark:bg-surface-card dark:border-border dark:hover:border-accent/40
+  bg-white border-gray-200 hover:border-indigo-300 hover:shadow-lg hover:shadow-accent/5
+  hover:-translate-y-1"    >
       {/* Top row: icon + badges + star */}
       <div className="flex items-start justify-between mb-3">
         <div

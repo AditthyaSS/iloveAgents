@@ -74,4 +74,5 @@ Rules:
 - If the code has external dependencies (db, API, fs), add a note
   about what needs to be mocked and provide a basic mock setup`,
   outputType: "markdown",
+  suggestedChainFrom: ["code-reviewer", "code-complexity-analyzer"],
 };
