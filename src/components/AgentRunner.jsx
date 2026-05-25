@@ -14,6 +14,7 @@ import {
   GitBranch,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
+import ApiKeyInfo from "./ApiKeyInfo";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
