@@ -38,7 +38,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   }
 
   return (
-    <>
+<>
       <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 border-b transition-theme
         dark:bg-surface dark:border-border bg-white border-gray-200">
         {/* Left */}
@@ -50,7 +50,6 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           >
             {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
-
           <Link
             to="/"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
@@ -59,7 +58,6 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
             <Logo height={26} className="dark:text-white text-gray-900" />
           </Link>
         </div>
-
         {/* Right */}
         <div className="flex items-center gap-2">
           <Link
