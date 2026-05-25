@@ -15,6 +15,7 @@ import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 import { fetchWorkflowById, subscribeToWorkflow } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function AgentRow({ agentId, index, total }) {
   const agent = agents.find((a) => a.id === agentId)
@@ -64,6 +65,7 @@ export default function WorkflowDetail() {
   const [error, setError] = useState(null)
   const [usageCount, setUsageCount] = useState(0)
   const [copied, setCopied] = useState(false)
+  useDocumentTitle(workflow?.title ?? 'Workflow Details')
 
   // Fetch workflow
   useEffect(() => {

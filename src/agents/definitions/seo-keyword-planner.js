@@ -51,6 +51,7 @@ Follow these strict guidelines:
 After the table, provide a brief, 3-point action plan on how to execute this strategy based on their specific primary goal.
 Keep your response strictly focused, professional, and well-formatted.`,
   outputType: 'markdown',
+  suggestedChainFrom: ['research-agent', 'competitive-analysis-generator'],
 };
 
 export default seoKeywordStrategyPlanner;

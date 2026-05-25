@@ -1,18 +1,29 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Sun, Moon, Github, Menu, X } from 'lucide-react'
+import { Sun, Moon, Github, Menu, X, HelpCircle } from 'lucide-react'
 import Logo from './Logo'
+import KeyboardShortcutsModal from './KeyboardShortcutsModal'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const [darkMode, setDarkMode] = useState(true)
+  const [showShortcuts, setShowShortcuts] = useState(false)
+
+  useKeyboardShortcuts({
+    '?': () => setShowShortcuts(true),
+  })
 
   useEffect(() => {
     const saved = localStorage.getItem('ila_theme')
     if (saved === 'light') {
       setDarkMode(false)
       document.documentElement.classList.remove('dark')
+    } else {
+      // Default to dark; ensure class is present
+      document.documentElement.classList.add('dark')
     }
   }, [])
+
 
   const toggleTheme = () => {
     const next = !darkMode
@@ -27,56 +38,76 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   }
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 border-b transition-theme
-      dark:bg-surface dark:border-border bg-white border-gray-200">
-      {/* Left */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className=" p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
-        </button>
+<>
+      <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 border-b transition-theme
+        dark:bg-surface dark:border-border bg-white border-gray-200">
+        {/* Left */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="lg:hidden p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors"
+            aria-label="Toggle sidebar"
+          >
+            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
+          <Link
+            to="/"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="flex items-center group hover:opacity-80 transition-opacity"
+          >
+            <Logo height={26} className="dark:text-white text-gray-900" />
+          </Link>
+        </div>
+        {/* Right */}
+        <div className="flex items-center gap-2">
+          <Link
+            to="/workflows"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+              dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+              bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200"
+          >
+            <span>Workflows</span>
+          </Link>
 
-        <Link to="/" className="flex items-center group hover:opacity-80 transition-opacity">
-          <Logo height={26} className="dark:text-white text-gray-900" />
-        </Link>
-      </div>
+          <a
+            href="https://github.com/AditthyaSS/iloveAgents"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+              dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+              bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200"
+          >
+            <Github size={14} />
+            <span className="hidden sm:inline">Star on GitHub</span>
+          </a>
 
-      {/* Right */}
-      <div className="flex items-center gap-2">
-        <Link
-          to="/workflows"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-            dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary dark:border-border
-            bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200"
-        >
-          <span>Workflows</span>
-        </Link>
+          <button
+            onClick={() => setShowShortcuts(true)}
+            className="p-2 rounded-md transition-colors
+              dark:hover:bg-surface-hover dark:text-text-secondary
+              hover:bg-gray-100 text-gray-500"
+            aria-label="Keyboard Shortcuts"
+            title="Keyboard Shortcuts (?)"
+          >
+            <HelpCircle size={16} />
+          </button>
 
-        <a
-          href="https://github.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
-            dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary dark:border-border
-            bg-gray-100 text-gray-600 hover:text-gray-900 border border-gray-200"
-        >
-          <Github size={14} />
-          <span className="hidden sm:inline">Star on GitHub</span>
-        </a>
-
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-md transition-colors
-            dark:hover:bg-surface-hover dark:text-text-secondary
-            hover:bg-gray-100 text-gray-500"
-          aria-label="Toggle theme"
-        >
-          {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-      </div>
-    </nav>
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-md transition-colors
+              dark:hover:bg-surface-hover dark:text-text-secondary
+              hover:bg-gray-100 text-gray-500"
+            aria-label="Toggle theme"
+          >
+            {darkMode ? <Sun size={16} /> : <Moon size={16} />}
+          </button>
+        </div>
+      </nav>
+      
+      <KeyboardShortcutsModal 
+        isOpen={showShortcuts} 
+        onClose={() => setShowShortcuts(false)} 
+      />
+    </>
   )
 }

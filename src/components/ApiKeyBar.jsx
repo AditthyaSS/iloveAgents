@@ -4,6 +4,7 @@ import { MODELS } from '../lib/resolveAgentModel'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
@@ -39,6 +40,21 @@ export default function ApiKeyBar({
       : PROVIDERS.filter((p) => p.value === agentProvider)
 
   const availableModels = MODELS[provider] || []
+
+  useKeyboardShortcuts({
+    'Alt+1': () => {
+      const p = availableProviders.find(p => p.value === 'openai');
+      if (p) setProvider('openai');
+    },
+    'Alt+2': () => {
+      const p = availableProviders.find(p => p.value === 'anthropic');
+      if (p) setProvider('anthropic');
+    },
+    'Alt+3': () => {
+      const p = availableProviders.find(p => p.value === 'gemini');
+      if (p) setProvider('gemini');
+    },
+  });
 
   return (
     <div className="rounded-lg border p-3 mb-4 transition-theme

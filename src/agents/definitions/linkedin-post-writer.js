@@ -48,4 +48,5 @@ Requirements:
 Return ONLY the LinkedIn post ready to copy and publish.`,
 
   outputType: "markdown",
+  suggestedChainFrom: ["research-agent", "meeting-notes-summarizer"],
 };

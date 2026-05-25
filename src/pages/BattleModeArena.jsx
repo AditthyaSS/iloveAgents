@@ -5,6 +5,7 @@ import { runAgent } from '../lib/llmAdapter'
 import BattleNavbar from '../components/BattleNavbar'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const PROVIDERS = [
   {
@@ -63,6 +64,7 @@ export default function BattleModeArena() {
   const navigate = useNavigate()
   const location = useLocation()
   const { agent, inputs, apiKeys } = location.state || {}
+  useDocumentTitle(agent?.name ? `${agent.name} Battle` : 'Battle Arena')
 
   const [results, setResults] = useState({
     openai: { loading: true, content: null, error: null, duration: null },

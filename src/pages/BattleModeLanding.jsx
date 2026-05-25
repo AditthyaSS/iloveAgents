@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { Swords, ArrowLeft, Crosshair, PenLine, Cpu, Trophy, Bot } from 'lucide-react'
 import BattleNavbar from '../components/BattleNavbar'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const steps = [
   { icon: Crosshair, text: 'Pick any agent', number: '01' },
@@ -17,6 +18,7 @@ const providers = [
 
 export default function BattleModeLanding() {
   const navigate = useNavigate()
+  useDocumentTitle('Battle Mode')
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
