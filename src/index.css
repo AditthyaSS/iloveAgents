@@ -66,9 +66,38 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 }
 
 /* ===== Focus Ring ===== */
-*:focus-visible {
-  outline: 2px solid #6366f1;
-  outline-offset: 2px;
+*:focus-visible,
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Remove all focus borders/shadows globally */
+*:focus,
+*:focus-visible,
+button:focus,
+button:focus-visible,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+[role="button"]:focus,
+[role="button"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* Remove Radix focus ring */
+[data-radix-select-trigger]:focus,
+[data-radix-select-trigger]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ===== Transitions ===== */

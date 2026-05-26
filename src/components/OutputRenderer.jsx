@@ -105,8 +105,7 @@ code({ node, className, children, ...props }) {
   const match = /language-(\w+)/.exec(className || '')
   const isInline = !match && (children?.length ?? 0) < 80
   return !isInline && match ? (
-                  const match = /language-(\w+)/.exec(className || '')
-                  return !inline && match ? (
+                  
                     <SyntaxHighlighter
                       style={oneDark}
                       language={match[1]}

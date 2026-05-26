@@ -12,7 +12,9 @@ import {
   Sparkles,
   RotateCw,
   GitBranch,
+  Check,
 } from "lucide-react";
+import * as Select from "@radix-ui/react-select";
 import ApiKeyBar from "./ApiKeyBar";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
@@ -31,6 +33,60 @@ const providerLabels = {
   gemini: "Gemini",
   any: "Any",
 };
+
+const TRIGGER_CLASS = `
+  h-8 inline-flex items-center justify-between gap-2.5 px-3
+  text-xs font-medium rounded-md select-none cursor-pointer transition-all duration-200
+  
+  dark:bg-[#111113]/60 bg-gray-50 text-gray-700 dark:text-neutral-300
+  border dark:border-neutral-800/80 border-gray-200
+  
+  hover:bg-[#17171a]/80 dark:hover:bg-neutral-900
+  hover:border-gray-300 dark:hover:border-neutral-700
+  
+  outline-none focus:ring-2 focus:ring-neutral-800/40
+  
+  data-[state=open]:bg-[#17171a]/80
+  dark:data-[state=open]:bg-neutral-900
+`;
+
+const CONTENT_CLASS = `
+  z-[9999] overflow-hidden rounded-lg p-1.5
+  border dark:border-neutral-800 border-gray-200
+  dark:bg-[#0c0c0e]/95 bg-white/95 backdrop-blur-md
+  
+  shadow-[0_10px_30px_rgba(0,0,0,0.12)]
+  
+  animate-in fade-in-0 zoom-in-95 duration-100
+`;
+
+function SelectItem({ value, children }) {
+  return (
+    <Select.Item
+      value={value}
+      className="
+        relative flex items-center justify-between
+        w-full px-2.5 py-1.5 pr-8
+        text-xs font-medium rounded-md
+        cursor-pointer select-none outline-none
+        
+        text-gray-500 dark:text-neutral-400
+        
+        data-[highlighted]:bg-gray-100/70
+        dark:data-[highlighted]:bg-white/5
+        
+        data-[highlighted]:text-gray-900
+        dark:data-[highlighted]:text-neutral-100
+      "
+    >
+      <Select.ItemText>{children}</Select.ItemText>
+
+      <Select.ItemIndicator className="absolute right-2.5 flex items-center justify-center">
+        <Check className="h-3.5 w-3.5 text-blue-500 stroke-[2.5]" />
+      </Select.ItemIndicator>
+    </Select.Item>
+  );
+}
 
 
 const LOADING_MESSAGES = [
@@ -419,21 +475,34 @@ export default function AgentRunner({ agent }) {
               </div>
             )}
 
-            {input.type === "select" && (
-              <select
+              {input.type === "select" && (
+              <Select.Root
                 value={inputs[input.id] || input.defaultValue || ""}
-                onChange={(e) => updateInput(input.id, e.target.value)}
-                className="h-9 px-3 rounded-md text-sm cursor-pointer transition-colors
-                  dark:bg-surface-input dark:border-border dark:text-text-primary
-                  bg-gray-50 border border-gray-200 text-gray-900
-                  focus:ring-1 focus:ring-accent focus:border-accent outline-none"
+                onValueChange={(value) => updateInput(input.id, value)}
               >
-                {input.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                <Select.Trigger className={`${TRIGGER_CLASS} w-full sm:w-[240px]`}>
+                  <Select.Value />
+                  <Select.Icon className="text-gray-400 dark:text-neutral-500">
+                    <ChevronDown size={13} className="stroke-[2.5]" />
+                  </Select.Icon>
+                </Select.Trigger>
+                <Select.Portal>
+                  <Select.Content
+                    position="popper"
+                    sideOffset={6}
+                    align="start"
+                    className={CONTENT_CLASS}
+                  >
+                    <Select.Viewport className="space-y-0.5 outline-none">
+                      {input.options?.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </Select.Viewport>
+                  </Select.Content>
+                </Select.Portal>
+              </Select.Root>
             )}
 
             {input.type === "multiselect" && (
