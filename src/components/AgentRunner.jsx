@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import * as Select from "@radix-ui/react-select";
 import ApiKeyBar from "./ApiKeyBar";
+import ApiKeyInfo from "./ApiKeyInfo";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";

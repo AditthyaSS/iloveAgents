@@ -1,8 +1,8 @@
 const mlExperimentAutopsy = {
-  id: 'ml-experiment-report-generator',           
+  id: 'ml-experiment-autopsy',           
   name: 'Model Meltdown Detective',
   description: 'Diagnose failed or underperforming ML experiments using model details, dataset context, metrics, hyperparameters, and code snippets.',
-  category: 'Data Science',          
+  category: 'Engineering',          
   icon: 'ChartSpline',              
   provider: 'any',               
   defaultProvider: 'openai',     
@@ -181,3 +181,4 @@ EDGE CASES:
 };
 
 export default mlExperimentAutopsy;
+

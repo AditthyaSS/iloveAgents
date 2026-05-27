@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { MODELS } from '../lib/resolveAgentModel'
+import ApiKeyInfo from './ApiKeyInfo'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
@@ -16,7 +17,13 @@ const providerLogos = {
   openai: openaiLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
-};
+}
+
+const providerUrls = {
+  openai: 'https://platform.openai.com/account/api-keys',
+  anthropic: 'https://console.anthropic.com/keys',
+  gemini: 'https://console.cloud.google.com/apis/credentials',
+}
 
 
 
@@ -111,11 +118,14 @@ export default function ApiKeyBar({
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={`Enter your ${provider} API key...`}
-            className="w-full h-8 px-3 pr-8 rounded-md text-xs font-mono transition-colors
+            className="w-full h-8 px-3 pr-10 rounded-md text-xs font-mono transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
               bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
               focus:ring-1 focus:ring-accent focus:border-accent outline-none"
           />
+          <div className="absolute right-8 top-1/2 -translate-y-1/2">
+            <ApiKeyInfo provider={provider} url={providerUrls[provider]} />
+          </div>
           <button
             onClick={() => setShowKey(!showKey)}
             className="absolute right-2 top-1/2 -translate-y-1/2 dark:text-text-muted text-gray-400

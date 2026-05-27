@@ -1,6 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, Key, Swords, ArrowLeft } from 'lucide-react'
+import ApiKeyInfo from '../components/ApiKeyInfo'
+const providerUrls = {
+  openai: 'https://platform.openai.com/account/api-keys',
+  anthropic: 'https://console.anthropic.com/keys',
+  gemini: 'https://console.cloud.google.com/apis/credentials',
+}
 import agents from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -216,8 +222,9 @@ export default function BattleModeSetup() {
           </h2>
           {keyFields.map((field) => (
             <div key={field.id}>
-              <label className="block text-xs font-medium text-gray-200 mb-2">
+              <label className="block text-xs font-medium text-gray-200 mb-2 flex items-center gap-1.5">
                 {field.label}
+                <ApiKeyInfo provider={field.label.replace(/ API Key.*/, '')} url={providerUrls[field.id]} />
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
