@@ -111,7 +111,7 @@ export default function AgentCard({ agent }) {
       <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1 group-hover:text-accent transition-colors">
         {agent.name}
       </h3>
-      <p className="flex-1 text-xs dark:text-text-secondary text-gray-500 leading-relaxed mb-3 line-clamp-2 break-words">
+      <p className="flex-1 text-xs dark:text-text-secondary text-gray-500 leading-relaxed mb-3 line-clamp-2 [overflow-wrap:anywhere]">
         {agent.description}
       </p>
 
