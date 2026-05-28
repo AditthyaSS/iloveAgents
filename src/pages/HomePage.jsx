@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch } from 'lucide-react'
-import agents from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
 import { useHistory } from '../lib/useHistory'
@@ -9,8 +9,7 @@ import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 
-// Derive unique sorted categories from the registry
-const allCategories = [...new Set(agents.map((a) => a.category))].sort()
+
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -31,9 +30,16 @@ const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/3
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const { agents, loading } = useAgents()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
   useDocumentTitle()
+
+  // Derive unique sorted categories from the loaded agents
+  const allCategories = useMemo(
+    () => [...new Set(agents.map((a) => a.category))].sort(),
+    [agents]
+  )
 
   useKeyboardShortcuts({
     '/': (e) => {
@@ -53,14 +59,14 @@ export default function HomePage() {
     return recentIds
       .map((id) => agents.find((a) => a.id === id))
       .filter(Boolean)
-  }, [])
+  }, [agents])
 
   // Resolve favorite agents (preserving the user's star order)
   const favoriteAgents = useMemo(() => {
     return favorites
       .map((id) => agents.find((a) => a.id === id))
       .filter(Boolean)
-  }, [favorites])
+  }, [favorites, agents])
 
   // Filter agents based on search + category
   const filteredAgents = useMemo(() => {
@@ -77,7 +83,7 @@ export default function HomePage() {
         agent.category.toLowerCase().includes(q)
       )
     })
-  }, [searchQuery, selectedCategory])
+  }, [searchQuery, selectedCategory, agents])
 
   const handleRerun = (run) => {
     navigate(`/agent/${run.agentId}`, { state: { prefill: run.inputs } })

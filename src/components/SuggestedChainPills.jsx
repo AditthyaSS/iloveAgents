@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { GitBranch } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import agents from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 
 /**
  * Renders "Works well after" clickable pills for agents that define
@@ -12,6 +12,7 @@ import agents from '../agents/registry'
  */
 export default function SuggestedChainPills({ agent }) {
   const navigate = useNavigate()
+  const { agents } = useAgents()
 
   if (!agent.suggestedChainFrom?.length) return null
 

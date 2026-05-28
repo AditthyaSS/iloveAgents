@@ -1,16 +1,18 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, Key, Swords, ArrowLeft, Info, ExternalLink, ShieldCheck } from 'lucide-react'
-import agents from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
+import { useApiKey } from '../lib/useApiKey'
 import BattleNavbar from '../components/BattleNavbar'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function BattleModeSetup() {
   const navigate = useNavigate()
+  const { agents } = useAgents()
   useDocumentTitle('Battle Mode Setup')
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
-  const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
+  const { apiKeys, setApiKeys } = useApiKey()
   const [openHelperId, setOpenHelperId] = useState(null)
 
   const selectedAgent = useMemo(
@@ -72,6 +74,10 @@ export default function BattleModeSetup() {
         apiKeys,
       },
     })
+  }
+
+  const handleKeyChange = (providerId, value) => {
+    setApiKeys((prev) => ({ ...prev, [providerId]: value }))
   }
 
   const keyFields = [
