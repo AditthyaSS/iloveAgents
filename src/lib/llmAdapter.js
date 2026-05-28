@@ -195,6 +195,27 @@ const ERROR_MESSAGES = {
   503: 'The API service is temporarily unavailable. Try again in a minute.',
 };
 
+const PROVIDER_LABELS = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
+}
+
+const VALIDATION_DEFAULT_MESSAGES = {
+  invalid_api_key: (label) => `Invalid ${label} API key.`,
+  quota_exceeded: (label) => `Quota exceeded or billing issue for ${label}.`,
+  network_error: () =>
+    "Couldn't reach the API. Check your internet connection and try again.",
+  unknown_error: (label) =>
+    `Unexpected error from ${label}. Check your configuration.`,
+}
+
+// Providers that sometimes return 200 OK with an error in the payload
+const VALIDATION_PAYLOAD_ERROR_PROVIDERS = new Set(['openrouter'])
+
+const ANTHROPIC_VALIDATION_MODEL = 'claude-3-5-haiku-20241022'
+
 /**
  * Handle non-OK HTTP responses consistently.
  */
@@ -224,6 +245,98 @@ async function handleErrorResponse(response, provider = "unknown") {
   throw new Error(
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
   );
+}
+
+function extractErrorMessage(payload) {
+  if (!payload) return ''
+  if (typeof payload === 'string') return payload
+  if (payload.error) {
+    if (typeof payload.error === 'string') return payload.error
+    if (typeof payload.error.message === 'string') return payload.error.message
+    return 'Unknown error'
+  }
+  if (typeof payload.message === 'string') return payload.message
+  if (Array.isArray(payload.errors) && payload.errors.length > 0) {
+    const firstError = payload.errors[0]
+    if (typeof firstError === 'string') return firstError
+    if (typeof firstError?.message === 'string') return firstError.message
+  }
+  return ''
+}
+
+function classifyValidationError(status, detail) {
+  const normalizedDetail = (detail || '').toLowerCase()
+  if (
+    status === 401 ||
+    status === 403 ||
+    normalizedDetail.includes('invalid api key') ||
+    normalizedDetail.includes('unauthorized') ||
+    normalizedDetail.includes('authentication') ||
+    normalizedDetail.includes('api key')
+  ) {
+    return 'invalid_api_key'
+  }
+  if (
+    status === 402 ||
+    status === 429 ||
+    normalizedDetail.includes('rate limit') ||
+    normalizedDetail.includes('quota') ||
+    normalizedDetail.includes('billing')
+  ) {
+    return 'quota_exceeded'
+  }
+  return 'unknown_error'
+}
+
+function buildValidationMessage(code, provider, detail) {
+  const label = PROVIDER_LABELS[provider] || 'Provider'
+  if (code === 'network_error') {
+    return VALIDATION_DEFAULT_MESSAGES.network_error()
+  }
+  if (code === 'invalid_api_key') {
+    return VALIDATION_DEFAULT_MESSAGES.invalid_api_key(label)
+  }
+  if (code === 'quota_exceeded') {
+    return VALIDATION_DEFAULT_MESSAGES.quota_exceeded(label)
+  }
+  if (detail) return detail
+  return VALIDATION_DEFAULT_MESSAGES.unknown_error(label)
+}
+
+async function readJsonSafely(response) {
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
+async function normalizeValidationResponse(response, provider) {
+  if (!response.ok) {
+    const payload = await readJsonSafely(response)
+    const detail = extractErrorMessage(payload)
+    const code = classifyValidationError(response.status, detail)
+    return {
+      valid: false,
+      code,
+      message: buildValidationMessage(code, provider, detail),
+    }
+  }
+
+  if (VALIDATION_PAYLOAD_ERROR_PROVIDERS.has(provider)) {
+    const payload = await readJsonSafely(response)
+    const detail = extractErrorMessage(payload)
+    if (detail) {
+      const code = classifyValidationError(response.status, detail)
+      return {
+        valid: false,
+        code,
+        message: buildValidationMessage(code, provider, detail),
+      }
+    }
+  }
+
+  return { valid: true }
 }
 /**
  * Run an agent against the specified LLM provider (one-shot, non-streaming).
@@ -395,6 +508,106 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       )
     }
     throw error
+  }
+}
+
+async function validateOpenAIKey(apiKey) {
+  const config = PROVIDER_CONFIGS.openai
+  const response = await fetch('https://api.openai.com/v1/models', {
+    method: 'GET',
+    headers: config.buildHeaders(apiKey),
+  })
+  return normalizeValidationResponse(response, 'openai')
+}
+
+async function validateGeminiKey(apiKey) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+    { method: 'GET' }
+  )
+  return normalizeValidationResponse(response, 'gemini')
+}
+
+async function validateAnthropicKey(apiKey) {
+  const config = PROVIDER_CONFIGS.anthropic
+  const response = await fetch('https://api.anthropic.com/v1/models', {
+    method: 'GET',
+    headers: config.buildHeaders(apiKey),
+  })
+
+  const { status } = response
+  const normalized = await normalizeValidationResponse(response, 'anthropic')
+  if (normalized.valid) return normalized
+  if (status === 404 || status === 405) {
+    return validateAnthropicWithMessages(apiKey)
+  }
+  return normalized
+}
+
+async function validateAnthropicWithMessages(apiKey) {
+  const config = PROVIDER_CONFIGS.anthropic
+  const body = {
+    model: ANTHROPIC_VALIDATION_MODEL,
+    max_tokens: 1,
+    system: 'Validation request.',
+    messages: [{ role: 'user', content: 'ping' }],
+  }
+
+  const response = await fetch(config.url, {
+    method: 'POST',
+    headers: config.buildHeaders(apiKey),
+    body: JSON.stringify(body),
+  })
+
+  return normalizeValidationResponse(response, 'anthropic')
+}
+
+const providerValidators = {
+  openai: validateOpenAIKey,
+  anthropic: validateAnthropicKey,
+  gemini: validateGeminiKey,
+}
+
+/**
+ * Validate a provider API key using a lightweight metadata endpoint.
+ * Returns a normalized result object for UI use.
+ */
+export async function validateProviderKey(provider, apiKey) {
+  if (!apiKey || apiKey.trim() === '') {
+    return {
+      valid: false,
+      code: 'invalid_api_key',
+      message: 'API key is required.',
+    }
+  }
+
+  const validator = providerValidators[provider]
+  if (!validator) {
+    return {
+      valid: false,
+      code: 'unknown_error',
+      message: `Unsupported provider: ${provider}`,
+    }
+  }
+
+  try {
+    return await validator(apiKey)
+  } catch (error) {
+    if (error?.name === 'TypeError' && error?.message === 'Failed to fetch') {
+      return {
+        valid: false,
+        code: 'network_error',
+        message: buildValidationMessage('network_error', provider, ''),
+      }
+    }
+
+    return {
+      valid: false,
+      code: 'unknown_error',
+      message:
+        error?.message ||
+        buildValidationMessage('unknown_error', provider, ''),
+    }
   }
 }
 
