@@ -10,7 +10,7 @@
 import { AgentSchema } from './schema';
 
 // Eagerly load the modules, or load them lazily depending on your current setup
-const agentModules = import.meta.glob('../src/agents/definitions/*.js', { eager: true });
+const agentModules = import.meta.glob('./definitions/*.js', { eager: true });
 
 export const loadAgents = () => {
   const validAgents = [];
