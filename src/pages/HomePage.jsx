@@ -8,6 +8,7 @@ import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import ErrorBoundary from '../components/ErrorBoundary'
 
 // Derive unique sorted categories from the registry
 const allCategories = [...new Set(agents.map((a) => a.category))].sort()
@@ -172,7 +173,9 @@ export default function HomePage() {
                 className="animate-fade-in"
                 style={{ animationDelay: `${idx * 40}ms` }}
               >
-                <AgentCard agent={agent} />
+                <ErrorBoundary>
+                  <AgentCard agent={agent} />
+                </ErrorBoundary>
               </div>
             ))}
           </div>
@@ -200,7 +203,7 @@ export default function HomePage() {
           className="animate-fade-in"
           style={{ animationDelay: `${idx * 40}ms` }}
         >
-          <AgentCard agent={agent} />
+          <ErrorBoundary><AgentCard agent={agent} /></ErrorBoundary>
         </div>
       ))}
     </div>
@@ -294,7 +297,7 @@ export default function HomePage() {
                   className="animate-fade-in"
                   style={{ animationDelay: `${idx * 30}ms` }}
                 >
-                  <AgentCard agent={agent} />
+                  <ErrorBoundary><AgentCard agent={agent} /></ErrorBoundary>
                 </div>
               ))}
             </div>
