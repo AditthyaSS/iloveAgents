@@ -10,13 +10,22 @@ const providerUrls = {
 import agents from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { useApiKeys } from '../contexts/ApiKeyContext'
 
 export default function BattleModeSetup() {
   const navigate = useNavigate()
   useDocumentTitle('Battle Mode Setup')
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
-  const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
+
+  const { allKeys, setProviderKey } = useApiKeys()
+  const apiKeys = allKeys
+  const setApiKeys = (updater) => {
+    const next = typeof updater === 'function' ? updater(allKeys) : updater
+    Object.entries(next).forEach(([p, k]) => {
+      if (k !== allKeys[p]) setProviderKey(p, k)
+    })
+  }
 
   const selectedAgent = useMemo(
     () => agents.find((a) => a.id === selectedAgentId),
