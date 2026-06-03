@@ -7,9 +7,13 @@
 //
 // ============================================================
 
+export const CATEGORY_KEYS = {
+  CONTENT_WRITING: 'Content Writing',
+};
+
 export const CATEGORIES = [
   "Business",
-  "Content Writing",
+  CATEGORY_KEYS.CONTENT_WRITING,
   "Cybersecurity",
   "Data Science",
   "Design",
