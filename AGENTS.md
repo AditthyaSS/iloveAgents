@@ -1,6 +1,6 @@
 # 🤖 Available Agents
 
-34 agents and growing — built by the community. 🚀
+35 agents and growing — built by the community. 🚀
 
 | # | Agent | What It Does | Category |
 |---|-------|-------------|----------|
@@ -38,4 +38,5 @@
 | 32 | Accessibility Audit Generator | Paste your HTML and get a detailed WCAG audit with issues, severity ratings, and fixes | Engineering |
 | 33 | Personal Budget Analyzer | Analyze monthly income and expenses to get savings rate, benchmarks, and financial recommendations | Finance |
 | 34 | K8s Manifest Generator | Generates a full Kubernetes manifest from your app name, container image, port, and optional config | DevOps |
+| 35 | Secret Detection Guard | Scans code, logs, config files, and PR diffs for exposed secrets with remediation guidance | Developer Tools |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
