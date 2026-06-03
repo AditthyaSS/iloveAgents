@@ -1,10 +1,16 @@
-import { useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 
 export default function Sidebar({ open, onClose }) {
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
+  const [expandedCategories, setExpandedCategories] = useState(() => new Set())
+  const location = useLocation()
+  const activeAgent = useMemo(
+    () => agents.find((agent) => location.pathname === `/agent/${agent.id}`),
+    [location.pathname]
+  )
 
   // Filter agents based on search query
   const filteredAgents = agents.filter((agent) =>
@@ -20,6 +26,56 @@ export default function Sidebar({ open, onClose }) {
   }, {})
 
   const categoryOrder = Object.keys(categories)
+  const hasSearchQuery = sidebarSearchQuery.trim().length > 0
+  const allCategoriesExpanded =
+    categoryOrder.length > 0 &&
+    categoryOrder.every((category) => expandedCategories.has(category))
+
+  useEffect(() => {
+    if (!activeAgent) return
+
+    setExpandedCategories((current) => {
+      if (current.has(activeAgent.category)) return current
+
+      const next = new Set(current)
+      next.add(activeAgent.category)
+      return next
+    })
+  }, [activeAgent])
+
+  const toggleCategory = (category) => {
+    setExpandedCategories((current) => {
+      const next = new Set(current)
+
+      if (next.has(category)) {
+        next.delete(category)
+      } else {
+        next.add(category)
+      }
+
+      return next
+    })
+  }
+
+  const toggleAllCategories = () => {
+    setExpandedCategories(() => {
+      if (allCategoriesExpanded) return new Set()
+
+      return new Set(categoryOrder)
+    })
+  }
+
+  const updateSearchQuery = (event) => {
+    const nextQuery = event.target.value
+
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextQuery.trim())) {
+      event.target.value = ''
+      setSidebarSearchQuery('')
+      return
+    }
+
+    setSidebarSearchQuery(nextQuery)
+  }
 
   return (
     <>
@@ -48,17 +104,24 @@ export default function Sidebar({ open, onClose }) {
         </div>
 
         {/* Search Input */}
-        <div className="px-4 mb-2">
+        <div className="px-4 mb-3">
           <div className="relative group">
             <Icons.Search
               size={14}
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-text-muted group-focus-within:text-accent transition-colors"
             />
             <input
-              type="text"
+              type="search"
+              name="ila-agent-filter"
+              autoComplete="new-password"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck="false"
+              data-lpignore="true"
+              data-1p-ignore="true"
               placeholder="Search agents..."
               value={sidebarSearchQuery}
-              onChange={(e) => setSidebarSearchQuery(e.target.value)}
+              onChange={updateSearchQuery}
               className="w-full pl-8 pr-8 py-1.5 text-[12px] rounded-md border transition-all
                 dark:bg-surface-hover dark:border-border dark:text-text-primary dark:focus:border-accent/40
                 bg-gray-50 border-gray-200 text-gray-900 focus:border-accent/40 focus:ring-1 focus:ring-accent/10 outline-none"
@@ -74,36 +137,82 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
 
+        {categoryOrder.length > 0 && !hasSearchQuery && (
+          <div className="px-4 mb-2">
+            <button
+              type="button"
+              onClick={toggleAllCategories}
+              className="flex w-full items-center justify-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-medium transition-colors
+                dark:border-border dark:text-text-secondary dark:hover:bg-surface-hover dark:hover:text-text-primary
+                border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+            >
+              {allCategoriesExpanded ? (
+                <Icons.ChevronsUp size={13} />
+              ) : (
+                <Icons.ChevronsDown size={13} />
+              )}
+              <span>{allCategoriesExpanded ? 'Collapse all' : 'Expand all'}</span>
+            </button>
+          </div>
+        )}
+
         {/* Agent List */}
         <nav className="flex-1 overflow-y-auto px-2 pb-4">
-          {categoryOrder.map((category) => (
-            <div key={category} className="mb-3">
-              <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest dark:text-text-muted text-gray-400">
-                {category}
+          {categoryOrder.map((category) => {
+            const categoryAgents = categories[category]
+            const isExpanded = hasSearchQuery || expandedCategories.has(category)
+
+            return (
+              <div key={category} className="mb-1">
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category)}
+                  aria-expanded={isExpanded}
+                  className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors
+                    dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover
+                    text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                >
+                  {isExpanded ? (
+                    <Icons.ChevronDown size={14} className="flex-shrink-0" />
+                  ) : (
+                    <Icons.ChevronRight size={14} className="flex-shrink-0" />
+                  )}
+                  <span className="min-w-0 flex-1 truncate text-[11px] font-semibold uppercase tracking-widest">
+                    {category}
+                  </span>
+                  <span className="flex-shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:bg-surface-hover dark:text-text-muted">
+                    {categoryAgents.length}
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div className="mt-1 pl-4">
+                    {categoryAgents.map((agent) => {
+                      const IconComponent = Icons[agent.icon] || Icons.Bot
+                      return (
+                        <NavLink
+                          key={agent.id}
+                          to={`/agent/${agent.id}`}
+                          onClick={onClose}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
+                            ${
+                              isActive
+                                ? 'bg-accent/10 text-accent dark:text-accent'
+                                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            }`
+                          }
+                        >
+                          <IconComponent size={15} className="flex-shrink-0" />
+                          <span className="truncate">{agent.name}</span>
+                        </NavLink>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-              {categories[category].map((agent) => {
-                const IconComponent = Icons[agent.icon] || Icons.Bot
-                return (
-                  <NavLink
-                    key={agent.id}
-                    to={`/agent/${agent.id}`}
-                    onClick={onClose}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
-                      ${
-                        isActive
-                          ? 'bg-accent/10 text-accent dark:text-accent'
-                          : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`
-                    }
-                  >
-                    <IconComponent size={15} className="flex-shrink-0" />
-                    <span className="truncate">{agent.name}</span>
-                  </NavLink>
-                )
-              })}
-            </div>
-          ))}
+            )
+          })}
           {filteredAgents.length === 0 && (
             <div className="px-4 py-8 text-center text-xs text-gray-400 dark:text-text-muted">
               No agents found
