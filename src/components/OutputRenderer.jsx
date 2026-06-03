@@ -56,9 +56,9 @@ function DownloadButton({ text, agentName }) {
     const a = document.createElement('a')
     a.href = url
     a.download = `${agentName || 'output'}.txt`
-a.click()
-setTimeout(() => URL.revokeObjectURL(url), 100)  
-}
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
 
   return (
     <button
@@ -101,9 +101,10 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                code({ node, inline, className, children, ...props }) {
+                code({ node, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '')
-                  return !inline && match ? (
+                  const isInline = !match && ((children?.length ?? 0) < 80);
+                  return !isInline && match ? (
                     <SyntaxHighlighter
                       style={oneDark}
                       language={match[1]}

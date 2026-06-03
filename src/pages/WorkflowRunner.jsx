@@ -17,6 +17,7 @@ import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
+import RunRating from '../components/RunRating'
 import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
@@ -393,6 +394,7 @@ export default function WorkflowRunner() {
                       outputType={step.agent?.outputType ?? 'text'}
                       agentName={step.agentName}
                     />
+                    <RunRating />
                   </div>
                 )}
 

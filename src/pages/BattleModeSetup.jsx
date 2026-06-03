@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Settings, Key, Swords, ArrowLeft } from 'lucide-react'
+import { Settings, Key, Swords, ArrowLeft, Info, ExternalLink, ShieldCheck } from 'lucide-react'
 import agents from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -11,6 +11,7 @@ export default function BattleModeSetup() {
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
   const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
+  const [openHelperId, setOpenHelperId] = useState(null)
 
   const selectedAgent = useMemo(
     () => agents.find((a) => a.id === selectedAgentId),
@@ -74,9 +75,36 @@ export default function BattleModeSetup() {
   }
 
   const keyFields = [
-    { id: 'openai',    label: 'OpenAI API Key',       color: 'yellow', icon: Key, borderColor: 'border-yellow-400/30', focusColor: 'focus:ring-yellow-400/40 focus:border-yellow-400/50', focusBg: 'focus:bg-yellow-400/5' },
-    { id: 'anthropic', label: 'Anthropic API Key',     color: 'violet', icon: Key, borderColor: 'border-violet-400/30', focusColor: 'focus:ring-violet-400/40 focus:border-violet-400/50', focusBg: 'focus:bg-violet-400/5' },
-    { id: 'gemini',    label: 'Google Gemini API Key', color: 'blue',   icon: Key, borderColor: 'border-blue-400/30',   focusColor: 'focus:ring-blue-400/40 focus:border-blue-400/50',   focusBg: 'focus:bg-blue-400/5' },
+    {
+      id: 'openai',
+      label: 'OpenAI API Key',
+      colorClass: 'text-yellow-400',
+      borderColor: 'border-yellow-400/30',
+      focusColor: 'focus:ring-yellow-400/40 focus:border-yellow-400/50',
+      focusBg: 'focus:bg-yellow-400/5',
+      keyUrl: 'https://platform.openai.com/api-keys',
+      helperText: 'Open the OpenAI dashboard, create a new secret key, then paste it here.',
+    },
+    {
+      id: 'anthropic',
+      label: 'Anthropic API Key',
+      colorClass: 'text-violet-400',
+      borderColor: 'border-violet-400/30',
+      focusColor: 'focus:ring-violet-400/40 focus:border-violet-400/50',
+      focusBg: 'focus:bg-violet-400/5',
+      keyUrl: 'https://console.anthropic.com/settings/keys',
+      helperText: 'Sign in to Anthropic Console, create an API key, then copy it into Battle Mode.',
+    },
+    {
+      id: 'gemini',
+      label: 'Google Gemini API Key',
+      colorClass: 'text-blue-400',
+      borderColor: 'border-blue-400/30',
+      focusColor: 'focus:ring-blue-400/40 focus:border-blue-400/50',
+      focusBg: 'focus:bg-blue-400/5',
+      keyUrl: 'https://aistudio.google.com/apikey',
+      helperText: 'Visit Google AI Studio, generate an API key, and paste it here to enable Gemini.',
+    },
   ]
 
   return (
@@ -211,17 +239,66 @@ export default function BattleModeSetup() {
 
         {/* API Keys */}
         <div className="mb-8 space-y-5 battle-fade-in" style={{ animationDelay: '200ms' }}>
-          <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
-            API Keys
-          </h2>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                API Keys
+              </h2>
+              <p className="mt-2 text-xs text-gray-500 max-w-xl">
+                Need a key? Use the info button beside each provider to jump straight to its key page.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-[11px] text-emerald-200">
+              <ShieldCheck size={14} className="text-emerald-300 flex-shrink-0" />
+              <span>Keys stay in your browser and are not saved on our servers.</span>
+            </div>
+          </div>
           {keyFields.map((field) => (
             <div key={field.id}>
-              <label className="block text-xs font-medium text-gray-200 mb-2">
-                {field.label}
-              </label>
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <label className="block pt-1 text-xs font-medium text-gray-200">
+                  {field.label}
+                </label>
+                <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setOpenHelperId((current) => current === field.id ? null : field.id)}
+                    className="inline-flex h-5 w-5 items-center justify-center text-gray-400 transition-colors hover:text-white"
+                    aria-label={`How to get a ${field.label}`}
+                    aria-expanded={openHelperId === field.id}
+                  >
+                    <Info size={12} />
+                  </button>
+                  <a
+                    href={field.keyUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] text-gray-500 transition-colors hover:text-white"
+                  >
+                    Get key
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              </div>
+
+              {openHelperId === field.id && (
+                <div className="mb-3 rounded-lg border border-gray-800 bg-gray-900/80 px-3 py-3 text-xs text-gray-300">
+                  <p>{field.helperText}</p>
+                  <a
+                    href={field.keyUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 font-medium text-yellow-300 transition-colors hover:text-yellow-200"
+                  >
+                    Open {field.label} page
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+              )}
+
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Key size={14} className={`text-${field.color}-400`} />
+                  <Key size={14} className={field.colorClass} />
                 </div>
                 <input
                   type="password"

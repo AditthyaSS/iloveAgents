@@ -35,6 +35,7 @@ export default function WorkflowBuilder() {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Pre-select agent if coming from AgentRunner
   useEffect(() => {
@@ -52,10 +53,17 @@ export default function WorkflowBuilder() {
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
   const availableAgents = agents.filter((a) => !selectedIds.has(a.id))
 
+  // Filter agents based on search query
+  const filteredAgents = availableAgents.filter((agent) =>
+    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    agent.category.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const addAgent = (agent) => {
     if (selectedAgents.length >= MAX_AGENTS) return
     setSelectedAgents((prev) => [...prev, agent])
     setDropdownOpen(false)
+    setSearchQuery('')
   }
 
   const removeAgent = (index) => {
@@ -262,12 +270,26 @@ export default function WorkflowBuilder() {
                   dark:bg-surface-card dark:border-border bg-white border-gray-200
                   max-h-64 overflow-y-auto animate-fade-in"
               >
-                {availableAgents.length === 0 ? (
+                {/* 🔍 STICKY SEARCH BAR INPUT */}
+                <div className="p-2 sticky top-0 bg-white dark:bg-surface-card border-b dark:border-border z-10">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search agents by name or category..."
+                    className="w-full px-2.5 py-1.5 rounded-md border text-xs transition-all
+                      dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
+                      bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
+                      focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                  />
+                </div>
+
+                {filteredAgents.length === 0 ? (
                   <div className="px-4 py-3 text-sm dark:text-text-muted text-gray-400 text-center">
-                    All agents already added
+                    No agents found
                   </div>
                 ) : (
-                  availableAgents.map((agent) => {
+                  filteredAgents.map((agent) => {
                     const IconComponent = Icons[agent.icon] || Icons.Bot
                     return (
                       <button
@@ -364,7 +386,8 @@ export default function WorkflowBuilder() {
               <Save size={15} />
               Save Workflow
             </>
-          )}
+          )
+          }
         </button>
 
         <button

@@ -1,31 +1,62 @@
-name: Welcome on Issue Assignment
+name: Notify Other Commenters on Issue Assignment
 
+# Trigger: fires whenever an issue is assigned to someone
 on:
   issues:
     types: [assigned]
 
 jobs:
-  welcome-assignee:
+  notify-commenters:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Post assignment welcome comment
-        uses: peter-evans/create-or-update-comment@v5
+      # Collect all unique commenters on the issue, then tag those who are
+      # neither the newly assigned person nor the maintainer AditthyaSS.
+      - name: Tag other interested commenters
+        uses: actions/github-script@v7
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.issue.number }}
-          body: |
-            Hey @${{ github.event.assignee.login }}! 👋
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const MAINTAINER = 'AditthyaSS';
+            const issueNumber = context.payload.issue.number;
+            const assignedPerson = context.payload.assignee.login;
 
-            You have been assigned to this issue — excited to have you on it! 🎉
+            // Fetch all comments on this issue (paginated, up to 100 per page)
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber,
+                per_page: 100,
+              }
+            );
 
-            Before you start, here are a few things to keep in mind:
+            // Build a deduplicated set of commenters to notify:
+            // exclude the assigned person, the maintainer, and bots
+            const toNotify = [
+              ...new Set(
+                comments
+                  .map(c => c.user.login)
+                  .filter(login =>
+                    login !== assignedPerson &&
+                    login !== MAINTAINER &&
+                    !login.includes('[bot]')
+                  )
+              )
+            ];
 
-            - ⭐ **Please star the repo** if you haven't already — it helps others discover iloveAgents and keeps the community growing. [Star it here](https://github.com/AditthyaSS/iloveAgents)
-            - 📖 Read the [Contributing Guide](https://github.com/AditthyaSS/iloveAgents/blob/main/CONTRIBUTING.md) if you haven't yet — it has everything you need to get started
-            - 🔀 Once you start working, **open a Draft PR** so I know you are actively on it
-            - 💬 If you get stuck at any point, just drop a comment here — I check GitHub every day and will reply within 24 hours
+            // Only post a comment if there are people to notify
+            if (toNotify.length === 0) {
+              console.log('No other commenters to notify. Skipping comment.');
+              return;
+            }
 
-            You got this. Can't wait to see what you build! 🚀
+            const mentions = toNotify.map(u => `@${u}`).join(', ');
 
-            — [@AditthyaSS](https://github.com/AditthyaSS)
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `Hey everyone! 👋\n\n${mentions}\n\nThis issue has been assigned to @${assignedPerson}.\n\nIf you were interested in working on this, hang tight — if the current contributor goes inactive and no PR is opened within 5 days, this issue will be automatically reassigned to the next interested contributor. So stay engaged and keep an eye on this thread! 👀\n\nIn the meantime, feel free to check out our other open issues and pick one that interests you.\n\nThank you for your enthusiasm — it means a lot! 🙏\n\n— [@AditthyaSS](https://github.com/AditthyaSS)`
+            });
