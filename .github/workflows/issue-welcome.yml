@@ -1,0 +1,27 @@
+name: Welcome New Issue Author
+
+# Trigger: fires whenever a new issue is opened
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Post a welcome comment tagging the issue author
+      - name: Post welcome comment
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const author = context.payload.issue.user.login;
+            const issueNumber = context.payload.issue.number;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `👋 Hey @${author}! Thanks for opening this issue.\n\nOur maintainer will review it shortly and get back to you.\n\nWhile you wait:\n- 📖 Check our [Contributing Guide](https://github.com/AditthyaSS/iloveAgents/blob/main/CONTRIBUTING.md)\n- ⭐ [Star the repo](https://github.com/AditthyaSS/iloveAgents) if you haven't already\n- 💬 Feel free to add more details to help us understand better\n\n— [@AditthyaSS](https://github.com/AditthyaSS)`
+            });
