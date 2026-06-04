@@ -42,3 +42,98 @@ pull_request_rules:
     actions:
       merge:
         method: merge
+
+  # Merge conflict rule
+  # Notifies the author when their PR has a merge conflict that must be resolved.
+  - name: Notify author on merge conflict
+    conditions:
+      - conflict
+    actions:
+      comment:
+        message: |
+          ⚠️ Hey @{{author}}! This PR has a merge conflict that needs to be resolved before we can review or merge it.
+          Please sync your branch with the latest main and fix the conflicts.
+          Need help? Check out [resolving merge conflicts](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/resolving-a-merge-conflict-using-the-command-line).
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+
+  # Lock file rule
+  # Flags PRs that modify package-lock.json without a corresponding change to package.json.
+  # This is usually caused by running `npm install` locally with a mismatched npm version.
+  - name: Flag unintentional package-lock.json changes
+    conditions:
+      - "files~=^package-lock\\.json$"
+      - "-files~=^package\\.json$"
+    actions:
+      comment:
+        message: |
+          ⚠️ Hey @{{author}}! It looks like only `package-lock.json` was changed but `package.json` was not.
+          This is usually unintentional — it happens when `npm install` is run locally with a different npm version.
+          Please revert the `package-lock.json` changes by running:
+          ```
+          git checkout package-lock.json
+          ```
+          Then push again. If you intentionally changed dependencies, make sure `package.json` is also updated.
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # PR title format check
+  # Flags PRs whose title does not follow the "type: description" convention.
+  # Valid types: feat, fix, docs, style, refactor, test, chore
+  - name: Flag invalid PR title format
+    conditions:
+      - "-title~=^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?!?:\\s.+"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          Your PR title doesn't follow our required format.
+          Please update it to:
+          `type: short description`
+          Valid types: feat, fix, docs, style, refactor, test, chore
+          Example: `feat: add sales discovery agent`
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # Empty PR description check
+  # Flags PRs with no description or a description shorter than 20 characters.
+  - name: Flag empty PR description
+    conditions:
+      - "body~=^.{0,19}$"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          Your PR description is empty.
+          Please add:
+          - What changes you made and why
+          - The issue this PR closes: `Closes #issue_number`
+          - Screenshots if it's a UI change
+          A good description helps us review and merge faster! 🚀
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # No linked issue check
+  # Flags PRs that don't reference a closing keyword + issue number in the body.
+  - name: Flag missing linked issue
+    conditions:
+      - "-body~=(?i)(closes?|fixes?|resolves?)\\s+#[0-9]+"
+      - "body~=.{20,}"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          Your PR doesn't seem to be linked to an issue.
+          Please add this line to your PR description:
+          `Closes #issue_number`
+          Replace issue_number with the actual issue number you are solving.
+          This helps us track what each PR is fixing! 🔗
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix

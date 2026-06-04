@@ -17,6 +17,7 @@ import * as Icons from 'lucide-react'
 import agents from '../agents/registry'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
+import RunRating from '../components/RunRating'
 import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
  main
@@ -493,6 +494,7 @@ export default function WorkflowRunner() {
                         <span className="text-xs dark:text-text-secondary text-gray-500">Processing...</span>
                       </div>
                     </div>
+ main
                   )}
 
                   {step.status === 'done' && step.output && (
@@ -513,6 +515,29 @@ export default function WorkflowRunner() {
                           <p className="text-xs font-medium text-red-400 mb-1">Step failed</p>
                           <p className="text-xs text-red-400/80">{step.error}</p>
                         </div>
+
+                  </div>
+                )}
+
+                {step.status === 'done' && step.output && (
+                  <div className="p-4">
+                    <OutputRenderer
+                      content={step.output}
+                      outputType={step.agent?.outputType ?? 'text'}
+                      agentName={step.agentName}
+                    />
+                    <RunRating />
+                  </div>
+                )}
+
+                {step.status === 'failed' && step.error && (
+                  <div className="p-4">
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <AlertCircle size={14} className="text-red-400 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-medium text-red-400 mb-1">Step failed</p>
+                        <p className="text-xs text-red-400/80">{step.error}</p>
+ main
                       </div>
                       <button
                         onClick={handleRunAgain}

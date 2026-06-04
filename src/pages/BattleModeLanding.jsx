@@ -24,7 +24,7 @@ export default function BattleModeLanding() {
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
       <BattleNavbar />
 
-      <main className="pt-14 flex flex-col items-center justify-center min-h-screen px-4">
+      <main className="pt-24 flex flex-col items-center justify-center min-h-screen px-4 pb-12">
         {/* Back button */}
         <button
           onClick={() => navigate('/')}
@@ -36,14 +36,14 @@ export default function BattleModeLanding() {
         </button>
 
         {/* Hero */}
-<div className="text-center mb-12 battle-fade-in">
-          <div className="w-20 h-20 rounded-2xl bg-yellow-400/10 border border-yellow-400/30
-            flex items-center justify-center mx-auto mb-6 battle-glow-gold
+        <div className="text-center mb-16 battle-fade-in">
+          <div className="w-16 h-16 rounded-2xl bg-yellow-400/10 border border-yellow-400/30
+            flex items-center justify-center mx-auto mb-4 battle-glow-gold
             hover:border-yellow-400/60 hover:shadow-lg hover:shadow-yellow-400/30 
             transition-all duration-300 cursor-default">
-            <Swords size={40} className="text-yellow-400" />
+            <Swords size={32} className="text-yellow-400" />
           </div>
-          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-wider mb-3
+          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-wider mb-2
             bg-gradient-to-r from-yellow-300 via-white to-violet-400 bg-clip-text text-transparent
             drop-shadow-[0_0_30px_rgba(250,204,21,0.3)]">
             Battle Mode
@@ -54,7 +54,7 @@ export default function BattleModeLanding() {
         </div>
 
         {/* Provider Cards */}
-        <div className="flex items-center justify-center gap-3 sm:gap-5 mb-10 w-full max-w-lg">
+        <div className="flex items-center justify-center gap-3 sm:gap-5 mb-16 w-full max-w-lg">
           {/* GPT */}
           <div
             className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border
@@ -108,7 +108,7 @@ export default function BattleModeLanding() {
         </div>
 
         {/* Steps */}
-        <div className="w-full max-w-2xl space-y-3 mb-12">
+        <div className="w-full max-w-2xl space-y-3 mb-16">
           {steps.map((step, idx) => {
             const Icon = step.icon
             return (

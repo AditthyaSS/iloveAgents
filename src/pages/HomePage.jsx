@@ -7,6 +7,7 @@ import { useFavorites } from '../lib/useFavorites'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 
 // Derive unique sorted categories from the registry
 const allCategories = [...new Set(agents.map((a) => a.category))].sort()
@@ -33,6 +34,13 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
   useDocumentTitle()
+
+  useKeyboardShortcuts({
+    '/': (e) => {
+      e.preventDefault();
+      document.getElementById('agent-search')?.focus();
+    },
+  });
   
   const { favorites } = useFavorites()
   const { history, deleteRun, clearHistory } = useHistory()
@@ -366,23 +374,100 @@ export default function HomePage() {
           </div>
         </div>
       )}
-
-      {/* Footer CTA */}
-      <div className="text-center py-8 border-t dark:border-border border-gray-200">
-        <p className="text-xs dark:text-text-muted text-gray-400 mb-3">
+{/* Footer */}
+<footer className="w-full mt-auto py-12 border-t border-gray-200 dark:border-border bg-gray-50/50 dark:bg-[#0a0a0a]">
+  <div className="container mx-auto px-4 md:px-8">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+      
+      {/* Column 1: Brand Info */}
+      <div className="flex flex-col gap-4">
+        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+          iLoveAgents
+        </h3>
+        <p className="text-sm text-gray-500 dark:text-text-muted leading-relaxed">
+          Community built AI workflows. Connect agents and automate your process seamlessly.
+        </p>
+        <div className="mt-auto text-sm font-medium text-gray-400 dark:text-gray-500">
           Built for GSSoC 2026
+        </div>
+      </div>
+
+      {/* Column 2: Resources */}
+      <div className="flex flex-col gap-3">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Resources</h4>
+        
+        {/* Links directly to the GitHub README */}
+        <a 
+          href="https://github.com/AditthyaSS/iloveAgents#readme" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors"
+        >
+          Documentation
+        </a>
+        
+        {/* Links directly to the GitHub Issues page */}
+        <a 
+          href="https://github.com/AditthyaSS/iloveAgents/issues" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors"
+        >
+          Request an Agent
+        </a>
+      </div>
+
+      {/* Column 3: Legal */}
+      <div className="flex flex-col gap-3">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h4>
+        
+        {/* Placeholder Link - Disabled click behavior */}
+        <a 
+          href="#" 
+          onClick={(e) => e.preventDefault()}
+          title="Coming Soon"
+          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors cursor-not-allowed opacity-75"
+        >
+          Privacy Policy
+        </a>
+        
+        {/* Placeholder Link - Disabled click behavior */}
+        <a 
+          href="#" 
+          onClick={(e) => e.preventDefault()}
+          title="Coming Soon"
+          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors cursor-not-allowed opacity-75"
+        >
+          Terms of Service
+        </a>
+      </div>
+
+      {/* Column 4: Contribute CTA */}
+      <div className="flex flex-col gap-3">
+        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h4>
+        <p className="text-sm text-gray-500 dark:text-text-muted mb-2">
+          Join us in building the ultimate agent library.
         </p>
         <a
           href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+          className="inline-flex items-center w-fit gap-2 px-4 py-2 text-sm font-medium text-white bg-accent hover:bg-accent-hover rounded-md transition-colors"
         >
-          <Github size={14} />
-          Contribute an agent on GitHub
-          <ArrowRight size={12} />
+          <Github size={16} />
+          GitHub Repo
+          <ArrowRight size={14} />
         </a>
       </div>
+
     </div>
-  )
+
+    {/* Bottom Copyright Bar */}
+    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center text-gray-500 dark:text-text-muted">
+      © {new Date().getFullYear()} iLoveAgents. All rights reserved.
+    </div>
+  </div>
+</footer>
+</div>
+)
 }

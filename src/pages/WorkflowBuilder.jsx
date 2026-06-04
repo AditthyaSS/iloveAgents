@@ -43,6 +43,7 @@ export default function WorkflowBuilder() {
   const [addingMCPStep, setAddingMCPStep] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // Pre-select agent if coming from AgentRunner
   useEffect(() => {
@@ -60,10 +61,17 @@ export default function WorkflowBuilder() {
   const agentIds = new Set(selectedSteps.filter(s => s.type === 'agent').map((s) => s.id))
   const availableAgents = agents.filter((a) => !agentIds.has(a.id))
 
+  // Filter agents based on search query
+  const filteredAgents = availableAgents.filter((agent) =>
+    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    agent.category.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   const addAgent = (agent) => {
     if (selectedSteps.length >= MAX_STEPS) return
     setSelectedSteps((prev) => [...prev, { type: 'agent', id: agent.id, ...agent }])
     setDropdownOpen(false)
+    setSearchQuery('')
   }
 
   const addMCPStep = () => {
@@ -376,6 +384,61 @@ export default function WorkflowBuilder() {
                 Add MCP Step (GitHub, Slack, etc.)
               </span>
             </button>
+ main
+
+
+            {dropdownOpen && (
+              <div
+                className="absolute top-full mt-1 left-0 right-0 z-30 rounded-lg border shadow-xl
+                  dark:bg-surface-card dark:border-border bg-white border-gray-200
+                  max-h-64 overflow-y-auto animate-fade-in"
+              >
+                {/* 🔍 STICKY SEARCH BAR INPUT */}
+                <div className="p-2 sticky top-0 bg-white dark:bg-surface-card border-b dark:border-border z-10">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search agents by name or category..."
+                    className="w-full px-2.5 py-1.5 rounded-md border text-xs transition-all
+                      dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
+                      bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
+                      focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                  />
+                </div>
+
+                {filteredAgents.length === 0 ? (
+                  <div className="px-4 py-3 text-sm dark:text-text-muted text-gray-400 text-center">
+                    No agents found
+                  </div>
+                ) : (
+                  filteredAgents.map((agent) => {
+                    const IconComponent = Icons[agent.icon] || Icons.Bot
+                    return (
+                      <button
+                        key={agent.id}
+                        onClick={() => addAgent(agent)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors
+                          dark:hover:bg-surface-hover hover:bg-gray-50"
+                      >
+                        <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
+                          <IconComponent size={13} className="text-accent" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
+                            {agent.name}
+                          </div>
+                          <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
+                            {agent.category}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })
+                )}
+              </div>
+            )}
+ main
           </div>
         )}
 
@@ -447,7 +510,8 @@ export default function WorkflowBuilder() {
               <Save size={15} />
               Save Workflow
             </>
-          )}
+          )
+          }
         </button>
 
         <button

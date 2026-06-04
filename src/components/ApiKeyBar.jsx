@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { fetchGeminiModels } from '../lib/llmAdapter'
+import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { MODELS } from '../lib/resolveAgentModel'
+import ApiKeyInfo from './ApiKeyInfo'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
@@ -15,7 +18,13 @@ const providerLogos = {
   openai: openaiLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
-};
+}
+
+const providerUrls = {
+  openai: 'https://platform.openai.com/account/api-keys',
+  anthropic: 'https://console.anthropic.com/keys',
+  gemini: 'https://console.cloud.google.com/apis/credentials',
+}
 
 
 
@@ -31,6 +40,32 @@ export default function ApiKeyBar({
   setModel,
 }) {
   const [showKey, setShowKey] = useState(false)
+  const [geminiModels, setGeminiModels] = useState([])
+  const [geminiLoading, setGeminiLoading] = useState(false)
+  const [geminiError, setGeminiError] = useState(null)
+
+  useEffect(() => {
+    if (provider !== 'gemini' || !apiKey?.trim()) {
+      setGeminiModels([])
+      setGeminiError(null)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setGeminiLoading(true)
+      setGeminiError(null)
+      try {
+        const models = await fetchGeminiModels(apiKey)
+        setGeminiModels(models)
+        if (models.length > 0) setModel(models[0].value)
+      } catch {
+        setGeminiError('Could not load Gemini models. Check your API key.')
+        setGeminiModels([])
+      } finally {
+        setGeminiLoading(false)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [provider, apiKey])
 
   // Filter providers if agent requires a specific one
   const availableProviders =
@@ -38,7 +73,23 @@ export default function ApiKeyBar({
       ? PROVIDERS
       : PROVIDERS.filter((p) => p.value === agentProvider)
 
-  const availableModels = MODELS[provider] || []
+  const availableModels =
+    provider === 'gemini' ? geminiModels : MODELS[provider] || []
+
+  useKeyboardShortcuts({
+    'Alt+1': () => {
+      const p = availableProviders.find(p => p.value === 'openai');
+      if (p) setProvider('openai');
+    },
+    'Alt+2': () => {
+      const p = availableProviders.find(p => p.value === 'anthropic');
+      if (p) setProvider('anthropic');
+    },
+    'Alt+3': () => {
+      const p = availableProviders.find(p => p.value === 'gemini');
+      if (p) setProvider('gemini');
+    },
+  });
 
   return (
     <div className="rounded-lg border p-3 mb-4 transition-theme
@@ -76,16 +127,21 @@ export default function ApiKeyBar({
         <select
           value={model}
           onChange={(e) => setModel(e.target.value)}
+          disabled={geminiLoading}
           className="h-8 px-2.5 rounded-md text-xs font-medium transition-colors cursor-pointer
             dark:bg-surface-input dark:border-border dark:text-text-primary
             bg-gray-50 border border-gray-200 text-gray-900
-            focus:ring-1 focus:ring-accent focus:border-accent outline-none"
+            focus:ring-1 focus:ring-accent focus:border-accent outline-none
+            disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {availableModels.map((m) => (
-            <option key={m.value} value={m.value} className="text-black">
-              {m.label}
-            </option>
-          ))}
+          {geminiLoading
+            ? <option>Loading models...</option>
+            : availableModels.map((m) => (
+                <option key={m.value} value={m.value} className="text-black">
+                  {m.label}
+                </option>
+              ))
+          }
         </select>
 
         {/* API Key Input */}
@@ -95,11 +151,14 @@ export default function ApiKeyBar({
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={`Enter your ${provider} API key...`}
-            className="w-full h-8 px-3 pr-8 rounded-md text-xs font-mono transition-colors
+            className="w-full h-8 px-3 pr-10 rounded-md text-xs font-mono transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
               bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
               focus:ring-1 focus:ring-accent focus:border-accent outline-none"
           />
+          <div className="absolute right-8 top-1/2 -translate-y-1/2">
+            <ApiKeyInfo provider={provider} url={providerUrls[provider]} />
+          </div>
           <button
             onClick={() => setShowKey(!showKey)}
             className="absolute right-2 top-1/2 -translate-y-1/2 dark:text-text-muted text-gray-400
@@ -137,6 +196,15 @@ export default function ApiKeyBar({
         <div className="mt-2 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/20">
           <span className="text-[11px] text-warning font-medium">
             ⚠ Enter an API key to run this agent.
+          </span>
+        </div>
+      )}
+
+      {/* Gemini model fetch error */}
+      {geminiError && (
+        <div className="mt-2 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/20">
+          <span className="text-[11px] text-warning font-medium">
+            ⚠ {geminiError}
           </span>
         </div>
       )}

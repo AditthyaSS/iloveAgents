@@ -1,0 +1,337 @@
+name: Weekly Summary Report
+
+# Trigger: every Monday at 9:00 AM IST (3:30 AM UTC)
+# Also supports manual runs from the Actions tab for testing
+on:
+  schedule:
+    - cron: '30 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  weekly-summary:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate weekly summary and open GitHub issue
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const MAINTAINER = 'AditthyaSS';
+            const MS_PER_DAY = 86_400_000;
+            const now = new Date();
+
+            // ── Date range: last 7 days
+            const since = new Date(now.getTime() - 7 * MS_PER_DAY);
+            const sinceISO = since.toISOString();
+
+            // ── Human-readable week label for the issue title/body
+            const weekLabel = now.toLocaleDateString('en-GB', {
+              day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata'
+            });
+
+            console.log(`Generating weekly summary for week of ${weekLabel} (since ${sinceISO})`);
+
+            // ─────────────────────────────────────────────────────────────
+            // HELPER: paginate a GitHub API endpoint safely
+            // ─────────────────────────────────────────────────────────────
+            async function paginate(method, params) {
+              return github.paginate(method, { ...params, per_page: 100 });
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: All issues opened in the last 7 days
+            // ─────────────────────────────────────────────────────────────
+            const newIssues = await paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              since: sinceISO,
+            });
+
+            // Separate real issues from PRs (GitHub mixes them)
+            const newIssuesOnly = newIssues.filter(i =>
+              !i.pull_request &&
+              new Date(i.created_at) >= since
+            );
+
+            const closedIssuesThisWeek = newIssues.filter(i =>
+              !i.pull_request &&
+              i.state === 'closed' &&
+              i.closed_at &&
+              new Date(i.closed_at) >= since
+            );
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: Issues still open with no assignee
+            // ─────────────────────────────────────────────────────────────
+            const allOpenIssues = await paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+            });
+
+            const openIssuesNoAssignee = allOpenIssues.filter(i =>
+              !i.pull_request &&
+              i.assignees.length === 0
+            );
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: All PRs (open + closed) touching the last 7 days
+            // ─────────────────────────────────────────────────────────────
+            const allPRsRaw = await paginate(github.rest.pulls.list, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'all',
+              sort: 'created',
+              direction: 'desc',
+            });
+
+            const prsOpenedThisWeek = allPRsRaw.filter(pr =>
+              new Date(pr.created_at) >= since
+            );
+
+            const prsMergedThisWeek = allPRsRaw.filter(pr =>
+              pr.merged_at && new Date(pr.merged_at) >= since
+            );
+
+            const prsClosedWithoutMerge = allPRsRaw.filter(pr =>
+              pr.state === 'closed' &&
+              !pr.merged_at &&
+              pr.closed_at &&
+              new Date(pr.closed_at) >= since
+            );
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: Open PRs with the "needs-fix" label
+            // ─────────────────────────────────────────────────────────────
+            const openPRsNeedsFix = await paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'needs-fix',
+            });
+
+            // Keep only actual PRs (not issues) with needs-fix
+            const needsFixPRs = openPRsNeedsFix.filter(i => i.pull_request);
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: New contributors this week
+            // (PR authors who had their FIRST ever PR merged this week)
+            // ─────────────────────────────────────────────────────────────
+            const newContributors = new Set();
+            for (const pr of prsMergedThisWeek) {
+              const author = pr.user.login;
+              if (author === MAINTAINER || author.includes('[bot]')) continue;
+
+              // Check if this author had any PR merged before this week
+              const priorPRs = allPRsRaw.filter(p =>
+                p.user.login === author &&
+                p.merged_at &&
+                new Date(p.merged_at) < since
+              );
+              if (priorPRs.length === 0) {
+                newContributors.add(author);
+              }
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: Contributors who missed the 5-day assignment deadline
+            // Find assigned issues where assignment was > 5 days ago and
+            // no PR has been opened referencing them
+            // ─────────────────────────────────────────────────────────────
+
+            // Build set of issue numbers referenced by any open or merged PR
+            const linkedIssueNumbers = new Set();
+            for (const pr of allPRsRaw) {
+              if (pr.state === 'closed' && !pr.merged_at) continue; // skip closed-without-merge
+              const body = (pr.body || '') + ' ' + (pr.title || '');
+              const matches = body.matchAll(/(?:closes?|fixes?|resolves?)\s+#(\d+)/gi);
+              for (const m of matches) {
+                linkedIssueNumbers.add(parseInt(m[1], 10));
+              }
+            }
+
+            const missedDeadline = [];
+            const assignedOpenIssues = allOpenIssues.filter(i =>
+              !i.pull_request && i.assignees.length > 0
+            );
+
+            for (const issue of assignedOpenIssues) {
+              // Skip if a PR already references this issue
+              if (linkedIssueNumbers.has(issue.number)) continue;
+
+              // Fetch assignment event to get exact assignment timestamp
+              try {
+                const events = await github.paginate(
+                  github.rest.issues.listEvents,
+                  {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issue.number,
+                    per_page: 100,
+                  }
+                );
+                const assignedEvent = events.filter(e => e.event === 'assigned').pop();
+                if (!assignedEvent) continue;
+
+                const assignedAt = new Date(assignedEvent.created_at);
+                const daysSince = (now - assignedAt) / MS_PER_DAY;
+
+                // Missed deadline = assigned > 5 days ago, no PR opened
+                if (daysSince > 5) {
+                  const assignee = issue.assignees[0]?.login;
+                  if (assignee && assignee !== MAINTAINER) {
+                    missedDeadline.push({ assignee, issueNumber: issue.number });
+                  }
+                }
+              } catch {
+                // Skip if events can't be fetched for this issue
+              }
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // COLLECT: Open PRs needing maintainer review
+            // (open PRs with no review yet, excluding maintainer's own PRs)
+            // ─────────────────────────────────────────────────────────────
+            const openPRs = allPRsRaw.filter(pr => pr.state === 'open');
+            const prsNeedingReview = [];
+
+            for (const pr of openPRs) {
+              if (pr.user.login === MAINTAINER || pr.user.login.includes('[bot]')) continue;
+              try {
+                const reviews = await github.rest.pulls.listReviews({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                });
+                // Include if no reviews submitted yet
+                if (reviews.data.length === 0) {
+                  prsNeedingReview.push(pr);
+                }
+              } catch {
+                prsNeedingReview.push(pr); // include on error to be safe
+              }
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // CHECK: Skip creating issue if there is truly nothing to report
+            // ─────────────────────────────────────────────────────────────
+            const hasAnything =
+              newIssuesOnly.length > 0 ||
+              closedIssuesThisWeek.length > 0 ||
+              openIssuesNoAssignee.length > 0 ||
+              prsOpenedThisWeek.length > 0 ||
+              prsMergedThisWeek.length > 0 ||
+              prsClosedWithoutMerge.length > 0 ||
+              needsFixPRs.length > 0 ||
+              newContributors.size > 0 ||
+              missedDeadline.length > 0 ||
+              prsNeedingReview.length > 0;
+
+            if (!hasAnything) {
+              console.log('Nothing to report this week. Skipping issue creation.');
+              return;
+            }
+
+            // ─────────────────────────────────────────────────────────────
+            // FORMAT: Build each section of the issue body
+            // ─────────────────────────────────────────────────────────────
+            const fmt = (arr, fn) =>
+              arr.length === 0
+                ? 'None this week 🎉'
+                : arr.map(fn).join('\n');
+
+            const issuesNoAssigneeList = fmt(
+              openIssuesNoAssignee,
+              i => `- #${i.number} — ${i.title}`
+            );
+
+            const needsFixPRList = fmt(
+              needsFixPRs,
+              pr => `- #${pr.number} — ${pr.title}`
+            );
+
+            const newContributorsList =
+              newContributors.size === 0
+                ? 'None this week 🎉'
+                : [...newContributors].map(u => `- @${u}`).join('\n');
+
+            const missedDeadlineList = fmt(
+              missedDeadline,
+              m => `- @${m.assignee} → issue #${m.issueNumber}`
+            );
+
+            const actionIssuesList = fmt(
+              openIssuesNoAssignee.slice(0, 10), // cap at 10 for readability
+              i => `- #${i.number} — ${i.title}`
+            );
+
+            const actionPRsList = fmt(
+              prsNeedingReview.slice(0, 10),
+              pr => `- #${pr.number} — ${pr.title}`
+            );
+
+            // ─────────────────────────────────────────────────────────────
+            // BUILD: Full issue body
+            // ─────────────────────────────────────────────────────────────
+            const body = `## 📊 Weekly Summary — ${weekLabel}
+
+### 📥 Issues
+- New issues opened: ${newIssuesOnly.length}
+- Issues closed: ${closedIssuesThisWeek.length}
+- Issues with no assignee:
+${issuesNoAssigneeList}
+
+### 🔀 Pull Requests
+- PRs opened: ${prsOpenedThisWeek.length}
+- PRs merged: ${prsMergedThisWeek.length}
+- PRs closed without merge: ${prsClosedWithoutMerge.length}
+- PRs with needs-fix still open:
+${needsFixPRList}
+
+### 👥 Contributors
+- New contributors this week: ${newContributors.size}
+${newContributorsList}
+- Contributors who missed 5-day deadline:
+${missedDeadlineList}
+
+### 📌 Action Needed
+- Issues needing your assignment:
+${actionIssuesList}
+- PRs needing your review:
+${actionPRsList}
+
+— Auto generated every Monday by GitHub Actions 🤖`;
+
+            // ─────────────────────────────────────────────────────────────
+            // CREATE: Open the weekly summary issue assigned to maintainer
+            // ─────────────────────────────────────────────────────────────
+
+            // Ensure "discussion" label exists before using it
+            try {
+              await github.rest.issues.getLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'discussion',
+              });
+            } catch {
+              await github.rest.issues.createLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: 'discussion',
+                color: 'd4c5f9',
+                description: 'General discussion',
+              });
+            }
+
+            const createdIssue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `📊 Weekly Summary — Week of ${weekLabel}`,
+              body: body,
+              labels: ['discussion'],
+              assignees: [MAINTAINER],
+            });
+
+            console.log(`Weekly summary issue created: #${createdIssue.data.number}`);

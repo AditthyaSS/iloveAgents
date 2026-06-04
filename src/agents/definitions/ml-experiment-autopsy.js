@@ -1,12 +1,21 @@
 const mlExperimentAutopsy = {
-  id: 'ml-experiment-report-generator',           
+  id: 'ml-experiment-autopsy',
   name: 'Model Meltdown Detective',
   description: 'Diagnose failed or underperforming ML experiments using model details, dataset context, metrics, hyperparameters, and code snippets.',
-  category: 'Data Science',          
-  icon: 'ChartSpline',              
-  provider: 'any',               
-  defaultProvider: 'openai',     
-  model: 'gpt-4o',
+  category: 'Engineering',
+  icon: 'ChartSpline',
+
+  provider: 'any',
+  supportedProviders: ['openai', 'anthropic', 'google', 'mistral'],
+  defaultProvider: 'anthropic',
+  defaultModels: {
+    openai: 'gpt-4o',
+    anthropic: 'claude-sonnet-4-20250514',
+    google: 'gemini-1.5-pro',
+    mistral: 'mistral-large-latest',
+  },
+  model: 'claude-sonnet-4-20250514',
+
   exampleInputs: {
     model_type: 'CNN (Convolutional Neural Network)',
 
@@ -58,6 +67,7 @@ X = normalize(X_all)
 y = encode(y_all)
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)`,
   },
+
   inputs: [
     {
       id: 'model_type',
@@ -109,6 +119,46 @@ X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)`,
       required: false,
     },
   ],
+
+  loadExampleButton: {
+    enabled: true,
+    label: 'Load example',
+    tooltip: 'Fill all fields with a sample CNN chest X-ray experiment',
+  },
+
+  exportOptions: {
+    markdown: {
+      enabled: true,
+      label: 'Export as Markdown',
+      filename: 'ml-autopsy-report.md',
+    },
+    pdf: {
+      enabled: true,
+      label: 'Export as PDF',
+      filename: 'ml-autopsy-report.pdf',
+      // PDF generation should use the rendered markdown output.
+      // Recommended: use a headless print approach (window.print or a lib like jsPDF / Puppeteer).
+    },
+  },
+
+  copyOptions: {
+    copyMarkdown: { enabled: true, label: 'Copy' },
+    copyPlainText: {
+      enabled: true,
+      label: 'Copy as plain text',
+      // Strip: ##, **, *, `, |, leading dashes, table separators
+      stripPatterns: [
+        /^#{1,6}\s/gm,       // headings
+        /\*\*(.*?)\*\*/g,    // bold → inner text
+        /\*(.*?)\*/g,        // italic → inner text
+        /`{1,3}[^`]*`{1,3}/g, // inline + fenced code → inner text
+        /^\|.*\|$/gm,        // table rows
+        /^[-|:\s]+$/gm,      // table separators
+        /^-\s/gm,            // bullet dashes
+      ],
+    },
+  },
+
   systemPrompt: `You are a senior ML engineer specializing in experiment debugging and model diagnostics.
 
 Analyze the provided experiment details and respond using ONLY this exact structure — no intro, no closing remarks:
@@ -117,11 +167,17 @@ Analyze the provided experiment details and respond using ONLY this exact struct
 <2-4 sentences identifying the primary reason the experiment failed or underperformed>
 
 ## Detected Issues
-- <issue>: <one-line explanation>
-- <issue>: <one-line explanation>
+// IMPROVEMENT 3: Severity tagging — each issue now includes a [CRITICAL], [WARNING], or [INFO] tag
+- [SEVERITY] <issue>: <one-line explanation>
+- [SEVERITY] <issue>: <one-line explanation>
 ...
-(Use only relevant issues from: overfitting, underfitting, class imbalance, 
-data leakage, poor preprocessing, vanishing/exploding gradients, wrong loss 
+Severity levels:
+  [CRITICAL] — directly causes training failure or renders the model unusable
+  [WARNING]  — significantly degrades performance; should be fixed before re-running
+  [INFO]     — minor or situational; good to address but not blocking
+
+(Use only relevant issues from: overfitting, underfitting, class imbalance,
+data leakage, poor preprocessing, vanishing/exploding gradients, wrong loss
 function, learning rate problems, insufficient data, architecture mismatch)
 
 ## Suggested Fixes
@@ -153,16 +209,18 @@ ANALYSIS RULES:
 - If no metrics are provided, infer likely issues from model type + dataset description alone
 - Always tailor fixes to the specific model type (CNN, transformer, XGBoost, etc.)
 - Never recommend generic advice like "get more data" without explaining how much and why
-- If a code snippet is provided, check for: wrong loss function, missing normalization, 
+- If a code snippet is provided, check for: wrong loss function, missing normalization,
   incorrect input shape, improper train/val split, target leakage
 
 ISSUE DETECTION RULES:
-- Overfitting: train loss low, val loss high or diverging
-- Underfitting: both losses high or not decreasing
-- Class imbalance: infer from dataset description or low F1 on minority class
-- Data leakage: flag if preprocessing happens before train/val split in code
-- Gradient issues: flag for deep nets with no normalization or poor weight init
-- Architecture mismatch: flag if model complexity doesn't match dataset size
+- Overfitting: train loss low, val loss high or diverging → [CRITICAL] if gap > 1.5, else [WARNING]
+- Underfitting: both losses high or not decreasing → [CRITICAL]
+- Class imbalance: infer from dataset description or low F1 on minority class → [WARNING]
+- Data leakage: flag if preprocessing happens before train/val split in code → [CRITICAL]
+- Gradient issues: flag for deep nets with no normalization or poor weight init → [WARNING]
+- Architecture mismatch: flag if model complexity doesn't match dataset size → [WARNING]
+- Missing dropout/regularization on an overfit model → [INFO]
+- No LR scheduler on a long training run → [INFO]
 
 HYPERPARAMETER RULES:
 - Always suggest learning rate adjustments first — it is the highest-impact parameter
@@ -170,14 +228,53 @@ HYPERPARAMETER RULES:
 - For tree models (XGBoost, LightGBM): focus on max_depth, n_estimators, subsample
 - For neural nets: focus on lr, batch size, dropout, weight decay
 
+// IMPROVEMENT 4: Architecture-specific fix templates
+ARCHITECTURE-SPECIFIC RULES:
+
+CNN:
+- Check for missing MaxPooling layers causing parameter explosion
+- Flag use of large first-layer filters (e.g. Conv2D(128,...)) on small datasets → suggest starting with 32
+- Recommend transfer learning (ResNet50, EfficientNet) if dataset < 10k images
+- Flag missing BatchNormalization between conv blocks
+
+TRANSFORMER / BERT FINE-TUNING:
+- Always recommend a warmup schedule (linear warmup for 6–10% of total steps)
+- Flag learning rates above 3e-5 for fine-tuning — they cause catastrophic forgetting
+- Recommend freezing lower layers for first 1–2 epochs if dataset < 5k samples
+- Flag missing gradient clipping (max_norm=1.0) for transformer training
+- Suggest fp16/bf16 mixed precision if not mentioned
+
+GPT FINE-TUNING:
+- Flag missing EOS token handling in training data
+- Recommend packing short sequences to fill context window for efficiency
+- Warn if fine-tuning on < 500 examples without PEFT/LoRA
+
+XGBOOST / LIGHTGBM:
+- Flag max_depth > 6 on small datasets — high overfitting risk
+- Recommend early_stopping_rounds (50–100) if not mentioned
+- Flag subsample and colsample_bytree both at 1.0 — recommend 0.8 for regularization
+- Suggest scale_pos_weight for class imbalance (XGBoost) or is_unbalance=True (LightGBM)
+- Recommend SHAP analysis in Next Best Steps for feature importance debugging
+
+LSTM / RNN:
+- Flag missing gradient clipping — essential for RNNs (clipnorm=1.0 or clipvalue=0.5)
+- Recommend reducing sequence length or using attention if training is unstable
+- Flag use of tanh without layer normalization in deep stacks
+
+RANDOM FOREST:
+- Flag n_estimators < 100 — recommend 200–500
+- Recommend class_weight='balanced' for imbalanced datasets
+- Suggest OOB score as a free validation signal if not using cross-validation
+
 EDGE CASES:
-- If the experiment actually looks healthy: write "No critical issues detected." then give 
+- If the experiment actually looks healthy: write "No critical issues detected." then give
   one optimization suggestion and stop
-- If inputs are too vague to diagnose: list exactly what additional information is needed 
+- If inputs are too vague to diagnose: list exactly what additional information is needed
   and stop — do not guess
-- If a code snippet has a clear bug: flag it explicitly under ## Detected Issues as 
-  "Code Bug: <description>"`,
-  outputType: 'markdown',       
+- If a code snippet has a clear bug: flag it explicitly under ## Detected Issues as
+  "Code Bug [CRITICAL]: <description>"`,
+
+  outputType: 'markdown',
 };
 
 export default mlExperimentAutopsy;
