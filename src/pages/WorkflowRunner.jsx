@@ -20,6 +20,8 @@ import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
 import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
+import { executeMcpAction } from '../lib/mcpAdapter'
+import { parseMcpStepId } from '../data/mcpRegistry'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
 import { exportWorkflowAsMarkdown } from '../lib/exportMarkdown'
@@ -118,25 +120,28 @@ export default function WorkflowRunner() {
     if (!workflow) return
     setSteps(
       (workflow.agents ?? []).map((agentId) => {
-        const agent = agents.find((a) => a.id === agentId)
+        const mcp = parseMcpStepId(agentId)
+        const agent = mcp ? null : agents.find((a) => a.id === agentId)
         return {
           agentId,
-          agentName: agent?.name ?? agentId,
+          agentName: mcp ? `${mcp.server.label}: ${mcp.tool.label}` : agent?.name ?? agentId,
           agent,
+          mcp,
           status: 'waiting',
           output: null,
           error: null,
         }
       })
     )
-  }, [workflow])
+  }, [workflow, agents])
 
   const setStepField = (index, fields) => {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...fields } : s)))
   }
 
   const handleRun = async () => {
-    if (!userInput.trim() || !apiKey || running) return
+    const needsApiKey = steps.some((s) => s.agent)
+    if (!userInput.trim() || (needsApiKey && !apiKey) || running) return
     setRunning(true)
     setAllDone(false)
     setHasRun(true)
@@ -149,7 +154,7 @@ export default function WorkflowRunner() {
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
-      if (!step.agent) {
+      if (!step.agent && !step.mcp) {
         setStepField(i, { status: 'failed', error: `Agent "${step.agentId}" not found in registry.` })
         failed = true
         break
@@ -157,23 +162,29 @@ export default function WorkflowRunner() {
 
       setStepField(i, { status: 'running' })
 
-      const actualProvider =
-        step.agent.provider === 'any'
-          ? provider
-          : step.agent.provider
-
-      const model = resolveAgentModel(step.agent, actualProvider)
-
       try {
-        const result = await runAgent({
-          provider: actualProvider,
-          model,
-          apiKey,
-          systemPrompt: step.agent.systemPrompt,
-          userMessage: currentInput,
-        })
-        setStepField(i, { status: 'done', output: result.content })
-        currentInput = result.content // pass output to next step
+        if (step.mcp) {
+          const result = await executeMcpAction(step.agentId, currentInput, step.mcp.config)
+          setStepField(i, { status: 'done', output: result })
+          currentInput = result
+        } else {
+          const actualProvider =
+            step.agent.provider === 'any'
+              ? provider
+              : step.agent.provider
+
+          const model = resolveAgentModel(step.agent, actualProvider)
+
+          const result = await runAgent({
+            provider: actualProvider,
+            model,
+            apiKey,
+            systemPrompt: step.agent.systemPrompt,
+            userMessage: currentInput,
+          })
+          setStepField(i, { status: 'done', output: result.content })
+          currentInput = result.content // pass output to next step
+        }
       } catch (err) {
         setStepField(i, { status: 'failed', error: err.message })
         failed = true
@@ -224,6 +235,7 @@ export default function WorkflowRunner() {
   }
 
   const hasFailed = steps.some((s) => s.status === 'failed')
+  const needsApiKey = steps.some((s) => s.agent)
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
@@ -256,17 +268,19 @@ export default function WorkflowRunner() {
       </div>
 
       {/* API Key Bar */}
-      <ApiKeyBar
-        provider={provider}
-        setProvider={setProvider}
-        apiKey={apiKey}
-        setApiKey={setApiKey}
-        saveForSession={saveForSession}
-        setSaveForSession={setSaveForSession}
-        agentProvider="any"
-        model={MODEL_MAP[provider] || MODEL_MAP.openai}
-        setModel={() => {}}
-      />
+      {needsApiKey && (
+        <ApiKeyBar
+          provider={provider}
+          setProvider={setProvider}
+          apiKey={apiKey}
+          setApiKey={setApiKey}
+          saveForSession={saveForSession}
+          setSaveForSession={setSaveForSession}
+          agentProvider="any"
+          model={MODEL_MAP[provider] || MODEL_MAP.openai}
+          setModel={() => {}}
+        />
+      )}
 
       {/* Input */}
       <div className="mb-4">
@@ -297,7 +311,7 @@ export default function WorkflowRunner() {
           <button
             id="run-workflow-btn"
             onClick={hasRun && (allDone || hasFailed) ? handleRunAgain : handleRun}
-            disabled={!userInput.trim() || !apiKey || running}
+            disabled={!userInput.trim() || (needsApiKey && !apiKey) || running}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
               transition-all duration-200 active:scale-[0.98]"
@@ -349,7 +363,7 @@ export default function WorkflowRunner() {
       {hasRun && (
         <div className="space-y-4">
           {steps.map((step, index) => {
-            const IconComponent = (step.agent && Icons[step.agent.icon]) || Icons.Bot
+            const IconComponent = step.mcp ? Icons.PlugZap : (step.agent && Icons[step.agent.icon]) || Icons.Bot
             return (
               <div
                 key={step.agentId + index}
