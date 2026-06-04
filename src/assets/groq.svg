@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-label="Groq">
+  <circle cx="24" cy="24" r="22" fill="#F55036"/>
+  <path
+    d="M24 12c-6.075 0-11 4.925-11 11s4.925 11 11 11c2.31 0 4.454-0.712 6.224-1.929V24h-7.2v4.2h3v2.04c-0.6 0.3-1.282 0.46-2.024 0.46-3.756 0-6.8-3.044-6.8-6.8s3.044-6.8 6.8-6.8c1.806 0 3.447 0.704 4.664 1.853l2.97-2.97C29.66 13.18 27.01 12 24 12z"
+    fill="#FFFFFF"/>
+  <rect x="30.6" y="29.4" width="4.2" height="7.5" rx="2.1" transform="rotate(-45 32.7 33.15)" fill="#FFFFFF"/>
+</svg>

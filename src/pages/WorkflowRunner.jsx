@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
@@ -82,6 +83,7 @@ export default function WorkflowRunner() {
   const navigate = useNavigate()
 
   const { provider, setProvider, apiKey, setApiKey, saveForSession, setSaveForSession } = useApiKey()
+  const { agents } = useAgents()
 
   const [workflow, setWorkflow] = useState(location.state?.workflow ?? null)
   const [loadingWorkflow, setLoadingWorkflow] = useState(!location.state?.workflow)

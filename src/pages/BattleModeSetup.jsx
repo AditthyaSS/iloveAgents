@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Cpu,
@@ -10,8 +10,16 @@ import {
   ChevronRight,
   Copy,
   Check,
+  Settings,
+  Key,
+  Sword,
+  Info,
+  ExternalLink,
+  ShieldCheck
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
+import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import BattleNavbar from "../components/BattleNavbar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";

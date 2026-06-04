@@ -7,24 +7,28 @@ import ApiKeyInfo from './ApiKeyInfo'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import groqLogo from "../assets/groq.svg";
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'gemini', label: 'Gemini' },
+  { value: 'groq', label: 'Groq' },
 ]
 
 const providerLogos = {
   openai: openaiLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
+  groq: groqLogo,
 }
 
 const providerUrls = {
   openai: 'https://platform.openai.com/account/api-keys',
   anthropic: 'https://console.anthropic.com/keys',
   gemini: 'https://console.cloud.google.com/apis/credentials',
+  groq: 'https://console.groq.com/keys',
 }
 
 
@@ -99,6 +103,10 @@ export default function ApiKeyBar({
     'Alt+3': () => {
       const p = availableProviders.find(p => p.value === 'gemini');
       if (p) setProvider('gemini');
+    },
+    'Alt+4': () => {
+      const p = availableProviders.find(p => p.value === 'groq');
+      if (p) setProvider('groq');
     },
   });
 
