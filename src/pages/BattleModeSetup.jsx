@@ -1,21 +1,27 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Settings, Key, Swords, ArrowLeft, Info, ExternalLink, ShieldCheck } from 'lucide-react'
-import agents from '../agents/registry'
+import CustomSelect from '../components/CustomSelect'
+import { loadAllAgents } from '../agents/registry'
 import BattleNavbar from '../components/BattleNavbar'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function BattleModeSetup() {
   const navigate = useNavigate()
   useDocumentTitle('Battle Mode Setup')
+  const [agents, setAgents] = useState([])
   const [selectedAgentId, setSelectedAgentId] = useState('')
   const [inputs, setInputs] = useState({})
   const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
   const [openHelperId, setOpenHelperId] = useState(null)
 
+  useEffect(() => {
+    loadAllAgents().then(setAgents)
+  }, [])
+
   const selectedAgent = useMemo(
     () => agents.find((a) => a.id === selectedAgentId),
-    [selectedAgentId]
+    [selectedAgentId, agents]
   )
 
   const handleAgentChange = (agentId) => {
@@ -139,22 +145,15 @@ export default function BattleModeSetup() {
           <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
             Select Agent
           </label>
-          <select
+          <CustomSelect
             value={selectedAgentId}
-            onChange={(e) => handleAgentChange(e.target.value)}
-            className="w-full h-14 px-5 rounded-xl text-base bg-gray-900 border border-gray-700/60
-              text-white cursor-pointer focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 
-              outline-none hover:border-gray-600 transition-all duration-200 battle-select-highlight"
-          >
-            <option value="" className="bg-gray-900 text-white">
-              -- Choose an agent --
-            </option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id} className="bg-gray-900 text-white">
-                {a.name} ({a.category})
-              </option>
-            ))}
-          </select>
+            onChange={handleAgentChange}
+            options={agents.map(a => ({ value: a.id, label: `${a.name} (${a.category})` }))}
+            accentColor="yellow"
+            placeholder="-- Choose an agent --"
+            triggerClassName="h-14 px-5 rounded-xl text-base bg-gray-900 border border-gray-700/60 text-white hover:border-yellow-400/35"
+            dropdownClassName="bg-gray-900 border-gray-700"
+          />
         </div>
 
         {/* Dynamic Agent Inputs */}
@@ -198,18 +197,14 @@ export default function BattleModeSetup() {
                 )}
 
                 {input.type === 'select' && (
-                  <select
+                  <CustomSelect
                     value={inputs[input.id] || input.defaultValue || ''}
-                    onChange={(e) => updateInput(input.id, e.target.value)}
-                    className="w-full h-12 px-5 rounded-xl text-base bg-gray-900 border border-gray-700/60
-                      text-white cursor-pointer hover:border-gray-600
-                      focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 focus:bg-gray-900
-                      outline-none transition-all duration-200"
-                  >
-                    {input.options?.map((opt) => (
-                      <option key={opt} value={opt} className="bg-gray-900 text-white">{opt}</option>
-                    ))}
-                  </select>
+                    onChange={(val) => updateInput(input.id, val)}
+                    options={input.options || []}
+                    accentColor="yellow"
+                    triggerClassName="h-12 px-5 rounded-xl text-base bg-gray-900 border border-gray-700/60 text-white hover:border-yellow-400/35"
+                    dropdownClassName="bg-gray-900 border-gray-700"
+                  />
                 )}
 
                 {input.type === 'multiselect' && (
