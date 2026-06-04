@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, Home, Swords, Search, Ghost } from 'lucide-react';
+import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
+  useDocumentTitle('Page Not Found');
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">

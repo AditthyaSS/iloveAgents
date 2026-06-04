@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import {
   Loader2,
@@ -10,15 +11,21 @@ import {
   ChevronRight,
   Sparkles,
   RotateCw,
+  GitBranch,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
+import ApiKeyInfo from "./ApiKeyInfo";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
+import CharCounter from "./CharCounter";
 import VoiceInput from "./VoiceInput";
+import SuggestedChainPills from "./SuggestedChainPills";
+import RunRating from "./RunRating";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP } from "../lib/resolveAgentModel";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 const providerLabels = {
   openai: "OpenAI",
@@ -50,6 +57,7 @@ export default function AgentRunner({ agent }) {
   } = useApiKey();
 
   const { saveRun } = useHistory();
+  const navigate = useNavigate();
 
   const [inputs, setInputs] = useState({});
   const [output, setOutput] = useState(null);
@@ -67,6 +75,16 @@ export default function AgentRunner({ agent }) {
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
+
+  useKeyboardShortcuts({
+    'Control+Enter': () => {
+      if (canRun() && !loading) handleRun();
+    },
+    'Escape': () => {
+      handleClear();
+      setPlaygroundOpen(false);
+    },
+  });
 
   useEffect(() => {
     setSelectedModel(MODEL_MAP[provider] || MODEL_MAP.openai);
@@ -207,11 +225,16 @@ export default function AgentRunner({ agent }) {
         output: result.content,
         provider: actualProvider,
       });
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        setError(err.message);
-      }
-    } finally {
+   } catch (err) {
+  if (err.name !== "AbortError") {
+    // If the error is our structured invalid-api-key error, pass it directly
+    if (err && err.type === "invalid_api_key") {
+      setError(err);
+    } else {
+      setError({ type: "generic", message: err.message });
+    }
+  }
+} finally {
       setLoading(false);
       abortControllerRef.current = null;
     }
@@ -255,6 +278,15 @@ export default function AgentRunner({ agent }) {
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
     setInputs((prev) => ({ ...prev, ...agent.exampleInputs }));
+  };
+
+  const handleSendToWorkflow = () => {
+    navigate("/workflows/build", {
+      state: {
+        preSelectedAgent: agent,
+        preFilledOutput: output,
+      },
+    });
   };
 
   const IconComponent = Icons[agent.icon] || Icons.Bot;
@@ -330,12 +362,14 @@ export default function AgentRunner({ agent }) {
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 />
+                 
                 <VoiceInput
                   value={inputs[input.id] || ""}
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-1/2 -translate-y-1/2 right-1.5"
                 />
               </div>
+              
             )}
 
             {input.type === "textarea" && (
@@ -355,6 +389,10 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
+                <CharCounter
+      value={inputs[input.id] || ""}
+      maxLength={5000}
+    />
               </div>
             )}
 
@@ -376,6 +414,10 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
+                <CharCounter
+      value={inputs[input.id] || ""}
+      maxLength={5000}
+    />
               </div>
             )}
 
@@ -421,6 +463,9 @@ export default function AgentRunner({ agent }) {
           </div>
         ))}
       </div>
+
+      {/* Suggested workflow chain pills */}
+      <SuggestedChainPills agent={agent} />
 
       <div className="mb-4">
         <button
@@ -479,9 +524,10 @@ export default function AgentRunner({ agent }) {
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] dark:text-text-muted text-gray-400">
-                  {customPrompt.length} chars
-                </span>
+                <CharCounter
+  value={customPrompt}
+  maxLength={5000}
+/>
                 {isPromptModified && (
                   <button
                     onClick={() => setCustomPrompt(agent.systemPrompt)}
@@ -567,7 +613,41 @@ export default function AgentRunner({ agent }) {
         )}
       </div>
 
-      {error && <ErrorCard message={error} />}
+      {error && error.type === "invalid_api_key" ? (
+  <ErrorCard message={
+    <>
+      <strong>
+        {error.provider === "openai" && "Your OpenAI API key is invalid or expired."}
+        {error.provider === "anthropic" && "Your Anthropic API key is invalid or expired."}
+        {error.provider === "gemini" && "Your Google Gemini API key is invalid or expired."}
+        {!["openai", "anthropic", "gemini"].includes(error.provider) && "Your API key is invalid or expired."}
+      </strong>
+      <br />
+      Please check and update your API key.<br />
+      <button
+        className="underline text-accent"
+        onClick={() => window.dispatchEvent(new CustomEvent("open-api-key-bar"))}
+      >
+        Update API Key
+      </button>
+      <span> or </span>
+      <button
+        className="underline text-accent"
+        onClick={() => window.location.reload()}
+      >
+        Retry
+      </button>
+      {error.detail && (
+        <>
+          <br /><br />
+          <span className="text-xs text-gray-400">Details: {error.detail}</span>
+        </>
+      )}
+    </>
+  } />
+) : (
+  error && <ErrorCard message={error.message || error} />
+)}
 
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
@@ -609,12 +689,25 @@ export default function AgentRunner({ agent }) {
       )}
 
       {output && !isStreaming && (
-        <OutputRenderer
-          content={output}
-          outputType={agent.outputType}
-          agentName={agent.name}
-          systemPrompt={customPrompt}
-        />
+        <div className="space-y-4">
+          <OutputRenderer
+            content={output}
+            outputType={agent.outputType}
+            agentName={agent.name}
+            systemPrompt={customPrompt}
+          />
+          <RunRating />
+          <div className="flex justify-end">
+            <button
+              onClick={handleSendToWorkflow}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
+                text-accent bg-accent/10 hover:bg-accent/20 transition-all border border-accent/20"
+            >
+              <GitBranch size={16} />
+              Send output to Workflow Builder →
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

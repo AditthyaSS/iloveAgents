@@ -53,6 +53,51 @@ const PROVIDER_CONFIGS = {
     },
   },
 
+  openrouter: {
+    url: 'https://openrouter.ai/api/v1/chat/completions',
+    buildHeaders: (apiKey) => ({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://iloveagents.ai',
+      'X-Title': 'ILoveAgents',
+    }),
+    buildBody: (model, systemPrompt, userMessage) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 4096,
+    }),
+    buildStreamBody: (model, systemPrompt, userMessage) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: 4096,
+      stream: true,
+    }),
+    parseResponse: (data) => ({
+      content: data.choices?.[0]?.message?.content || '',
+      tokens:
+        (data.usage?.prompt_tokens || 0) +
+        (data.usage?.completion_tokens || 0),
+    }),
+    parseStreamChunk: (line) => {
+      if (line === 'data: [DONE]') return { content: '', done: true }
+      if (!line.startsWith('data: ')) return null
+      try {
+        const json = JSON.parse(line.slice(6))
+        const delta = json.choices?.[0]?.delta?.content || ''
+        const finished = json.choices?.[0]?.finish_reason === 'stop'
+        return { content: delta, done: finished }
+      } catch {
+        return null
+      }
+    },
+  },
+
   anthropic: {
     url: 'https://api.anthropic.com/v1/messages',
     buildHeaders: (apiKey) => ({
@@ -142,40 +187,49 @@ const PROVIDER_CONFIGS = {
 }
 
 const ERROR_MESSAGES = {
-  401: 'Invalid API key. Please check your key and try again.',
+  401: 'invalid_api_key', // We'll use a key to help downstream logic
   403: 'Access forbidden. Your API key may not have the required permissions.',
   429: 'Rate limit hit. Wait a moment and try again.',
   500: 'The API server encountered an error. Try again shortly.',
   502: 'Bad gateway — the API is temporarily unavailable.',
   503: 'The API service is temporarily unavailable. Try again in a minute.',
-}
+};
 
 /**
  * Handle non-OK HTTP responses consistently.
  */
-async function handleErrorResponse(response) {
-  const friendlyMessage =
-    ERROR_MESSAGES[response.status] ||
-    `API returned status ${response.status}. Please check your configuration.`
-
-  let detail = ''
+async function handleErrorResponse(response, provider = "unknown") {
+  const errorKey = ERROR_MESSAGES[response.status] || null;
+  let detail = '';
   try {
-    const errBody = await response.json()
-    detail = errBody?.error?.message || JSON.stringify(errBody)
+    const errBody = await response.json();
+    detail = errBody?.error?.message || JSON.stringify(errBody);
   } catch {
     // Could not parse error body
   }
 
+  if (errorKey === 'invalid_api_key') {
+    throw {
+      type: "invalid_api_key",
+      provider,
+      detail: detail || 'No additional details',
+    };
+  }
+
+  const friendlyMessage =
+    typeof ERROR_MESSAGES[response.status] === 'string'
+      ? ERROR_MESSAGES[response.status]
+      : `API returned status ${response.status}. Please check your configuration.`;
+
   throw new Error(
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
-  )
+  );
 }
-
 /**
  * Run an agent against the specified LLM provider (one-shot, non-streaming).
  *
  * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'} params.provider
+ * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
  * @param {string} params.model
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
@@ -211,7 +265,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
     })
 
     if (!response.ok) {
-      await handleErrorResponse(response)
+      await handleErrorResponse(response, provider)
     }
 
     const data = await response.json()
@@ -238,7 +292,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * as it arrives so the UI can render progressively.
  *
  * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'} params.provider
+ * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
  * @param {string} params.model
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
@@ -281,7 +335,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     })
 
     if (!response.ok) {
-      await handleErrorResponse(response)
+      await handleErrorResponse(response, provider)
     }
 
     const reader = response.body.getReader()
@@ -342,4 +396,25 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     }
     throw error
   }
+}
+
+/**
+ * Fetch supported Gemini models dynamically from the Google API.
+ * Returns models that support generateContent (i.e. usable for chat/generation).
+ *
+ * @param {string} apiKey
+ * @returns {Promise<Array<{value: string, label: string}>>}
+ */
+export async function fetchGeminiModels(apiKey) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+  )
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  return (data.models || [])
+    .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+    .map(m => ({
+      value: m.name.replace('models/', ''),
+      label: m.displayName || m.name.replace('models/', ''),
+    }))
 }

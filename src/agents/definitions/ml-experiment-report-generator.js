@@ -4,7 +4,7 @@ export default {
   name: "ML Experiment Report Generator",
   description:
     "Enter your model type, hyperparameters, training metrics, and evaluation results to get a structured experiment report ready to share with your team or include in a paper.",
-  category: "Data Science",
+  category: "Engineering",
   icon: "FlaskConical",
   provider: "any",
   defaultProvider: "openai",
@@ -141,3 +141,4 @@ Rules:
 - Recommendations must be specific and actionable, not generic advice.`,
   outputType: "markdown",
 };
+

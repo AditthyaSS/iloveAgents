@@ -58,27 +58,45 @@ export async function saveWorkflow(workflow) {
  * @param {string} id
  * @returns {Promise<{ error: object|null }>}
  */
+/**
+ * Increment the usage_count for a workflow by 1.
+ * Uses a raw RPC-style update to safely increment without race conditions.
+ * @param {string} id
+ * @returns {Promise<{ error: object|null }>}
+ */
 export async function incrementUsage(id) {
-  const { error } = await supabase.rpc('increment_workflow_usage', { workflow_id: id })
+  const { error: rpcError } = await supabase.rpc('increment_workflow_usage', { workflow_id: id })
 
-  // Fallback: if RPC doesn't exist, do a client-side increment
-  if (error) {
-    const { data: current } = await supabase
-      .from('workflows')
-      .select('usage_count')
-      .eq('id', id)
-      .single()
-
-    if (current) {
-      const { error: updateError } = await supabase
-        .from('workflows')
-        .update({ usage_count: (current.usage_count ?? 0) + 1 })
-        .eq('id', id)
-      return { error: updateError }
-    }
+  // 1. If the RPC works perfectly, exit immediately with no error.
+  if (!rpcError) {
+    return { error: null }
   }
 
-  return { error }
+  // 2. If we reach this point, the RPC failed. Attempt client-side fallback.
+  console.warn('RPC failed, executing client-side fallback:', rpcError.message)
+
+  const { data: current } = await supabase
+    .from('workflows')
+    .select('usage_count')
+    .eq('id', id)
+    .single()
+
+  if (current) {
+    const { error: updateError } = await supabase
+      .from('workflows')
+      .update({ usage_count: (current.usage_count ?? 0) + 1 })
+      .eq('id', id)
+    
+    return { error: updateError }
+  }
+
+  // 3. THE FIX: If 'current' is null (row not found), return a clear contextual error
+  // instead of letting it slip through to return the old rpcError.
+  return { 
+    error: { 
+      message: `Failed to increment usage. Workflow with ID ${id} could not be found during fallback.` 
+    } 
+  }
 }
 
 /**

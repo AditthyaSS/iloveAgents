@@ -116,4 +116,5 @@ Rules:
   but "add alert for query execution time > 5s on orders table"
 - Timeline must be chronological and in table format`,
   outputType: "markdown",
+  suggestedChainFrom: ["incident-runbook-generator"],
 };

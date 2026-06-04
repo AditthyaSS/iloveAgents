@@ -11,11 +11,13 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react'
-import agents from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { fetchWorkflows, subscribeToAllWorkflows } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function AgentPill({ agentId }) {
+  const { agents } = useAgents()
   const agent = agents.find((a) => a.id === agentId)
   if (!agent) return <span className="text-[11px] dark:text-text-muted text-gray-400">{agentId}</span>
   return (
@@ -133,6 +135,7 @@ function WorkflowCard({ workflow, onRun, onView }) {
 
 export default function WorkflowLibrary() {
   const navigate = useNavigate()
+  useDocumentTitle('Workflow Library')
   const [workflows, setWorkflows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
