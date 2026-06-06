@@ -1,5 +1,30 @@
 # Contributing to iloveAgents
 
+## ⚠️ Before You Submit a PR
+
+**You MUST run this locally before opening a PR:**
+
+```bash
+npm run build
+```
+
+If it fails, fix the errors before submitting. PRs with failing builds will be automatically closed.
+
+**Common mistake to avoid:**
+
+Never do this:
+```js
+import agents from '../agents/registry'  // ❌ WRONG
+```
+
+Always do this instead:
+```js
+import { useAgents } from '../lib/useAgents'  // ✅ CORRECT
+const { agents } = useAgents()
+```
+
+---
+
 Hey! Really glad you are here. 👋
 
 iloveAgents is built by people like you — developers, designers, and curious minds
