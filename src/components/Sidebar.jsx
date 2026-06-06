@@ -1,10 +1,20 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import * as Icons from 'lucide-react'
-import agents from '../agents/registry'
+import { loadAllAgents } from '../agents/registry'
 
 export default function Sidebar({ open, onClose }) {
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
+  const [agents, setAgents] = useState([])
+
+  useEffect(() => {
+    const fetchAgents = async () => {
+      const allAgents = await loadAllAgents()
+      setAgents(allAgents)
+    }
+
+    fetchAgents()
+  }, [])
 
   // Filter agents based on search query
   const filteredAgents = agents.filter((agent) =>
