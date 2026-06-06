@@ -6,12 +6,13 @@
 // with `export default { ...agentConfig }`, and it will be
 // auto-collected here. See CONTRIBUTING.md for full guidelines.
 //
-// Agent definitions are lazy-loaded via Vite's import.meta.glob
-// with `eager: false` to reduce the initial JS bundle size.
-// Each definition file becomes a separate chunk loaded on demand.
+// Agent definitions are collected via Vite's import.meta.glob.
+// A default synchronous export is kept for existing app screens,
+// while loadAllAgents() remains available for context-based consumers.
 // ============================================================
 
-const modules = import.meta.glob('./definitions/*.js', { eager: false });
+const modules = import.meta.glob('./definitions/*.js', { eager: true });
+const agents = Object.values(modules).map((mod) => mod.default);
 
 /**
  * Load all agent definitions and return the array.
@@ -23,11 +24,9 @@ let cachedAgentsPromise = null;
 export function loadAllAgents() {
   if (cachedAgentsPromise) return cachedAgentsPromise;
 
-  cachedAgentsPromise = Promise.all(
-    Object.values(modules).map((loader) => loader())
-  ).then((entries) => {
-    return entries.map((mod) => mod.default);
-  });
+  cachedAgentsPromise = Promise.resolve(agents);
 
   return cachedAgentsPromise;
 }
+
+export default agents;
