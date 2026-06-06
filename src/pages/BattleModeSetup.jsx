@@ -1,338 +1,450 @@
-import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Settings, Key, Swords, ArrowLeft, Info, ExternalLink, ShieldCheck } from 'lucide-react'
-import agents from '../agents/registry'
-import BattleNavbar from '../components/BattleNavbar'
-import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Cpu,
+  Loader2,
+  Trophy,
+  AlertCircle,
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Check,
+} from "lucide-react";
+import { runAgent } from "../lib/llmAdapter";
+import BattleNavbar from "../components/BattleNavbar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
-export default function BattleModeSetup() {
-  const navigate = useNavigate()
-  useDocumentTitle('Battle Mode Setup')
-  const [selectedAgentId, setSelectedAgentId] = useState('')
-  const [inputs, setInputs] = useState({})
-  const [apiKeys, setApiKeys] = useState({ openai: '', anthropic: '', gemini: '' })
-  const [openHelperId, setOpenHelperId] = useState(null)
+const PROVIDERS = [
+  {
+    id: "openai",
+    label: "GPT-4o",
+    model: "gpt-4o",
+    color: "yellow",
+    borderClass: "border-yellow-400/40 battle-card-yellow",
+    glowClass: "hover:shadow-yellow-400/30",
+    headerBg: "bg-yellow-400/10 border-b border-yellow-400/30",
+    textColor: "text-yellow-400",
+    btnBg:
+      "bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border-yellow-400/40 border-2 hover:border-yellow-300/60 battle-btn-secondary",
+    loaderColor: "text-yellow-400",
+  },
+  {
+    id: "anthropic",
+    label: "Claude Sonnet",
+    model: "claude-sonnet-4-6",
+    color: "violet",
+    borderClass: "border-violet-400/40 battle-card-violet",
+    glowClass: "hover:shadow-violet-400/30",
+    headerBg: "bg-violet-400/10 border-b border-violet-400/30",
+    textColor: "text-violet-400",
+    btnBg:
+      "bg-violet-400/10 hover:bg-violet-400/20 text-violet-400 border-violet-400/40 border-2 hover:border-violet-300/60 battle-btn-secondary",
+    loaderColor: "text-violet-400",
+  },
+  {
+    id: "gemini",
+    label: "Gemini Flash",
+    model: "gemini-2.5-flash",
+    color: "blue",
+    borderClass: "border-blue-400/40 battle-card-blue",
+    glowClass: "hover:shadow-blue-400/30",
+    headerBg: "bg-blue-400/10 border-b border-blue-400/30",
+    textColor: "text-blue-400",
+    btnBg:
+      "bg-blue-400/10 hover:bg-blue-400/20 text-blue-400 border-blue-400/40 border-2 hover:border-blue-300/60 battle-btn-secondary",
+    loaderColor: "text-blue-400",
+  },
+];
 
-  const selectedAgent = useMemo(
-    () => agents.find((a) => a.id === selectedAgentId),
-    [selectedAgentId]
-  )
+function buildUserMessage(agent, inputs) {
+  const parts = [];
+  agent.inputs.forEach((input) => {
+    const val = inputs[input.id];
+    if (!val || (Array.isArray(val) && val.length === 0)) return;
+    parts.push(
+      Array.isArray(val)
+        ? `${input.label}: ${val.join(", ")}`
+        : `${input.label}: ${val}`,
+    );
+  });
+  return parts.join("\n\n");
+}
 
-  const handleAgentChange = (agentId) => {
-    setSelectedAgentId(agentId)
-    const agent = agents.find((a) => a.id === agentId)
-    if (!agent) { setInputs({}); return }
+export default function BattleModeArena() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { agent, inputs, apiKeys } = location.state || {};
+  useDocumentTitle(agent?.name ? `${agent.name} Battle` : "Battle Arena");
 
-    const defaults = {}
-    agent.inputs.forEach((input) => {
-      if (input.defaultValue !== undefined) {
-        defaults[input.id] = input.defaultValue
-      } else if (input.type === 'multiselect') {
-        defaults[input.id] = []
-      } else {
-        defaults[input.id] = ''
-      }
-    })
-    setInputs(defaults)
-  }
+  const [results, setResults] = useState({
+    openai: { loading: true, content: null, error: null, duration: null },
+    anthropic: { loading: true, content: null, error: null, duration: null },
+    gemini: { loading: true, content: null, error: null, duration: null },
+  });
 
-  const updateInput = (id, value) => {
-    setInputs((prev) => ({ ...prev, [id]: value }))
-  }
+  const [promptViewerOpen, setPromptViewerOpen] = useState(false);
+  const [prompts, setPrompts] = useState({
+    openai: null,
+    anthropic: null,
+    gemini: null,
+  });
 
-  const toggleMultiselect = (id, option) => {
-    setInputs((prev) => {
-      const current = prev[id] || []
-      return {
+  const [copiedProvider, setCopiedProvider] = useState(null);
+
+  // Redirect if no state
+  useEffect(() => {
+    if (!agent || !inputs || !apiKeys) {
+      navigate("/battle/setup", { replace: true });
+    }
+  }, [agent, inputs, apiKeys, navigate]);
+
+  // Fire all three API calls simultaneously
+  useEffect(() => {
+    if (!agent || !inputs || !apiKeys) return;
+
+    const userMessage = buildUserMessage(agent, inputs);
+
+    PROVIDERS.forEach((prov) => {
+      setPrompts((prev) => ({
         ...prev,
-        [id]: current.includes(option)
-          ? current.filter((o) => o !== option)
-          : [...current, option],
-      }
-    })
-  }
+        [prov.id]: {
+          systemPrompt: agent.systemPrompt,
+          userMessage,
+        },
+      }));
 
-  const canStart = () => {
-    if (!selectedAgent) return false
-    if (!apiKeys.openai || !apiKeys.anthropic || !apiKeys.gemini) return false
-    return selectedAgent.inputs
-      .filter((i) => i.required)
-      .every((i) => {
-        const v = inputs[i.id]
-        if (Array.isArray(v)) return v.length > 0
-        return v && v.trim() !== ''
+      runAgent({
+        provider: prov.id,
+        model: prov.model,
+        apiKey: apiKeys[prov.id],
+        systemPrompt: agent.systemPrompt,
+        userMessage,
       })
-  }
+        .then((result) => {
+          setResults((prev) => ({
+            ...prev,
+            [prov.id]: {
+              loading: false,
+              content: result.content,
+              error: null,
+              duration: result.duration,
+            },
+          }));
+        })
+        .catch((err) => {
+          setResults((prev) => ({
+            ...prev,
+            [prov.id]: {
+              loading: false,
+              content: null,
+              error: err.message || "An unknown error occurred",
+              duration: null,
+            },
+          }));
+        });
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleStart = () => {
-    navigate('/battle/arena', {
+  const handlePickWinner = (providerId) => {
+    const prov = PROVIDERS.find((p) => p.id === providerId);
+    navigate("/battle/winner", {
       state: {
-        agent: selectedAgent,
-        inputs,
-        apiKeys,
+        provider: prov,
+        content: results[providerId].content,
+        duration: results[providerId].duration,
+        agentName: agent?.name,
       },
-    })
-  }
+    });
+  };
 
-  const keyFields = [
-    {
-      id: 'openai',
-      label: 'OpenAI API Key',
-      colorClass: 'text-yellow-400',
-      borderColor: 'border-yellow-400/30',
-      focusColor: 'focus:ring-yellow-400/40 focus:border-yellow-400/50',
-      focusBg: 'focus:bg-yellow-400/5',
-      keyUrl: 'https://platform.openai.com/api-keys',
-      helperText: 'Open the OpenAI dashboard, create a new secret key, then paste it here.',
-    },
-    {
-      id: 'anthropic',
-      label: 'Anthropic API Key',
-      colorClass: 'text-violet-400',
-      borderColor: 'border-violet-400/30',
-      focusColor: 'focus:ring-violet-400/40 focus:border-violet-400/50',
-      focusBg: 'focus:bg-violet-400/5',
-      keyUrl: 'https://console.anthropic.com/settings/keys',
-      helperText: 'Sign in to Anthropic Console, create an API key, then copy it into Battle Mode.',
-    },
-    {
-      id: 'gemini',
-      label: 'Google Gemini API Key',
-      colorClass: 'text-blue-400',
-      borderColor: 'border-blue-400/30',
-      focusColor: 'focus:ring-blue-400/40 focus:border-blue-400/50',
-      focusBg: 'focus:bg-blue-400/5',
-      keyUrl: 'https://aistudio.google.com/apikey',
-      helperText: 'Visit Google AI Studio, generate an API key, and paste it here to enable Gemini.',
-    },
-  ]
+  const handleCopyPrompt = (providerId, promptData) => {
+    const copyText = `System Prompt: ${promptData?.systemPrompt || "Not available"}\n\nUser Prompt: ${promptData?.userMessage || "Not available"}`;
+    navigator.clipboard.writeText(copyText).catch(console.error);
+    setCopiedProvider(providerId);
+    setTimeout(() => {
+      setCopiedProvider(null);
+    }, 2000);
+  };
+
+  if (!agent) return null;
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
       <BattleNavbar />
 
-      <main className="pt-16 max-w-3xl mx-auto px-4 py-12">
+      <main className="pt-14 px-4 py-8">
         {/* Back */}
         <button
-          onClick={() => navigate('/battle')}
-          className="flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white 
-              transition-all duration-200 hover:gap-2.5 mb-10"
+          onClick={() => navigate("/battle/setup")}
+          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white 
+            transition-all duration-200 hover:gap-2 mb-8"
         >
-          <ArrowLeft size={16} />
-          Back
+          <ArrowLeft size={14} />
+          Back to Setup
         </button>
 
         {/* Header */}
-        <div className="flex items-center gap-4 mb-10 battle-fade-in">
-          <div className="w-14 h-14 rounded-2xl bg-yellow-400/10 border border-yellow-400/30
-            flex items-center justify-center flex-shrink-0">
-            <Settings size={24} className="text-yellow-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-wider text-white">Battle Setup</h1>
-            <p className="text-sm text-gray-400 mt-1">Pick an agent, enter your inputs, provide API keys</p>
-          </div>
+        <div className="text-center mb-10 battle-fade-in">
+          <h1 className="text-3xl font-extrabold tracking-wider mb-2 text-white">
+            Battle Arena
+          </h1>
+          <p className="text-sm text-gray-300">
+            Running{" "}
+            <span className="text-white font-semibold">{agent.name}</span>{" "}
+            across three providers
+          </p>
         </div>
 
-        {/* Agent Picker */}
-        <div className="mb-10 battle-fade-in" style={{ animationDelay: '100ms' }}>
-          <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">
-            Select Agent
-          </label>
-          <select
-            value={selectedAgentId}
-            onChange={(e) => handleAgentChange(e.target.value)}
-            className="w-full h-14 px-5 rounded-xl text-base bg-gray-900 border border-gray-700/60
-              text-white cursor-pointer focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 
-              outline-none hover:border-gray-600 transition-all duration-200 battle-select-highlight"
+        {/* Prompt Comparison Viewer */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <button
+            onClick={() => setPromptViewerOpen(!promptViewerOpen)}
+            className="w-full flex items-center justify-between px-5 py-3 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-all duration-200"
           >
-            <option value="" className="bg-gray-900 text-white">
-              -- Choose an agent --
-            </option>
-            {agents.map((a) => (
-              <option key={a.id} value={a.id} className="bg-gray-900 text-white">
-                {a.name} ({a.category})
-              </option>
-            ))}
-          </select>
+            <span className="text-sm font-semibold text-gray-200">
+              Prompt Comparison Viewer
+            </span>
+            {promptViewerOpen ? (
+              <ChevronDown size={18} className="text-gray-400" />
+            ) : (
+              <ChevronRight size={18} className="text-gray-400" />
+            )}
+          </button>
+
+          {promptViewerOpen && (
+            <div className="mt-4 battle-fade-in">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* OpenAI Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-yellow-400">
+                      OpenAI
+                    </span>
+                    <button
+                      onClick={() => handleCopyPrompt("openai", prompts.openai)}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "openai" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.openai?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.openai?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Claude Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-violet-400">
+                      Claude
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleCopyPrompt("anthropic", prompts.anthropic)
+                      }
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "anthropic" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.anthropic?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.anthropic?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gemini Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-blue-400">
+                      Gemini
+                    </span>
+                    <button
+                      onClick={() => handleCopyPrompt("gemini", prompts.gemini)}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "gemini" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.gemini?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.gemini?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Dynamic Agent Inputs */}
-        {selectedAgent && (
-          <div className="mb-10 space-y-6 battle-fade-in" style={{ animationDelay: '150ms' }}>
-            <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-              Agent Inputs
-            </h2>
-            {selectedAgent.inputs.map((input) => (
-              <div key={input.id}>
-                <label className="block text-sm font-medium text-gray-200 mb-2">
-                  {input.label}
-                  {input.required && <span className="text-red-400 ml-0.5">*</span>}
-                </label>
-
-                {input.type === 'text' && (
-                  <input
-                    type="text"
-                    value={inputs[input.id] || ''}
-                    onChange={(e) => updateInput(input.id, e.target.value)}
-                    placeholder={input.placeholder}
-                    className="w-full h-12 px-5 rounded-xl text-base bg-gray-900/60 border border-gray-700/60
-                      text-white placeholder:text-gray-500 hover:border-gray-600
-                      focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 focus:bg-gray-900/80
-                      outline-none transition-all duration-200"
-                  />
-                )}
-
-                {(input.type === 'textarea' || input.type === 'code') && (
-                  <textarea
-                    value={inputs[input.id] || ''}
-                    onChange={(e) => updateInput(input.id, e.target.value)}
-                    placeholder={input.placeholder}
-                    rows={input.type === 'code' ? 8 : 4}
-                    className={`w-full px-5 py-3 rounded-xl text-base bg-gray-900/60 border border-gray-700/60
-                      text-white placeholder:text-gray-500 resize-y hover:border-gray-600
-                      focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 focus:bg-gray-900/80
-                      outline-none transition-all duration-200
-                      ${input.type === 'code' ? 'font-mono text-sm text-green-300' : ''}`}
-                  />
-                )}
-
-                {input.type === 'select' && (
-                  <select
-                    value={inputs[input.id] || input.defaultValue || ''}
-                    onChange={(e) => updateInput(input.id, e.target.value)}
-                    className="w-full h-12 px-5 rounded-xl text-base bg-gray-900 border border-gray-700/60
-                      text-white cursor-pointer hover:border-gray-600
-                      focus:ring-1 focus:ring-yellow-400/40 focus:border-yellow-400/50 focus:bg-gray-900
-                      outline-none transition-all duration-200"
+        {/* Three Columns */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+          {PROVIDERS.map((prov, idx) => {
+            const r = results[prov.id];
+            return (
+              <div
+                key={prov.id}
+                className={`rounded-xl border ${prov.borderClass} bg-gray-900/50 backdrop-blur-sm
+                  shadow-lg flex flex-col battle-fade-in transition-all duration-300`}
+                style={{ animationDelay: `${idx * 100}ms` }}
+              >
+                {/* Column Header */}
+                <div
+                  className={`flex items-center gap-2.5 px-5 py-4 rounded-t-xl ${prov.headerBg}`}
+                >
+                  <Cpu size={16} className={prov.textColor} />
+                  <span
+                    className={`text-sm font-bold ${prov.textColor} tracking-wide`}
                   >
-                    {input.options?.map((opt) => (
-                      <option key={opt} value={opt} className="bg-gray-900 text-white">{opt}</option>
-                    ))}
-                  </select>
-                )}
+                    {prov.label}
+                  </span>
+                  {r.duration && (
+                    <span className="ml-auto text-[11px] text-gray-400 font-medium">
+                      {(r.duration / 1000).toFixed(1)}s
+                    </span>
+                  )}
+                </div>
 
-                {input.type === 'multiselect' && (
-                  <div className="flex flex-wrap gap-3">
-                    {input.options?.map((opt) => {
-                      const selected = (inputs[input.id] || []).includes(opt)
-                      return (
-                        <button
-                          key={opt}
-                          onClick={() => toggleMultiselect(input.id, opt)}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 border
-                            ${selected
-                              ? 'bg-yellow-400/15 text-yellow-300 border-yellow-400/40'
-                              : 'bg-gray-900/60 text-gray-400 border-gray-700/60 hover:border-gray-600 hover:text-gray-300'
-                            }`}
-                        >
-                          {selected && '✓ '}{opt}
-                        </button>
-                      )
-                    })}
+                {/* Content */}
+                <div className="flex-1 p-5 overflow-y-auto max-h-[60vh]">
+                  {r.loading && (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <Loader2
+                        size={28}
+                        className={`animate-spin ${prov.loaderColor}`}
+                      />
+                      <span className="text-xs text-gray-400 font-medium">
+                        {prov.label} is generating...
+                      </span>
+                    </div>
+                  )}
+
+                  {r.error && (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                      <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                        <AlertCircle size={24} className="text-red-400" />
+                      </div>
+                      <p className="text-xs text-red-400 max-w-xs font-medium">
+                        {r.error}
+                      </p>
+                    </div>
+                  )}
+
+                  {r.content && (
+                    <div className="markdown-output text-sm text-gray-100 leading-relaxed">
+                      {agent.outputType === "markdown" ? (
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {r.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <pre className="whitespace-pre-wrap font-sans">
+                          {r.content}
+                        </pre>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Pick Winner Button */}
+                {r.content && !r.loading && (
+                  <div className="p-5 border-t border-gray-800/50">
+                    <button
+                      onClick={() => handlePickWinner(prov.id)}
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg
+                        text-xs font-bold border-2 transition-all duration-200 active:scale-95
+                        ${prov.btnBg}`}
+                    >
+                      <Trophy size={14} />
+                      Pick Winner
+                    </button>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* API Keys */}
-        <div className="mb-10 space-y-6 battle-fade-in" style={{ animationDelay: '200ms' }}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
-                API Keys
-              </h2>
-              <p className="mt-2 text-sm text-gray-500 max-w-xl">
-                Need a key? Use the info button beside each provider to jump straight to its key page.
-              </p>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-sm text-emerald-200">
-              <ShieldCheck size={18} className="text-emerald-300 flex-shrink-0" />
-              <span>Keys stay in your browser and are not saved on our servers.</span>
-            </div>
-          </div>
-          {keyFields.map((field) => (
-            <div key={field.id}>
-              <div className="mb-2 flex items-start justify-between gap-3">
-                <label className="block pt-1 text-xs font-medium text-gray-200">
-                  {field.label}
-                </label>
-                <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setOpenHelperId((current) => current === field.id ? null : field.id)}
-                    className="inline-flex h-5 w-5 items-center justify-center text-gray-400 transition-colors hover:text-white"
-                    aria-label={`How to get a ${field.label}`}
-                    aria-expanded={openHelperId === field.id}
-                  >
-                    <Info size={12} />
-                  </button>
-                  <a
-                    href={field.keyUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[11px] text-gray-500 transition-colors hover:text-white"
-                  >
-                    Get key
-                    <ExternalLink size={12} />
-                  </a>
-                </div>
-              </div>
-
-              {openHelperId === field.id && (
-                <div className="mb-3 rounded-lg border border-gray-800 bg-gray-900/80 px-3 py-3 text-xs text-gray-300">
-                  <p>{field.helperText}</p>
-                  <a
-                    href={field.keyUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-1 font-medium text-yellow-300 transition-colors hover:text-yellow-200"
-                  >
-                    Open {field.label} page
-                    <ExternalLink size={12} />
-                  </a>
-                </div>
-              )}
-
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Key size={18} className={field.colorClass} />
-                </div>
-                <input
-                  type="password"
-                  value={apiKeys[field.id]}
-                  onChange={(e) => setApiKeys((prev) => ({ ...prev, [field.id]: e.target.value }))}
-                  placeholder={`Enter your ${field.label}...`}
-                  className={`w-full h-14 pl-12 pr-5 rounded-xl text-base bg-gray-900/60 border ${field.borderColor}
-                    text-white placeholder:text-gray-500 outline-none hover:border-gray-600
-                    focus:ring-1 ${field.focusColor} ${field.focusBg}
-                    transition-all duration-200`}
-                />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
-
-        {/* Start Battle */}
-        <button
-          onClick={handleStart}
-          disabled={!canStart()}
-          className="w-full flex items-center justify-center gap-3 px-8 py-5 rounded-2xl text-base font-bold
-            bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-950
-            hover:from-yellow-400 hover:to-amber-400 transition-all duration-200
-            shadow-lg shadow-yellow-500/20 hover:shadow-yellow-500/40 hover:shadow-xl
-            active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed
-            disabled:hover:from-yellow-500 disabled:hover:to-amber-500 disabled:hover:shadow-yellow-500/20
-            border border-yellow-400/20 hover:border-yellow-300/40
-            battle-fade-in"
-          style={{ animationDelay: '300ms' }}
-        >
-          <Swords size={20} />
-          Start Battle
-        </button>
       </main>
     </div>
-  )
+  );
 }

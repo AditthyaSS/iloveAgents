@@ -44,10 +44,16 @@ pull_request_rules:
         method: merge
 
   # Merge conflict rule
-  # Notifies the author when their PR has a merge conflict that must be resolved.
+  # Notifies the author only when GitHub has CONFIRMED the PR has a real merge
+  # conflict. The "conflict" attribute is set by GitHub after it finishes
+  # computing mergeability — adding "-draft" ensures we don't fire on PRs still
+  # being processed, and "-closed" prevents triggering on already-closed PRs.
   - name: Notify author on merge conflict
     conditions:
       - conflict
+      - -draft
+      - -closed
+      - -merged
     actions:
       comment:
         message: |
@@ -56,24 +62,178 @@ pull_request_rules:
           Need help? Check out [resolving merge conflicts](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/addressing-merge-conflicts/resolving-a-merge-conflict-using-the-command-line).
           — [@AditthyaSS](https://github.com/AditthyaSS)
 
-  # Lock file rule
-  # Flags PRs that modify package-lock.json without a corresponding change to package.json.
-  # This is usually caused by running `npm install` locally with a mismatched npm version.
-  - name: Flag unintentional package-lock.json changes
+  # Lock file rules — two separate rules for two different scenarios.
+  # Rule A: package-lock.json changed but package.json was NOT touched.
+  - name: Flag package-lock.json changed without package.json
     conditions:
       - "files~=^package-lock\\.json$"
       - "-files~=^package\\.json$"
     actions:
       comment:
         message: |
-          ⚠️ Hey @{{author}}! It looks like only `package-lock.json` was changed but `package.json` was not.
+          hey @{{author}}! 👋
+          It looks like `package-lock.json` was changed but `package.json` was not.
           This is usually unintentional — it happens when `npm install` is run locally with a different npm version.
-          Please revert the `package-lock.json` changes by running:
-          ```
-          git checkout package-lock.json
-          ```
-          Then push again. If you intentionally changed dependencies, make sure `package.json` is also updated.
+          Please revert it by running:
+          `git checkout package-lock.json`
+          Then push again. 🙏
           — [@AditthyaSS](https://github.com/AditthyaSS)
       label:
         add:
           - needs-fix
+
+  # Rule B: package.json changed but package-lock.json was NOT updated.
+  - name: Flag package.json changed without package-lock.json
+    conditions:
+      - "files~=^package\\.json$"
+      - "-files~=^package-lock\\.json$"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          You changed `package.json` but `package-lock.json` was not updated.
+          Quick check before we review:
+          → If you added or removed a package:
+          Please run `npm install` and commit the updated `package-lock.json` too.
+          Both files need to change together. ✅
+          → If you only changed metadata (scripts, description, version etc):
+          You can safely ignore this message. ✅
+          Just wanted to make sure nothing was missed! 🙏
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # PR title format check
+  - name: Flag invalid PR title format
+    conditions:
+      - "-title~=^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?!?:\\s.+"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          Your PR title doesn't follow our required format.
+          Please update it to:
+          `type: short description`
+          Valid types: feat, fix, docs, style, refactor, test, chore
+          Example: `feat: add sales discovery agent`
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # Empty PR description check
+  - name: Flag empty PR description
+    conditions:
+      - "body~=^.{0,19}$"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          Your PR description is empty.
+          Please add:
+          - What changes you made and why
+          - The issue this PR closes: `Closes #issue_number`
+          - Screenshots if it's a UI change
+          A good description helps us review and merge faster! 🚀
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # No linked issue check
+  - name: Flag missing linked issue
+    conditions:
+      - "-body~=(?i)(closes?|fixes?|resolves?)\\s+#[0-9]+"
+      - "body~=.{20,}"
+    actions:
+      comment:
+        message: |
+          hey @{{author}}! 👋
+          Your PR doesn't seem to be linked to an issue.
+          Please add this line to your PR description:
+          `Closes #issue_number`
+          Replace issue_number with the actual issue number you are solving.
+          This helps us track what each PR is fixing! 🔗
+          — [@AditthyaSS](https://github.com/AditthyaSS)
+      label:
+        add:
+          - needs-fix
+
+  # Auto-merge Dependabot PRs when build passes
+  - name: Auto-merge Dependabot PR
+    conditions:
+      - author = dependabot[bot]
+      - check-success = build
+      - check-success = Mergify Merge Protections
+    actions:
+      merge:
+        method: squash
+
+  # Block merge and request changes when build check fails
+  - name: Block merge when build fails
+    conditions:
+      - check-failure = build
+      - "-author = dependabot[bot]"
+    actions:
+      review:
+        type: REQUEST_CHANGES
+        message: |
+          ❌ Build is failing on this PR.
+          Please fix before merging:
+          1. Run `npm run build` locally
+          2. Fix any errors shown
+          3. Push your fix — the check will re-run automatically
+          Most common issue: broken registry import.
+          Replace:
+          import agents from '../agents/registry'
+          With:
+          import { useAgents } from '../lib/useAgents'
+          const { agents } = useAgents()
+          See CONTRIBUTING.md for help. 🙏
+
+  # Comment when CodeRabbit requests changes
+  - name: Comment when CodeRabbit requests changes
+    conditions:
+      - check-failure = CodeRabbit
+    actions:
+      comment:
+        message: |
+          👋 Hey! CodeRabbit found issues in this PR that need to be fixed before merging.
+          Please:
+          1. Scroll up and read the CodeRabbit comments carefully
+          2. Click the "Proposed fix" links to see exactly what to change
+          3. Apply the fixes and push your changes
+          4. The PR will be re-reviewed automatically
+          Thank you for contributing to iloveAgents! 🚀
+
+  # Close PRs with empty description (skip bots)
+  - name: Close PRs with no description
+    conditions:
+      - "body~=^\\s*$"
+      - "-author = dependabot[bot]"
+      - "-author = coderabbitai[bot]"
+    actions:
+      close:
+        message: |
+          👋 Hi! Thanks for your contribution to iloveAgents!
+          This PR was closed because it has no description.
+          Please reopen it with:
+          ✅ What this PR does
+          ✅ Screenshots if UI change
+          ✅ Confirmation that npm run build passes locally
+          See CONTRIBUTING.md for the full guide.
+
+  # Warn when branch is out of date with main (skip bots and drafts)
+  - name: Warn when branch is out of date
+    conditions:
+      - "-linear-history"
+      - "-draft"
+      - "-author = dependabot[bot]"
+    actions:
+      comment:
+        message: |
+          ⚠️ This branch is out of date with main.
+          Please click "Update branch" to sync before merging.
+merge_protections_settings:
+  reporting_method: check-runs

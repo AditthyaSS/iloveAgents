@@ -1,11 +1,21 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import agents from '../agents/registry'
+import { loadAllAgents } from '../agents/registry'
 import AgentRunner from '../components/AgentRunner'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function AgentPage() {
   const { id } = useParams()
+  const [agents, setAgents] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    loadAllAgents().then((loaded) => {
+      setAgents(loaded)
+      setIsLoading(false)
+    })
+  }, [])
+
   const agent = agents.find((a) => a.id === id)
   useDocumentTitle(agent?.name ?? 'Agent')
 
@@ -26,6 +36,10 @@ export default function AgentPage() {
       JSON.stringify(updated)
     )
   }, [agent])
+
+  if (isLoading) {
+    return null
+  }
 
   if (!agent) {
     return <Navigate to="/" replace />
