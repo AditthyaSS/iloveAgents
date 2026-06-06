@@ -166,3 +166,85 @@ pull_request_rules:
       label:
         add:
           - needs-fix
+
+  # Auto-merge Dependabot PRs when build passes
+  - name: Auto-merge Dependabot PR
+    conditions:
+      - author = dependabot[bot]
+      - check-success = build
+      - check-success = Mergify Merge Protections
+    actions:
+      merge:
+        method: squash
+
+  # Request changes when build check fails (not on Dependabot PRs)
+  - name: Request changes when build fails
+    conditions:
+      - check-failure = build
+      - "-author = dependabot[bot]"
+    actions:
+      review:
+        type: REQUEST_CHANGES
+        message: |
+          ❌ The build is failing on this PR.
+          Please fix before this can be merged:
+          1. Run `npm run build` locally
+          2. Fix any errors shown
+          3. Most likely cause: `import agents from '../agents/registry'`
+          Fix: Replace with `const { agents } = useAgents()` and add `import { useAgents } from '../lib/useAgents'`
+          4. Push your fix and the build check will re-run automatically
+          See CONTRIBUTING.md for help.
+
+  # Auto-label PRs that add or modify agent definitions
+  - name: Auto-label new agents
+    conditions:
+      - "files~=^src/agents/"
+    actions:
+      label:
+        add:
+          - "new agents"
+
+  # Auto-label PRs whose title starts with fix
+  - name: Auto-label bug fixes
+    conditions:
+      - "title~=^fix"
+    actions:
+      label:
+        add:
+          - "type:bug"
+
+  # Auto-label PRs that touch UI components
+  - name: Auto-label UI changes
+    conditions:
+      - "files~=^src/components/"
+    actions:
+      label:
+        add:
+          - "type:design"
+
+  # Close PRs with no description (skip Dependabot)
+  - name: Close PRs with no description
+    conditions:
+      - "body~=^\\s*$"
+      - "-author = dependabot[bot]"
+    actions:
+      close:
+        message: |
+          👋 Hi! Thanks for your contribution.
+          This PR was closed because it has no description.
+          Please reopen it with:
+          - What this PR does
+          - Screenshots if UI change
+          - Confirmation that `npm run build` passes locally
+          See CONTRIBUTING.md for the full guide.
+
+  # Warn when branch is out of date with main
+  - name: Warn when PR is out of date
+    conditions:
+      - "-linear-history"
+      - "-draft"
+    actions:
+      comment:
+        message: |
+          ⚠️ This branch is out of date with main.
+          Please click "Update branch" to sync it before merging.

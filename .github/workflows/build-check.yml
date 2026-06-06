@@ -14,7 +14,30 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npm run build
+      - name: Check for broken registry imports
+        run: |
+          if grep -r "import agents from" src/; then
+            echo "❌ Found broken default import of registry!"
+            echo "Replace with: const { agents } = useAgents()"
+            exit 1
+          fi
+
+      - name: Run build
+        run: npm run build
+
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ **Build failed on this PR.**\n\nPlease fix before merging:\n1. Run \`npm run build\` locally\n2. Fix any errors shown\n3. Push your fix — the check will re-run automatically\n\nMost common issue: broken registry import.\nReplace \`import agents from '../agents/registry'\` with \`const { agents } = useAgents()\`\n\nSee CONTRIBUTING.md for help. 🙏`
+            })
