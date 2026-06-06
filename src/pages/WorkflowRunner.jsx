@@ -14,7 +14,7 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import agents from '../agents/registry'
+import { loadAllAgents } from '../agents/registry'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
@@ -77,6 +77,11 @@ export default function WorkflowRunner() {
     })
   }, [id])
 
+  const [agents, setAgents] = useState([])
+  useEffect(() => {
+    loadAllAgents().then(setAgents)
+  }, [])
+
   // Initialize step states when workflow is ready
   useEffect(() => {
     if (!workflow) return
@@ -93,7 +98,7 @@ export default function WorkflowRunner() {
         }
       })
     )
-  }, [workflow])
+  }, [workflow, agents])
 
   const setStepField = (index, fields) => {
     setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...fields } : s)))
