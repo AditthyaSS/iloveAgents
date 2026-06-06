@@ -6,7 +6,7 @@ export default {
   icon: 'Terminal',
   provider: 'any',
   defaultProvider: 'openai',
-  model: 'gpt-4o',
+  model: 'gpt-4o-mini',
   inputs: [
     {
       id: 'errorCode',
@@ -39,6 +39,6 @@ You must format your entire final output as a single, valid JSON object matching
   "suggestedHttpStatus": 400
 }
 
-Ensure the "suggestedHttpStatus" field contains a real, valid 3-digit HTTP code (integer) according to RFC standards. Do not include markdown wraps or block quotes outside of the raw JSON content container.`,
+Ensure the "suggestedHttpStatus" field contains a valid standard HTTP status code integer between 100 and 599 according to RFC specifications. Output only the JSON object structure. Do not include markdown code fences, backticks, block quotes, or any surrounding conversational prose text formatting container.`,
   outputType: 'json'
 };
