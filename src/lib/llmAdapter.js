@@ -394,8 +394,9 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
+    let streamComplete = false
 
-    while (true) {
+    while (!streamComplete) {
       const { done, value } = await reader.read()
       if (done) break
 
@@ -418,7 +419,11 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
           onChunk(parsed.content)
         }
 
-        if (parsed.done) break
+        if (parsed.done) {
+          streamComplete = true
+          await reader.cancel()
+          break
+        }
       }
     }
 
