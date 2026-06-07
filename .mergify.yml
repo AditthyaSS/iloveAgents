@@ -64,7 +64,6 @@ pull_request_rules:
 
   # Lock file rules — two separate rules for two different scenarios.
   # Rule A: package-lock.json changed but package.json was NOT touched.
-  # Usually caused by running npm install with a different npm version locally.
   - name: Flag package-lock.json changed without package.json
     conditions:
       - "files~=^package-lock\\.json$"
@@ -84,8 +83,6 @@ pull_request_rules:
           - needs-fix
 
   # Rule B: package.json changed but package-lock.json was NOT updated.
-  # Could mean missing npm install after adding a dependency, or just a
-  # metadata-only change (scripts, description, version) which is fine.
   - name: Flag package.json changed without package-lock.json
     conditions:
       - "files~=^package\\.json$"
@@ -108,8 +105,6 @@ pull_request_rules:
           - needs-fix
 
   # PR title format check
-  # Flags PRs whose title does not follow the "type: description" convention.
-  # Valid types: feat, fix, docs, style, refactor, test, chore
   - name: Flag invalid PR title format
     conditions:
       - "-title~=^(feat|fix|docs|style|refactor|test|chore)(\\(.+\\))?!?:\\s.+"
@@ -128,7 +123,6 @@ pull_request_rules:
           - needs-fix
 
   # Empty PR description check
-  # Flags PRs with no description or a description shorter than 20 characters.
   - name: Flag empty PR description
     conditions:
       - "body~=^.{0,19}$"
@@ -148,7 +142,6 @@ pull_request_rules:
           - needs-fix
 
   # No linked issue check
-  # Flags PRs that don't reference a closing keyword + issue number in the body.
   - name: Flag missing linked issue
     conditions:
       - "-body~=(?i)(closes?|fixes?|resolves?)\\s+#[0-9]+"
@@ -166,3 +159,81 @@ pull_request_rules:
       label:
         add:
           - needs-fix
+
+  # Auto-merge Dependabot PRs when build passes
+  - name: Auto-merge Dependabot PR
+    conditions:
+      - author = dependabot[bot]
+      - check-success = build
+      - check-success = Mergify Merge Protections
+    actions:
+      merge:
+        method: squash
+
+  # Block merge and request changes when build check fails
+  - name: Block merge when build fails
+    conditions:
+      - check-failure = build
+      - "-author = dependabot[bot]"
+    actions:
+      review:
+        type: REQUEST_CHANGES
+        message: |
+          ❌ Build is failing on this PR.
+          Please fix before merging:
+          1. Run `npm run build` locally
+          2. Fix any errors shown
+          3. Push your fix — the check will re-run automatically
+          Most common issue: broken registry import.
+          Replace:
+          import agents from '../agents/registry'
+          With:
+          import { useAgents } from '../lib/useAgents'
+          const { agents } = useAgents()
+          See CONTRIBUTING.md for help. 🙏
+
+  # Comment when CodeRabbit requests changes
+  - name: Comment when CodeRabbit requests changes
+    conditions:
+      - check-failure = CodeRabbit
+    actions:
+      comment:
+        message: |
+          👋 Hey! CodeRabbit found issues in this PR that need to be fixed before merging.
+          Please:
+          1. Scroll up and read the CodeRabbit comments carefully
+          2. Click the "Proposed fix" links to see exactly what to change
+          3. Apply the fixes and push your changes
+          4. The PR will be re-reviewed automatically
+          Thank you for contributing to iloveAgents! 🚀
+
+  # Close PRs with empty description (skip bots)
+  - name: Close PRs with no description
+    conditions:
+      - "body~=^\\s*$"
+      - "-author = dependabot[bot]"
+      - "-author = coderabbitai[bot]"
+    actions:
+      close:
+        message: |
+          👋 Hi! Thanks for your contribution to iloveAgents!
+          This PR was closed because it has no description.
+          Please reopen it with:
+          ✅ What this PR does
+          ✅ Screenshots if UI change
+          ✅ Confirmation that npm run build passes locally
+          See CONTRIBUTING.md for the full guide.
+
+  # Warn when branch is out of date with main (skip bots and drafts)
+  - name: Warn when branch is out of date
+    conditions:
+      - "-linear-history"
+      - "-draft"
+      - "-author = dependabot[bot]"
+    actions:
+      comment:
+        message: |
+          ⚠️ This branch is out of date with main.
+          Please click "Update branch" to sync before merging.
+merge_protections_settings:
+  reporting_method: check-runs
