@@ -87,17 +87,24 @@ export default function WorkflowBuilder() {
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
   const availableAgents = agents.filter((a) => !selectedIds.has(a.id))
 
-  // Get available categories for the dropdown dynamically
+  // Get available categories for the dropdown dynamically, filtering out empty/falsy categories
   const availableCategories = useMemo(() => {
-    return [...new Set(availableAgents.map((a) => a.category))].sort()
+    return [...new Set(
+      availableAgents
+        .map((a) => (typeof a.category === 'string' ? a.category.trim() : ''))
+        .filter(Boolean)
+    )].sort((a, b) => a.localeCompare(b))
   }, [availableAgents])
 
   // Filter agents based on search query and category
   const filteredAgents = availableAgents.filter((agent) => {
-    const matchesSearch =
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.category.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = !selectedCategory || agent.category === selectedCategory
+    const q = searchQuery.toLowerCase()
+    const name = typeof agent.name === 'string' ? agent.name.toLowerCase() : ''
+    const category = typeof agent.category === 'string' ? agent.category.toLowerCase() : ''
+    const rawCategory = typeof agent.category === 'string' ? agent.category.trim() : ''
+    
+    const matchesSearch = name.includes(q) || category.includes(q)
+    const matchesCategory = !selectedCategory || rawCategory === selectedCategory
     return matchesSearch && matchesCategory
   })
 
@@ -113,7 +120,7 @@ export default function WorkflowBuilder() {
 
   // Reset selected category if it's no longer present in available agents
   useEffect(() => {
-    if (selectedCategory && !availableAgents.some((a) => a.category === selectedCategory)) {
+    if (selectedCategory && !availableAgents.some((a) => (typeof a.category === 'string' ? a.category.trim() : '') === selectedCategory)) {
       setSelectedCategory(null)
     }
   }, [availableAgents, selectedCategory])
