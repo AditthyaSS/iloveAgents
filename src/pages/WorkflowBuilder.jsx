@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -16,6 +16,23 @@ import { loadAllAgents } from '../agents/registry'
 import { saveWorkflow } from '../hooks/useWorkflows'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
+// Category colors and ring highlights for visual consistency
+const categoryMeta = {
+  Productivity: { color: 'from-blue-500 to-cyan-400',   ring: 'ring-blue-500/30' },
+  Research:     { color: 'from-violet-500 to-purple-400', ring: 'ring-violet-500/30' },
+  Marketing:    { color: 'from-pink-500 to-rose-400',    ring: 'ring-pink-500/30' },
+  Engineering:  { color: 'from-emerald-500 to-green-400', ring: 'ring-emerald-500/30' },
+  HR:           { color: 'from-amber-500 to-yellow-400',  ring: 'ring-amber-500/30' },
+  Business:     { color: 'from-orange-500 to-amber-400',  ring: 'ring-orange-500/30' },
+  Education:    { color: 'from-indigo-500 to-blue-400',   ring: 'ring-indigo-500/30' },
+  Legal:        { color: 'from-red-500 to-rose-400',      ring: 'ring-red-500/30' },
+  Design:       { color: 'from-fuchsia-500 to-pink-400',  ring: 'ring-fuchsia-500/30' },
+  Product:      { color: 'from-teal-500 to-cyan-400',     ring: 'ring-teal-500/30' },
+  'Developer Tools': { color: 'from-slate-600 to-slate-400', ring: 'ring-slate-500/30' },
+}
+
+const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
+
 const MAX_AGENTS = 5
 
 export default function WorkflowBuilder() {
@@ -31,7 +48,10 @@ export default function WorkflowBuilder() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState(null)
   const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
+
+  const searchInputRef = useRef(null)
 
   useEffect(() => {
     loadAllAgents().then(setAgents)
@@ -67,17 +87,43 @@ export default function WorkflowBuilder() {
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
   const availableAgents = agents.filter((a) => !selectedIds.has(a.id))
 
-  // Filter agents based on search query
-  const filteredAgents = availableAgents.filter((agent) =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.category.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Get available categories for the dropdown dynamically
+  const availableCategories = useMemo(() => {
+    return [...new Set(availableAgents.map((a) => a.category))].sort()
+  }, [availableAgents])
+
+  // Filter agents based on search query and category
+  const filteredAgents = availableAgents.filter((agent) => {
+    const matchesSearch =
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.category.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = !selectedCategory || agent.category === selectedCategory
+    return matchesSearch && matchesCategory
+  })
+
+  // Auto-focus search input when dropdown opens
+  useEffect(() => {
+    if (dropdownOpen) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [dropdownOpen])
+
+  // Reset selected category if it's no longer present in available agents
+  useEffect(() => {
+    if (selectedCategory && !availableAgents.some((a) => a.category === selectedCategory)) {
+      setSelectedCategory(null)
+    }
+  }, [availableAgents, selectedCategory])
 
   const addAgent = (agent) => {
     if (selectedAgents.length >= MAX_AGENTS) return
     setSelectedAgents((prev) => [...prev, agent])
     setDropdownOpen(false)
     setSearchQuery('')
+    setSelectedCategory(null)
   }
 
   const removeAgent = (index) => {
@@ -262,7 +308,16 @@ export default function WorkflowBuilder() {
           <div className="relative">
             <button
               id="add-agent-btn"
-              onClick={() => setDropdownOpen((o) => !o)}
+              onClick={() => {
+                setDropdownOpen((o) => {
+                  const next = !o
+                  if (!next) {
+                    setSearchQuery('')
+                    setSelectedCategory(null)
+                  }
+                  return next
+                })
+              }}
               className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg border
                 text-sm font-semibold transition-all duration-200
                 dark:bg-surface-card dark:border-border dark:text-text-secondary
@@ -286,18 +341,67 @@ export default function WorkflowBuilder() {
                   dark:bg-surface-card dark:border-border bg-white border-gray-200
                   max-h-64 overflow-y-auto animate-fade-in p-1.5 space-y-1"
               >
-                {/* 🔍 STICKY SEARCH BAR INPUT */}
-                <div className="p-1.5 sticky top-0 bg-white dark:bg-surface-card border-b border-gray-100 dark:border-border/60 z-10 mb-1">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search agents by name or category..."
-                    className="w-full px-3 py-2 rounded-md border text-xs transition-all duration-200
-                      dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
-                      bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
-                      focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
-                  />
+                {/* 🔍 STICKY SEARCH & FILTER HEADER */}
+                <div className="p-1.5 sticky top-0 bg-white dark:bg-surface-card border-b border-gray-100 dark:border-border/60 z-10 mb-1 space-y-1.5">
+                  <div className="relative">
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search agents by name or category..."
+                      className="w-full pl-2 pr-7 py-2 rounded-md border text-xs transition-all duration-200
+                        dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
+                        bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
+                        focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute inset-y-0 right-0 pr-2 flex items-center
+                          dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+                        aria-label="Clear search"
+                      >
+                        <X size={12} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Horizontal Scrollable Category Filter Pills */}
+                  {availableCategories.length > 0 && (
+                    <div className="flex items-center gap-1 overflow-x-auto py-1 scrollbar-none border-t border-gray-50 dark:border-border/30 mt-1 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCategory(null)}
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all duration-200 border whitespace-nowrap
+                          ${!selectedCategory
+                            ? 'bg-accent text-white border-accent shadow-sm'
+                            : 'dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:border-accent/40 bg-white border-gray-200 text-gray-500 hover:border-accent/30'
+                          }`}
+                      >
+                        All
+                      </button>
+                      {availableCategories.map((cat) => {
+                        const meta = categoryMeta[cat] || defaultMeta
+                        const isActive = selectedCategory === cat
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setSelectedCategory(isActive ? null : cat)}
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition-all duration-200 border whitespace-nowrap
+                              ${isActive
+                                ? `bg-gradient-to-r ${meta.color} text-white border-transparent ring-1 ${meta.ring}`
+                                : 'dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:border-accent/40 bg-white border-gray-200 text-gray-500 hover:border-accent/30'
+                              }`}
+                          >
+                            {cat}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {filteredAgents.length === 0 ? (
