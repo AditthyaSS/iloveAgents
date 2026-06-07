@@ -549,3 +549,32 @@ html:not(.dark) .light-text-secondary {
 .battle-select-highlight:focus {
   background-color: rgba(255, 255, 255, 0.03);
 }
+
+/* ===== Navigation Responsive Helpers ===== */
+
+@media (max-width: 768px) {
+  nav {
+    flex-wrap: wrap;
+  }
+
+  nav ul {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  nav a {
+    display: block;
+    width: 100%;
+  }
+
+  header {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+}
+
