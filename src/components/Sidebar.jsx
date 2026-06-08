@@ -86,6 +86,23 @@ export default function Sidebar({ open, onClose }) {
 
         {/* Agent List */}
         <nav className="flex-1 overflow-y-auto px-2 pb-4">
+          {/* Suites link */}
+          <NavLink
+            to="/suites"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-2
+              ${isActive
+                ? 'bg-accent/10 text-accent dark:text-accent'
+                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`
+            }
+          >
+            <span className="text-sm">✨</span>
+            <span className="truncate">Suites</span>
+          </NavLink>
+
+          <div className="border-b dark:border-border border-gray-100 mb-2" />
           {categoryOrder.map((category) => (
             <div key={category} className="mb-3">
               <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest dark:text-text-muted text-gray-400">

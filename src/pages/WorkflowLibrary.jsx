@@ -31,7 +31,7 @@ function AgentPill({ agentId }) {
   )
 }
 
-function WorkflowCard({ workflow, onRun, onView }) {
+function WorkflowCard({ workflow, onRun, onView, onFork }) {
   const [usageCount, setUsageCount] = useState(workflow.usage_count ?? 0)
 
   // Sync when parent data refreshes
@@ -125,6 +125,16 @@ function WorkflowCard({ workflow, onRun, onView }) {
           <Eye size={12} />
           Details
         </button>
+        <button
+  id={`fork-workflow-${workflow.id}`}
+  onClick={() => onFork(workflow)}
+  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+    dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:text-text-primary
+    bg-gray-100 border border-gray-200 text-gray-600 hover:text-gray-900"
+>
+  <GitBranch size={12} />
+  Fork
+</button>
         <span className="ml-auto text-[11px] dark:text-text-muted text-gray-400">
           {(workflow.agents ?? []).length} agent{workflow.agents?.length !== 1 ? 's' : ''}
         </span>
@@ -182,6 +192,13 @@ export default function WorkflowLibrary() {
   const handleView = (workflow) => {
     navigate(`/workflows/${workflow.id}`)
   }
+  const handleFork = (workflow) => {
+  navigate('/workflows/build', {
+    state: {
+      forkedWorkflow: workflow,
+    },
+  })
+}
 
   return (
     <div className="animate-fade-in">
@@ -302,6 +319,7 @@ export default function WorkflowLibrary() {
                   workflow={workflow}
                   onRun={handleRun}
                   onView={handleView}
+                  onFork={handleFork}
                 />
               </div>
             ))}
