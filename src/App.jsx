@@ -14,6 +14,7 @@ import WorkflowBuilder from './pages/WorkflowBuilder'
 import WorkflowDetail from './pages/WorkflowDetail'
 import WorkflowRunner from './pages/WorkflowRunner'
 import NotFoundPage from './pages/NotFoundPage'
+import SuitesPage from './pages/SuitesPage'
 
 // Shared layout: Navbar + Sidebar + main content area
 function MainLayout({ sidebarOpen, setSidebarOpen }) {
@@ -47,6 +48,8 @@ export default function App() {
         <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/agent/:id" element={<AgentPage />} />
+          {/* Suites */}
+          <Route path="/suites" element={<SuitesPage />} />
           {/* Workflow routes */}
           <Route path="/workflows" element={<WorkflowLibrary />} />
           <Route path="/workflows/build" element={<WorkflowBuilder />} />

@@ -5,10 +5,114 @@ import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
-import ExportCenter from './ExportCenter'
+
+function CopyButton({ text, label }) {
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = text
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy to clipboard"
+      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+        dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+        bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+    >
+      {copied ? (
+        <>
+          <Check size={12} className="text-success" />
+          Copied!
+        </>
+      ) : (
+        <>
+          <Copy size={12} />
+          {label || 'Copy'}
+        </>
+      )}
+    </button>
+  )
+}
+
+function convertMarkdownToPlainText(markdown) {
+  if (!markdown) return ''
+
+  return markdown
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, (match) =>
+      match.replace(/```/g, '')
+    )
+
+    // Remove inline code
+    .replace(/`([^`]+)`/g, '$1')
+
+    // Remove markdown headers
+    .replace(/^#{1,6}\s*/gm, '')
+
+    // Remove bold/italic
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+
+    // Remove blockquotes
+    .replace(/^>\s*/gm, '')
+
+    // Convert markdown links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+
+    // Remove list markers
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+
+    // Remove extra newlines
+    .replace(/\n{3,}/g, '\n\n')
+
+    .trim()
+}
+
+function DownloadButton({ text, agentName }) {
+  const handleDownload = () => {
+    const blob = new Blob([text], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${agentName || 'output'}.txt`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  }
+
+  return (
+    <button
+      onClick={handleDownload}
+      title="Download as .txt"
+      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+        dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+        bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+    >
+      ⬇ Download
+    </button>
+  )
+}
 
 export default function OutputRenderer({ content, outputType, agentName, systemPrompt }) {
   if (!content) return null
+
+  const shareText = `--- Agent: ${agentName} ---\n\n--- Output ---\n${content}`
+  const plainTextContent = convertMarkdownToPlainText(content)
 
   return (
     <div className="animate-fade-in">
@@ -17,7 +121,21 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
         <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
           Output
         </span>
-        <ExportCenter content={content} agentName={agentName} outputType={outputType} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <CopyButton text={content} label="Copy output" />
+
+          <CopyButton
+            text={plainTextContent}
+            label="Plain Text"
+          />
+
+          <CopyButton text={shareText} label="Share" />
+
+          <DownloadButton
+            text={plainTextContent}
+            agentName={agentName}
+          />
+        </div>
       </div>
 
       {/* Content */}
