@@ -1,15 +1,51 @@
 // ============================================================
-// I LOVE AGENTS — Agent Registry
+// I LOVE AGENTS — Agent Registry (Lazy-loaded)
 // ============================================================
 //
 // To contribute an agent: create a new file in ./definitions/
 // with `export default { ...agentConfig }`, and it will be
 // auto-collected here. See CONTRIBUTING.md for full guidelines.
 //
+// Agent definitions are lazy-loaded via Vite's import.meta.glob
+// with `eager: false` to reduce the initial JS bundle size.
+// Each definition file becomes a separate chunk loaded on demand.
 // ============================================================
 
-const modules = import.meta.glob('./definitions/*.js', { eager: true });
+const modules = import.meta.glob('./definitions/*.js', { eager: false });
 
-const agents = Object.values(modules).map((mod) => mod.default);
+/**
+ * Load all agent definitions and return the array.
+ * Results are cached after the first call.
+ * @returns {Promise<Array>} Array of agent definition objects.
+ */
+let cachedAgentsPromise = null;
 
-export default agents;
+export function loadAllAgents() {
+  if (cachedAgentsPromise) return cachedAgentsPromise;
+
+  cachedAgentsPromise = Promise.all(
+    Object.values(modules).map((loader) => loader())
+  ).then((entries) => {
+    const agents = entries.map((mod) => mod.default).filter(Boolean);
+
+    const seenIds = new Set();
+    const uniqueAgents = agents.filter((agent) => {
+      if (!agent?.id) {
+        console.warn('Skipping agent without an id:', agent);
+        return false;
+      }
+
+      if (seenIds.has(agent.id)) {
+        console.warn(`Skipping duplicate agent id "${agent.id}".`);
+        return false;
+      }
+
+      seenIds.add(agent.id);
+      return true;
+    });
+
+    return uniqueAgents;
+  });
+
+  return cachedAgentsPromise;
+}

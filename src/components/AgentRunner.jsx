@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
+import CustomSelect from "./CustomSelect";
 import {
   Loader2,
   RotateCcw,
@@ -20,6 +21,7 @@ import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
+import RunRating from "./RunRating";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
 import { useHistory } from "../lib/useHistory";
@@ -421,20 +423,13 @@ export default function AgentRunner({ agent }) {
             )}
 
             {input.type === "select" && (
-              <select
+              <CustomSelect
                 value={inputs[input.id] || input.defaultValue || ""}
-                onChange={(e) => updateInput(input.id, e.target.value)}
-                className="h-9 px-3 rounded-md text-sm cursor-pointer transition-colors
-                  dark:bg-surface-input dark:border-border dark:text-text-primary
-                  bg-gray-50 border border-gray-200 text-gray-900
-                  focus:ring-1 focus:ring-accent focus:border-accent outline-none"
-              >
-                {input.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => updateInput(input.id, val)}
+                options={input.options || []}
+                className="w-full sm:w-64"
+                triggerClassName="h-9"
+              />
             )}
 
             {input.type === "multiselect" && (
@@ -695,6 +690,7 @@ export default function AgentRunner({ agent }) {
             agentName={agent.name}
             systemPrompt={customPrompt}
           />
+          <RunRating />
           <div className="flex justify-end">
             <button
               onClick={handleSendToWorkflow}

@@ -25,7 +25,8 @@
 - [Supported Providers](#supported-providers)
 - [Battle Mode](#battle-mode)
 - [AI Workflow Builder (New)](#-ai-workflow-builder-new)
-  - [What you can do](#what-you can-do)
+  <!-- Fix: Corrected broken anchor link - replaced space with hyphen in 'what-you-can-do' -->
+- [What you can do](#what-you-can-do)
   - [How sequential execution works](#how-sequential-execution-works)
   - [Navigation](#navigation)
 - [Getting Started](#getting-started)

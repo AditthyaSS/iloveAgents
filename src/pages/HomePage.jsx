@@ -1,16 +1,13 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch } from 'lucide-react'
-import agents from '../agents/registry'
+import { loadAllAgents } from '../agents/registry'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
-
-// Derive unique sorted categories from the registry
-const allCategories = [...new Set(agents.map((a) => a.category))].sort()
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -32,7 +29,15 @@ const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/3
 export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
+  const [agents, setAgents] = useState([])
+
+useEffect(() => {
+  loadAllAgents().then(setAgents)
+}, [])
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const allCategories = useMemo(() => {
+    return [...new Set(agents.map((a) => a.category))].sort()
+  }, [agents])
   useDocumentTitle()
 
   useKeyboardShortcuts({

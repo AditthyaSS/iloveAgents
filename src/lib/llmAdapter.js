@@ -335,7 +335,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     })
 
     if (!response.ok) {
-      await handleErrorResponse(response)
+      await handleErrorResponse(response, provider)
     }
 
     const reader = response.body.getReader()
@@ -396,4 +396,25 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     }
     throw error
   }
+}
+
+/**
+ * Fetch supported Gemini models dynamically from the Google API.
+ * Returns models that support generateContent (i.e. usable for chat/generation).
+ *
+ * @param {string} apiKey
+ * @returns {Promise<Array<{value: string, label: string}>>}
+ */
+export async function fetchGeminiModels(apiKey) {
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
+  )
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  const data = await res.json()
+  return (data.models || [])
+    .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+    .map(m => ({
+      value: m.name.replace('models/', ''),
+      label: m.displayName || m.name.replace('models/', ''),
+    }))
 }
