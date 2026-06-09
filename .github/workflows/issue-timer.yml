@@ -49,6 +49,34 @@ jobs:
               return linked;
             }
 
+            // ─── Helper: fetch all MERGED PRs and build a set of issue numbers
+            //     they reference. Merged PRs mean the issue is already resolved —
+            //     the timer must never touch those issues.
+            async function getIssuesWithMergedPR() {
+              const linked = new Set();
+              const prs = await github.paginate(
+                github.rest.pulls.list,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'closed',   // merged PRs have state=closed + merged_at set
+                  per_page: 100,
+                }
+              );
+              for (const pr of prs) {
+                // Only care about PRs that were actually merged, not just closed
+                if (!pr.merged_at) continue;
+                const body = (pr.body || '') + ' ' + (pr.title || '');
+                const matches = body.matchAll(
+                  /(?:closes?|fixes?|resolves?)\s+#(\d+)/gi
+                );
+                for (const m of matches) {
+                  linked.add(parseInt(m[1], 10));
+                }
+              }
+              return linked;
+            }
+
             // ─── Helper: get all commenters on an issue excluding maintainer,
             //     bots, and the current assignee
             async function getOtherCommenters(issueNumber, excludeLogin) {
@@ -144,15 +172,31 @@ jobs:
             // Get the set of issue numbers that already have a linked open PR
             const issuesWithPR = await getIssuesWithLinkedPR();
 
+            // Get the set of issue numbers that already have a linked MERGED PR
+            // These are resolved issues — the timer must never act on them
+            const issuesWithMergedPR = await getIssuesWithMergedPR();
+
             for (const issue of issues) {
               // Skip pull requests (GitHub returns PRs in issues list)
               if (issue.pull_request) continue;
 
               const issueNumber = issue.number;
 
-              // Skip if this issue already has a linked open PR
+              // ── GUARD 1: skip if issue is already closed
+              if (issue.state === 'closed') {
+                console.log(`Issue #${issueNumber} is already closed. Skipping.`);
+                continue;
+              }
+
+              // ── GUARD 2: skip if a merged PR already references this issue
+              if (issuesWithMergedPR.has(issueNumber)) {
+                console.log(`Issue #${issueNumber} has a merged PR — already resolved. Skipping.`);
+                continue;
+              }
+
+              // ── GUARD 3: skip if an open PR already references this issue
               if (issuesWithPR.has(issueNumber)) {
-                console.log(`Issue #${issueNumber} already has a linked PR. Skipping.`);
+                console.log(`Issue #${issueNumber} already has a linked open PR. Skipping.`);
                 continue;
               }
 

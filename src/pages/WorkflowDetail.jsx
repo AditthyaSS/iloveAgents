@@ -18,7 +18,7 @@ import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function AgentRow({ agentId, index, total, agents }) {
-  const agent = agents.find((a) => a.id === agentId)
+  const agent = agents?.find((a) => a.id === agentId)
   const IconComponent = (agent && Icons[agent.icon]) || Icons.Bot
 
   return (
@@ -60,6 +60,11 @@ export default function WorkflowDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { agents } = useAgents()
+
+  const [agents, setAgents] = useState([])
+  useEffect(() => {
+    loadAllAgents().then(setAgents)
+  }, [])
 
   const [workflow, setWorkflow] = useState(null)
   const [loading, setLoading] = useState(true)

@@ -16,9 +16,11 @@ export default function SuggestedChainPills({ agent }) {
 
   if (!agent.suggestedChainFrom?.length) return null
 
-  const predecessors = agent.suggestedChainFrom
-    .map((id) => agents.find((a) => a.id === id))
-    .filter(Boolean)
+  const predecessors = agents.length
+    ? agent.suggestedChainFrom
+        .map((id) => agents.find((a) => a.id === id))
+        .filter(Boolean)
+    : []
 
   if (!predecessors.length) return null
 

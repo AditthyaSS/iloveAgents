@@ -60,3 +60,25 @@ jobs:
               issue_number: issueNumber,
               body: `Hey everyone! 👋\n\n${mentions}\n\nThis issue has been assigned to @${assignedPerson}.\n\nIf you were interested in working on this, hang tight — if the current contributor goes inactive and no PR is opened within 5 days, this issue will be automatically reassigned to the next interested contributor. So stay engaged and keep an eye on this thread! 👀\n\nIn the meantime, feel free to check out our other open issues and pick one that interests you.\n\nThank you for your enthusiasm — it means a lot! 🙏\n\n— [@AditthyaSS](https://github.com/AditthyaSS)`
             });
+
+      # Post a separate comment directly to the assigned contributor with
+      # deadline, PR format reminders, and a star nudge.
+      - name: Post assignment instructions to assignee
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.payload.issue.number;
+            const assignedPerson = context.payload.assignee.login;
+
+            // Calculate the deadline: exactly 5 days from now, formatted YYYY-MM-DD
+            const deadline = new Date();
+            deadline.setDate(deadline.getDate() + 5);
+            const deadlineStr = deadline.toISOString().split('T')[0];
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `✅ Assigned to @${assignedPerson}.\n\nOpen your PR by **${deadlineStr}** (5 days from now). The bot frees this issue for another contributor after that date.\n\n**Reminders:**\n⭐ Star the repo first. The star-check job blocks your merge otherwise.\n📝 PR title format: \`type: short description\`\n🔗 Link this issue in your PR body: \`Closes #${issueNumber}\`\n\nGood luck. 🚀\n\n— [@AditthyaSS](https://github.com/AditthyaSS)`
+            });

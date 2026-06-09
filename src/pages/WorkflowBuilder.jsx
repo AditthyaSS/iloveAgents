@@ -12,7 +12,7 @@ import {
   GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import agents from '../agents/registry'
+import { loadAllAgents } from '../agents/registry'
 import { saveWorkflow } from '../hooks/useWorkflows'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -21,33 +21,51 @@ const MAX_AGENTS = 5
 export default function WorkflowBuilder() {
   const navigate = useNavigate()
   const location = useLocation()
+  const forkedWorkflow = location.state?.forkedWorkflow
   useDocumentTitle('Build a Workflow')
 
-  // Pre-populate chain when navigating from a SuggestedChainPills click
-  const preselected = location.state?.preselectedAgents ?? []
-  const initialAgents = preselected
-    .map((id) => agents.find((a) => a.id === id))
-    .filter(Boolean)
-
+  const [agents, setAgents] = useState([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [selectedAgents, setSelectedAgents] = useState(initialAgents)
+  const [selectedAgents, setSelectedAgents] = useState([])
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
+
+  useEffect(() => {
+    loadAllAgents().then(setAgents)
+  }, [])
+
+  // Resolve pre-populated chain once agents load
+  useEffect(() => {
+    if (!hasResolvedPreselected && agents.length > 0 && location.state?.preselectedAgents) {
+      const preselected = location.state.preselectedAgents
+      const loaded = preselected
+        .map((id) => agents.find((a) => a.id === id))
+        .filter(Boolean)
+      if (loaded.length > 0) {
+        setSelectedAgents(loaded)
+      }
+      setHasResolvedPreselected(true)
+    }
+  }, [agents, location.state?.preselectedAgents, hasResolvedPreselected])
 
   // Pre-select agent if coming from AgentRunner
   useEffect(() => {
-    if (location.state?.preSelectedAgent) {
-      const agent = location.state.preSelectedAgent
-      setSelectedAgents([agent])
-      setTitle(`${agent.name} Workflow`)
-      
-      // Clear location state to prevent re-adding on refresh
-      window.history.replaceState({}, document.title)
-    }
-  }, [location.state])
+  if (forkedWorkflow) {
+    setNodes(
+      JSON.parse(JSON.stringify(forkedWorkflow.nodes || []))
+    )
+
+    setEdges(
+      JSON.parse(JSON.stringify(forkedWorkflow.edges || []))
+    )
+
+    setTitle(`Copy of ${forkedWorkflow.title}`)
+  }
+}, [forkedWorkflow])
 
   // Agents already in the chain — prevent duplicates
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
@@ -249,10 +267,12 @@ export default function WorkflowBuilder() {
             <button
               id="add-agent-btn"
               onClick={() => setDropdownOpen((o) => !o)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border
-                text-sm font-medium transition-all
-                dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:border-accent/40
-                bg-white border-gray-200 text-gray-600 hover:border-indigo-300"
+              className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg border
+                text-sm font-semibold transition-all duration-200
+                dark:bg-surface-card dark:border-border dark:text-text-secondary
+                dark:hover:border-accent/40 dark:hover:text-text-primary
+                bg-white border-gray-200 text-gray-600 hover:border-accent/30 hover:text-gray-900
+                focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
             >
               <span className="flex items-center gap-2">
                 <Plus size={14} className="text-accent" />
@@ -266,21 +286,21 @@ export default function WorkflowBuilder() {
 
             {dropdownOpen && (
               <div
-                className="absolute top-full mt-1 left-0 right-0 z-30 rounded-lg border shadow-xl
+                className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
                   dark:bg-surface-card dark:border-border bg-white border-gray-200
-                  max-h-64 overflow-y-auto animate-fade-in"
+                  max-h-64 overflow-y-auto animate-fade-in p-1.5 space-y-1"
               >
                 {/* 🔍 STICKY SEARCH BAR INPUT */}
-                <div className="p-2 sticky top-0 bg-white dark:bg-surface-card border-b dark:border-border z-10">
+                <div className="p-1.5 sticky top-0 bg-white dark:bg-surface-card border-b border-gray-100 dark:border-border/60 z-10 mb-1">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search agents by name or category..."
-                    className="w-full px-2.5 py-1.5 rounded-md border text-xs transition-all
+                    className="w-full px-3 py-2 rounded-md border text-xs transition-all duration-200
                       dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
                       bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
-                      focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent"
+                      focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
                   />
                 </div>
 
@@ -295,8 +315,9 @@ export default function WorkflowBuilder() {
                       <button
                         key={agent.id}
                         onClick={() => addAgent(agent)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors
-                          dark:hover:bg-surface-hover hover:bg-gray-50"
+                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
+                          dark:hover:bg-surface-hover dark:hover:text-text-primary
+                          hover:bg-gray-50 hover:text-gray-900"
                       >
                         <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
                           <IconComponent size={13} className="text-accent" />

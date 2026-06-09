@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch } from 'lucide-react'
 import { useAgents } from '../lib/useAgents'
@@ -8,9 +8,6 @@ import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
-
-
-
 // Category icons/colors for the filter pills
 const categoryMeta = {
   Productivity: { color: 'from-blue-500 to-cyan-400',   ring: 'ring-blue-500/30' },
@@ -33,13 +30,14 @@ export default function HomePage() {
   const { agents, loading } = useAgents()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
-  useDocumentTitle()
 
   // Derive unique sorted categories from the loaded agents
   const allCategories = useMemo(
     () => [...new Set(agents.map((a) => a.category))].sort(),
     [agents]
   )
+
+  useDocumentTitle()
 
   useKeyboardShortcuts({
     '/': (e) => {
