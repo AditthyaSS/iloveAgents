@@ -48,14 +48,7 @@ const LOADING_MESSAGES = [
 ];
 
 export default function AgentRunner({ agent }) {
-  const {
-    provider,
-    setProvider,
-    apiKey,
-    setApiKey,
-    saveForSession,
-    setSaveForSession,
-  } = useApiKey();
+  const { provider, apiKey } = useApiKey();
 
   const { saveRun } = useHistory();
   const navigate = useNavigate();
@@ -331,12 +324,6 @@ export default function AgentRunner({ agent }) {
 
       {/* API Key Bar */}
       <ApiKeyBar
-        provider={provider}
-        setProvider={setProvider}
-        apiKey={apiKey}
-        setApiKey={setApiKey}
-        saveForSession={saveForSession}
-        setSaveForSession={setSaveForSession}
         agentProvider={agent.provider}
         model={selectedModel}
         setModel={setSelectedModel}
