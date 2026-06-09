@@ -49,6 +49,41 @@ function CopyButton({ text, label }) {
   )
 }
 
+function convertMarkdownToPlainText(markdown) {
+  if (!markdown) return ''
+
+  return markdown
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, (match) =>
+      match.replace(/```/g, '')
+    )
+
+    // Remove inline code
+    .replace(/`([^`]+)`/g, '$1')
+
+    // Remove markdown headers
+    .replace(/^#{1,6}\s*/gm, '')
+
+    // Remove bold/italic
+    .replace(/(\*\*|__)(.*?)\1/g, '$2')
+    .replace(/(\*|_)(.*?)\1/g, '$2')
+
+    // Remove blockquotes
+    .replace(/^>\s*/gm, '')
+
+    // Convert markdown links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1')
+
+    // Remove list markers
+    .replace(/^\s*[-*+]\s+/gm, '')
+    .replace(/^\s*\d+\.\s+/gm, '')
+
+    // Remove extra newlines
+    .replace(/\n{3,}/g, '\n\n')
+
+    .trim()
+}
+
 function DownloadButton({ text, agentName }) {
   const handleDownload = () => {
     const blob = new Blob([text], { type: 'text/plain' })
@@ -77,6 +112,7 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
   if (!content) return null
 
   const shareText = `--- Agent: ${agentName} ---\n\n--- Output ---\n${content}`
+  const plainTextContent = convertMarkdownToPlainText(content)
 
   return (
     <div className="animate-fade-in">
@@ -85,10 +121,20 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
         <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
           Output
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <CopyButton text={content} label="Copy output" />
+
+          <CopyButton
+            text={plainTextContent}
+            label="Plain Text"
+          />
+
           <CopyButton text={shareText} label="Share" />
-          <DownloadButton text={content} agentName={agentName} />
+
+          <DownloadButton
+            text={plainTextContent}
+            agentName={agentName}
+          />
         </div>
       </div>
 
