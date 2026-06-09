@@ -23,6 +23,7 @@ import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
 import VoiceOutput from "./VoiceOutput";
+import ErrorBoundary from "./ErrorBoundary";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
 import { useHistory } from "../lib/useHistory";
@@ -685,12 +686,14 @@ export default function AgentRunner({ agent }) {
 
       {output && !isStreaming && (
         <div className="space-y-4">
-          <OutputRenderer
-            content={output}
-            outputType={agent.outputType}
-            agentName={agent.name}
-            systemPrompt={customPrompt}
-          />
+          <ErrorBoundary>
+            <OutputRenderer
+              content={output}
+              outputType={agent.outputType}
+              agentName={agent.name}
+              systemPrompt={customPrompt}
+            />
+          </ErrorBoundary>
           <VoiceOutput text={output} />
           <RunRating />
           <div className="flex justify-end">
