@@ -113,10 +113,7 @@ export default function WorkflowRunner() {
     })
   }, [id])
 
-  const [agents, setAgents] = useState([])
-  useEffect(() => {
-    loadAllAgents().then(setAgents)
-  }, [])
+
 
   // Initialize step states when workflow is ready
   useEffect(() => {

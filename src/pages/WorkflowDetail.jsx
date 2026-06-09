@@ -61,10 +61,7 @@ export default function WorkflowDetail() {
   const navigate = useNavigate()
   const { agents } = useAgents()
 
-  const [agents, setAgents] = useState([])
-  useEffect(() => {
-    loadAllAgents().then(setAgents)
-  }, [])
+
 
   const [workflow, setWorkflow] = useState(null)
   const [loading, setLoading] = useState(true)
