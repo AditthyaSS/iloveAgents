@@ -22,6 +22,7 @@ import CharCounter from "./CharCounter";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
+import VoiceOutput from "./VoiceOutput";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
 import { useHistory } from "../lib/useHistory";
@@ -690,6 +691,7 @@ export default function AgentRunner({ agent }) {
             agentName={agent.name}
             systemPrompt={customPrompt}
           />
+          <VoiceOutput text={output} />
           <RunRating />
           <div className="flex justify-end">
             <button
