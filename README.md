@@ -202,7 +202,7 @@ src/
 │   ├── definitions/          # Each agent in its own file (auto-collected)
 │   │   ├── pdf-summarizer.js
 │   │   ├── code-reviewer.js
-│   │   └── ... (33 files)
+│   │   └── ... (35 files)
 │   ├── categories.js         # CATEGORIES constant
 │   └── registry.js           # Auto-collects all definitions via import.meta.glob
 ├── components/
