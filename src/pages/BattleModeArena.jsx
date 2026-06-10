@@ -57,6 +57,19 @@ const PROVIDERS = [
       "bg-blue-400/10 hover:bg-blue-400/20 text-blue-400 border-blue-400/40 border-2 hover:border-blue-300/60 battle-btn-secondary",
     loaderColor: "text-blue-400",
   },
+  {
+    id: "groq",
+    label: "Groq",
+    model: "llama-3.3-70b-versatile",
+    color: "red",
+    borderClass: "border-red-400/40 battle-card-red",
+    glowClass: "hover:shadow-red-400/30",
+    headerBg: "bg-red-400/10 border-b border-red-400/30",
+    textColor: "text-red-400",
+    btnBg:
+      "bg-red-400/10 hover:bg-red-400/20 text-red-400 border-red-400/40 border-2 hover:border-red-300/60 battle-btn-secondary",
+    loaderColor: "text-red-400",
+  },
 ];
 
 function buildUserMessage(agent, inputs) {
@@ -83,6 +96,7 @@ export default function BattleModeArena() {
     openai: { loading: true, content: null, error: null, duration: null },
     anthropic: { loading: true, content: null, error: null, duration: null },
     gemini: { loading: true, content: null, error: null, duration: null },
+    groq: { loading: true, content: null, error: null, duration: null },
   });
 
   const [promptViewerOpen, setPromptViewerOpen] = useState(false);
@@ -90,6 +104,7 @@ export default function BattleModeArena() {
     openai: null,
     anthropic: null,
     gemini: null,
+    groq: null,
   });
 
   const [copiedProvider, setCopiedProvider] = useState(null);
@@ -353,6 +368,52 @@ export default function BattleModeArena() {
                     </div>
                   </div>
                 </div>
+
+                {/* Groq Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-red-400">
+                      Groq
+                    </span>
+                    <button
+                      onClick={() => handleCopyPrompt("groq", prompts.groq)}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "groq" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.groq?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.groq?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}

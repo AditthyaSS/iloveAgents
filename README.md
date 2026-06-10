@@ -87,10 +87,10 @@ Pit three AI providers against each other head-to-head.
 
 1. **Pick any agent** from the full registry
 2. **Enter your input once** — same prompt goes to all three
-3. **GPT-4o vs Claude Sonnet vs Gemini Flash** generate outputs simultaneously
+3. **GPT-4o vs Claude Sonnet vs Gemini Flash vs Llama 3.3 70B** generate outputs simultaneously
 4. **You pick the winner**
 
-Battle Mode has its own dark, dramatic UI with color-coded provider columns (gold for OpenAI, purple for Anthropic, blue for Gemini). Each provider loads independently — if one fails, the other two still work. Access it from the "Enter Battle Mode" button on the homepage or navigate directly to `/battle`.
+Battle Mode has its own dark, dramatic UI with color-coded provider columns (gold for OpenAI, purple for Anthropic, blue for Gemini, and red for Groq). Each provider loads independently — if one fails, the other two still work. Access it from the "Enter Battle Mode" button on the homepage or navigate directly to `/battle`.
 
 ---
 
@@ -239,7 +239,7 @@ src/
 1. **Registry** — Each agent is its own file in `src/agents/definitions/`. The registry auto-collects them via `import.meta.glob` — just drop a file in and it appears.
 2. **LLM Adapter** — A single `runAgent()` function in `llmAdapter.js` handles all three providers through one unified interface.
 3. **Agent Runner** — `AgentRunner.jsx` builds the input form from the config, constructs the prompt, and renders the response.
-4. **Battle Mode** — `BattleModeArena.jsx` fires the same prompt to GPT-4o, Claude Sonnet, and Gemini Flash simultaneously and lets you pick the winner.
+4. **Battle Mode** — `BattleModeArena.jsx` fires the same prompt to GPT-4o, Claude Sonnet, Gemini Flash and Llama 3.3 70B simultaneously and lets you pick the winner.
 5. **Workflow Builder** — `WorkflowRunner.jsx` chains agents sequentially using the same `runAgent()` adapter — output of step N becomes input of step N+1, with per-step status cards and real-time usage counters.
 6. **No backend** — Every API call goes directly from your browser to the provider. Nothing passes through our servers because there are no servers.
 
