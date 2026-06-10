@@ -22,6 +22,8 @@ export const MODELS = {
     { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
     { value: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
     { value: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B' },
+    { value: 'whisper-large-v3', label: 'Whisper' },
+    { value: 'whisper-large-v3-turbo', label: 'Whisper Large V3 Turbo' },
   ],
 }
 
