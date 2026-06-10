@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useAgents } from '../lib/useAgents'
 import {
   ArrowLeft,
   Zap,
@@ -83,7 +84,6 @@ export default function WorkflowRunner() {
   const navigate = useNavigate()
 
   const { provider, setProvider, apiKey, setApiKey, saveForSession, setSaveForSession } = useApiKey()
-  const { agents } = useAgents()
 
   const [workflow, setWorkflow] = useState(location.state?.workflow ?? null)
   const [loadingWorkflow, setLoadingWorkflow] = useState(!location.state?.workflow)
