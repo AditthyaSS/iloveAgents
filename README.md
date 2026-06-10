@@ -75,7 +75,7 @@ The complete list of agents has been moved to [AGENTS.md](./AGENTS.md) for bette
 | OpenAI | <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg" width="80"/> | GPT-4o, GPT-4o-mini | [platform.openai.com](https://platform.openai.com/api-keys) |
 | Anthropic | <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" width="80"/> | Claude Opus, Claude Sonnet | [console.anthropic.com](https://console.anthropic.com/) |
 | Google Gemini | <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" width="80"/> | Gemini 2.5 Flash | [aistudio.google.com](https://aistudio.google.com/apikey) |
-| Groq | <img src="https://console.groq.com/groq-logo.svg" width="80"/> | Llama 3.3 70B, Llama 3.1 8B, GPT-OSS 120B/20B | [console.groq.com](https://console.groq.com/keys) |
+| Groq | <img src="https://console.groq.com/groq-logo.svg" alt="Groq logo" width="80"/> | Llama 3.3 70B, Llama 3.1 8B, GPT-OSS 120B/20B | [console.groq.com](https://console.groq.com/keys) |
 
 You can switch providers on any agent at runtime from the dropdown. No restart needed.
 
