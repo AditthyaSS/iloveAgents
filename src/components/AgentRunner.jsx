@@ -26,6 +26,7 @@ import VoiceOutput from "./VoiceOutput";
 import ErrorBoundary from "./ErrorBoundary";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
+import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP } from "../lib/resolveAgentModel";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -75,6 +76,9 @@ export default function AgentRunner({ agent }) {
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
   const [msgIndex, setMsgIndex] = useState(0);
+  const [analyserOpen, setAnalyserOpen] = useState(false);
+  const [modelRecommendation, setModelRecommendation] = useState(null);
+  const [analyserLoading, setAnalyserLoading] = useState(false);
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
@@ -230,7 +234,6 @@ export default function AgentRunner({ agent }) {
       });
    } catch (err) {
   if (err.name !== "AbortError") {
-    // If the error is our structured invalid-api-key error, pass it directly
     if (err && err.type === "invalid_api_key") {
       setError(err);
     } else {
@@ -281,6 +284,20 @@ export default function AgentRunner({ agent }) {
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
     setInputs((prev) => ({ ...prev, ...agent.exampleInputs }));
+  };
+
+  const handleAnalyseModels = async () => {
+    if (!apiKey) return;
+    setAnalyserLoading(true);
+    setModelRecommendation(null);
+    try {
+      const result = await analyseModels(agent, apiKey, provider);
+      setModelRecommendation(result);
+    } catch (err) {
+      setModelRecommendation("Failed to analyse models. Please try again.");
+    } finally {
+      setAnalyserLoading(false);
+    }
   };
 
   const handleSendToWorkflow = () => {
@@ -365,14 +382,12 @@ export default function AgentRunner({ agent }) {
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 />
-                 
                 <VoiceInput
                   value={inputs[input.id] || ""}
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-1/2 -translate-y-1/2 right-1.5"
                 />
               </div>
-              
             )}
 
             {input.type === "textarea" && (
@@ -393,9 +408,9 @@ export default function AgentRunner({ agent }) {
                   className="top-2 right-2"
                 />
                 <CharCounter
-      value={inputs[input.id] || ""}
-      maxLength={5000}
-    />
+                  value={inputs[input.id] || ""}
+                  maxLength={5000}
+                />
               </div>
             )}
 
@@ -418,9 +433,9 @@ export default function AgentRunner({ agent }) {
                   className="top-2 right-2"
                 />
                 <CharCounter
-      value={inputs[input.id] || ""}
-      maxLength={5000}
-    />
+                  value={inputs[input.id] || ""}
+                  maxLength={5000}
+                />
               </div>
             )}
 
@@ -521,9 +536,9 @@ export default function AgentRunner({ agent }) {
               </label>
               <div className="flex items-center gap-2">
                 <CharCounter
-  value={customPrompt}
-  maxLength={5000}
-/>
+                  value={customPrompt}
+                  maxLength={5000}
+                />
                 {isPromptModified && (
                   <button
                     onClick={() => setCustomPrompt(agent.systemPrompt)}
@@ -559,6 +574,79 @@ export default function AgentRunner({ agent }) {
                 <Sparkles size={10} />
                 You're using a custom prompt. This won't affect other users.
               </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Model Analyser Panel */}
+      <div className="mb-4 rounded-lg border transition-all duration-200
+        dark:bg-surface-card dark:border-border bg-white border-gray-200">
+        <button
+          onClick={() => setAnalyserOpen(!analyserOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left group"
+        >
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="text-accent" />
+            <span className="text-xs font-semibold dark:text-text-primary text-gray-700">
+              Model Analyser
+            </span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full
+              bg-accent/10 text-accent border border-accent/20">
+              Beta
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] dark:text-text-muted text-gray-400">
+              {analyserOpen ? "Collapse" : "Find the best model for this agent"}
+            </span>
+            {analyserOpen ? (
+              <ChevronDown size={14} className="dark:text-text-muted text-gray-400" />
+            ) : (
+              <ChevronRight size={14} className="dark:text-text-muted text-gray-400" />
+            )}
+          </div>
+        </button>
+
+        {analyserOpen && (
+          <div className="px-4 pb-4 animate-fade-in">
+            {!apiKey && (
+              <p className="text-xs dark:text-text-muted text-gray-400 mb-3">
+                Add an API key above to analyse models.
+              </p>
+            )}
+            {apiKey && !modelRecommendation && !analyserLoading && (
+              <button
+                onClick={handleAnalyseModels}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs
+                  font-semibold text-white bg-accent hover:bg-accent-hover
+                  transition-all duration-200 active:scale-[0.98]"
+              >
+                <Zap size={12} />
+                Analyse Models
+              </button>
+            )}
+            {analyserLoading && (
+              <div className="flex items-center gap-2 text-xs text-accent">
+                <Loader2 size={14} className="animate-spin" />
+                Analysing best models for this agent...
+              </div>
+            )}
+            {modelRecommendation && (
+              <div className="mt-2">
+                <OutputRenderer
+                  content={modelRecommendation}
+                  outputType="markdown"
+                  agentName="Model Analyser"
+                  systemPrompt=""
+                />
+                <button
+                  onClick={() => setModelRecommendation(null)}
+                  className="mt-2 text-[10px] text-accent hover:underline"
+                >
+                  ↺ Re-analyse
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -610,40 +698,40 @@ export default function AgentRunner({ agent }) {
       </div>
 
       {error && error.type === "invalid_api_key" ? (
-  <ErrorCard message={
-    <>
-      <strong>
-        {error.provider === "openai" && "Your OpenAI API key is invalid or expired."}
-        {error.provider === "anthropic" && "Your Anthropic API key is invalid or expired."}
-        {error.provider === "gemini" && "Your Google Gemini API key is invalid or expired."}
-        {!["openai", "anthropic", "gemini"].includes(error.provider) && "Your API key is invalid or expired."}
-      </strong>
-      <br />
-      Please check and update your API key.<br />
-      <button
-        className="underline text-accent"
-        onClick={() => window.dispatchEvent(new CustomEvent("open-api-key-bar"))}
-      >
-        Update API Key
-      </button>
-      <span> or </span>
-      <button
-        className="underline text-accent"
-        onClick={() => window.location.reload()}
-      >
-        Retry
-      </button>
-      {error.detail && (
-        <>
-          <br /><br />
-          <span className="text-xs text-gray-400">Details: {error.detail}</span>
-        </>
+        <ErrorCard message={
+          <>
+            <strong>
+              {error.provider === "openai" && "Your OpenAI API key is invalid or expired."}
+              {error.provider === "anthropic" && "Your Anthropic API key is invalid or expired."}
+              {error.provider === "gemini" && "Your Google Gemini API key is invalid or expired."}
+              {!["openai", "anthropic", "gemini"].includes(error.provider) && "Your API key is invalid or expired."}
+            </strong>
+            <br />
+            Please check and update your API key.<br />
+            <button
+              className="underline text-accent"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-api-key-bar"))}
+            >
+              Update API Key
+            </button>
+            <span> or </span>
+            <button
+              className="underline text-accent"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+            {error.detail && (
+              <>
+                <br /><br />
+                <span className="text-xs text-gray-400">Details: {error.detail}</span>
+              </>
+            )}
+          </>
+        } />
+      ) : (
+        error && <ErrorCard message={error.message || error} />
       )}
-    </>
-  } />
-) : (
-  error && <ErrorCard message={error.message || error} />
-)}
 
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
@@ -711,3 +799,9 @@ export default function AgentRunner({ agent }) {
     </div>
   );
 }
+
+
+
+ 
+
+  
