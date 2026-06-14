@@ -13,6 +13,7 @@ import {
   Sparkles,
   RotateCw,
   GitBranch,
+  Trash2,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
@@ -326,7 +327,7 @@ export default function AgentRunner({ agent }) {
         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
           <IconComponent size={24} className="text-accent" />
         </div>
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h1 className="text-lg font-bold dark:text-text-primary text-gray-900">
               {agent.name}
@@ -346,6 +347,14 @@ export default function AgentRunner({ agent }) {
             {agent.description}
           </p>
         </div>
+        <button
+          onClick={handleClear}
+          disabled={!hasInputContent()}
+          title="Clear Chat"
+          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Trash2 size={18} />
+        </button>
       </div>
 
       {/* API Key Bar */}
