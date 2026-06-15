@@ -1,21 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import AgentRunner from '../components/AgentRunner'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function AgentPage() {
   const { id } = useParams()
-  const [agents, setAgents] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    loadAllAgents().then((loaded) => {
-      setAgents(loaded)
-      setIsLoading(false)
-    })
-  }, [])
-
+  const { agents, loading } = useAgents()
   const agent = agents.find((a) => a.id === id)
   useDocumentTitle(agent?.name ?? 'Agent')
 
@@ -37,8 +28,12 @@ export default function AgentPage() {
     )
   }, [agent])
 
-  if (isLoading) {
-    return null
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent" />
+      </div>
+    )
   }
 
   if (!agent) {

@@ -1,3 +1,4 @@
+import { useApiKey } from '../lib/useApiKey'
 import { fetchGeminiModels } from '../lib/llmAdapter'
 import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
@@ -30,16 +31,11 @@ const providerUrls = {
 
 
 export default function ApiKeyBar({
-  provider,
-  setProvider,
-  apiKey,
-  setApiKey,
-  saveForSession,
-  setSaveForSession,
   agentProvider,
   model,
   setModel,
 }) {
+  const { provider, setProvider, apiKey, setApiKey, saveForSession, setSaveForSession } = useApiKey()
   const [showKey, setShowKey] = useState(false)
   const [geminiModels, setGeminiModels] = useState([])
   const [geminiLoading, setGeminiLoading] = useState(false)
