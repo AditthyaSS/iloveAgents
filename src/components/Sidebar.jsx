@@ -17,9 +17,12 @@ export default function Sidebar({ open, onClose }) {
   }, [])
 
   // Filter agents based on search query
+  // Normalize the query (trim + lowercase) so matching is case-insensitive
+  // and tolerant of leading/trailing whitespace in user input.
+  const normalizedQuery = sidebarSearchQuery.trim().toLowerCase()
   const filteredAgents = agents.filter((agent) =>
-    agent.name.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
-    agent.category.toLowerCase().includes(sidebarSearchQuery.toLowerCase())
+    agent.name.toLowerCase().includes(normalizedQuery) ||
+    agent.category.toLowerCase().includes(normalizedQuery)
   )
 
   // Group agents by category
@@ -42,7 +45,7 @@ export default function Sidebar({ open, onClose }) {
       )}
 
     <aside
-      className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
+      className={`fixed top-28 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
         dark:bg-surface dark:border-border bg-white border-gray-200
         ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
     >
@@ -67,6 +70,7 @@ export default function Sidebar({ open, onClose }) {
             <input
               type="text"
               placeholder="Search agents..."
+              aria-label="Search agents"
               value={sidebarSearchQuery}
               onChange={(e) => setSidebarSearchQuery(e.target.value)}
               className="w-full pl-8 pr-8 py-1.5 text-[12px] rounded-md border transition-all
@@ -75,7 +79,9 @@ export default function Sidebar({ open, onClose }) {
             />
             {sidebarSearchQuery && (
               <button
+                type="button"
                 onClick={() => setSidebarSearchQuery('')}
+                aria-label="Clear search"
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-text-muted dark:hover:text-text-primary transition-colors"
               >
                 <Icons.X size={14} />
