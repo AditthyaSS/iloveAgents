@@ -103,6 +103,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
 
           <Link
             to="/"
+            aria-label="iloveAgents - Go to homepage"
             onClick={() => {
               setMobileMenuOpen(false)
               window.scrollTo({
@@ -115,6 +116,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
               min-w-0
               overflow-hidden
               transition-all duration-300 hover:scale-[1.02]
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
             "
           >
             <Logo
@@ -126,10 +128,14 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
 
         <div className="hidden md:flex items-center justify-center rounded-full border border-white/50 bg-white/45 p-1 shadow-inner shadow-white/50 dark:border-white/10 dark:bg-black/20 dark:shadow-black/20">
           {navItems.map(({ label, to, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={navLinkClass}>
-              <Icon size={14} />
-              <span>{label}</span>
-              <span className="absolute inset-x-4 -bottom-1 h-px scale-x-0 rounded-full bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-0 transition-all duration-300 group-hover:scale-x-100 group-hover:opacity-100" />
+            <NavLink key={to} to={to} end={end} className={navLinkClass} aria-label={label}>
+              {({isactive }) => (
+                <>
+                  <Icon size={14} />
+                <span>{label}</span>
+                <span className="absolute inset-x-4 -bottom-1 h-px scale-x-0 rounded-full bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-0 transition-all duration-300 group-hover:scale-x-100 group-hover:opacity-100" />
+                </>
+              )}
             </NavLink>
           ))}
         </div>
@@ -139,6 +145,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
             href="https://github.com/AditthyaSS/iloveAgents"
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Star iloveAgents on GitHub (opens in new tab)"
             className="
               hidden md:flex items-center justify-center gap-1.5
               px-3.5 py-2
@@ -150,7 +157,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
               transition-all duration-300 hover:-translate-y-0.5 hover:shadow-violet-500/35
             "
           >
-            <Github size={15} />
+            <Github size={15} aria-hidden="true" />
             <span>Star</span>
           </a>
 
@@ -164,6 +171,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
               dark:text-text-secondary
               hover:bg-white/70
               text-gray-500
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
             "
             aria-label="Keyboard Shortcuts"
           >
@@ -180,6 +188,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
               dark:text-text-secondary
               hover:bg-white/70
               text-gray-500
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
             "
             aria-label="Toggle theme"
           >
@@ -193,6 +202,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
               text-gray-600 dark:text-text-secondary
               transition-all duration-200 hover:scale-105
               hover:bg-white/70 dark:hover:bg-white/10
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
             "
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
@@ -203,6 +213,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
         </div>
 
         <div
+          role="menu"
+          aria-hidden={ !mobileMenuOpen }
           className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
             mobileMenuOpen ? 'max-h-80 opacity-100 pt-3' : 'max-h-0 opacity-0 pt-0'
           }`}

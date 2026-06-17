@@ -66,8 +66,14 @@ const filteredAgents = !normalizedQuery
       {/* Mobile overlay */}
       {open && (
         <div
+          role="button" tabIndex={0} aria-label="Close sidebar"
           className="fixed inset-0 z-30 bg-black/50 lg:hidden"
           onClick={onClose}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+              onClose()
+            }
+          }}  
         />
       )}
 
@@ -79,7 +85,7 @@ const filteredAgents = !normalizedQuery
 >
   {/* Header */}
   <div className="px-4 py-3 flex items-center justify-between">
-    <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+    <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-500">
       Agents
     </span>
 
@@ -154,7 +160,7 @@ const filteredAgents = !normalizedQuery
           type="button"
           onClick={() => toggleCategory(category)}
           aria-expanded={isCategoryExpanded}
-          className="w-full flex items-center justify-between gap-2 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+          className="w-full flex items-center justify-between gap-2 px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest dark:text-text-muted text-gray-500 hover:text-accent transition-colors"
         >
           <span className="flex items-center gap-1.5 min-w-0">
             <span className="truncate">{category}</span>
@@ -202,7 +208,7 @@ const filteredAgents = !normalizedQuery
   })}
 
   {filteredAgents.length === 0 && (
-    <div className="px-4 py-8 text-center text-xs text-gray-400 dark:text-text-muted">
+    <div className="px-4 py-8 text-center text-xs text-gray-500 dark:text-text-muted">
       No agents found
     </div>
   )}
@@ -215,7 +221,7 @@ const filteredAgents = !normalizedQuery
               href="https://github.com/AditthyaSS/iloveAgents"
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+              className="block text-[11px] dark:text-text-muted text-gray-500 hover:text-accent transition-colors"
             >
               GitHub →
             </a>
@@ -224,12 +230,12 @@ const filteredAgents = !normalizedQuery
               href="https://github.com/AditthyaSS/iloveAgents/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+              className="block text-[11px] dark:text-text-muted text-gray-500 hover:text-accent transition-colors"
             >
               Contribute →
             </a>
 
-            <span className="block text-[10px] dark:text-text-muted/60 text-gray-300">
+            <span className="block text-[10px] dark:text-text-muted/60 text-gray-400">
               GSSoC 2026
             </span>
           </div>
