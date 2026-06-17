@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
+import CustomSelect from "./CustomSelect";
 import {
   Loader2,
   RotateCcw,
@@ -12,16 +13,23 @@ import {
   Sparkles,
   RotateCw,
   GitBranch,
+  Trash2,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
+import ApiKeyInfo from "./ApiKeyInfo";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
+import CharCounter from "./CharCounter";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
+import RunRating from "./RunRating";
+import ErrorBoundary from "./ErrorBoundary";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
+import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP } from "../lib/resolveAgentModel";
+import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 const providerLabels = {
   openai: "OpenAI",
@@ -68,9 +76,22 @@ export default function AgentRunner({ agent }) {
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
   const [msgIndex, setMsgIndex] = useState(0);
+  const [analyserOpen, setAnalyserOpen] = useState(false);
+  const [modelRecommendation, setModelRecommendation] = useState(null);
+  const [analyserLoading, setAnalyserLoading] = useState(false);
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
+
+  useKeyboardShortcuts({
+    'Control+Enter': () => {
+      if (canRun() && !loading) handleRun();
+    },
+    'Escape': () => {
+      handleClear();
+      setPlaygroundOpen(false);
+    },
+  });
 
   useEffect(() => {
     setSelectedModel(MODEL_MAP[provider] || MODEL_MAP.openai);
@@ -211,11 +232,15 @@ export default function AgentRunner({ agent }) {
         output: result.content,
         provider: actualProvider,
       });
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        setError(err.message);
-      }
-    } finally {
+   } catch (err) {
+  if (err.name !== "AbortError") {
+    if (err && err.type === "invalid_api_key") {
+      setError(err);
+    } else {
+      setError({ type: "generic", message: err.message });
+    }
+  }
+} finally {
       setLoading(false);
       abortControllerRef.current = null;
     }
@@ -261,6 +286,20 @@ export default function AgentRunner({ agent }) {
     setInputs((prev) => ({ ...prev, ...agent.exampleInputs }));
   };
 
+  const handleAnalyseModels = async () => {
+    if (!apiKey) return;
+    setAnalyserLoading(true);
+    setModelRecommendation(null);
+    try {
+      const result = await analyseModels(agent, apiKey, provider);
+      setModelRecommendation(result);
+    } catch (err) {
+      setModelRecommendation("Failed to analyse models. Please try again.");
+    } finally {
+      setAnalyserLoading(false);
+    }
+  };
+
   const handleSendToWorkflow = () => {
     navigate("/workflows/build", {
       state: {
@@ -287,7 +326,7 @@ export default function AgentRunner({ agent }) {
         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
           <IconComponent size={24} className="text-accent" />
         </div>
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <h1 className="text-lg font-bold dark:text-text-primary text-gray-900">
               {agent.name}
@@ -307,6 +346,14 @@ export default function AgentRunner({ agent }) {
             {agent.description}
           </p>
         </div>
+        <button
+          onClick={handleClear}
+          disabled={!hasInputContent()}
+          title="Clear Chat"
+          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <Trash2 size={18} />
+        </button>
       </div>
 
       {/* API Key Bar */}
@@ -368,6 +415,10 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
+                <CharCounter
+                  value={inputs[input.id] || ""}
+                  maxLength={5000}
+                />
               </div>
             )}
 
@@ -389,24 +440,21 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
+                <CharCounter
+                  value={inputs[input.id] || ""}
+                  maxLength={5000}
+                />
               </div>
             )}
 
             {input.type === "select" && (
-              <select
+              <CustomSelect
                 value={inputs[input.id] || input.defaultValue || ""}
-                onChange={(e) => updateInput(input.id, e.target.value)}
-                className="h-9 px-3 rounded-md text-sm cursor-pointer transition-colors
-                  dark:bg-surface-input dark:border-border dark:text-text-primary
-                  bg-gray-50 border border-gray-200 text-gray-900
-                  focus:ring-1 focus:ring-accent focus:border-accent outline-none"
-              >
-                {input.options?.map((opt) => (
-                  <option key={opt} value={opt}>
-                    {opt}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => updateInput(input.id, val)}
+                options={input.options || []}
+                className="w-full sm:w-64"
+                triggerClassName="h-9"
+              />
             )}
 
             {input.type === "multiselect" && (
@@ -495,9 +543,10 @@ export default function AgentRunner({ agent }) {
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] dark:text-text-muted text-gray-400">
-                  {customPrompt.length} chars
-                </span>
+                <CharCounter
+                  value={customPrompt}
+                  maxLength={5000}
+                />
                 {isPromptModified && (
                   <button
                     onClick={() => setCustomPrompt(agent.systemPrompt)}
@@ -533,6 +582,79 @@ export default function AgentRunner({ agent }) {
                 <Sparkles size={10} />
                 You're using a custom prompt. This won't affect other users.
               </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Model Analyser Panel */}
+      <div className="mb-4 rounded-lg border transition-all duration-200
+        dark:bg-surface-card dark:border-border bg-white border-gray-200">
+        <button
+          onClick={() => setAnalyserOpen(!analyserOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 text-left group"
+        >
+          <div className="flex items-center gap-2">
+            <Zap size={14} className="text-accent" />
+            <span className="text-xs font-semibold dark:text-text-primary text-gray-700">
+              Model Analyser
+            </span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full
+              bg-accent/10 text-accent border border-accent/20">
+              Beta
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] dark:text-text-muted text-gray-400">
+              {analyserOpen ? "Collapse" : "Find the best model for this agent"}
+            </span>
+            {analyserOpen ? (
+              <ChevronDown size={14} className="dark:text-text-muted text-gray-400" />
+            ) : (
+              <ChevronRight size={14} className="dark:text-text-muted text-gray-400" />
+            )}
+          </div>
+        </button>
+
+        {analyserOpen && (
+          <div className="px-4 pb-4 animate-fade-in">
+            {!apiKey && (
+              <p className="text-xs dark:text-text-muted text-gray-400 mb-3">
+                Add an API key above to analyse models.
+              </p>
+            )}
+            {apiKey && !modelRecommendation && !analyserLoading && (
+              <button
+                onClick={handleAnalyseModels}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs
+                  font-semibold text-white bg-accent hover:bg-accent-hover
+                  transition-all duration-200 active:scale-[0.98]"
+              >
+                <Zap size={12} />
+                Analyse Models
+              </button>
+            )}
+            {analyserLoading && (
+              <div className="flex items-center gap-2 text-xs text-accent">
+                <Loader2 size={14} className="animate-spin" />
+                Analysing best models for this agent...
+              </div>
+            )}
+            {modelRecommendation && (
+              <div className="mt-2">
+                <OutputRenderer
+                  content={modelRecommendation}
+                  outputType="markdown"
+                  agentName="Model Analyser"
+                  systemPrompt=""
+                />
+                <button
+                  onClick={() => setModelRecommendation(null)}
+                  className="mt-2 text-[10px] text-accent hover:underline"
+                >
+                  ↺ Re-analyse
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -583,7 +705,41 @@ export default function AgentRunner({ agent }) {
         )}
       </div>
 
-      {error && <ErrorCard message={error} />}
+      {error && error.type === "invalid_api_key" ? (
+        <ErrorCard message={
+          <>
+            <strong>
+              {error.provider === "openai" && "Your OpenAI API key is invalid or expired."}
+              {error.provider === "anthropic" && "Your Anthropic API key is invalid or expired."}
+              {error.provider === "gemini" && "Your Google Gemini API key is invalid or expired."}
+              {!["openai", "anthropic", "gemini"].includes(error.provider) && "Your API key is invalid or expired."}
+            </strong>
+            <br />
+            Please check and update your API key.<br />
+            <button
+              className="underline text-accent"
+              onClick={() => window.dispatchEvent(new CustomEvent("open-api-key-bar"))}
+            >
+              Update API Key
+            </button>
+            <span> or </span>
+            <button
+              className="underline text-accent"
+              onClick={() => window.location.reload()}
+            >
+              Retry
+            </button>
+            {error.detail && (
+              <>
+                <br /><br />
+                <span className="text-xs text-gray-400">Details: {error.detail}</span>
+              </>
+            )}
+          </>
+        } />
+      ) : (
+        error && <ErrorCard message={error.message || error} />
+      )}
 
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
@@ -626,12 +782,15 @@ export default function AgentRunner({ agent }) {
 
       {output && !isStreaming && (
         <div className="space-y-4">
-          <OutputRenderer
-            content={output}
-            outputType={agent.outputType}
-            agentName={agent.name}
-            systemPrompt={customPrompt}
-          />
+          <ErrorBoundary>
+            <OutputRenderer
+              content={output}
+              outputType={agent.outputType}
+              agentName={agent.name}
+              systemPrompt={customPrompt}
+            />
+          </ErrorBoundary>
+          <RunRating />
           <div className="flex justify-end">
             <button
               onClick={handleSendToWorkflow}
@@ -647,3 +806,9 @@ export default function AgentRunner({ agent }) {
     </div>
   );
 }
+
+
+
+ 
+
+  

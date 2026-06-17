@@ -12,12 +12,13 @@ import {
   GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import agents from '../agents/registry'
+import { loadAllAgents } from '../agents/registry'
 import { fetchWorkflowById, subscribeToWorkflow } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
-function AgentRow({ agentId, index, total }) {
-  const agent = agents.find((a) => a.id === agentId)
+function AgentRow({ agentId, index, total, agents }) {
+  const agent = agents?.find((a) => a.id === agentId)
   const IconComponent = (agent && Icons[agent.icon]) || Icons.Bot
 
   return (
@@ -59,11 +60,17 @@ export default function WorkflowDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
 
+  const [agents, setAgents] = useState([])
+  useEffect(() => {
+    loadAllAgents().then(setAgents)
+  }, [])
+
   const [workflow, setWorkflow] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [usageCount, setUsageCount] = useState(0)
   const [copied, setCopied] = useState(false)
+  useDocumentTitle(workflow?.title ?? 'Workflow Details')
 
   // Fetch workflow
   useEffect(() => {
@@ -236,6 +243,7 @@ export default function WorkflowDetail() {
               agentId={agentId}
               index={index}
               total={workflow.agents.length}
+              agents={agents}
             />
           ))}
         </div>

@@ -13,6 +13,7 @@ export const CATEGORIES = [
   "Cybersecurity",
   "Data Science",
   "Design",
+  "Developer Tools",
   "Education",
   "Engineering",
   "Finance",
@@ -25,5 +26,11 @@ export const CATEGORIES = [
   "Research",
   "Healthcare",
   "Sales",
-  "DevOps"
+  "DevOps",
+ "Web3",
+"Gaming",
+"Real Estate"
 ];
+
+
+

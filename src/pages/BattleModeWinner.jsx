@@ -4,6 +4,7 @@ import { Trophy, Copy, Check, RotateCcw, ArrowLeft } from 'lucide-react'
 import BattleNavbar from '../components/BattleNavbar'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const colorMap = {
   yellow: { bg: 'bg-yellow-400/10', border: 'border-yellow-400/30', text: 'text-yellow-400', hoverBorder: 'hover:border-yellow-400/60', shadow: 'hover:shadow-yellow-400/30', lightBg: 'bg-yellow-400/5' },
@@ -16,6 +17,7 @@ export default function BattleModeWinner() {
   const location = useLocation()
   const { provider, content, duration, agentName } = location.state || {}
   const [copied, setCopied] = useState(false)
+  useDocumentTitle(agentName ? `${agentName} Battle Winner` : 'Battle Winner')
 
   if (!provider || !content) {
     navigate('/battle', { replace: true })

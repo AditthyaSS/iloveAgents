@@ -3,14 +3,18 @@ import { AlertTriangle, XCircle, Wifi } from 'lucide-react'
 export default function ErrorCard({ message }) {
   // Determine icon based on error content
   let Icon = XCircle
-  let color = 'error'
-  if (message.includes('Rate limit')) {
-    Icon = AlertTriangle
-    color = 'warning'
-  } else if (message.includes('connection') || message.includes('reach')) {
-    Icon = Wifi
-    color = 'warning'
-  }
+let color = 'error'
+
+// Only call .includes if message is a string!
+if (typeof message === 'string' && message.includes('Rate limit')) {
+  Icon = AlertTriangle
+  color = 'warning'
+} else if (
+  typeof message === 'string' && (message.includes('connection') || message.includes('reach'))
+) {
+  Icon = Wifi
+  color = 'warning'
+}
 
   return (
     <div className={`rounded-lg border p-4 animate-fade-in
@@ -32,9 +36,11 @@ export default function ErrorCard({ message }) {
           }`}>
             {color === 'error' ? 'Error' : 'Warning'}
           </h4>
-          <p className="text-xs dark:text-text-secondary text-gray-600 leading-relaxed whitespace-pre-wrap">
-            {message}
-          </p>
+          {typeof message === "string" ?
+  <p className="text-xs dark:text-text-secondary text-gray-600 leading-relaxed whitespace-pre-wrap">{message}</p>
+  :
+  <div className="text-xs dark:text-text-secondary text-gray-600 leading-relaxed whitespace-pre-wrap">{message}</div>
+}
         </div>
       </div>
     </div>

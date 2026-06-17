@@ -1,0 +1,357 @@
+name: Issue Assignment Timer
+
+# Trigger: runs once per day at midnight UTC
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  # Allow manual runs from the Actions tab for testing
+  workflow_dispatch:
+
+jobs:
+  check-assigned-issues:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Process assigned issues with no linked PR
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const MAINTAINER = 'AditthyaSS';
+            const DAYS_BEFORE_REASSIGN = 5;
+            const DAYS_BEFORE_CLOSE = 2;   // extra days after reminder-sent label
+            const MS_PER_DAY = 86_400_000;
+            const now = Date.now();
+
+            // ─── Helper: fetch all open PRs and build a set of issue numbers
+            //     that already have a linked PR (via "Fixes #N" / "Closes #N" etc.)
+            async function getIssuesWithLinkedPR() {
+              const linked = new Set();
+              const prs = await github.paginate(
+                github.rest.pulls.list,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'open',
+                  per_page: 100,
+                }
+              );
+              for (const pr of prs) {
+                // GitHub auto-populates pr.body; scan for closing keywords
+                const body = (pr.body || '') + ' ' + (pr.title || '');
+                const matches = body.matchAll(
+                  /(?:closes?|fixes?|resolves?)\s+#(\d+)/gi
+                );
+                for (const m of matches) {
+                  linked.add(parseInt(m[1], 10));
+                }
+              }
+              return linked;
+            }
+
+            // ─── Helper: fetch all MERGED PRs and build a set of issue numbers
+            //     they reference. Merged PRs mean the issue is already resolved —
+            //     the timer must never touch those issues.
+            async function getIssuesWithMergedPR() {
+              const linked = new Set();
+              const prs = await github.paginate(
+                github.rest.pulls.list,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  state: 'closed',   // merged PRs have state=closed + merged_at set
+                  per_page: 100,
+                }
+              );
+              for (const pr of prs) {
+                // Only care about PRs that were actually merged, not just closed
+                if (!pr.merged_at) continue;
+                const body = (pr.body || '') + ' ' + (pr.title || '');
+                const matches = body.matchAll(
+                  /(?:closes?|fixes?|resolves?)\s+#(\d+)/gi
+                );
+                for (const m of matches) {
+                  linked.add(parseInt(m[1], 10));
+                }
+              }
+              return linked;
+            }
+
+            // ─── Helper: get all commenters on an issue excluding maintainer,
+            //     bots, and the current assignee
+            async function getOtherCommenters(issueNumber, excludeLogin) {
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  per_page: 100,
+                }
+              );
+              return [
+                ...new Set(
+                  comments
+                    .map(c => c.user.login)
+                    .filter(
+                      login =>
+                        login !== excludeLogin &&
+                        login !== MAINTAINER &&
+                        !login.includes('[bot]')
+                    )
+                )
+              ];
+            }
+
+            // ─── Helper: check if a label exists on an issue
+            function hasLabel(issue, labelName) {
+              return issue.labels.some(l => l.name === labelName);
+            }
+
+            // ─── Helper: get the timestamp when a specific label was added
+            //     (falls back to issue updated_at if events are unavailable)
+            async function getLabelAddedAt(issueNumber, labelName) {
+              try {
+                const events = await github.paginate(
+                  github.rest.issues.listEvents,
+                  {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    per_page: 100,
+                  }
+                );
+                // Find the most recent 'labeled' event for this label
+                const event = events
+                  .filter(e => e.event === 'labeled' && e.label?.name === labelName)
+                  .pop();
+                return event ? new Date(event.created_at).getTime() : null;
+              } catch {
+                return null;
+              }
+            }
+
+            // ─── Helper: get the timestamp when the issue was assigned
+            async function getAssignedAt(issueNumber) {
+              try {
+                const events = await github.paginate(
+                  github.rest.issues.listEvents,
+                  {
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    issue_number: issueNumber,
+                    per_page: 100,
+                  }
+                );
+                // Find the most recent 'assigned' event
+                const event = events
+                  .filter(e => e.event === 'assigned')
+                  .pop();
+                return event ? new Date(event.created_at).getTime() : null;
+              } catch {
+                return null;
+              }
+            }
+
+            // ════════════════════════════════════════════════════
+            // MAIN LOGIC
+            // ════════════════════════════════════════════════════
+
+            // Fetch all open, assigned issues
+            const issues = await github.paginate(
+              github.rest.issues.listForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                assignee: '*',   // any assignee
+                per_page: 100,
+              }
+            );
+
+            // Get the set of issue numbers that already have a linked open PR
+            const issuesWithPR = await getIssuesWithLinkedPR();
+
+            // Get the set of issue numbers that already have a linked MERGED PR
+            // These are resolved issues — the timer must never act on them
+            const issuesWithMergedPR = await getIssuesWithMergedPR();
+
+            for (const issue of issues) {
+              // Skip pull requests (GitHub returns PRs in issues list)
+              if (issue.pull_request) continue;
+
+              const issueNumber = issue.number;
+
+              // ── GUARD 1: skip if issue is already closed
+              if (issue.state === 'closed') {
+                console.log(`Issue #${issueNumber} is already closed. Skipping.`);
+                continue;
+              }
+
+              // ── GUARD 2: skip if a merged PR already references this issue
+              if (issuesWithMergedPR.has(issueNumber)) {
+                console.log(`Issue #${issueNumber} has a merged PR — already resolved. Skipping.`);
+                continue;
+              }
+
+              // ── GUARD 3: skip if an open PR already references this issue
+              if (issuesWithPR.has(issueNumber)) {
+                console.log(`Issue #${issueNumber} already has a linked open PR. Skipping.`);
+                continue;
+              }
+
+              // There should only be one assignee per our workflow, take the first
+              const assignee = issue.assignees[0]?.login;
+              if (!assignee) continue;
+
+              const assignedAt = await getAssignedAt(issueNumber);
+              if (!assignedAt) continue;
+
+              const daysSinceAssignment = (now - assignedAt) / MS_PER_DAY;
+              const reminderAlreadySent = hasLabel(issue, 'reminder-sent');
+
+              console.log(
+                `Issue #${issueNumber} — assignee: ${assignee}, ` +
+                `days since assignment: ${daysSinceAssignment.toFixed(1)}, ` +
+                `reminder-sent: ${reminderAlreadySent}`
+              );
+
+              // ── BRANCH A: reminder-sent label exists → check if 2 more days passed
+              if (reminderAlreadySent) {
+                const labelAddedAt = await getLabelAddedAt(issueNumber, 'reminder-sent');
+                if (!labelAddedAt) continue;
+
+                const daysSinceReminder = (now - labelAddedAt) / MS_PER_DAY;
+                if (daysSinceReminder < DAYS_BEFORE_CLOSE) {
+                  console.log(
+                    `Issue #${issueNumber}: reminder sent ${daysSinceReminder.toFixed(1)} days ago. ` +
+                    `Not yet ${DAYS_BEFORE_CLOSE} days. Skipping.`
+                  );
+                  continue;
+                }
+
+                // 2+ days after reminder, still no PR → unassign + close
+                console.log(`Issue #${issueNumber}: closing due to inactivity after reminder.`);
+
+                // Unassign the person
+                await github.rest.issues.removeAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  assignees: [assignee],
+                });
+
+                // Post closure comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body:
+                    `🔒 This issue has been automatically closed due to inactivity.\n\n` +
+                    `No PR was opened within the time window.\n\n` +
+                    `If you'd still like to work on this, feel free to reopen the issue and recommit.\n\n` +
+                    `— [@AditthyaSS](https://github.com/AditthyaSS)`
+                });
+
+                // Close the issue
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  state: 'closed',
+                });
+
+                continue;
+              }
+
+              // ── BRANCH B: no reminder yet → check if 5 days have passed
+              if (daysSinceAssignment < DAYS_BEFORE_REASSIGN) {
+                console.log(
+                  `Issue #${issueNumber}: only ${daysSinceAssignment.toFixed(1)} days since assignment. ` +
+                  `Not yet ${DAYS_BEFORE_REASSIGN} days. Skipping.`
+                );
+                continue;
+              }
+
+              // 5+ days passed → check for other commenters
+              const otherCommenters = await getOtherCommenters(issueNumber, assignee);
+
+              if (otherCommenters.length > 0) {
+                // ── SUB-BRANCH B1: other interested commenters exist → reassign
+                const newAssignee = otherCommenters[0];
+                console.log(
+                  `Issue #${issueNumber}: reassigning from ${assignee} to ${newAssignee}.`
+                );
+
+                // Remove old assignee
+                await github.rest.issues.removeAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  assignees: [assignee],
+                });
+
+                // Add new assignee
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  assignees: [newAssignee],
+                });
+
+                // Post reassignment comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body:
+                    `⏰ Hey @${assignee}! The 5-day window to open a PR has passed.\n\n` +
+                    `This issue has been reassigned to @${newAssignee}.\n\n` +
+                    `@${newAssignee} you now have 5 days to open a PR. You got this! 💪\n\n` +
+                    `— [@AditthyaSS](https://github.com/AditthyaSS)`
+                });
+
+              } else {
+                // ── SUB-BRANCH B2: no other commenters → send reminder + add label
+                console.log(
+                  `Issue #${issueNumber}: no other commenters. Sending reminder to ${assignee}.`
+                );
+
+                // Post reminder comment
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  body:
+                    `⏰ Hey @${assignee}! Just a reminder — please open a PR for this issue as soon as possible.\n\n` +
+                    `If a PR is not opened within 2 days, this issue will be automatically unassigned and closed.\n\n` +
+                    `You got this! 💪\n\n` +
+                    `— [@AditthyaSS](https://github.com/AditthyaSS)`
+                });
+
+                // Add the reminder-sent label (create it first if it doesn't exist)
+                try {
+                  await github.rest.issues.getLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: 'reminder-sent',
+                  });
+                } catch {
+                  // Label doesn't exist yet — create it
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name: 'reminder-sent',
+                    color: 'e4e669',
+                    description: 'Automated reminder sent to assignee',
+                  });
+                }
+
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueNumber,
+                  labels: ['reminder-sent'],
+                });
+              }
+            }
