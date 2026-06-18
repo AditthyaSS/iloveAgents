@@ -316,10 +316,13 @@ useEffect(() => {
           before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full
           before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px
           flex items-center
-          focus-within:border-indigo-500/50 dark:focus-within:border-white/20 focus-within:ring-2 focus-within:ring-indigo-500/20 dark:focus-within:ring-white/10 hover:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_32px_rgba(99,102,241,0.15)]"
+          focus-within:border-indigo-500/50 dark:focus-within:border-white/20
+          focus-within:ring-2 focus-within:ring-indigo-500/20 dark:focus-within:ring-white/10
+          focus-within:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_36px_rgba(99,102,241,0.22)]
+          hover:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_32px_rgba(99,102,241,0.15)]"
         >
           <div className="pl-4 flex items-center pointer-events-none shrink-0">
-            <Search size={16} className="dark:text-text-muted text-gray-400" />
+            <Search size={16} className="dark:text-text-muted text-gray-400 transition-colors duration-300" />
           </div>
           <input
             id="agent-search"
@@ -327,7 +330,7 @@ useEffect(() => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search agents by name, description, or category..."
-            className="w-full pl-3 pr-12 py-3 bg-transparent text-sm font-semibold tracking-wide transition-all duration-200
+            className="w-full pl-3 pr-12 py-3 bg-transparent text-sm font-semibold tracking-wide transition-all duration-300
               dark:text-text-primary dark:placeholder-text-muted
               text-gray-900 placeholder-gray-400
               focus:outline-none"
