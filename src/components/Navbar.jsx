@@ -8,6 +8,8 @@ import {
   X,
   HelpCircle,
   Sparkles,
+  PanelLeftOpen,
+  PanelLeftClose,
   PanelsTopLeft,
   Workflow,
   LibraryBig
@@ -98,7 +100,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
             "
             aria-label="Toggle sidebar"
           >
-            {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+            {sidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
 
           <Link
