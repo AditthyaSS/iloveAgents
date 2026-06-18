@@ -80,9 +80,9 @@ function SuiteCard({ suite, onSelect }) {
   const IconComponent = SUITE_ICONS[suite.icon] || Code2
   return (
     <div
-      className="rounded-xl border p-5 flex flex-col gap-3 transition-all duration-200
+      className="premium-hover-card rounded-xl border p-5 flex flex-col gap-3 transition-all duration-300
         dark:bg-surface-card dark:border-border bg-white border-gray-200
-        hover:shadow-md hover:-translate-y-0.5"
+        hover:shadow-md hover:-translate-y-1"
       style={{ borderTopColor: suite.color, borderTopWidth: 3 }}
     >
       {/* Icon + name */}

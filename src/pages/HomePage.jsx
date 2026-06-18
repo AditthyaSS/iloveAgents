@@ -306,9 +306,23 @@ useEffect(() => {
       {/* ── Search & Category Filter Section ── */}
       <div className="premium-section mb-6 space-y-4" style={{ animationDelay: '180ms' }}>
         {/* Search Bar */}
-        <div className="relative max-w-xl mx-auto">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search size={16} className="dark:text-text-muted text-gray-400" />
+        <div className="relative max-w-xl mx-auto
+          rounded-full
+          border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70
+          backdrop-blur-2xl
+          shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          transition-all duration-300
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px
+          flex items-center
+          focus-within:border-indigo-500/50 dark:focus-within:border-white/20
+          focus-within:ring-2 focus-within:ring-indigo-500/20 dark:focus-within:ring-white/10
+          focus-within:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_36px_rgba(99,102,241,0.22)]
+          hover:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_32px_rgba(99,102,241,0.15)]"
+        >
+          <div className="pl-4 flex items-center pointer-events-none shrink-0">
+            <Search size={16} className="dark:text-text-muted text-gray-400 transition-colors duration-300" />
           </div>
           <input
             id="agent-search"
@@ -316,16 +330,15 @@ useEffect(() => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search agents by name, description, or category..."
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm transition-all duration-200
-              dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
-              bg-white border-gray-200 text-gray-900 placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50
-              hover:border-accent/30"
+            className="w-full pl-3 pr-12 py-3 bg-transparent text-sm font-semibold tracking-wide transition-all duration-300
+              dark:text-text-primary dark:placeholder-text-muted
+              text-gray-900 placeholder-gray-400
+              focus:outline-none"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center
+              className="absolute inset-y-0 right-0 pr-4 flex items-center
                 dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
               aria-label="Clear search"
             >
