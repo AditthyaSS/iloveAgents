@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
 import { useHistory } from '../lib/useHistory'
@@ -30,9 +31,10 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [agents, setAgents] = useState([])
+  const [agentsLoading, setAgentsLoading] = useState(true)
 
 useEffect(() => {
-  loadAllAgents().then(setAgents)
+  loadAllAgents().then(setAgents).finally(() => setAgentsLoading(false))
 }, [])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const allCategories = useMemo(() => {
@@ -197,9 +199,12 @@ useEffect(() => {
       </div>
 
       {/* Stat Cards */}
-      <div className="premium-section grid grid-cols-1 min-[430px]:grid-cols-3 gap-3 mb-10 max-w-lg mx-auto" style={{ animationDelay: '90ms' }}>
-        <div className="text-center p-4 rounded-lg border transition-theme
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+      <div className="premium-section grid grid-cols-1 min-[430px]:grid-cols-3 gap-4 mb-10 max-w-xl mx-auto" style={{ animationDelay: '90ms' }}>
+        <div className="relative text-center p-5 rounded-[2rem] border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03]
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[2rem]
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px">
           <div className="flex justify-center mb-2">
             <Bot size={20} className="text-accent" />
           </div>
@@ -211,8 +216,11 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="text-center p-4 rounded-lg border transition-theme
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+        <div className="relative text-center p-5 rounded-[2rem] border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03]
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[2rem]
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px">
           <div className="flex justify-center mb-2">
             <Users size={20} className="text-accent" />
           </div>
@@ -224,8 +232,11 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="text-center p-4 rounded-lg border transition-theme
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+        <div className="relative text-center p-5 rounded-[2rem] border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03]
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[2rem]
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px">
           <div className="flex justify-center mb-2">
             <Code2 size={20} className="text-accent" />
           </div>
@@ -477,7 +488,13 @@ useEffect(() => {
             </span>
           </div>
 
-          {filteredAgents.length > 0 ? (
+          {agentsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+              {Array.from({ length: 9 }).map((_, idx) => (
+                <AgentCardSkeleton key={idx} />
+              ))}
+            </div>
+          ) : filteredAgents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {filteredAgents.map((agent, idx) => (
                 <div
