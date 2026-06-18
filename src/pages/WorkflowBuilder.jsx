@@ -12,11 +12,16 @@ import {
   GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
+import MCPStepCard from '../components/MCPStepCard'
 import { loadAllAgents } from '../agents/registry'
 import { saveWorkflow } from '../hooks/useWorkflows'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const MAX_AGENTS = 5
+
+function isMcpStep(step) {
+  return step?.kind === 'mcp'
+}
 
 export default function WorkflowBuilder() {
   const navigate = useNavigate()
@@ -67,7 +72,7 @@ export default function WorkflowBuilder() {
   }
 }, [forkedWorkflow])
 
-  // Agents already in the chain — prevent duplicates
+  // Steps already in the chain — prevent duplicate agents/actions
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
   const availableAgents = agents.filter((a) => !selectedIds.has(a.id))
 
@@ -82,6 +87,11 @@ export default function WorkflowBuilder() {
     setSelectedAgents((prev) => [...prev, agent])
     setDropdownOpen(false)
     setSearchQuery('')
+  }
+
+  const addMcpStep = (step) => {
+    if (selectedAgents.length >= MAX_AGENTS || !step) return
+    setSelectedAgents((prev) => [...prev, step])
   }
 
   const removeAgent = (index) => {
@@ -201,7 +211,8 @@ export default function WorkflowBuilder() {
         {selectedAgents.length > 0 && (
           <div className="mb-4 space-y-2">
             {selectedAgents.map((agent, index) => {
-              const IconComponent = Icons[agent.icon] || Icons.Bot
+              const mcpStep = isMcpStep(agent)
+              const IconComponent = mcpStep ? Icons.PlugZap : Icons[agent.icon] || Icons.Bot
               return (
                 <div key={`${agent.id}-${index}`} className="animate-fade-in">
                   <div
@@ -227,7 +238,7 @@ export default function WorkflowBuilder() {
                         {agent.name}
                       </div>
                       <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
-                        {agent.category}
+                        {mcpStep ? agent.description : agent.category}
                       </div>
                     </div>
 
@@ -258,6 +269,12 @@ export default function WorkflowBuilder() {
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {selectedAgents.length < MAX_AGENTS && (
+          <div className="mt-3">
+            <MCPStepCard disabled={selectedAgents.length >= MAX_AGENTS} onAdd={addMcpStep} />
           </div>
         )}
 
@@ -364,7 +381,7 @@ export default function WorkflowBuilder() {
                     dark:bg-surface-input dark:text-text-secondary dark:border-border
                     bg-gray-100 text-gray-700 border border-gray-200"
                 >
-                  {agent.name}
+                  {isMcpStep(agent) ? `MCP: ${agent.name}` : agent.name}
                 </span>
                 {index < selectedAgents.length - 1 && (
                   <ArrowRight size={12} className="dark:text-text-muted text-gray-400 flex-shrink-0" />

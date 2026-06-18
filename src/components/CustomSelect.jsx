@@ -11,7 +11,7 @@ export default function CustomSelect({
   triggerClassName,
   dropdownClassName,
   placeholder = 'Select...',
-  accentColor = 'accent', 
+  accentColor = 'accent',
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const containerRef = useRef(null)
@@ -43,8 +43,8 @@ export default function CustomSelect({
   }
 
   // accent styling rules based on component context
-  const accentRing = accentColor === 'yellow' 
-    ? 'focus:ring-yellow-400/30 focus:border-yellow-400/50' 
+  const accentRing = accentColor === 'yellow'
+    ? 'focus:ring-yellow-400/30 focus:border-yellow-400/50'
     : 'focus:ring-accent/40 focus:border-accent'
 
   const accentItem = accentColor === 'yellow'

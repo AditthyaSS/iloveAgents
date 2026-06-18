@@ -179,7 +179,7 @@ export default function BattleModeArena() {
         {/* Back */}
         <button
           onClick={() => navigate("/battle/setup")}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white 
+          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white
             transition-all duration-200 hover:gap-2 mb-8"
         >
           <ArrowLeft size={14} />
