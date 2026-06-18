@@ -52,6 +52,6 @@ Rules:
 - Base the summary strictly on the provided text. Never invent results, statistics, or conclusions that aren't in the source.
 - If only an abstract was provided (not full text), say so explicitly and note that methodology/limitations detail is necessarily limited.
 - Keep the tone neutral, evidence-based, and free of hype — do not overstate clinical significance or certainty.
-- End every summary with this exact note on its own line: "_This is an informational summary, not medical advice. Please discuss any findings relevant to your own care with a qualified healthcare provider._"`,
+- End every summary with this exact note on its own line: _This is an informational summary, not medical advice. Please discuss any findings relevant to your own care with a qualified healthcare provider._`,
   outputType: 'markdown',
 }
