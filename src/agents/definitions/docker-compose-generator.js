@@ -122,7 +122,7 @@ Use these exact health check patterns:
 PostgreSQL:
 \`\`\`
 healthcheck:
-  test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+  test: ["CMD-SHELL", "pg_isready -U $\${POSTGRES_USER} -d $\${POSTGRES_DB}"]
   interval: 10s
   timeout: 5s
   retries: 5
@@ -132,7 +132,7 @@ healthcheck:
 MySQL:
 \`\`\`
 healthcheck:
-  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+  test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$\${MYSQL_ROOT_PASSWORD}"]
   interval: 10s
   timeout: 5s
   retries: 5
@@ -161,7 +161,7 @@ healthcheck:
 Node.js / generic HTTP API:
 \`\`\`
 healthcheck:
-  test: ["CMD-SHELL", "wget -qO- http://localhost:$${PORT:-3000}/health || exit 1"]
+  test: ["CMD-SHELL", "wget -qO- http://localhost:$\${PORT:-3000}/health || exit 1"]
   interval: 30s
   timeout: 10s
   retries: 3
