@@ -18,11 +18,12 @@ import { loadAllAgents } from '../agents/registry'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
+import ExportCenter from '../components/ExportCenter'
 import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
-import { exportWorkflowAsMarkdown } from '../lib/exportMarkdown'
+import { formatWorkflowContent } from '../lib/exportUtils'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const STATUS_COLORS = {
@@ -38,42 +39,6 @@ function StepStatusIcon({ status }) {
   if (status === 'done') return <CheckCircle2 size={15} className={STATUS_COLORS.done} />
   if (status === 'failed') return <XCircle size={15} className={STATUS_COLORS.failed} />
   return null
-}
-
-function CopyAllButton({ steps }) {
-  const [copied, setCopied] = useState(false)
-
-  const handleCopy = async () => {
-    const text = steps
-      .filter((s) => s.status === 'done' && s.output)
-      .map((s) => `=== ${s.agentName} ===\n\n${s.output}`)
-      .join('\n\n---\n\n')
-
-    try {
-      await navigator.clipboard.writeText(text)
-    } catch {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-    }
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <button
-      onClick={handleCopy}
-      className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-        dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
-        bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
-    >
-      {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
-      {copied ? 'Copied!' : 'Copy All Outputs'}
-    </button>
-  )
 }
 
 export default function WorkflowRunner() {
@@ -335,17 +300,10 @@ export default function WorkflowRunner() {
         )}
 
         {allDone && (
-           <>
-            <CopyAllButton steps={steps} />
-            <button
-              onClick={() => exportWorkflowAsMarkdown(workflow?.title ?? 'workflow', steps)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-               dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
-                bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
-            >
-              Export as Markdown
-            </button>
-          </>
+          <ExportCenter 
+            content={formatWorkflowContent(workflow?.title ?? 'Workflow', steps)} 
+            agentName={workflow?.title ?? 'Workflow'} 
+          />
         )}
       </div>
 
