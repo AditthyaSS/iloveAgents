@@ -5,8 +5,8 @@ import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
 import HomePage from './pages/HomePage'
 import AgentPage from './pages/AgentPage'
-import ScrollToTop from "./components/ScrollToTop";
-import ScrollToBottom from "./components/ScrollToBottom";
+import ScrollToTop from './components/ScrollToTop'
+import ScrollToBottom from './components/ScrollToBottom'
 import BattleModeLanding from './pages/BattleModeLanding'
 import BattleModeSetup from './pages/BattleModeSetup'
 import BattleModeArena from './pages/BattleModeArena'
@@ -17,13 +17,7 @@ import WorkflowDetail from './pages/WorkflowDetail'
 import WorkflowRunner from './pages/WorkflowRunner'
 import NotFoundPage from './pages/NotFoundPage'
 import SuitesPage from './pages/SuitesPage'
-<<<<<<< ours
-<<<<<<< ours
 import CollectionsPage from './pages/CollectionsPage'
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
 import CollectionDetailPage from './pages/CollectionDetailPage'
 import ErrorBoundary from './components/ErrorBoundary'
 
@@ -62,22 +56,20 @@ export default function App() {
           <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/agent/:id" element={<AgentPage />} />
+
             {/* Suites */}
             <Route path="/suites" element={<SuitesPage />} />
-<<<<<<< ours
-<<<<<<< ours
+
             {/* Collections */}
             <Route path="/collections" element={<CollectionsPage />} />
-=======
->>>>>>> theirs
-=======
->>>>>>> theirs
             <Route path="/collections/:id" element={<CollectionDetailPage />} />
+
             {/* Workflow routes */}
             <Route path="/workflows" element={<WorkflowLibrary />} />
             <Route path="/workflows/build" element={<WorkflowBuilder />} />
             <Route path="/workflows/:id" element={<WorkflowDetail />} />
             <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
+
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

@@ -1,13 +1,22 @@
 import { useMemo, useState } from 'react'
 import { Search } from 'lucide-react'
-import { MAX_COLLECTION_AGENTS } from '../../lib/useCollections'
+import { MAX_AGENTS_PER_COLLECTION } from '../../lib/useCollections'
+
+function getMutationError(result, fallback) {
+  if (result === false) return fallback
+  if (result && typeof result === 'object' && result.ok === false) {
+    return result.error || fallback
+  }
+
+  return ''
+}
 
 export default function CollectionAgentPicker({
   collection,
   agents,
   onAddAgent,
   onRemoveAgent,
-  maxAgents = MAX_COLLECTION_AGENTS,
+  maxAgents = MAX_AGENTS_PER_COLLECTION,
 }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [feedback, setFeedback] = useState('')
@@ -30,8 +39,8 @@ export default function CollectionAgentPicker({
     if (!agent?.id) return
 
     if (selectedIds.has(agent.id)) {
-      setFeedback('')
-      onRemoveAgent(agent.id)
+      const result = onRemoveAgent(agent.id)
+      setFeedback(getMutationError(result, 'Unable to remove this agent from the collection.'))
       return
     }
 
@@ -40,8 +49,8 @@ export default function CollectionAgentPicker({
       return
     }
 
-    setFeedback('')
-    onAddAgent(agent.id)
+    const result = onAddAgent(agent.id)
+    setFeedback(getMutationError(result, 'Unable to add this agent to the collection.'))
   }
 
   return (
