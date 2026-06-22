@@ -1,5 +1,5 @@
 import React from 'react';
-import { RotateCcw, Copy, Trash2, History } from 'lucide-react';
+import { RotateCcw, Copy, Trash2, History, Sparkles, ArrowUp } from 'lucide-react';
 
 const RecentRuns = ({ history, onRerun, onCopy, onDelete, onClearAll }) => {
   if (!history || history.length === 0) {
@@ -11,15 +11,26 @@ const RecentRuns = ({ history, onRerun, onCopy, onDelete, onClearAll }) => {
             Recent Runs
           </h2>
         </div>
-        <div className="p-8 border border-dashed rounded-xl text-center flex flex-col items-center justify-center gap-3
+        <div className="p-6 border border-dashed rounded-xl text-center flex flex-col items-center justify-center gap-3
           dark:border-border dark:bg-surface-card/50 bg-gray-50 border-gray-200">
-          <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center mb-1">
-            <RotateCcw size={20} className="text-accent opacity-80" />
+          <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mb-1">
+            <Sparkles size={22} className="text-accent" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-accent/40 animate-ping" />
           </div>
-          <h3 className="text-sm font-bold dark:text-text-primary text-gray-800">No history yet</h3>
-          <p className="text-xs dark:text-text-secondary text-gray-500 max-w-[200px] leading-relaxed">
-            Runs will automatically appear here once you start using agents.
+          <h3 className="text-sm font-bold dark:text-text-primary text-gray-800">No runs yet</h3>
+          <p className="text-xs dark:text-text-secondary text-gray-500 max-w-[220px] leading-relaxed">
+            Try an agent to see your run history appear here automatically.
           </p>
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold
+              bg-accent text-white hover:bg-accent-hover transition-all duration-200
+              shadow-sm hover:shadow-md hover:shadow-accent/20"
+            aria-label="Browse available agents"
+          >
+            <ArrowUp size={12} />
+            Browse Agents
+          </button>
         </div>
       </div>
     );

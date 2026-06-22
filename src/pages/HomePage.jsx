@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
+import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown, BookOpen, Plus, Sparkles } from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
@@ -516,28 +516,67 @@ useEffect(() => {
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
-              <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                <Search size={24} className="text-accent" />
-              </div>
-              <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
-                No agents found
-              </h3>
-              <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
-                Try adjusting your search or removing category filters
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory(null);
-                }}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
-              >
-                Clear all filters <X size={12} />
-              </button>
+                  ) : (
+          <div className="text-center py-16 px-6 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in">
+            {/* Icon with subtle animation */}
+            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mx-auto mb-5">
+              <Search size={26} className="text-accent" />
+              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-accent/40 animate-ping" />
             </div>
-          )}
+
+            {/* Heading + description */}
+            <h3 className="text-base font-bold dark:text-text-primary text-gray-900 mb-2">
+              {searchQuery || selectedCategory ? "No matching agents found" : "No agents available yet"}
+            </h3>
+            <p className="text-sm dark:text-text-secondary text-gray-500 mb-6 max-w-md mx-auto leading-relaxed">
+              {searchQuery || selectedCategory
+                ? "We couldn't find any agents that match your search. Try a different keyword or clear your filters."
+                : "Be the first to contribute an agent and help the community get started!"}
+            </p>
+
+            {/* CTA buttons */}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {(searchQuery || selectedCategory) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold
+                    bg-accent text-white hover:bg-accent-hover transition-all duration-200
+                    shadow-sm hover:shadow-md hover:shadow-accent/20"
+                >
+                  Clear all filters <X size={12} />
+                </button>
+              )}
+
+              <a
+                href="https://github.com/AditthyaSS/iloveAgents/blob/main/CONTRIBUTING.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold
+                  bg-accent/10 text-accent hover:bg-accent/20 transition-all duration-200
+                  border border-accent/20"
+              >
+                <Plus size={12} />
+                Submit an Agent
+              </a>
+
+              <a
+                href="https://github.com/AditthyaSS/iloveAgents#readme"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold
+                  dark:bg-surface-input dark:hover:bg-surface-hover dark:text-text-secondary
+                  bg-gray-100 hover:bg-gray-200 text-gray-700
+                  transition-all duration-200 border dark:border-border border-gray-200"
+              >
+                <BookOpen size={12} />
+                Explore Documentation
+              </a>
+            </div>
+          </div>
+        )}
         </div>
 
         {/* Recent Runs Sidebar */}

@@ -10,6 +10,7 @@ import {
   Loader2,
   TrendingUp,
   X,
+  BookOpen,
 } from 'lucide-react'
 import { useAgents } from '../lib/useAgents'
 import { fetchWorkflows, subscribeToAllWorkflows } from '../hooks/useWorkflows'
@@ -286,31 +287,53 @@ export default function WorkflowLibrary() {
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <div className="text-center py-20 rounded-xl border
-          dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in">
-          <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-            <GitBranch size={24} className="text-accent" />
-          </div>
-          <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
-            {searchQuery ? 'No workflows found' : 'No workflows yet'}
-          </h3>
-          <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
-            {searchQuery
-              ? 'Try a different search term'
-              : 'Be the first to build a community workflow'}
-          </p>
-          {!searchQuery && (
-            <button
-              onClick={() => navigate('/workflows/build')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium text-white
-                bg-accent hover:bg-accent-hover transition-all duration-200"
-            >
-              <Plus size={14} />
-              Build First Workflow
-            </button>
-          )}
-        </div>
+  <div className="text-center py-20 px-6 rounded-xl border
+    dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in">
+    {/* Icon with subtle animation */}
+    <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-accent/20 to-accent/5 flex items-center justify-center mx-auto mb-5">
+      <GitBranch size={26} className="text-accent" />
+      <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-accent/40 animate-ping" />
+    </div>
+
+    {/* Heading + description */}
+    <h3 className="text-base font-bold dark:text-text-primary text-gray-900 mb-2">
+      {searchQuery ? 'No workflows found' : 'No workflows yet'}
+    </h3>
+    <p className="text-sm dark:text-text-secondary text-gray-500 mb-6 max-w-md mx-auto leading-relaxed">
+      {searchQuery
+        ? 'We couldn\'t find any workflows matching your search. Try a different keyword.'
+        : 'Be the first to build a community workflow and help others automate their tasks!'}
+    </p>
+
+    {/* CTA buttons */}
+    <div className="flex flex-wrap items-center justify-center gap-3">
+      {!searchQuery && (
+        <button
+          onClick={() => navigate('/workflows/build')}
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold text-white
+            bg-accent hover:bg-accent-hover transition-all duration-200
+            shadow-sm hover:shadow-md hover:shadow-accent/20"
+        >
+          <Plus size={12} />
+          Build First Workflow
+        </button>
       )}
+
+      <a
+        href="https://github.com/AditthyaSS/iloveAgents#readme"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold
+          dark:bg-surface-input dark:hover:bg-surface-hover dark:text-text-secondary
+          bg-gray-100 hover:bg-gray-200 text-gray-700
+          transition-all duration-200 border dark:border-border border-gray-200"
+      >
+        <BookOpen size={12} />
+        Explore Documentation
+      </a>
+    </div>
+  </div>
+)}
 
       {!loading && !error && filtered.length > 0 && (
         <>
