@@ -195,6 +195,8 @@ const ERROR_MESSAGES = {
   503: 'The API service is temporarily unavailable. Try again in a minute.',
 };
 
+const DEFAULT_REQUEST_TIMEOUT = 60000 // 60 seconds — override via timeoutMs param
+
 /**
  * Handle non-OK HTTP responses consistently.
  */
@@ -226,6 +228,52 @@ async function handleErrorResponse(response, provider = "unknown") {
   );
 }
 /**
+ * Merges multiple AbortSignals into one.
+ * Uses native AbortSignal.any when available, falls back to manual listeners.
+ *
+ * @param {AbortSignal[]} signals
+ * @returns {AbortSignal}
+ */
+function combineSignals(signals) {
+  if (AbortSignal.any) {
+    return AbortSignal.any(signals)
+  }
+
+  // Manual fallback for older browsers
+  const controller = new AbortController()
+
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort()
+      break
+    }
+    signal.addEventListener('abort', () => controller.abort(), { once: true })
+  }
+
+  return controller.signal
+}
+/**
+ * Creates an AbortController that automatically aborts
+ * requests after the configured timeout duration.
+ * Callers must invoke cleanup() to clear the timer when done.
+ *
+ * @param {number} [timeoutMs] — timeout in ms (default: 60000)
+ */
+
+function createTimeoutController(timeoutMs = DEFAULT_REQUEST_TIMEOUT) {
+  const controller = new AbortController()
+
+  const timeoutId = setTimeout(() => {
+    controller.abort()
+  }, timeoutMs)
+
+  return {
+    controller,
+    cleanup: () => clearTimeout(timeoutId),
+  }
+}
+
+/**
  * Run an agent against the specified LLM provider (one-shot, non-streaming).
  *
  * @param {Object} params
@@ -234,9 +282,10 @@ async function handleErrorResponse(response, provider = "unknown") {
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
  * @param {string} params.userMessage
+ * @param {number} [params.timeoutMs] — request timeout in ms (default: 60000)
  * @returns {Promise<{content: string, tokens: number, duration: number}>}
  */
-export async function runAgent({ provider, model, apiKey, systemPrompt, userMessage }) {
+export async function runAgent({ provider, model, apiKey, systemPrompt, userMessage, timeoutMs  }) {
   const config = PROVIDER_CONFIGS[provider]
 
   if (!config) {
@@ -256,12 +305,14 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
   const body = config.buildBody(model, systemPrompt, userMessage)
 
   const startTime = performance.now()
+  const {controller, cleanup} = createTimeoutController(timeoutMs)
 
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
+      signal: controller.signal,
     })
 
     if (!response.ok) {
@@ -278,12 +329,17 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
       duration,
     }
   } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. The provider took too long to respond.')
+    }
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       throw new Error(
         "Couldn't reach the API. Check your internet connection and try again."
       )
     }
     throw error
+  } finally{
+    cleanup()
   }
 }
 
@@ -299,9 +355,10 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * @param {string} params.userMessage
  * @param {(text: string) => void} params.onChunk — called with each token/chunk
  * @param {AbortSignal} [params.signal] — optional AbortSignal to cancel streaming
+ * @param {number} [params.timeoutMs] — request timeout in ms (default: 60000)
  * @returns {Promise<{content: string, duration: number}>}
  */
-export async function streamAgent({ provider, model, apiKey, systemPrompt, userMessage, onChunk, signal }) {
+export async function streamAgent({ provider, model, apiKey, systemPrompt, userMessage, onChunk, signal, timeoutMs  }) {
   const config = PROVIDER_CONFIGS[provider]
 
   if (!config) {
@@ -326,12 +383,17 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
   const startTime = performance.now()
   let fullContent = ''
 
+  const {controller, cleanup} = createTimeoutController(timeoutMs )
+  const combinedSignal = signal
+    ? combineSignals([signal, controller.signal])
+    : controller.signal
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
-      signal,
+      signal: combinedSignal,
     })
 
     if (!response.ok) {
@@ -341,8 +403,9 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
+    let streamComplete = false
 
-    while (true) {
+    while (!streamComplete) {
       const { done, value } = await reader.read()
       if (done) break
 
@@ -365,7 +428,11 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
           onChunk(parsed.content)
         }
 
-        if (parsed.done) break
+        if (parsed.done) {
+          streamComplete = true
+          await reader.cancel()
+          break
+        }
       }
     }
 
@@ -387,6 +454,9 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
   } catch (error) {
     if (error.name === 'AbortError') {
       const duration = Math.round(performance.now() - startTime)
+      if (controller.signal.aborted) {
+        throw new Error('Request timed out. The provider took too long to respond.')
+      }
       return { content: fullContent, duration }
     }
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
@@ -395,6 +465,8 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       )
     }
     throw error
+  } finally{
+    cleanup()
   }
 }
 
