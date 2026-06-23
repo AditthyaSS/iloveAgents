@@ -19,6 +19,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import SuitesPage from './pages/SuitesPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import SchedulerPage from './pages/SchedulerPage'
+import SharedOutputPage from './pages/SharedOutputPage'
 
 // Shared layout: Navbar + Sidebar + main content area
 function MainLayout({ sidebarOpen, setSidebarOpen }) {
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/battle/setup" element={<BattleModeSetup />} />
           <Route path="/battle/arena" element={<BattleModeArena />} />
           <Route path="/battle/winner" element={<BattleModeWinner />} />
+          <Route path="/share/:id" element={<SharedOutputPage />} />
 
           {/* Main app layout — all routes share Navbar + Sidebar */}
           <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
