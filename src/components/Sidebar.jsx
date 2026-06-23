@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
 import { useAgents } from '../lib/useAgents'
+import { useCollections } from '../lib/useCollections'
 
 export default function Sidebar({ open, onClose }) {
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
@@ -10,6 +11,7 @@ export default function Sidebar({ open, onClose }) {
   const [openCategories, setOpenCategories] = useState({})
   const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
   const [agents, setAgents] = useState([])
+  const { collections } = useCollections()
   const location = useLocation()
 
   useEffect(() => {
@@ -21,12 +23,15 @@ export default function Sidebar({ open, onClose }) {
     fetchAgents()
   }, [])
 
-  // Auto-expand the category of the currently active agent
   useEffect(() => {
-    const currentAgentId = location.pathname.startsWith('/agent/') ? location.pathname.split('/agent/')[1] : null
+    const currentAgentId = location.pathname.startsWith('/agent/')
+      ? location.pathname.split('/agent/')[1]
+      : null
+
     if (currentAgentId && agents.length > 0) {
       const activeAgent = agents.find((a) => a.id === currentAgentId)
-      if (activeAgent && activeAgent.category) {
+
+      if (activeAgent?.category) {
         setOpenCategories((prev) => ({
           ...prev,
           [activeAgent.category]: true,
@@ -35,12 +40,13 @@ export default function Sidebar({ open, onClose }) {
     }
   }, [location.pathname, agents])
 
-  const currentAgentId = location.pathname.startsWith('/agent/') ? location.pathname.split('/agent/')[1] : null
+  const currentAgentId = location.pathname.startsWith('/agent/')
+    ? location.pathname.split('/agent/')[1]
+    : null
+
   const activeAgent = agents.find((a) => a.id === currentAgentId)
   const activeCategory = activeAgent ? activeAgent.category : null
 
-  // Normalize the query (trim + lowercase) so matching is case-insensitive
-  // and tolerant of leading/trailing whitespace in user input.
   const normalizedQuery = sidebarSearchQuery.trim().toLowerCase()
   const isSearching = normalizedQuery !== ''
 
@@ -50,16 +56,14 @@ export default function Sidebar({ open, onClose }) {
     }
   }, [isSearching])
 
-  // Filter agents based on search query
   const filteredAgents = !normalizedQuery
     ? agents
     : agents.filter(
-      (agent) =>
-        agent.name.toLowerCase().includes(normalizedQuery) ||
-        agent.category.toLowerCase().includes(normalizedQuery)
-    )
+        (agent) =>
+          agent.name.toLowerCase().includes(normalizedQuery) ||
+          agent.category.toLowerCase().includes(normalizedQuery)
+      )
 
-  // Group agents by category
   const categories = filteredAgents.reduce((acc, agent) => {
     if (!acc[agent.category]) acc[agent.category] = []
     acc[agent.category].push(agent)
@@ -84,7 +88,6 @@ export default function Sidebar({ open, onClose }) {
 
   return (
     <>
-      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 z-30 bg-black/50 lg:hidden"
@@ -97,11 +100,9 @@ export default function Sidebar({ open, onClose }) {
           dark:border-border border-gray-200
           ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
-        {/* Background gradient & blur matching Navbar */}
         <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
 
-        {/* Header */}
         <div className="px-4 py-3 flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-wider dark:text-text-primary text-gray-800">
             Agents
@@ -112,7 +113,6 @@ export default function Sidebar({ open, onClose }) {
           </span>
         </div>
 
-        {/* Search Input */}
         <div className="px-4 mb-2">
           <div className="relative group">
             <Icons.Search
@@ -144,17 +144,16 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
 
-        {/* Agent List */}
         <nav className="flex-1 overflow-y-auto px-2 pb-4">
-          {/* Suites link */}
           <NavLink
             to="/suites"
             onClick={onClose}
             className={({ isActive }) =>
               `relative flex items-center gap-2.5 pl-3.5 pr-2.5 py-2 rounded-md text-[13px] font-medium transition-all duration-200 mb-2 group
-              ${isActive
-                ? 'bg-accent/15 text-accent dark:text-accent font-semibold shadow-sm'
-                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-white/10 text-gray-700 hover:text-gray-950 hover:bg-gray-150/50'
+              ${
+                isActive
+                  ? 'bg-accent/15 text-accent dark:text-accent font-semibold shadow-sm'
+                  : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-white/10 text-gray-700 hover:text-gray-950 hover:bg-gray-150/50'
               }`
             }
           >
@@ -173,15 +172,64 @@ export default function Sidebar({ open, onClose }) {
             )}
           </NavLink>
 
-          {/* Scheduler link */}
+          <div className="mb-2 rounded-lg border border-gray-100/80 p-2 dark:border-border/80">
+            <div className="mb-1 flex items-center justify-between px-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-text-muted">
+              <span>Collections</span>
+              <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] text-accent">
+                {collections.length}
+              </span>
+            </div>
+
+            <NavLink
+              to="/collections"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `relative mb-0.5 flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
+                ${
+                  isActive && location.pathname === '/collections'
+                    ? 'bg-accent/15 text-accent font-semibold shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-150/50 hover:text-gray-950 dark:text-text-secondary dark:hover:bg-white/10 dark:hover:text-text-primary'
+                }`
+              }
+            >
+              <Icons.FolderPlus size={14} />
+              <span className="truncate">All Collections</span>
+            </NavLink>
+
+            {collections.slice(0, 10).map((collection) => (
+              <NavLink
+                key={collection.id}
+                to={`/collections/${collection.id}`}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `relative flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
+                  ${
+                    isActive
+                      ? 'bg-accent/15 text-accent font-semibold shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-150/50 hover:text-gray-950 dark:text-text-secondary dark:hover:bg-white/10 dark:hover:text-text-primary'
+                  }`
+                }
+              >
+                <Icons.Folder size={14} className="flex-shrink-0" />
+                <span className="min-w-0 flex-1 truncate">
+                  {collection.name}
+                </span>
+                <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold text-accent">
+                  {collection.agentIds.length}
+                </span>
+              </NavLink>
+            ))}
+          </div>
+
           <NavLink
             to="/scheduler"
             onClick={onClose}
             className={({ isActive }) =>
               `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
-              ${isActive
-                ? 'bg-accent/10 text-accent dark:text-accent'
-                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              ${
+                isActive
+                  ? 'bg-accent/10 text-accent dark:text-accent'
+                  : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`
             }
           >
@@ -193,7 +241,7 @@ export default function Sidebar({ open, onClose }) {
 
           {categoryOrder.map((category) => {
             const isCategoryExpanded = isSearching
-              ? (searchExpandedCategories[category] ?? true)
+              ? searchExpandedCategories[category] ?? true
               : Boolean(openCategories[category])
             const isActiveCategory = activeCategory === category
 
@@ -204,22 +252,20 @@ export default function Sidebar({ open, onClose }) {
                   onClick={() => toggleCategory(category)}
                   aria-expanded={isCategoryExpanded}
                   className={`w-full relative flex items-center justify-between gap-2 pl-3.5 pr-2.5 py-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 group rounded-md
-                    ${isActiveCategory
-                      ? 'bg-accent/20 text-indigo-600 dark:text-indigo-400 font-extrabold'
-                      : 'dark:text-text-primary text-gray-800 hover:bg-gray-100/70 dark:hover:bg-white/10 hover:text-accent dark:hover:text-white'
+                    ${
+                      isActiveCategory
+                        ? 'bg-accent/20 text-indigo-600 dark:text-indigo-400 font-extrabold'
+                        : 'dark:text-text-primary text-gray-800 hover:bg-gray-100/70 dark:hover:bg-white/10 hover:text-accent dark:hover:text-white'
                     }`}
                 >
-                  {/* Left accent bar for active category */}
                   {isActiveCategory && (
                     <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-accent rounded-r" />
                   )}
 
-                  {/* Category Text (shifts on hover) */}
                   <span className="truncate transition-transform duration-200 ease-in-out group-hover:translate-x-[4px]">
                     {category}
                   </span>
 
-                  {/* Right section: Badge + Chevron (both vertically centered) */}
                   <span className="flex items-center gap-1.5 flex-shrink-0">
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-indigo-600 dark:text-indigo-400 tracking-normal flex items-center justify-center min-h-[16px]">
                       {categories[category].length}
@@ -250,9 +296,10 @@ export default function Sidebar({ open, onClose }) {
                           onClick={onClose}
                           className={({ isActive }) =>
                             `relative flex items-center gap-2.5 pl-3.5 pr-2.5 py-2 rounded-md text-[13px] font-medium transition-all duration-200 mb-0.5 group
-                            ${isActive
-                              ? 'bg-accent/15 text-accent dark:text-accent font-semibold shadow-sm'
-                              : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-white/10 text-gray-750 hover:text-gray-950 hover:bg-gray-150/50'
+                            ${
+                              isActive
+                                ? 'bg-accent/15 text-accent dark:text-accent font-semibold shadow-sm'
+                                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-white/10 text-gray-750 hover:text-gray-950 hover:bg-gray-150/50'
                             }`
                           }
                         >
@@ -286,7 +333,6 @@ export default function Sidebar({ open, onClose }) {
           )}
         </nav>
 
-        {/* Footer */}
         <div className="mt-auto px-4 py-3 border-t dark:border-border border-gray-200">
           <div className="space-y-1.5">
             <a
@@ -316,4 +362,3 @@ export default function Sidebar({ open, onClose }) {
     </>
   )
 }
-

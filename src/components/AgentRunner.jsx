@@ -165,13 +165,21 @@ export default function AgentRunner({ agent }) {
     agent.inputs.forEach((input) => {
       const val = inputs[input.id];
       if (!val || (Array.isArray(val) && val.length === 0)) return;
+      
+      const sanitizedVal = typeof val === "string" ? val.trim() : val;
+      if (sanitizedVal === "") return;
+
       parts.push(
-        Array.isArray(val)
-          ? `${input.label}: ${val.join(", ")}`
-          : `${input.label}: ${val}`,
+        Array.isArray(sanitizedVal)
+          ? `${input.label}: ${sanitizedVal.join(", ")}`
+          : `${input.label}: ${sanitizedVal}`,
       );
     });
-    return parts.join("\n\n");
+
+    return parts
+      .join("\n\n")
+      .trim()
+      .replace(/\n{3,}/g, "\n\n");
   };
 
   const canRun = () => {
