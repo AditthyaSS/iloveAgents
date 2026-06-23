@@ -5,8 +5,10 @@
 
 import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
-import { ArrowRight, Star } from "lucide-react";
+import { ArrowRight, FolderPlus, Star } from "lucide-react";
 import { useFavorites } from "../lib/useFavorites";
+import { useState } from "react";
+import CollectionPicker from "./CollectionPicker";
 
 const providerColors = {
   openai: {
@@ -53,6 +55,7 @@ export default function AgentCard({ agent }) {
 const prov = providerColors[agent?.provider] || providerColors.any;
 const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Provider";
   const { isFavorite, toggleFavorite } = useFavorites();
+  const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const favorited = isFavorite(agent.id);
 
   const handleFavorite = (e) => {
@@ -61,7 +64,14 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
     toggleFavorite(agent.id);
   };
 
+  const handleCollectionPicker = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowCollectionPicker(true);
+  };
+
   return (
+    <>
     <Link
       to={`/agent/${agent.id}`}
       className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 
@@ -99,6 +109,14 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
           >
             {agent.category}
           </span>
+          <button
+            onClick={handleCollectionPicker}
+            className="p-1 rounded-md dark:text-text-muted text-gray-300 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            aria-label="Add to collection"
+            title="Add to collection"
+          >
+            <FolderPlus size={15} />
+          </button>
           <button
             onClick={handleFavorite}
             className={`p-1 rounded-md transition-all duration-200
@@ -139,5 +157,9 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
         </span>
       </div>
     </Link>
+    {showCollectionPicker && (
+      <CollectionPicker agentId={agent.id} onClose={() => setShowCollectionPicker(false)} />
+    )}
+    </>
   );
 }
