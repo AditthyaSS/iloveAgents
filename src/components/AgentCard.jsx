@@ -49,9 +49,9 @@ function isWithinLast7Days(dateStr) {
 }
 
 export default function AgentCard({ agent }) {
-  const IconComponent = Icons[agent.icon] || Icons.Bot;
-  const prov = providerColors[agent.provider] || providerColors.any;
-  const provLabel = providerLabels[agent.provider] || agent.provider;
+  const IconComponent = Icons[agent?.icon] || Icons.Bot;
+const prov = providerColors[agent?.provider] || providerColors.any;
+const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Provider";
   const { isFavorite, toggleFavorite } = useFavorites();
   const favorited = isFavorite(agent.id);
 
@@ -121,10 +121,10 @@ export default function AgentCard({ agent }) {
 
       {/* Name + description */}
       <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1 group-hover:text-accent group-focus-visible:text-accent transition-colors">
-        {agent.name}
+        {agent?.name || "Unnamed Agent"}
       </h3>
       <p className=" flex-1 text-xs dark:text-text-secondary text-gray-500 leading-relaxed mb-3 line-clamp-2">
-        {agent.description}
+        {agent?.description || "No description provided."}
       </p>
 
       {/* Bottom: provider badge + run link */}
