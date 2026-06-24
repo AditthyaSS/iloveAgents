@@ -1,72 +1,65 @@
 export default {
-id: 'project-architecture-planner',
-name: 'Project Architecture Planner',
-description:
-'Analyzes a project idea and recommends a practical technology stack, architecture, authentication strategy, AI components, deployment approach, and development roadmap.',
+  id: 'project-architecture-planner',
+  name: 'Project Architecture Planner',
+  description:
+    'Analyzes a project idea and recommends a practical technology stack, architecture, authentication strategy, AI components, deployment approach, and development roadmap.',
+  category: 'Engineering',
+  icon: 'Workflow',
+  provider: 'any',
+  defaultProvider: 'openai',
+  model: 'gpt-4o',
 
-category: 'Engineering',
-icon: 'Workflow',
-provider: 'any',
-defaultProvider: 'openai',
-model: 'gpt-4o',
-
-inputs: [
-{
-id: 'project_idea',
-label: 'Project Idea',
-type: 'textarea',
-placeholder:
-'Describe the application you want to build and its main purpose...',
-required: true,
-},
-
-```
-{
-  id: 'project_scale',
-  label: 'Project Scale',
-  type: 'select',
-  required: true,
-  options: [
-    'Learning Project',
-    'College Project',
-    'Personal Portfolio Project',
-    'Hackathon Project',
-    'Startup MVP',
-    'Growing Startup',
-    'Enterprise Application',
+  inputs: [
+    {
+      id: 'project_idea',
+      label: 'Project Idea',
+      type: 'textarea',
+      placeholder:
+        'Describe the application you want to build and its main purpose...',
+      required: true,
+    },
+    {
+      id: 'project_scale',
+      label: 'Project Scale',
+      type: 'select',
+      required: true,
+      options: [
+        'Learning Project',
+        'College Project',
+        'Personal Portfolio Project',
+        'Hackathon Project',
+        'Startup MVP',
+        'Growing Startup',
+        'Enterprise Application',
+      ],
+    },
+    {
+      id: 'team_size',
+      label: 'Team Size',
+      type: 'select',
+      required: true,
+      options: [
+        'Solo Developer',
+        '2-5 Developers',
+        '6-15 Developers',
+        '15+ Developers',
+      ],
+    },
+    {
+      id: 'budget',
+      label: 'Budget',
+      type: 'select',
+      required: true,
+      options: [
+        'Free / Student',
+        'Low Budget',
+        'Moderate Budget',
+        'Enterprise Budget',
+      ],
+    },
   ],
-},
 
-{
-  id: 'team_size',
-  label: 'Team Size',
-  type: 'select',
-  required: true,
-  options: [
-    'Solo Developer',
-    '2-5 Developers',
-    '6-15 Developers',
-    '15+ Developers',
-  ],
-},
-
-{
-  id: 'budget',
-  label: 'Budget',
-  type: 'select',
-  required: true,
-  options: [
-    'Free / Student',
-    'Low Budget',
-    'Moderate Budget',
-    'Enterprise Budget',
-  ],
-},
-```
-
-],
-
-systemPrompt: `
+  systemPrompt: `
 You are a senior software architect and technical consultant.
 Analyze the user's project idea, project scale, team size, and budget.
 
@@ -158,5 +151,5 @@ Explain:
 Summarize the recommended architecture in a concise paragraph.
 `,
 
-outputType: 'markdown',
+  outputType: 'markdown',
 };

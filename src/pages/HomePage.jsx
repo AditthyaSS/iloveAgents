@@ -1,7 +1,8 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch } from 'lucide-react'
+import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
 import { useHistory } from '../lib/useHistory'
@@ -30,14 +31,95 @@ export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [agents, setAgents] = useState([])
+  const [agentsLoading, setAgentsLoading] = useState(true)
 
 useEffect(() => {
-  loadAllAgents().then(setAgents)
+  loadAllAgents().then(setAgents).finally(() => setAgentsLoading(false))
 }, [])
   const [selectedCategory, setSelectedCategory] = useState(null)
   const allCategories = useMemo(() => {
     return [...new Set(agents.map((a) => a.category))].sort()
   }, [agents])
+
+  const categoryCounts = useMemo(() => {
+    const counts = {}
+    agents.forEach((agent) => {
+      counts[agent.category] = (counts[agent.category] || 0) + 1
+    })
+    return counts
+  }, [agents])
+
+  const dropdownOptions = useMemo(() => {
+    return [
+      { value: null, label: 'All Categories', count: agents.length },
+      ...allCategories.map((cat) => ({
+        value: cat,
+        label: cat,
+        count: categoryCounts[cat] || 0,
+      })),
+    ]
+  }, [allCategories, categoryCounts, agents.length])
+
+  const [isOpen, setIsOpen] = useState(false)
+  const [focusedIndex, setFocusedIndex] = useState(-1)
+  const dropdownRef = useRef(null)
+  const triggerRef = useRef(null)
+  const optionRefs = useRef([])
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false)
+        setFocusedIndex(-1)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleKeyDown = (e) => {
+    if (!isOpen) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        setIsOpen(true)
+        setFocusedIndex(0)
+        setTimeout(() => optionRefs.current[0]?.focus(), 0)
+      }
+      return
+    }
+
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault()
+        setIsOpen(false)
+        setFocusedIndex(-1)
+        triggerRef.current?.focus()
+        break
+      case 'ArrowDown':
+        e.preventDefault()
+        setFocusedIndex((prev) => {
+          const next = prev + 1 >= dropdownOptions.length ? 0 : prev + 1
+          optionRefs.current[next]?.focus()
+          return next
+        })
+        break
+      case 'ArrowUp':
+        e.preventDefault()
+        setFocusedIndex((prev) => {
+          const next = prev - 1 < 0 ? dropdownOptions.length - 1 : prev - 1
+          optionRefs.current[next]?.focus()
+          return next
+        })
+        break
+      case 'Tab':
+        setIsOpen(false)
+        setFocusedIndex(-1)
+        break
+      default:
+        break
+    }
+  }
+
   useDocumentTitle()
 
   useKeyboardShortcuts({
@@ -58,14 +140,14 @@ useEffect(() => {
     return recentIds
       .map((id) => agents.find((a) => a.id === id))
       .filter(Boolean)
-  }, [])
+  }, [agents])
 
   // Resolve favorite agents (preserving the user's star order)
   const favoriteAgents = useMemo(() => {
     return favorites
       .map((id) => agents.find((a) => a.id === id))
       .filter(Boolean)
-  }, [favorites])
+  }, [favorites, agents])
 
   // Filter agents based on search + category
   const filteredAgents = useMemo(() => {
@@ -82,7 +164,7 @@ useEffect(() => {
         agent.category.toLowerCase().includes(q)
       )
     })
-  }, [searchQuery, selectedCategory])
+  }, [agents, searchQuery, selectedCategory])
 
   const handleRerun = (run) => {
     navigate(`/agent/${run.agentId}`, { state: { prefill: run.inputs } })
@@ -97,11 +179,11 @@ useEffect(() => {
   return (
     <div className="animate-fade-in">
       {/* Hero */}
-      <div className="text-center mb-10 pt-2">
-        <h1 className="text-3xl sm:text-4xl font-bold dark:text-text-primary text-gray-900 mb-3 tracking-tight">
+      <div className="premium-section text-center mb-10 pt-2 overflow-hidden">
+        <h1 className="text-3xl sm:text-4xl font-bold dark:text-text-primary text-gray-900 mb-3 tracking-tight text-balance">
           AI Agents, ready to use.
         </h1>
-        <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md mx-auto leading-relaxed mb-4">
+        <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md mx-auto leading-relaxed mb-4 text-balance">
           Open source. Community-built. Bring your own key.
         </p>
         <button
@@ -117,9 +199,12 @@ useEffect(() => {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-3 gap-3 mb-10 max-w-lg mx-auto">
-        <div className="text-center p-4 rounded-lg border transition-theme
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+      <div className="premium-section grid grid-cols-1 min-[430px]:grid-cols-3 gap-4 mb-10 max-w-xl mx-auto" style={{ animationDelay: '90ms' }}>
+        <div className="relative text-center p-5 rounded-[2rem] border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03]
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[2rem]
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px">
           <div className="flex justify-center mb-2">
             <Bot size={20} className="text-accent" />
           </div>
@@ -131,8 +216,11 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="text-center p-4 rounded-lg border transition-theme
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+        <div className="relative text-center p-5 rounded-[2rem] border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03]
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[2rem]
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px">
           <div className="flex justify-center mb-2">
             <Users size={20} className="text-accent" />
           </div>
@@ -144,8 +232,11 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="text-center p-4 rounded-lg border transition-theme
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+        <div className="relative text-center p-5 rounded-[2rem] border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          backdrop-blur-2xl transition-all duration-300 hover:scale-[1.03]
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-[2rem]
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px">
           <div className="flex justify-center mb-2">
             <Code2 size={20} className="text-accent" />
           </div>
@@ -160,7 +251,7 @@ useEffect(() => {
 
       {/* ── Favorites Section ── */}
       {favoriteAgents.length > 0 && !showingFiltered && (
-        <div className="mb-8 animate-fade-in">
+        <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '140ms' }}>
           <div className="flex items-center gap-2 mb-4">
             <Star size={14} className="text-yellow-400 fill-yellow-400" />
             <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
@@ -185,7 +276,7 @@ useEffect(() => {
       )}
       {/* ── Recently Used Section ── */}
 {recentAgents.length > 0 && !showingFiltered && (
-  <div className="mb-8 animate-fade-in">
+  <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '160ms' }}>
     <div className="flex items-center gap-2 mb-4">
       <Heart size={14} className="text-pink-400 fill-pink-400" />
 
@@ -213,11 +304,30 @@ useEffect(() => {
 )}
 
       {/* ── Search & Category Filter Section ── */}
-      <div className="mb-6 space-y-4">
+      <div
+  className={`premium-section space-y-4 ${
+    isOpen ? "mb-80" : "mb-6"
+  }`}
+  style={{ animationDelay: "180ms" }}
+>
         {/* Search Bar */}
-        <div className="relative max-w-xl mx-auto">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search size={16} className="dark:text-text-muted text-gray-400" />
+        <div className="relative max-w-xl mx-auto
+          rounded-full
+          border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70
+          backdrop-blur-2xl
+          shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
+          transition-all duration-300
+          before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full
+          before:bg-gradient-to-r before:from-cyan-400/30 before:via-indigo-400/30 before:to-rose-400/30 before:p-px
+          flex items-center
+          focus-within:border-indigo-500/50 dark:focus-within:border-white/20
+          focus-within:ring-2 focus-within:ring-indigo-500/20 dark:focus-within:ring-white/10
+          focus-within:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_36px_rgba(99,102,241,0.22)]
+          hover:shadow-[0_20px_60px_rgba(15,23,42,0.18),0_0_32px_rgba(99,102,241,0.15)]"
+        >
+          <div className="pl-4 flex items-center pointer-events-none shrink-0">
+            <Search size={16} className="dark:text-text-muted text-gray-400 transition-colors duration-300" />
           </div>
           <input
             id="agent-search"
@@ -225,16 +335,15 @@ useEffect(() => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search agents by name, description, or category..."
-            className="w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm transition-all duration-200
-              dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
-              bg-white border-gray-200 text-gray-900 placeholder-gray-400
-              focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50
-              hover:border-accent/30"
+            className="w-full pl-3 pr-12 py-3 bg-transparent text-sm font-semibold tracking-wide transition-all duration-300
+              dark:text-text-primary dark:placeholder-text-muted
+              text-gray-900 placeholder-gray-400
+              focus:outline-none"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3.5 flex items-center
+              className="absolute inset-y-0 right-0 pr-4 flex items-center
                 dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
               aria-label="Clear search"
             >
@@ -243,43 +352,141 @@ useEffect(() => {
           )}
         </div>
 
-        {/* Category Filter Pills */}
-        <div className="flex items-center gap-2 flex-wrap justify-center">
-          <SlidersHorizontal size={14} className="dark:text-text-muted text-gray-400 flex-shrink-0" />
-          <button
-            id="filter-all"
-            onClick={() => setSelectedCategory(null)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border
-              ${!selectedCategory
-                ? 'bg-accent text-white border-accent shadow-md shadow-accent/20'
-                : 'dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:border-accent/40 bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
-              }`}
-          >
-            All
-          </button>
-          {allCategories.map((cat) => {
-            const meta = categoryMeta[cat] || defaultMeta
-            const isActive = selectedCategory === cat
-            return (
+        {/* Category Filter Dropdown */}
+        <div className="flex justify-center" onKeyDown={handleKeyDown}>
+          <div ref={dropdownRef} className="relative w-72 z-50">
+            {!selectedCategory ? (
+              // Default State
               <button
-                key={cat}
-                id={`filter-${cat.toLowerCase()}`}
-                onClick={() => setSelectedCategory(isActive ? null : cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 border
-                  ${isActive
-                    ? `bg-gradient-to-r ${meta.color} text-white border-transparent shadow-md ring-2 ${meta.ring}`
-                    : 'dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:border-accent/40 bg-white border-gray-200 text-gray-600 hover:border-indigo-300'
-                  }`}
+                id="category-select-trigger"
+                type="button"
+                ref={triggerRef}
+                onClick={() => setIsOpen(!isOpen)}
+                aria-haspopup="listbox"
+                aria-expanded={isOpen}
+                aria-controls="category-select-menu"
+                className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all duration-200
+                  dark:bg-surface-card dark:border-border dark:text-text-primary
+                  bg-white border-gray-200 text-gray-900
+                  hover:border-accent/30 dark:hover:border-accent/40
+                  focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
               >
-                {cat}
+                <span className="flex items-center gap-2 truncate">
+                  <SlidersHorizontal size={14} className="dark:text-text-muted text-gray-400" />
+                  <span className="font-medium">All Categories</span>
+                </span>
+                <ChevronDown
+                  size={16}
+                  className={`text-gray-400 dark:text-text-muted transition-transform duration-200 flex-shrink-0 ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
-            )
-          })}
+            ) : (
+              // Active State
+              (() => {
+                const meta = categoryMeta[selectedCategory] || defaultMeta
+                return (
+                  <div
+                    className={`flex items-center justify-between w-full rounded-xl text-sm transition-all duration-200 bg-gradient-to-r ${meta.color} text-white border-transparent shadow-md ring-2 ${meta.ring}`}
+                  >
+                    <button
+                      id="category-select-trigger"
+                      type="button"
+                      ref={triggerRef}
+                      onClick={() => setIsOpen(!isOpen)}
+                      aria-haspopup="listbox"
+                      aria-expanded={isOpen}
+                      aria-controls="category-select-menu"
+                      className="flex-1 text-left px-4 py-2.5 font-semibold focus:outline-none focus:ring-0 truncate"
+                    >
+                      {selectedCategory}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setSelectedCategory(null)
+                        setIsOpen(false)
+                        // Focus the reset trigger button after layout update
+                        setTimeout(() => triggerRef.current?.focus(), 0)
+                      }}
+                      aria-label={`Clear filter for ${selectedCategory}`}
+                      className="flex-shrink-0 p-2 mr-1.5 hover:bg-white/20 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-white/50"
+                    >
+                      <X size={16} className="text-white" />
+                    </button>
+                  </div>
+                )
+              })()
+            )}
+
+            {/* Dropdown Options Menu */}
+            {isOpen && (
+              <div
+                id="category-select-menu"
+                role="listbox"
+                aria-label="Agent categories"
+                aria-activedescendant={focusedIndex >= 0 ? `option-${focusedIndex}` : undefined}
+                className="absolute left-0 right-0 mt-2 z-50 rounded-xl border shadow-2xl max-h-[70vh] overflow-y-auto p-1.5 space-y-1 bg-white dark:bg-surface-card"
+              >
+                {dropdownOptions.map((opt, idx) => {
+                  const isSelected = opt.value === selectedCategory
+                  const meta = opt.value ? (categoryMeta[opt.value] || defaultMeta) : null
+
+                  return (
+                    <button
+                      key={opt.value || 'all'}
+                      id={`option-${idx}`}
+                      role="option"
+                      aria-selected={isSelected}
+                      ref={(el) => (optionRefs.current[idx] = el)}
+                      type="button"
+                      onClick={() => {
+                        
+                        
+                        setSelectedCategory(opt.value)
+                        setIsOpen(false)
+                        setFocusedIndex(-1)
+                        // Return focus to the trigger
+                        setTimeout(() => triggerRef.current?.focus(), 0)
+                      }}
+                      className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg border transition-all duration-150 text-left
+                        ${isSelected
+                          ? opt.value
+                            ? `bg-gradient-to-r ${meta.color} text-white border-transparent font-semibold shadow-sm`
+                            : 'bg-accent text-white border-accent font-semibold shadow-sm'
+                          : 'dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:border-accent/40 dark:hover:text-text-primary hover:border-accent/30 bg-white border-gray-200 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent'
+                        }`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        {opt.value ? (
+                          <span className={`w-2 h-2 rounded-full bg-gradient-to-r ${meta.color} flex-shrink-0`} />
+                        ) : (
+                          <SlidersHorizontal size={14} className="dark:text-text-muted text-gray-400 flex-shrink-0" />
+                        )}
+                        <span className="truncate">{opt.label}</span>
+                      </span>
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full
+                        ${isSelected
+                          ? 'bg-white/20 text-white'
+                          : 'dark:bg-surface-card dark:text-text-muted bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {opt.count}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Agent Grid */}
-      <div className="flex flex-col lg:flex-row gap-8 mb-8">
+      <div
+        className="premium-section flex flex-col lg:flex-row gap-8 mb-8 relative z-0" style={{ animationDelay: '220ms' }}>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
@@ -291,7 +498,13 @@ useEffect(() => {
             </span>
           </div>
 
-          {filteredAgents.length > 0 ? (
+          {agentsLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+              {Array.from({ length: 9 }).map((_, idx) => (
+                <AgentCardSkeleton key={idx} />
+              ))}
+            </div>
+          ) : filteredAgents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {filteredAgents.map((agent, idx) => (
                 <div
@@ -341,7 +554,7 @@ useEffect(() => {
 
       {/* ── Workflows Section ── */}
       {!showingFiltered && (
-        <div className="mb-8 animate-fade-in">
+        <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '260ms' }}>
           <div
             className="rounded-xl border p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4
               dark:bg-surface-card dark:border-border bg-white border-gray-200"
@@ -380,8 +593,12 @@ useEffect(() => {
         </div>
       )}
 {/* Footer */}
-<footer className="w-full mt-auto py-12 border-t border-gray-200 dark:border-border bg-gray-50/50 dark:bg-[#0a0a0a]">
-  <div className="container mx-auto px-4 md:px-8">
+<footer className="relative w-full mt-auto py-12 border-t border-gray-200 dark:border-border overflow-hidden">
+  {/* Background gradient & blur matching Sidebar/Navbar */}
+  <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
+  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
+
+  <div className="container mx-auto px-4 md:px-8 relative z-10">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
       
       {/* Column 1: Brand Info */}
@@ -389,10 +606,10 @@ useEffect(() => {
         <h3 className="font-bold text-lg text-gray-900 dark:text-white">
           iLoveAgents
         </h3>
-        <p className="text-sm text-gray-500 dark:text-text-muted leading-relaxed">
+        <p className="text-sm text-gray-700 dark:text-text-secondary leading-relaxed">
           Community built AI workflows. Connect agents and automate your process seamlessly.
         </p>
-        <div className="mt-auto text-sm font-medium text-gray-400 dark:text-gray-500">
+        <div className="mt-auto text-sm font-semibold text-gray-600 dark:text-gray-400">
           Built for GSSoC 2026
         </div>
       </div>
@@ -406,7 +623,7 @@ useEffect(() => {
           href="https://github.com/AditthyaSS/iloveAgents#readme" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
         >
           Documentation
         </a>
@@ -416,7 +633,7 @@ useEffect(() => {
           href="https://github.com/AditthyaSS/iloveAgents/issues" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
         >
           Request an Agent
         </a>
@@ -431,7 +648,7 @@ useEffect(() => {
           href="#" 
           onClick={(e) => e.preventDefault()}
           title="Coming Soon"
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors cursor-not-allowed opacity-75"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors cursor-not-allowed opacity-75"
         >
           Privacy Policy
         </a>
@@ -441,7 +658,7 @@ useEffect(() => {
           href="#" 
           onClick={(e) => e.preventDefault()}
           title="Coming Soon"
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors cursor-not-allowed opacity-75"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors cursor-not-allowed opacity-75"
         >
           Terms of Service
         </a>
@@ -450,14 +667,14 @@ useEffect(() => {
       {/* Column 4: Contribute CTA */}
       <div className="flex flex-col gap-3">
         <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h4>
-        <p className="text-sm text-gray-500 dark:text-text-muted mb-2">
+        <p className="text-sm text-gray-700 dark:text-text-secondary mb-2">
           Join us in building the ultimate agent library.
         </p>
         <a
           href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center w-fit gap-2 px-4 py-2 text-sm font-medium text-white bg-accent hover:bg-accent-hover rounded-md transition-colors"
+          className="inline-flex items-center w-fit gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-500 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-violet-500/35"
         >
           <Github size={16} />
           GitHub Repo
@@ -468,7 +685,7 @@ useEffect(() => {
     </div>
 
     {/* Bottom Copyright Bar */}
-    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center text-gray-500 dark:text-text-muted">
+    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center font-medium text-gray-600 dark:text-gray-400">
       © {new Date().getFullYear()} iLoveAgents. All rights reserved.
     </div>
   </div>

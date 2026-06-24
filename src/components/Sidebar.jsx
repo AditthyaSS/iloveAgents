@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import { useCollections } from '../lib/useCollections'
 
 export default function Sidebar({ open, onClose }) {
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
+  const [openCategories, setOpenCategories] = useState({})
+  const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
   const [agents, setAgents] = useState([])
+  const { collections } = useCollections()
+  const location = useLocation()
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -16,13 +21,47 @@ export default function Sidebar({ open, onClose }) {
     fetchAgents()
   }, [])
 
-  // Filter agents based on search query
-  const filteredAgents = agents.filter((agent) =>
-    agent.name.toLowerCase().includes(sidebarSearchQuery.toLowerCase()) ||
-    agent.category.toLowerCase().includes(sidebarSearchQuery.toLowerCase())
-  )
+  useEffect(() => {
+    const currentAgentId = location.pathname.startsWith('/agent/')
+      ? location.pathname.split('/agent/')[1]
+      : null
 
-  // Group agents by category
+    if (currentAgentId && agents.length > 0) {
+      const activeAgent = agents.find((a) => a.id === currentAgentId)
+
+      if (activeAgent?.category) {
+        setOpenCategories((prev) => ({
+          ...prev,
+          [activeAgent.category]: true,
+        }))
+      }
+    }
+  }, [location.pathname, agents])
+
+  const currentAgentId = location.pathname.startsWith('/agent/')
+    ? location.pathname.split('/agent/')[1]
+    : null
+
+  const activeAgent = agents.find((a) => a.id === currentAgentId)
+  const activeCategory = activeAgent ? activeAgent.category : null
+
+  const normalizedQuery = sidebarSearchQuery.trim().toLowerCase()
+  const isSearching = normalizedQuery !== ''
+
+  useEffect(() => {
+    if (!isSearching) {
+      setSearchExpandedCategories({})
+    }
+  }, [isSearching])
+
+  const filteredAgents = !normalizedQuery
+    ? agents
+    : agents.filter(
+        (agent) =>
+          agent.name.toLowerCase().includes(normalizedQuery) ||
+          agent.category.toLowerCase().includes(normalizedQuery)
+      )
+
   const categories = filteredAgents.reduce((acc, agent) => {
     if (!acc[agent.category]) acc[agent.category] = []
     acc[agent.category].push(agent)
@@ -31,9 +70,22 @@ export default function Sidebar({ open, onClose }) {
 
   const categoryOrder = Object.keys(categories)
 
+  const toggleCategory = (category) => {
+    if (isSearching) {
+      setSearchExpandedCategories((prev) => ({
+        ...prev,
+        [category]: !(prev[category] ?? true),
+      }))
+    } else {
+      setOpenCategories((prev) => ({
+        ...prev,
+        [category]: !prev[category],
+      }))
+    }
+  }
+
   return (
     <>
-      {/* Mobile overlay */}
       {open && (
         <div
           className="fixed inset-0 z-30 bg-black/50 lg:hidden"
@@ -41,41 +93,47 @@ export default function Sidebar({ open, onClose }) {
         />
       )}
 
-    <aside
-      className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
-        dark:bg-surface dark:border-border bg-white border-gray-200
-        ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
-    >
-      
-        {/* Header */}
+      <aside
+        className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
+          dark:border-border border-gray-200
+          ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+      >
+        <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
+
         <div className="px-4 py-3 flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+          <span className="text-xs font-bold uppercase tracking-wider dark:text-text-primary text-gray-800">
             Agents
           </span>
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-accent/10 text-accent">
+
+          <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent dark:text-accent-hover">
             {filteredAgents.length}
           </span>
         </div>
 
-        {/* Search Input */}
         <div className="px-4 mb-2">
           <div className="relative group">
             <Icons.Search
               size={14}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-text-muted group-focus-within:text-accent transition-colors"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 dark:text-text-secondary group-focus-within:text-accent transition-colors"
             />
+
             <input
               type="text"
               placeholder="Search agents..."
+              aria-label="Search agents"
               value={sidebarSearchQuery}
               onChange={(e) => setSidebarSearchQuery(e.target.value)}
               className="w-full pl-8 pr-8 py-1.5 text-[12px] rounded-md border transition-all
-                dark:bg-surface-hover dark:border-border dark:text-text-primary dark:focus:border-accent/40
+                dark:bg-surface-hover/80 dark:border-border dark:text-text-primary dark:focus:border-accent/40
                 bg-gray-50 border-gray-200 text-gray-900 focus:border-accent/40 focus:ring-1 focus:ring-accent/10 outline-none"
             />
+
             {sidebarSearchQuery && (
               <button
+                type="button"
                 onClick={() => setSidebarSearchQuery('')}
+                aria-label="Clear search"
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-text-muted dark:hover:text-text-primary transition-colors"
               >
                 <Icons.X size={14} />
@@ -84,80 +142,216 @@ export default function Sidebar({ open, onClose }) {
           </div>
         </div>
 
-        {/* Agent List */}
         <nav className="flex-1 overflow-y-auto px-2 pb-4">
-          {/* Suites link */}
           <NavLink
             to="/suites"
             onClick={onClose}
             className={({ isActive }) =>
-              `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-2
-              ${isActive
-                ? 'bg-accent/10 text-accent dark:text-accent'
-                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              `relative flex items-center gap-2.5 pl-3.5 pr-2.5 py-2 rounded-md text-[13px] font-medium transition-all duration-200 mb-2 group
+              ${
+                isActive
+                  ? 'bg-accent/15 text-accent dark:text-accent font-semibold shadow-sm'
+                  : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-white/10 text-gray-700 hover:text-gray-950 hover:bg-gray-150/50'
               }`
             }
           >
-            <span className="text-sm">✨</span>
-            <span className="truncate">Suites</span>
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-accent rounded-r" />
+                )}
+                <span className="text-sm transition-transform duration-200 group-hover:translate-x-[4px]">
+                  ✨
+                </span>
+                <span className="truncate transition-transform duration-200 group-hover:translate-x-[4px]">
+                  Suites
+                </span>
+              </>
+            )}
+          </NavLink>
+
+          <div className="mb-2 rounded-lg border border-gray-100/80 p-2 dark:border-border/80">
+            <div className="mb-1 flex items-center justify-between px-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-text-muted">
+              <span>Collections</span>
+              <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] text-accent">
+                {collections.length}
+              </span>
+            </div>
+
+            <NavLink
+              to="/collections"
+              onClick={onClose}
+              className={({ isActive }) =>
+                `relative mb-0.5 flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
+                ${
+                  isActive && location.pathname === '/collections'
+                    ? 'bg-accent/15 text-accent font-semibold shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-150/50 hover:text-gray-950 dark:text-text-secondary dark:hover:bg-white/10 dark:hover:text-text-primary'
+                }`
+              }
+            >
+              <Icons.FolderPlus size={14} />
+              <span className="truncate">All Collections</span>
+            </NavLink>
+
+            {collections.slice(0, 10).map((collection) => (
+              <NavLink
+                key={collection.id}
+                to={`/collections/${collection.id}`}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `relative flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
+                  ${
+                    isActive
+                      ? 'bg-accent/15 text-accent font-semibold shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-150/50 hover:text-gray-950 dark:text-text-secondary dark:hover:bg-white/10 dark:hover:text-text-primary'
+                  }`
+                }
+              >
+                <Icons.Folder size={14} className="flex-shrink-0" />
+                <span className="min-w-0 flex-1 truncate">
+                  {collection.name}
+                </span>
+                <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold text-accent">
+                  {collection.agentIds.length}
+                </span>
+              </NavLink>
+            ))}
+          </div>
+
+          <NavLink
+            to="/scheduler"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
+              ${
+                isActive
+                  ? 'bg-accent/10 text-accent dark:text-accent'
+                  : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`
+            }
+          >
+            <Icons.CalendarClock size={15} className="flex-shrink-0" />
+            <span className="truncate">Scheduler</span>
           </NavLink>
 
           <div className="border-b dark:border-border border-gray-100 mb-2" />
-          {categoryOrder.map((category) => (
-            <div key={category} className="mb-3">
-              <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-widest dark:text-text-muted text-gray-400">
-                {category}
+
+          {categoryOrder.map((category) => {
+            const isCategoryExpanded = isSearching
+              ? searchExpandedCategories[category] ?? true
+              : Boolean(openCategories[category])
+            const isActiveCategory = activeCategory === category
+
+            return (
+              <div key={category} className="mb-3">
+                <button
+                  type="button"
+                  onClick={() => toggleCategory(category)}
+                  aria-expanded={isCategoryExpanded}
+                  className={`w-full relative flex items-center justify-between gap-2 pl-3.5 pr-2.5 py-2 text-[10px] font-bold uppercase tracking-widest transition-all duration-200 group rounded-md
+                    ${
+                      isActiveCategory
+                        ? 'bg-accent/20 text-indigo-600 dark:text-indigo-400 font-extrabold'
+                        : 'dark:text-text-primary text-gray-800 hover:bg-gray-100/70 dark:hover:bg-white/10 hover:text-accent dark:hover:text-white'
+                    }`}
+                >
+                  {isActiveCategory && (
+                    <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-accent rounded-r" />
+                  )}
+
+                  <span className="truncate transition-transform duration-200 ease-in-out group-hover:translate-x-[4px]">
+                    {category}
+                  </span>
+
+                  <span className="flex items-center gap-1.5 flex-shrink-0">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-indigo-600 dark:text-indigo-400 tracking-normal flex items-center justify-center min-h-[16px]">
+                      {categories[category].length}
+                    </span>
+                    {isCategoryExpanded ? (
+                      <Icons.ChevronDown
+                        size={12}
+                        className="flex-shrink-0 text-gray-400 group-hover:text-accent transition-colors"
+                      />
+                    ) : (
+                      <Icons.ChevronRight
+                        size={12}
+                        className="flex-shrink-0 text-gray-400 group-hover:text-accent transition-colors"
+                      />
+                    )}
+                  </span>
+                </button>
+
+                {isCategoryExpanded && (
+                  <div className="mt-0.5">
+                    {categories[category].map((agent) => {
+                      const IconComponent = Icons[agent.icon] || Icons.Bot
+
+                      return (
+                        <NavLink
+                          key={agent.id}
+                          to={`/agent/${agent.id}`}
+                          onClick={onClose}
+                          className={({ isActive }) =>
+                            `relative flex items-center gap-2.5 pl-3.5 pr-2.5 py-2 rounded-md text-[13px] font-medium transition-all duration-200 mb-0.5 group
+                            ${
+                              isActive
+                                ? 'bg-accent/15 text-accent dark:text-accent font-semibold shadow-sm'
+                                : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-white/10 text-gray-750 hover:text-gray-950 hover:bg-gray-150/50'
+                            }`
+                          }
+                        >
+                          {({ isActive }) => (
+                            <>
+                              {isActive && (
+                                <div className="absolute left-0 top-1.5 bottom-1.5 w-0.5 bg-accent rounded-r" />
+                              )}
+                              <IconComponent
+                                size={15}
+                                className="flex-shrink-0 transition-transform duration-200 group-hover:translate-x-[4px]"
+                              />
+                              <span className="truncate transition-transform duration-200 group-hover:translate-x-[4px]">
+                                {agent.name}
+                              </span>
+                            </>
+                          )}
+                        </NavLink>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-              {categories[category].map((agent) => {
-                const IconComponent = Icons[agent.icon] || Icons.Bot
-                return (
-                  <NavLink
-                    key={agent.id}
-                    to={`/agent/${agent.id}`}
-                    onClick={onClose}
-                    className={({ isActive }) =>
-                      `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
-                      ${
-                        isActive
-                          ? 'bg-accent/10 text-accent dark:text-accent'
-                          : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`
-                    }
-                  >
-                    <IconComponent size={15} className="flex-shrink-0" />
-                    <span className="truncate">{agent.name}</span>
-                  </NavLink>
-                )
-              })}
-            </div>
-          ))}
+            )
+          })}
+
           {filteredAgents.length === 0 && (
-            <div className="px-4 py-8 text-center text-xs text-gray-400 dark:text-text-muted">
+            <div className="px-4 py-8 text-center text-xs text-gray-500 dark:text-text-muted">
               No agents found
             </div>
           )}
         </nav>
 
-        {/* Footer */}
         <div className="mt-auto px-4 py-3 border-t dark:border-border border-gray-200">
           <div className="space-y-1.5">
             <a
               href="https://github.com/AditthyaSS/iloveAgents"
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+              className="block text-[11px] dark:text-text-secondary text-gray-500 hover:text-accent transition-colors font-medium"
             >
               GitHub →
             </a>
+
             <a
               href="https://github.com/AditthyaSS/iloveAgents/issues"
               target="_blank"
               rel="noopener noreferrer"
-              className="block text-[11px] dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+              className="block text-[11px] dark:text-text-secondary text-gray-500 hover:text-accent transition-colors font-medium"
             >
               Contribute →
             </a>
-            <span className="block text-[10px] dark:text-text-muted/60 text-gray-300">
+
+            <span className="block text-[10px] dark:text-text-secondary/70 text-gray-400 font-medium">
               GSSoC 2026
             </span>
           </div>
