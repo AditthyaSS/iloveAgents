@@ -10,7 +10,7 @@ export default {
   model: "gpt-4o-mini",
   exampleInputs: {
     company_name: "TechCorp Solutions",
-    company_size: "50-200 employees",
+    company_size: "51-200 employees",
     industry: "SaaS & Cloud Services",
     linkedin_url: "https://linkedin.com/company/techcorp-solutions",
     recent_activity: "Recently hired 5 Sales Engineers, expanded to 3 new markets",
