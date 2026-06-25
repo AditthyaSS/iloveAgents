@@ -33,6 +33,7 @@ import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { useAgentFormPersistence } from "../lib/useAgentFormPersistence";
 
 const providerLabels = {
   openai: "OpenAI",
@@ -40,7 +41,6 @@ const providerLabels = {
   gemini: "Gemini",
   any: "Any",
 };
-
 
 const LOADING_MESSAGES = [
   "⚙️ Agent is grinding for you...",
@@ -66,7 +66,9 @@ export default function AgentRunner({ agent }) {
   const { saveRun } = useHistory();
   const navigate = useNavigate();
 
-  const [inputs, setInputs] = useState({});
+  const { values: inputs, setField, resetToDefaults, hasDraft, draftSavedAt } =
+    useAgentFormPersistence(agent.id, agent.inputs);
+
   const [output, setOutput] = useState(null);
   const [streamingOutput, setStreamingOutput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
@@ -116,24 +118,27 @@ export default function AgentRunner({ agent }) {
     setCustomPrompt(agent.systemPrompt);
     setPlaygroundOpen(false);
 
-    const defaults = {};
-    agent.inputs.forEach((input) => {
-      if (input.defaultValue !== undefined) {
-        defaults[input.id] = input.defaultValue;
-      } else if (input.type === "multiselect") {
-        defaults[input.id] = [];
-      } else {
-        defaults[input.id] = "";
-      }
-    });
-    setInputs(defaults);
-
     if (agent.provider !== "any") {
       setProvider(agent.provider);
     } else if (agent.defaultProvider) {
       setProvider(agent.defaultProvider);
     }
   }, [agent.id]);
+
+  useEffect(() => {
+    const hasContent = agent.inputs.some((input) => {
+      const v = inputs[input.id];
+      return Array.isArray(v) ? v.length > 0 : v && v.trim() !== "";
+    });
+    if (!hasContent) return;
+
+    const handler = (e) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [inputs, agent.inputs]);
 
   useEffect(() => {
     if (!loading || isStreaming) return;
@@ -144,19 +149,17 @@ export default function AgentRunner({ agent }) {
   }, [loading, isStreaming]);
 
   const updateInput = (id, value) => {
-    setInputs((prev) => ({ ...prev, [id]: value }));
+    setField(id, value);
   };
 
   const toggleMultiselect = (id, option) => {
-    setInputs((prev) => {
-      const current = prev[id] || [];
-      return {
-        ...prev,
-        [id]: current.includes(option)
-          ? current.filter((o) => o !== option)
-          : [...current, option],
-      };
-    });
+    const current = inputs[id] || [];
+    setField(
+      id,
+      current.includes(option)
+        ? current.filter((o) => o !== option)
+        : [...current, option],
+    );
   };
 
   const buildUserMessage = () => {
@@ -238,7 +241,6 @@ export default function AgentRunner({ agent }) {
       setIsStreaming(false);
       setDuration(result.duration);
 
-      // Save to history
       saveRun({
         agentId: agent.id,
         agentName: agent.name,
@@ -246,15 +248,15 @@ export default function AgentRunner({ agent }) {
         output: result.content,
         provider: actualProvider,
       });
-   } catch (err) {
-  if (err.name !== "AbortError") {
-    if (err && err.type === "invalid_api_key") {
-      setError(err);
-    } else {
-      setError({ type: "generic", message: err.message });
-    }
-  }
-} finally {
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        if (err && err.type === "invalid_api_key") {
+          setError(err);
+        } else {
+          setError({ type: "generic", message: err.message });
+        }
+      }
+    } finally {
       setLoading(false);
       abortControllerRef.current = null;
     }
@@ -281,23 +283,14 @@ export default function AgentRunner({ agent }) {
     setIsStreaming(false);
     setError(null);
     setDuration(null);
-
-    const defaults = {};
-    agent.inputs.forEach((input) => {
-      if (input.defaultValue !== undefined) {
-        defaults[input.id] = input.defaultValue;
-      } else if (input.type === "multiselect") {
-        defaults[input.id] = [];
-      } else {
-        defaults[input.id] = "";
-      }
-    });
-    setInputs(defaults);
+    resetToDefaults();
   };
 
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
-    setInputs((prev) => ({ ...prev, ...agent.exampleInputs }));
+    Object.entries(agent.exampleInputs).forEach(([id, value]) => {
+      setField(id, value);
+    });
   };
 
   const handleAnalyseModels = async () => {
@@ -327,15 +320,13 @@ export default function AgentRunner({ agent }) {
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
-      {/* Breadcrumb */}
-      <a
+      <a>
         href="/"
         className="inline-block mb-4 text-xs dark:text-text-muted text-gray-400 hover:underline"
-      >
+      
         ← All agents
       </a>
 
-      {/* Agent Header */}
       <div className="flex items-start gap-4 mb-5">
         <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
           <IconComponent size={24} className="text-accent" />
@@ -370,7 +361,6 @@ export default function AgentRunner({ agent }) {
         </button>
       </div>
 
-      {/* API Key Bar */}
       <ApiKeyBar
         provider={provider}
         setProvider={setProvider}
@@ -383,7 +373,28 @@ export default function AgentRunner({ agent }) {
         setModel={setSelectedModel}
       />
 
-      {/* Input Form */}
+      {hasDraft && (
+        <div
+          className="mb-3 flex items-center justify-between rounded-lg border px-4 py-2 text-xs
+          dark:bg-surface-card dark:border-border dark:text-text-secondary
+          bg-blue-50 border-blue-200 text-blue-800"
+        >
+          <span>
+            📋 Draft restored from{" "}
+            {new Date(draftSavedAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+          <button
+            onClick={resetToDefaults}
+            className="ml-4 underline opacity-70 hover:opacity-100 transition-opacity"
+          >
+            Clear draft
+          </button>
+        </div>
+      )}
+
       <div className="space-y-3 mb-4">
         {agent.inputs.map((input) => (
           <div key={input.id}>
@@ -429,10 +440,7 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
-                <CharCounter
-                  value={inputs[input.id] || ""}
-                  maxLength={5000}
-                />
+                <CharCounter value={inputs[input.id] || ""} maxLength={5000} />
               </div>
             )}
 
@@ -454,10 +462,7 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
-                <CharCounter
-                  value={inputs[input.id] || ""}
-                  maxLength={5000}
-                />
+                <CharCounter value={inputs[input.id] || ""} maxLength={5000} />
               </div>
             )}
 
@@ -497,7 +502,6 @@ export default function AgentRunner({ agent }) {
         ))}
       </div>
 
-      {/* Suggested workflow chain pills */}
       <SuggestedChainPills agent={agent} />
 
       <div className="mb-4">
@@ -509,7 +513,6 @@ export default function AgentRunner({ agent }) {
         </button>
       </div>
 
-      {/* Prompt Playground */}
       <div
         className="mb-4 rounded-lg border transition-all duration-200
         dark:bg-surface-card dark:border-border bg-white border-gray-200"
@@ -557,10 +560,7 @@ export default function AgentRunner({ agent }) {
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
-                <CharCounter
-                  value={customPrompt}
-                  maxLength={5000}
-                />
+                <CharCounter value={customPrompt} maxLength={5000} />
                 {isPromptModified && (
                   <button
                     onClick={() => setCustomPrompt(agent.systemPrompt)}
@@ -896,9 +896,3 @@ export default function AgentRunner({ agent }) {
     </div>
   );
 }
-
-
-
- 
-
-  
