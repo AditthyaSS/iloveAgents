@@ -65,7 +65,7 @@ const RecentRuns = ({ history, onRerun, onCopy, onDelete, onClearAll }) => {
         </button>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-4 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 120px)', minHeight: '300px' }}>
+      <div className="flex-1 overflow-y-auto pr-2 -mr-2 space-y-4 custom-scrollbar max-h-none lg:max-h-[calc(100vh-120px)] min-h-0 lg:min-h-[300px]">
         {history.map((run, idx) => (
           <div
             key={run.id}

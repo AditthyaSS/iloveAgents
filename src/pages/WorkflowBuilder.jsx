@@ -52,20 +52,17 @@ export default function WorkflowBuilder() {
     }
   }, [agents, location.state?.preselectedAgents, hasResolvedPreselected])
 
-  // Pre-select agent if coming from AgentRunner
+  // Pre-populate fields if forking an existing workflow
   useEffect(() => {
-  if (forkedWorkflow) {
-    setNodes(
-      JSON.parse(JSON.stringify(forkedWorkflow.nodes || []))
-    )
-
-    setEdges(
-      JSON.parse(JSON.stringify(forkedWorkflow.edges || []))
-    )
-
-    setTitle(`Copy of ${forkedWorkflow.title}`)
-  }
-}, [forkedWorkflow])
+    if (forkedWorkflow && agents.length > 0) {
+      setTitle(`Copy of ${forkedWorkflow.title}`)
+      setDescription(forkedWorkflow.description || '')
+      const loaded = (forkedWorkflow.agents || [])
+        .map((id) => agents.find((a) => a.id === id))
+        .filter(Boolean)
+      setSelectedAgents(loaded)
+    }
+  }, [forkedWorkflow, agents])
 
   // Agents already in the chain — prevent duplicates
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
