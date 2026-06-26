@@ -128,24 +128,39 @@ useEffect(() => {
   });
   
  useEffect(() => {
-  const savedFilters = localStorage.getItem('homepageFilters')
+   try {
+     const savedFilters = localStorage.getItem('homepageFilters')
+     if (!savedFilters) return
+ 
+     const parsedFilters = JSON.parse(savedFilters)
+     if (!parsedFilters || typeof parsedFilters !== 'object') return
 
-  if (savedFilters) {
-    const parsedFilters = JSON.parse(savedFilters)
-
-    setSearchQuery(parsedFilters.searchQuery || '')
-    setSelectedCategory(parsedFilters.selectedCategory || null)
+    setSearchQuery(typeof parsedFilters.searchQuery === 'string' ? parsedFilters.searchQuery : '')
+    setSelectedCategory(
+      typeof parsedFilters.selectedCategory === 'string' ? parsedFilters.selectedCategory : null
+    )
+  } catch {
+    localStorage.removeItem('homepageFilters')
     }
   }, [])
 
   useEffect(() => {
-  localStorage.setItem(
-    'homepageFilters',
-    JSON.stringify({
-      searchQuery,
-      selectedCategory,
-     })
-   )
+    if (!searchQuery.trim() && !selectedCategory) {
+     localStorage.removeItem('homepageFilters')
+     return
+   }
+
+ try {
+   localStorage.setItem(
+       'homepageFilters',
+       JSON.stringify({
+         searchQuery,
+         selectedCategory,
+       })
+     )
+   } catch {
+     // Ignore unavailable storage; filtering should still work for the session.
+   }
   }, [searchQuery, selectedCategory])
 
   const { favorites } = useFavorites()
