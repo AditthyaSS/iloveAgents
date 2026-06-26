@@ -1,4 +1,3 @@
-import { useState, useMemo, useEffect } from 'react'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
