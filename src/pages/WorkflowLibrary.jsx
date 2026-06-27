@@ -11,11 +11,13 @@ import {
   TrendingUp,
   X,
 } from 'lucide-react'
-import agents from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { fetchWorkflows, subscribeToAllWorkflows } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
+import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function AgentPill({ agentId }) {
+  const { agents } = useAgents()
   const agent = agents.find((a) => a.id === agentId)
   if (!agent) return <span className="text-[11px] dark:text-text-muted text-gray-400">{agentId}</span>
   return (
@@ -29,7 +31,7 @@ function AgentPill({ agentId }) {
   )
 }
 
-function WorkflowCard({ workflow, onRun, onView }) {
+function WorkflowCard({ workflow, onRun, onView, onFork }) {
   const [usageCount, setUsageCount] = useState(workflow.usage_count ?? 0)
 
   // Sync when parent data refreshes
@@ -60,10 +62,17 @@ function WorkflowCard({ workflow, onRun, onView }) {
 
   return (
     <div
-      className="rounded-lg border p-4 transition-all duration-200
-        dark:bg-surface-card dark:border-border dark:hover:border-accent/40
-        bg-white border-gray-200 hover:border-indigo-300 hover:shadow-lg hover:shadow-accent/5"
+      className="group relative rounded-lg border p-4 transition-all duration-300 overflow-hidden
+        dark:bg-surface-card dark:border-border
+        bg-white border-gray-200
+        hover:border-indigo-300/60 dark:hover:border-indigo-500/40
+        hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/15
+        hover:-translate-y-0.5"
     >
+      {/* Hover gradient overlay — signature cyan→indigo→rose theme */}
+      <div className="pointer-events-none absolute inset-0 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300
+        bg-gradient-to-br from-cyan-400/8 via-indigo-400/8 to-rose-400/8
+        dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10" />
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -123,6 +132,16 @@ function WorkflowCard({ workflow, onRun, onView }) {
           <Eye size={12} />
           Details
         </button>
+        <button
+  id={`fork-workflow-${workflow.id}`}
+  onClick={() => onFork(workflow)}
+  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors
+    dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:text-text-primary
+    bg-gray-100 border border-gray-200 text-gray-600 hover:text-gray-900"
+>
+  <GitBranch size={12} />
+  Fork
+</button>
         <span className="ml-auto text-[11px] dark:text-text-muted text-gray-400">
           {(workflow.agents ?? []).length} agent{workflow.agents?.length !== 1 ? 's' : ''}
         </span>
@@ -133,6 +152,7 @@ function WorkflowCard({ workflow, onRun, onView }) {
 
 export default function WorkflowLibrary() {
   const navigate = useNavigate()
+  useDocumentTitle('Workflow Library')
   const [workflows, setWorkflows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -179,6 +199,13 @@ export default function WorkflowLibrary() {
   const handleView = (workflow) => {
     navigate(`/workflows/${workflow.id}`)
   }
+  const handleFork = (workflow) => {
+  navigate('/workflows/build', {
+    state: {
+      forkedWorkflow: workflow,
+    },
+  })
+}
 
   return (
     <div className="animate-fade-in">
@@ -206,9 +233,14 @@ export default function WorkflowLibrary() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md mb-6">
-        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-          <Search size={14} className="dark:text-text-muted text-gray-400" />
+      <div className="relative max-w-md mb-6 group">
+        {/* Gradient glow ring — matches navbar/sidebar theme */}
+        <div className="pointer-events-none absolute -inset-[1.5px] rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-300
+          bg-gradient-to-r from-cyan-400/60 via-indigo-400/60 to-rose-400/60
+          dark:from-cyan-500/50 dark:via-indigo-500/50 dark:to-rose-500/50 blur-[2px]" />
+
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+          <Search size={14} className="dark:text-text-muted text-gray-400 group-focus-within:text-accent transition-colors duration-200" />
         </div>
         <input
           id="workflow-search"
@@ -216,16 +248,19 @@ export default function WorkflowLibrary() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search workflows..."
-          className="w-full pl-9 pr-9 py-2 rounded-lg border text-sm transition-all
-            dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
-            bg-white border-gray-200 text-gray-900 placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50"
+          className="relative w-full pl-10 pr-10 py-2.5 rounded-full border text-sm transition-all duration-300
+            dark:bg-[#101014]/80 dark:border-white/10 dark:text-text-primary dark:placeholder-text-muted
+            bg-white/80 border-white/60 text-gray-900 placeholder-gray-400
+            backdrop-blur-md
+            shadow-[0_4px_20px_rgba(99,102,241,0.08)] dark:shadow-[0_4px_20px_rgba(99,102,241,0.12)]
+            focus:outline-none focus:shadow-[0_6px_28px_rgba(99,102,241,0.18)] dark:focus:shadow-[0_6px_28px_rgba(99,102,241,0.22)]
+            focus:border-indigo-300/60 dark:focus:border-indigo-500/40"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center
-              dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+            className="absolute inset-y-0 right-0 pr-4 flex items-center z-10
+              dark:text-text-muted text-gray-400 hover:text-accent transition-colors duration-200"
           >
             <X size={14} />
           </button>
@@ -299,6 +334,7 @@ export default function WorkflowLibrary() {
                   workflow={workflow}
                   onRun={handleRun}
                   onView={handleView}
+                  onFork={handleFork}
                 />
               </div>
             ))}

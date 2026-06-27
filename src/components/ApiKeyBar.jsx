@@ -1,8 +1,13 @@
-import { useState } from 'react'
+import { fetchGeminiModels } from '../lib/llmAdapter'
+import { useState, useEffect } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import CustomSelect from './CustomSelect'
+import { MODELS } from '../lib/resolveAgentModel'
+import ApiKeyInfo from './ApiKeyInfo'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
@@ -14,31 +19,15 @@ const providerLogos = {
   openai: openaiLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
-};
-
-const MODELS = {
-  openai: [
-    { value: 'gpt-4o', label: 'GPT-4o' },
-    { value: 'gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'gpt-4.1', label: 'GPT-4.1' },
-    { value: 'gpt-4.1-mini', label: 'GPT-4.1 Mini' },
-    { value: 'gpt-4.1-nano', label: 'GPT-4.1 Nano' },
-    { value: 'o3-mini', label: 'o3-mini' },
-  ],
-  anthropic: [
-    { value: 'claude-opus-4-20250514', label: 'Claude Opus 4' },
-    { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-  ],
-  gemini: [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-    { value: 'gemini-2.0-flash-lite', label: 'Gemini 2.0 Flash Lite' },
-    { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
-    { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
-  ],
 }
+
+const providerUrls = {
+  openai: 'https://platform.openai.com/account/api-keys',
+  anthropic: 'https://console.anthropic.com/keys',
+  gemini: 'https://console.cloud.google.com/apis/credentials',
+}
+
+
 
 export default function ApiKeyBar({
   provider,
@@ -52,62 +41,90 @@ export default function ApiKeyBar({
   setModel,
 }) {
   const [showKey, setShowKey] = useState(false)
+  const [geminiModels, setGeminiModels] = useState([])
+  const [geminiLoading, setGeminiLoading] = useState(false)
+  const [geminiError, setGeminiError] = useState(null)
+
+  useEffect(() => {
+    if (provider !== 'gemini' || !apiKey?.trim()) {
+      setGeminiModels([])
+      setGeminiError(null)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setGeminiLoading(true)
+      setGeminiError(null)
+      try {
+        const models = await fetchGeminiModels(apiKey)
+        setGeminiModels(models)
+        if (models.length > 0) setModel(models[0].value)
+      } catch {
+        setGeminiError('Could not load Gemini models. Check your API key.')
+        setGeminiModels([])
+      } finally {
+        setGeminiLoading(false)
+      }
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [provider, apiKey])
 
   // Filter providers if agent requires a specific one
-  const availableProviders =
+  const availableProviders = (
     agentProvider === 'any'
       ? PROVIDERS
       : PROVIDERS.filter((p) => p.value === agentProvider)
+  ).map((p) => ({
+    ...p,
+    icon: (
+      <img
+        src={providerLogos[p.value]}
+        alt={`${p.label} logo`}
+        className="w-4 h-4 flex-shrink-0"
+      />
+    ),
+  }))
 
-  const availableModels = MODELS[provider] || []
+  const availableModels =
+    provider === 'gemini' ? geminiModels : MODELS[provider] || []
+
+  useKeyboardShortcuts({
+    'Alt+1': () => {
+      const p = availableProviders.find(p => p.value === 'openai');
+      if (p) setProvider('openai');
+    },
+    'Alt+2': () => {
+      const p = availableProviders.find(p => p.value === 'anthropic');
+      if (p) setProvider('anthropic');
+    },
+    'Alt+3': () => {
+      const p = availableProviders.find(p => p.value === 'gemini');
+      if (p) setProvider('gemini');
+    },
+  });
 
   return (
     <div className="rounded-lg border p-3 mb-4 transition-theme
       dark:bg-surface-card dark:border-border bg-white border-gray-200">
       <div className="flex flex-wrap items-center gap-2">
         {/* Provider Select with Logo */}
-        <div
-          className="flex items-center gap-2 h-8 px-2.5 rounded-md border transition-colors
-            dark:bg-surface-input dark:border-border
-            bg-white border-gray-200">
-          <img
-            src={providerLogos[provider]}
-            alt={`${provider} logo`}
-            className="w-4 h-4 flex-shrink-0"
-          />
-
-          <select
-            value={provider}
-            onChange={(e) => setProvider(e.target.value)}
-            className="h-full bg-transparent text-xs font-medium cursor-pointer outline-none
-              dark:text-white text-gray-900">
-            {availableProviders.map((p) => (
-              <option
-                key={p.value}
-                value={p.value}
-                className="text-black"
-              >
-                {p.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <CustomSelect
+          value={provider}
+          onChange={setProvider}
+          options={availableProviders}
+          className="w-auto min-w-[130px]"
+          triggerClassName="h-8 py-0 px-2.5 font-semibold text-xs border dark:bg-surface-input dark:border-border hover:border-accent/30 dark:hover:border-accent/40 bg-white border-gray-200"
+        />
 
         {/* Model Select */}
-        <select
+        <CustomSelect
           value={model}
-          onChange={(e) => setModel(e.target.value)}
-          className="h-8 px-2.5 rounded-md text-xs font-medium transition-colors cursor-pointer
-            dark:bg-surface-input dark:border-border dark:text-text-primary
-            bg-gray-50 border border-gray-200 text-gray-900
-            focus:ring-1 focus:ring-accent focus:border-accent outline-none"
-        >
-          {availableModels.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
+          onChange={setModel}
+          options={availableModels.map(m => ({ value: m.value, label: m.label }))}
+          disabled={geminiLoading}
+          placeholder={geminiLoading ? 'Loading models...' : 'Select Model'}
+          className="w-auto min-w-[150px]"
+          triggerClassName="h-8 py-0 px-2.5 font-semibold text-xs border dark:bg-surface-input dark:border-border hover:border-accent/30 dark:hover:border-accent/40 bg-white border-gray-200"
+        />
 
         {/* API Key Input */}
         <div className="flex-1 min-w-[180px] relative">
@@ -116,11 +133,14 @@ export default function ApiKeyBar({
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder={`Enter your ${provider} API key...`}
-            className="w-full h-8 px-3 pr-8 rounded-md text-xs font-mono transition-colors
+            className="w-full h-8 px-3 pr-10 rounded-md text-xs font-mono transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
               bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
               focus:ring-1 focus:ring-accent focus:border-accent outline-none"
           />
+          <div className="absolute right-8 top-1/2 -translate-y-1/2">
+            <ApiKeyInfo provider={provider} url={providerUrls[provider]} />
+          </div>
           <button
             onClick={() => setShowKey(!showKey)}
             className="absolute right-2 top-1/2 -translate-y-1/2 dark:text-text-muted text-gray-400
@@ -158,6 +178,15 @@ export default function ApiKeyBar({
         <div className="mt-2 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/20">
           <span className="text-[11px] text-warning font-medium">
             ⚠ Enter an API key to run this agent.
+          </span>
+        </div>
+      )}
+
+      {/* Gemini model fetch error */}
+      {geminiError && (
+        <div className="mt-2 px-2.5 py-1.5 rounded-md bg-warning/10 border border-warning/20">
+          <span className="text-[11px] text-warning font-medium">
+            ⚠ {geminiError}
           </span>
         </div>
       )}

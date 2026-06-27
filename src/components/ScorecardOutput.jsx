@@ -27,11 +27,11 @@ export default function ScorecardOutput({ data }) {
     )
   }
 
-  const score = parsed.matchScore ?? 0
+  const score = parsed?.matchScore ?? 0
   const scoreColor =
     score >= 70 ? '#22c55e' : score >= 40 ? '#f59e0b' : '#ef4444'
 
-  const recommendation = parsed.recommendation || 'N/A'
+  const recommendation = parsed?.recommendation || 'N/A'
   const recColor = {
     'Strong Yes': 'bg-green-500/20 text-green-400 border-green-500/30',
     Yes: 'bg-green-500/10 text-green-400 border-green-500/20',
@@ -92,7 +92,7 @@ export default function ScorecardOutput({ data }) {
       </div>
 
       {/* Criteria Breakdown */}
-      {parsed.criteria && (
+      {parsed?.criteria && typeof parsed.criteria === 'object' && !Array.isArray(parsed.criteria) && (
         <div className="p-4 rounded-lg dark:bg-surface-card bg-white border dark:border-border border-gray-200">
           <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-3">
             Criteria Breakdown
@@ -105,24 +105,24 @@ export default function ScorecardOutput({ data }) {
                     {name}
                   </span>
                   <span className="text-xs font-bold dark:text-text-primary text-gray-900">
-                    {val.score}/100
+                    {val?.score ?? 0}/100
                   </span>
                 </div>
                 <div className="w-full h-2 rounded-full dark:bg-surface-input bg-gray-100 overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
-                      width: `${val.score}%`,
+                      width: `${val?.score ?? 0}%`,
                       backgroundColor:
-                        val.score >= 70
+                        (val?.score ?? 0) >= 70
                           ? '#22c55e'
-                          : val.score >= 40
+                          : (val?.score ?? 0) >= 40
                           ? '#f59e0b'
                           : '#ef4444',
                     }}
                   />
                 </div>
-                {val.comment && (
+                {val?.comment && (
                   <p className="text-[11px] dark:text-text-muted text-gray-400 mt-0.5">
                     {val.comment}
                   </p>
@@ -135,7 +135,7 @@ export default function ScorecardOutput({ data }) {
 
       {/* Strengths & Gaps */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {parsed.strengths?.length > 0 && (
+        {Array.isArray(parsed?.strengths) && parsed.strengths.length > 0 && (
           <div className="p-4 rounded-lg dark:bg-surface-card bg-white border dark:border-border border-gray-200">
             <h3 className="text-sm font-semibold text-success mb-2">
               Top Strengths
@@ -154,7 +154,7 @@ export default function ScorecardOutput({ data }) {
           </div>
         )}
 
-        {parsed.gaps?.length > 0 && (
+        {Array.isArray(parsed?.gaps) && parsed.gaps.length > 0 && (
           <div className="p-4 rounded-lg dark:bg-surface-card bg-white border dark:border-border border-gray-200">
             <h3 className="text-sm font-semibold text-error mb-2">
               Top Gaps
@@ -175,7 +175,7 @@ export default function ScorecardOutput({ data }) {
       </div>
 
       {/* Reasoning */}
-      {parsed.reasoning && (
+      {parsed?.reasoning && (
         <div className="p-4 rounded-lg dark:bg-surface-card bg-white border dark:border-border border-gray-200">
           <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-2">
             Reasoning

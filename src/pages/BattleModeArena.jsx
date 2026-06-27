@@ -1,86 +1,121 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { Cpu, Loader2, Trophy, AlertCircle, ArrowLeft } from 'lucide-react'
-import { runAgent } from '../lib/llmAdapter'
-import BattleNavbar from '../components/BattleNavbar'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {
+  Cpu,
+  Loader2,
+  Trophy,
+  AlertCircle,
+  ArrowLeft,
+  ChevronDown,
+  ChevronRight,
+  Copy,
+  Check,
+} from "lucide-react";
+import { runAgent } from "../lib/llmAdapter";
+import BattleNavbar from "../components/BattleNavbar";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 const PROVIDERS = [
   {
-    id: 'openai',
-    label: 'GPT-4o',
-    model: 'gpt-4o',
-    color: 'yellow',
-    borderClass: 'border-yellow-400/30',
-    glowClass: 'shadow-yellow-400/10',
-    headerBg: 'bg-yellow-400/10',
-    textColor: 'text-yellow-400',
-    btnBg: 'bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border-yellow-400/30',
+    id: "openai",
+    label: "GPT-4o",
+    model: "gpt-4o",
+    color: "yellow",
+    borderClass: "border-yellow-400/40 battle-card-yellow",
+    glowClass: "hover:shadow-yellow-400/30",
+    headerBg: "bg-yellow-400/10 border-b border-yellow-400/30",
+    textColor: "text-yellow-400",
+    btnBg:
+      "bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border-yellow-400/40 border-2 hover:border-yellow-300/60 battle-btn-secondary",
+    loaderColor: "text-yellow-400",
   },
   {
-    id: 'anthropic',
-    label: 'Claude Sonnet',
-    model: 'claude-sonnet-4-6',
-    color: 'violet',
-    borderClass: 'border-violet-400/30',
-    glowClass: 'shadow-violet-400/10',
-    headerBg: 'bg-violet-400/10',
-    textColor: 'text-violet-400',
-    btnBg: 'bg-violet-400/10 hover:bg-violet-400/20 text-violet-400 border-violet-400/30',
+    id: "anthropic",
+    label: "Claude Sonnet",
+    model: "claude-sonnet-4-6",
+    color: "violet",
+    borderClass: "border-violet-400/40 battle-card-violet",
+    glowClass: "hover:shadow-violet-400/30",
+    headerBg: "bg-violet-400/10 border-b border-violet-400/30",
+    textColor: "text-violet-400",
+    btnBg:
+      "bg-violet-400/10 hover:bg-violet-400/20 text-violet-400 border-violet-400/40 border-2 hover:border-violet-300/60 battle-btn-secondary",
+    loaderColor: "text-violet-400",
   },
   {
-    id: 'gemini',
-    label: 'Gemini Flash',
-    model: 'gemini-2.5-flash',
-    color: 'blue',
-    borderClass: 'border-blue-400/30',
-    glowClass: 'shadow-blue-400/10',
-    headerBg: 'bg-blue-400/10',
-    textColor: 'text-blue-400',
-    btnBg: 'bg-blue-400/10 hover:bg-blue-400/20 text-blue-400 border-blue-400/30',
+    id: "gemini",
+    label: "Gemini Flash",
+    model: "gemini-2.5-flash",
+    color: "blue",
+    borderClass: "border-blue-400/40 battle-card-blue",
+    glowClass: "hover:shadow-blue-400/30",
+    headerBg: "bg-blue-400/10 border-b border-blue-400/30",
+    textColor: "text-blue-400",
+    btnBg:
+      "bg-blue-400/10 hover:bg-blue-400/20 text-blue-400 border-blue-400/40 border-2 hover:border-blue-300/60 battle-btn-secondary",
+    loaderColor: "text-blue-400",
   },
-]
+];
 
 function buildUserMessage(agent, inputs) {
-  const parts = []
+  const parts = [];
   agent.inputs.forEach((input) => {
-    const val = inputs[input.id]
-    if (!val || (Array.isArray(val) && val.length === 0)) return
+    const val = inputs[input.id];
+    if (!val || (Array.isArray(val) && val.length === 0)) return;
     parts.push(
       Array.isArray(val)
-        ? `${input.label}: ${val.join(', ')}`
-        : `${input.label}: ${val}`
-    )
-  })
-  return parts.join('\n\n')
+        ? `${input.label}: ${val.join(", ")}`
+        : `${input.label}: ${val}`,
+    );
+  });
+  return parts.join("\n\n");
 }
 
 export default function BattleModeArena() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const { agent, inputs, apiKeys } = location.state || {}
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { agent, inputs, apiKeys } = location.state || {};
+  useDocumentTitle(agent?.name ? `${agent.name} Battle` : "Battle Arena");
 
   const [results, setResults] = useState({
     openai: { loading: true, content: null, error: null, duration: null },
     anthropic: { loading: true, content: null, error: null, duration: null },
     gemini: { loading: true, content: null, error: null, duration: null },
-  })
+  });
+
+  const [promptViewerOpen, setPromptViewerOpen] = useState(false);
+  const [prompts, setPrompts] = useState({
+    openai: null,
+    anthropic: null,
+    gemini: null,
+  });
+
+  const [copiedProvider, setCopiedProvider] = useState(null);
 
   // Redirect if no state
   useEffect(() => {
     if (!agent || !inputs || !apiKeys) {
-      navigate('/battle/setup', { replace: true })
+      navigate("/battle/setup", { replace: true });
     }
-  }, [agent, inputs, apiKeys, navigate])
+  }, [agent, inputs, apiKeys, navigate]);
 
   // Fire all three API calls simultaneously
   useEffect(() => {
-    if (!agent || !inputs || !apiKeys) return
+    if (!agent || !inputs || !apiKeys) return;
 
-    const userMessage = buildUserMessage(agent, inputs)
+    const userMessage = buildUserMessage(agent, inputs);
 
     PROVIDERS.forEach((prov) => {
+      setPrompts((prev) => ({
+        ...prev,
+        [prov.id]: {
+          systemPrompt: agent.systemPrompt,
+          userMessage,
+        },
+      }));
+
       runAgent({
         provider: prov.id,
         model: prov.model,
@@ -97,7 +132,7 @@ export default function BattleModeArena() {
               error: null,
               duration: result.duration,
             },
-          }))
+          }));
         })
         .catch((err) => {
           setResults((prev) => ({
@@ -105,102 +140,285 @@ export default function BattleModeArena() {
             [prov.id]: {
               loading: false,
               content: null,
-              error: err.message || 'An unknown error occurred',
+              error: err.message || "An unknown error occurred",
               duration: null,
             },
-          }))
-        })
-    })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+          }));
+        });
+    });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePickWinner = (providerId) => {
-    const prov = PROVIDERS.find((p) => p.id === providerId)
-    navigate('/battle/winner', {
+    const prov = PROVIDERS.find((p) => p.id === providerId);
+    navigate("/battle/winner", {
       state: {
         provider: prov,
         content: results[providerId].content,
         duration: results[providerId].duration,
         agentName: agent?.name,
       },
-    })
-  }
+    });
+  };
 
-  if (!agent) return null
+  const handleCopyPrompt = (providerId, promptData) => {
+    const copyText = `System Prompt: ${promptData?.systemPrompt || "Not available"}\n\nUser Prompt: ${promptData?.userMessage || "Not available"}`;
+    navigator.clipboard.writeText(copyText).catch(console.error);
+    setCopiedProvider(providerId);
+    setTimeout(() => {
+      setCopiedProvider(null);
+    }, 2000);
+  };
+
+  if (!agent) return null;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
       <BattleNavbar />
 
       <main className="pt-14 px-4 py-8">
         {/* Back */}
         <button
-          onClick={() => navigate('/battle/setup')}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white transition-colors mb-6"
+          onClick={() => navigate("/battle/setup")}
+          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white 
+            transition-all duration-200 hover:gap-2 mb-8"
         >
           <ArrowLeft size={14} />
           Back to Setup
         </button>
 
         {/* Header */}
-        <div className="text-center mb-8 battle-fade-in">
-          <h1 className="text-2xl font-bold mb-1">
+        <div className="text-center mb-10 battle-fade-in">
+          <h1 className="text-3xl font-extrabold tracking-wider mb-2 text-white">
             Battle Arena
           </h1>
-          <p className="text-xs text-gray-400">
-            Running <span className="text-white font-medium">{agent.name}</span> across three providers
+          <p className="text-sm text-gray-300">
+            Running{" "}
+            <span className="text-white font-semibold">{agent.name}</span>{" "}
+            across three providers
           </p>
         </div>
 
+        {/* Prompt Comparison Viewer */}
+        <div className="max-w-7xl mx-auto mb-6">
+          <button
+            onClick={() => setPromptViewerOpen(!promptViewerOpen)}
+            className="w-full flex items-center justify-between px-5 py-3 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-all duration-200"
+          >
+            <span className="text-sm font-semibold text-gray-200">
+              Prompt Comparison Viewer
+            </span>
+            {promptViewerOpen ? (
+              <ChevronDown size={18} className="text-gray-400" />
+            ) : (
+              <ChevronRight size={18} className="text-gray-400" />
+            )}
+          </button>
+
+          {promptViewerOpen && (
+            <div className="mt-4 battle-fade-in">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* OpenAI Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-yellow-400">
+                      OpenAI
+                    </span>
+                    <button
+                      onClick={() => handleCopyPrompt("openai", prompts.openai)}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "openai" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.openai?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.openai?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Claude Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-violet-400">
+                      Claude
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleCopyPrompt("anthropic", prompts.anthropic)
+                      }
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "anthropic" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.anthropic?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.anthropic?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Gemini Column */}
+                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+                    <span className="text-sm font-bold text-blue-400">
+                      Gemini
+                    </span>
+                    <button
+                      onClick={() => handleCopyPrompt("gemini", prompts.gemini)}
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                    >
+                      {copiedProvider === "gemini" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="text-gray-400 hover:text-gray-300"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.gemini?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                        {prompts.gemini?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Three Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {PROVIDERS.map((prov, idx) => {
-            const r = results[prov.id]
+            const r = results[prov.id];
             return (
               <div
                 key={prov.id}
                 className={`rounded-xl border ${prov.borderClass} bg-gray-900/50 backdrop-blur-sm
-                  shadow-lg ${prov.glowClass} flex flex-col battle-fade-in`}
+                  shadow-lg flex flex-col battle-fade-in transition-all duration-300`}
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
                 {/* Column Header */}
-                <div className={`flex items-center gap-2.5 px-4 py-3 rounded-t-xl ${prov.headerBg} border-b ${prov.borderClass}`}>
+                <div
+                  className={`flex items-center gap-2.5 px-5 py-4 rounded-t-xl ${prov.headerBg}`}
+                >
                   <Cpu size={16} className={prov.textColor} />
-                  <span className={`text-sm font-bold ${prov.textColor}`}>{prov.label}</span>
+                  <span
+                    className={`text-sm font-bold ${prov.textColor} tracking-wide`}
+                  >
+                    {prov.label}
+                  </span>
                   {r.duration && (
-                    <span className="ml-auto text-[10px] text-gray-500 font-medium">
+                    <span className="ml-auto text-[11px] text-gray-400 font-medium">
                       {(r.duration / 1000).toFixed(1)}s
                     </span>
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 overflow-y-auto max-h-[60vh]">
+                <div className="flex-1 p-5 overflow-y-auto max-h-[60vh]">
                   {r.loading && (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3">
-                      <Loader2 size={24} className={`animate-spin ${prov.textColor}`} />
-                      <span className="text-xs text-gray-400">
+                    <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <Loader2
+                        size={28}
+                        className={`animate-spin ${prov.loaderColor}`}
+                      />
+                      <span className="text-xs text-gray-400 font-medium">
                         {prov.label} is generating...
                       </span>
                     </div>
                   )}
 
                   {r.error && (
-                    <div className="flex flex-col items-center justify-center py-12 gap-3 text-center">
-                      <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                      <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
                         <AlertCircle size={24} className="text-red-400" />
                       </div>
-                      <p className="text-xs text-red-400 max-w-xs">{r.error}</p>
+                      <p className="text-xs text-red-400 max-w-xs font-medium">
+                        {r.error}
+                      </p>
                     </div>
                   )}
 
                   {r.content && (
-                    <div className="markdown-output text-sm text-gray-200">
-                      {agent.outputType === 'markdown' ? (
+                    <div className="markdown-output text-sm text-gray-100 leading-relaxed">
+                      {agent.outputType === "markdown" ? (
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {r.content}
                         </ReactMarkdown>
                       ) : (
-                        <pre className="whitespace-pre-wrap font-sans leading-relaxed">
+                        <pre className="whitespace-pre-wrap font-sans">
                           {r.content}
                         </pre>
                       )}
@@ -210,11 +428,11 @@ export default function BattleModeArena() {
 
                 {/* Pick Winner Button */}
                 {r.content && !r.loading && (
-                  <div className="p-4 border-t border-gray-800">
+                  <div className="p-5 border-t border-gray-800/50">
                     <button
                       onClick={() => handlePickWinner(prov.id)}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
-                        text-xs font-bold border transition-all duration-200 active:scale-[0.97]
+                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg
+                        text-xs font-bold border-2 transition-all duration-200 active:scale-95
                         ${prov.btnBg}`}
                     >
                       <Trophy size={14} />
@@ -223,10 +441,10 @@ export default function BattleModeArena() {
                   </div>
                 )}
               </div>
-            )
+            );
           })}
         </div>
       </main>
     </div>
-  )
+  );
 }

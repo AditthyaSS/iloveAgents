@@ -1,0 +1,164 @@
+name: Auto Label New Issues
+
+# Trigger: fires whenever a new issue is opened
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Read the issue title and body, then apply relevant labels based on
+      # keyword matching rules. Always applies "needs review" and "triage".
+      # Never applies level:* labels — those are reserved for the maintainer.
+      - name: Apply labels based on issue content
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.payload.issue.number;
+            const title = (context.payload.issue.title || '').toLowerCase();
+            const body  = (context.payload.issue.body  || '').toLowerCase();
+            const text  = `${title} ${body}`;
+
+            // Labels to apply — always start with these two
+            const labels = new Set(['needs review', 'triage']);
+
+            // ── Bug
+            if (/\b(bug|error|broken|not working|crash|issue|fail|exception)\b/.test(text)) {
+              labels.add('type:bug');
+            }
+
+            // ── Feature / Enhancement
+            if (/\b(feature|add|new|request|improve|improvement|suggestion|suggest|enhance)\b/.test(text)) {
+              labels.add('type:feature');
+              labels.add('enhancement');
+            }
+
+            // ── Docs
+            if (/\b(docs|documentation|readme|guide|wiki|contributing)\b/.test(text)) {
+              labels.add('type:docs');
+              labels.add('documentation');
+            }
+
+            // ── Design
+            if (/\b(design|ui|style|layout|css|visual|theme|colour|color)\b/.test(text)) {
+              labels.add('type:design');
+            }
+
+            // ── Performance
+            if (/\b(performance|slow|speed|optimize|optimise|lag|latency|fast)\b/.test(text)) {
+              labels.add('type:performance');
+            }
+
+            // ── Security
+            if (/\b(security|vulnerability|auth|exploit|injection|xss|csrf)\b/.test(text)) {
+              labels.add('type:security');
+            }
+
+            // ── Refactor
+            if (/\b(refactor|cleanup|clean up|restructure|reorganize|reorganise)\b/.test(text)) {
+              labels.add('type:refactor');
+            }
+
+            // ── Testing
+            if (/\b(test|testing|coverage|unit test|e2e|integration test)\b/.test(text)) {
+              labels.add('type:testing');
+            }
+
+            // ── Accessibility
+            if (/\b(accessibility|a11y|screen reader|keyboard nav|wcag|aria)\b/.test(text)) {
+              labels.add('type:accessibility');
+            }
+
+            // ── New Agent submission
+            if (/\b(new agent|add agent|submit agent|agent submission|adding agent)\b/.test(text)) {
+              labels.add('new agents');
+              labels.add('contribution-welcome');
+              labels.add('help wanted');
+            }
+
+            // ── New domain / category
+            if (/\b(new domain|new category|new section|add category|add domain)\b/.test(text)) {
+              labels.add('new-domain');
+            }
+
+            // ── GSSoC
+            if (/\b(gssoc|girlscript|girl script)\b/.test(text)) {
+              labels.add("GSSoC'26");
+            }
+
+            // ── Question — skip contribution labels if it's a question
+            const isQuestion = /\b(question|how to|how do|help me|can i|is it possible|what is|why is|where is)\b/.test(text);
+            if (isQuestion) {
+              labels.add('question');
+              // Remove contribution-welcome and help wanted if added by other rules
+              labels.delete('contribution-welcome');
+              labels.delete('help wanted');
+            }
+
+            // ── General discussion — skip contribution labels
+            const isDiscussion = /\b(discuss|discussion|thoughts|opinion|feedback|idea|ideas|suggestion)\b/.test(text);
+            if (isDiscussion && !labels.has('type:feature') && !labels.has('type:bug')) {
+              labels.add('discussion');
+              labels.delete('contribution-welcome');
+              labels.delete('help wanted');
+            }
+
+            // ── Fallback: if no specific type was detected beyond the base labels,
+            //    mark as open for contribution
+            const specificTypes = [
+              'type:bug','type:feature','type:docs','type:design',
+              'type:performance','type:security','type:refactor',
+              'type:testing','type:accessibility','new agents',
+              'new-domain','question','discussion'
+            ];
+            const hasSpecific = specificTypes.some(l => labels.has(l));
+            if (!hasSpecific) {
+              labels.add('help wanted');
+              labels.add('contribution-welcome');
+            }
+
+            // ── Safety guard: NEVER add level:* labels under any circumstance
+            ['level:beginner','level:intermediate','level:advanced','level:critical']
+              .forEach(l => labels.delete(l));
+
+            const labelsArray = [...labels];
+            console.log(`Applying labels to issue #${issueNumber}:`, labelsArray);
+
+            // Ensure every label exists in the repo before applying
+            // (GitHub will error if a label doesn't exist)
+            const existingLabels = await github.paginate(
+              github.rest.issues.listLabelsForRepo,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              }
+            );
+            const existingNames = new Set(existingLabels.map(l => l.name));
+
+            // Filter to only labels that actually exist in the repo
+            const validLabels = labelsArray.filter(l => existingNames.has(l));
+            const skipped = labelsArray.filter(l => !existingNames.has(l));
+
+            if (skipped.length > 0) {
+              console.log('Skipping labels not found in repo:', skipped);
+            }
+
+            if (validLabels.length === 0) {
+              console.log('No valid labels to apply.');
+              return;
+            }
+
+            // Apply all valid labels to the issue
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              labels: validLabels,
+            });
+
+            console.log('Labels applied successfully:', validLabels);
