@@ -154,10 +154,11 @@ export default function CustomSelect({
                 onClick={() => handleSelect(val)}
                 onKeyDown={(e) => handleOptionKeyDown(e, val)}
                 className={`w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors duration-150 text-left
+                  text-gray-700 dark:text-text-secondary
                   focus:outline-none focus:ring-2 focus:ring-accent/40
                   ${isSelected
                     ? accentItem
-                    : 'dark:text-text-secondary dark:hover:bg-surface-hover dark:hover:text-text-primary hover:bg-gray-50 hover:text-gray-900'
+                    : 'dark:hover:bg-surface-hover dark:hover:text-text-primary hover:bg-gray-50 hover:text-gray-900'
                   }`}
               >
                 {icon}

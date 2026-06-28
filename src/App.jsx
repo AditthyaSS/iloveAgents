@@ -5,8 +5,8 @@ import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
 import HomePage from './pages/HomePage'
 import AgentPage from './pages/AgentPage'
-import ScrollToTop from "./components/ScrollToTop";
-import ScrollToBottom from "./components/ScrollToBottom";
+import ScrollToTop from './components/ScrollToTop'
+import ScrollToBottom from './components/ScrollToBottom'
 import BattleModeLanding from './pages/BattleModeLanding'
 import BattleModeSetup from './pages/BattleModeSetup'
 import BattleModeArena from './pages/BattleModeArena'
@@ -17,8 +17,12 @@ import WorkflowDetail from './pages/WorkflowDetail'
 import WorkflowRunner from './pages/WorkflowRunner'
 import NotFoundPage from './pages/NotFoundPage'
 import SuitesPage from './pages/SuitesPage'
+import CollectionsPage from './pages/CollectionsPage'
+import CollectionDetailPage from './pages/CollectionDetailPage'
+import SchedulerPage from './pages/SchedulerPage'
+import ErrorBoundary from './components/ErrorBoundary'
+import Privacy from './pages/Privacy'
 
-// Shared layout: Navbar + Sidebar + main content area
 function MainLayout({ sidebarOpen, setSidebarOpen }) {
   return (
     <>
@@ -41,27 +45,34 @@ export default function App() {
     <div className="min-h-screen transition-theme dark:bg-surface bg-gray-50">
       <ScrollToTop />
       <ScrollToBottom />
-      <Routes>
-        {/* Battle Mode — full-screen, own layout */}
-        <Route path="/battle" element={<BattleModeLanding />} />
-        <Route path="/battle/setup" element={<BattleModeSetup />} />
-        <Route path="/battle/arena" element={<BattleModeArena />} />
-        <Route path="/battle/winner" element={<BattleModeWinner />} />
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/battle" element={<BattleModeLanding />} />
+          <Route path="/battle/setup" element={<BattleModeSetup />} />
+          <Route path="/battle/arena" element={<BattleModeArena />} />
+          <Route path="/battle/winner" element={<BattleModeWinner />} />
 
-        {/* Main app layout — all routes share Navbar + Sidebar */}
-        <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/agent/:id" element={<AgentPage />} />
-          {/* Suites */}
-          <Route path="/suites" element={<SuitesPage />} />
-          {/* Workflow routes */}
-          <Route path="/workflows" element={<WorkflowLibrary />} />
-          <Route path="/workflows/build" element={<WorkflowBuilder />} />
-          <Route path="/workflows/:id" element={<WorkflowDetail />} />
-          <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
+          <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/agent/:id" element={<AgentPage />} />
+
+            <Route path="/suites" element={<SuitesPage />} />
+
+            <Route path="/collections" element={<CollectionsPage />} />
+            <Route path="/collections/:id" element={<CollectionDetailPage />} />
+
+            <Route path="/scheduler" element={<SchedulerPage />} />
+
+            <Route path="/workflows" element={<WorkflowLibrary />} />
+            <Route path="/workflows/build" element={<WorkflowBuilder />} />
+            <Route path="/workflows/:id" element={<WorkflowDetail />} />
+            <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
+
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </ErrorBoundary>
     </div>
   )
 }

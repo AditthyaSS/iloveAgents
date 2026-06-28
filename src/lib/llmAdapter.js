@@ -236,8 +236,9 @@ async function handleErrorResponse(response, provider = "unknown") {
  * @param {string} params.userMessage
  * @returns {Promise<{content: string, tokens: number, duration: number}>}
  */
-export async function runAgent({ provider, model, apiKey, systemPrompt, userMessage }) {
+export async function runAgent({ provider, model, apiKey, systemPrompt, userMessage }, options = {})  {
   const config = PROVIDER_CONFIGS[provider]
+  const { signal } = options || {};
 
   if (!config) {
     throw new Error(`Unsupported provider: ${provider}`)
@@ -262,6 +263,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
       method: 'POST',
       headers,
       body: JSON.stringify(body),
+      signal,
     })
 
     if (!response.ok) {
