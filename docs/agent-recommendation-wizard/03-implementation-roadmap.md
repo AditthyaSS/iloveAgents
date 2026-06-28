@@ -1,80 +1,151 @@
-# Agent Collections: Implementation Roadmap
+# Smart Agent Recommendation Wizard: Implementation Roadmap
 
-## Phase 1: types, constants, localStorage helpers
+This roadmap is planning only. Do not implement in this documentation refresh.
 
-- Add localStorage constants and limits.
-- Define the persisted collection shape with clear JSDoc or inline documentation.
-- Implement safe load/save helpers with JSON parse protection.
-- Normalize corrupted state, dedupe agent IDs, and cap stored values at product limits.
+## Phase 1: Types, constants, and option catalog
 
-## Phase 2: collection state/store/hook
+- **Files likely affected**
+  - New: `src/lib/agentRecommendation/constants.js`
+  - New: `src/lib/agentRecommendation/types.js` or JSDoc in constants/scoring files
+- **Changes required**
+  - Define wizard step IDs, option IDs, labels, category mappings, task/output mappings, and `DEFAULT_RECOMMENDATION_WEIGHTS`.
+  - Document `PreferenceModel` and `RecommendationResult` shapes with JSDoc because the project is JavaScript-only.
+  - Derive category options from loaded agents in UI rather than hardcoding only `src/agents/categories.js`.
+- **Risk level**: Low. Pure constants with no runtime integration.
+- **Validation plan**
+  - Import constants in a temporary/local check or through build once integrated.
+  - Confirm option IDs match scoring rules.
+  - Confirm no application source behavior changes until later phases.
 
-- Add a localStorage-backed collection hook modeled after the existing favorites sync pattern.
-- Expose collection state plus create, delete, rename, add-agent, remove-agent, lookup, and membership helpers.
-- Return consistent mutation results: `{ ok: true, ... }` for success and `{ ok: false, error }` for failures.
+## Phase 2: Recommendation engine
 
-## Phase 3: create/delete/rename collection UI
+- **Files likely affected**
+  - New: `src/lib/agentRecommendation/scoring.js`
+  - New: `src/lib/agentRecommendation/explanations.js`
+  - Optional new: `src/lib/agentRecommendation/rules.js`
+- **Changes required**
+  - Implement pure `scoreAgent()` and `recommendAgents()` functions.
+  - Tokenize free-text input and agent searchable text.
+  - Return sorted result objects with scores, match percentages, reasons, and matched signals.
+  - Handle empty/invalid agent arrays safely.
+- **Risk level**: Low to Medium. Logic is new and isolated, but poor scoring could reduce user trust.
+- **Validation plan**
+  - Add lightweight unit-style checks if a test runner is introduced; otherwise create deterministic fixtures during implementation review.
+  - Manually verify that known goals produce expected top agents, e.g. code review → `code-reviewer`, SEO content → `blog-post-seo-optimizer`, SQL → SQL/database agents.
+  - Run `npm run build`.
 
-- Add the `/collections` overview page.
-- Provide empty, max-limit, create, rename, and delete states.
-- Keep validation messages close to the action that produced them.
+## Phase 3: Wizard state hook
 
-## Phase 4: add/remove agents from collections
+- **Files likely affected**
+  - New: `src/hooks/useRecommendationWizard.js` or `src/components/recommendation/useRecommendationWizard.js`
+- **Changes required**
+  - Manage modal open/completion state, step index, preferences, validation errors, and computed results.
+  - Provide `nextStep`, `previousStep`, `setPreference`, `resetWizard`, and `completeWizard` actions.
+  - Keep state local and non-persistent.
+- **Risk level**: Low. No app-wide store needed.
+- **Validation plan**
+  - Validate required steps cannot advance without an answer.
+  - Validate reset clears preferences/results.
+  - Validate back/next boundaries.
 
-- Add `src/components/collections/CollectionAgentPicker.jsx`.
-- Add or update `src/pages/CollectionDetailPage.jsx`.
-- Show a searchable checklist of all agents.
-- Treat checked rows as collection members and unchecked rows as non-members.
-- Toggling a checked agent removes it; toggling an unchecked agent adds it.
-- Enforce duplicate prevention and the 15-agent collection limit.
-- Disable unchecked rows while the collection is full while keeping selected rows removable.
+## Phase 4: Wizard UI
 
-## Phase 5: routes and page metadata
+- **Files likely affected**
+  - New: `src/components/recommendation/RecommendationWizardModal.jsx`
+  - New: `src/components/recommendation/RecommendationWizardStep.jsx`
+  - New: `src/components/recommendation/RecommendationWizardEntry.jsx`
+  - Reference only: `src/components/CollectionModal.jsx`, `src/components/KeyboardShortcutsModal.jsx`, `src/components/CustomSelect.jsx`
+- **Changes required**
+  - Build modal using existing overlay/panel conventions.
+  - Render single-choice, multi-choice, category, and optional free-text steps.
+  - Add accessible labels, focus management, keyboard close, progress indicator, back/next controls, and mobile-friendly layout.
+  - Keep styling consistent with rounded cards, accent buttons, dark theme tokens, and small text conventions.
+- **Risk level**: Medium. Modal focus/accessibility and responsive layout need care.
+- **Validation plan**
+  - Manually test keyboard navigation, escape/close, and focus return.
+  - Test in dark/light themes.
+  - Verify mobile width does not overflow.
 
-- Add `/collections` and `/collections/:id` under the main layout in `src/App.jsx`.
-- Set document titles for the collections overview and detail pages.
-- Preserve battle routes as full-screen routes outside the main layout.
+## Phase 5: Results UI
 
-## Phase 6: collection detail edge cases
+- **Files likely affected**
+  - New: `src/components/recommendation/RecommendationResults.jsx`
+  - New: `src/components/recommendation/RecommendationResultCard.jsx`
+  - Optional reference/reuse: `src/components/AgentCard.jsx`, `src/components/CollectionPicker.jsx`
+- **Changes required**
+  - Show ranked result cards with agent name, category, provider, match percentage, and reasons.
+  - Link primary action to `/agent/:id`.
+  - Provide no-result state and “Adjust answers” / “Start over” actions.
+  - Decide whether to include favorite/collection actions in v1. Recommended: skip in v1 unless trivial; existing agent pages/cards already support those actions.
+- **Risk level**: Medium. Result metadata must remain understandable and deterministic.
+- **Validation plan**
+  - Verify all result links navigate to valid agent pages.
+  - Verify percentages are bounded 0–100.
+  - Verify explanations match actual scoring signals.
+  - Verify no-result state appears for intentionally over-constrained preferences if strict filters are added.
 
-- Resolve collections with `getCollectionById(id)`.
-- Resolve collection `agentIds` against agents loaded through `useAgents()`.
-- Handle missing collections with a not-found state.
-- Filter stale or missing agent IDs so deleted or renamed agents do not crash the page.
+## Phase 6: Homepage integration
 
-## Phase 7: sidebar integration
+- **Files likely affected**
+  - Modify: `src/pages/HomePage.jsx`
+  - Possibly no changes: `src/App.jsx` if modal-on-homepage is chosen
+- **Changes required**
+  - Add wizard entry CTA near the homepage hero/search area.
+  - Pass loaded `agents` and `agentsLoading` to the wizard.
+  - Ensure wizard state does not alter `searchQuery`, `selectedCategory`, favorites, recent agents, collections, or run history.
+  - Keep existing Battle Mode CTA visible.
+- **Risk level**: Medium. `HomePage.jsx` is already large and owns many discovery sections.
+- **Validation plan**
+  - Verify homepage still renders loading skeletons and full grid.
+  - Verify search/category filters still work before and after using the wizard.
+  - Verify Favorites and Recently Used sections still hide/show according to existing rules.
 
-- Add a Collections section below Suites and above agent categories.
-- Show the all-collections link, collection links, and live agent-count badges.
-- Keep category search and active-agent category expansion unchanged.
-- Close the mobile sidebar when collection links are selected.
+## Phase 7: Responsive improvements
 
-## Phase 8: validation and manual QA
+- **Files likely affected**
+  - New wizard/result component files
+  - Possibly modify: `src/index.css` only if reusable animation/focus styles are absolutely needed
+- **Changes required**
+  - Ensure modal/panel works on narrow screens with scrollable content.
+  - Use single-column answer cards on mobile and multi-column layouts at `sm`/`md` where appropriate.
+  - Avoid interfering with mobile navbar/sidebar overlays.
+- **Risk level**: Medium. Nested fixed overlays can conflict with existing fixed navbar/sidebar.
+- **Validation plan**
+  - Manually test desktop, tablet, and mobile viewport sizes.
+  - Verify modal content remains scrollable and close controls remain reachable.
+  - Verify no horizontal overflow.
 
-- Run `npm run build`.
-- Run `npm run dev`.
-- Verify creating, renaming, deleting, opening, adding to, removing from, and refreshing collections.
-- Verify Favorites, Suites, Workflows, Battle routes, and the agent registry still render.
+## Phase 8: Validation and edge cases
 
-## Debugging Note: Blank Page After Merge
+- **Files likely affected**
+  - Recommendation utility files
+  - Wizard/result components
+- **Changes required**
+  - Handle empty agent list, agent loading state, missing/duplicate categories, unknown provider values, empty descriptions, and corrupted preference state.
+  - Ensure result cards tolerate stale IDs by resolving against current `agents` before rendering.
+  - Ensure deterministic tie-breaking.
+- **Risk level**: Low to Medium.
+- **Validation plan**
+  - Run `npm run build`.
+  - Run `git diff --check`.
+  - Manually test no-answer validation and reset flow.
 
-The blank page was caused by unresolved Agent Collections merge fallout. The active runtime issue was `CollectionAgentPicker.jsx` importing `MAX_COLLECTION_AGENTS`, which was not exported by `src/lib/useCollections.js`; Vite failed module evaluation for the collection detail route. The roadmap doc also still contained unresolved conflict markers.
+## Phase 9: Manual QA
 
-Fixed by aligning the picker with the exported `MAX_AGENTS_PER_COLLECTION` constant, making picker mutation feedback tolerate both boolean and `{ ok, error }` return values, keeping collection detail stale-agent handling non-crashing, and cleaning the roadmap conflict markers.
+- **Files likely affected**
+  - None beyond feature files; this is validation.
+- **Changes required**
+  - Execute the checklist in `05-qa-checklist.md`.
+  - Record any visual regressions or scoring surprises.
+- **Risk level**: Low.
+- **Validation plan**
+  - Complete manual QA across homepage, search, favorites, suites, collections, and agent runner.
+  - Take screenshots if the final implementation creates a perceptible runnable web-app change.
 
-Validation commands run:
+## Files intentionally not changed by the wizard v1
 
-- `npm run build`
-- `git diff --check`
-
-## Agent Loading Convention Note
-
-Agent Collections pages now use `useAgents()` instead of importing directly from `src/agents/registry.js`. Collection detail builds `agentById` from the hook-provided `agents` array and renders safe loading/error states while the provider is resolving agent definitions. The collections overview also uses the hook for preview names and keeps saved collection data visible if agent previews are loading or unavailable.
-
-Validation commands run:
-
-- `npm run build`
-- `git diff --check`
-- direct registry import search for Agent Collections files
-
-Remaining direct registry imports are existing non-collection code paths, including `useAgents`, `HomePage`, `AgentPage`, workflow pages, `Sidebar`, and `SuggestedChainPills`; these were intentionally left unchanged.
+- `src/agents/definitions/*.js`: do not add recommendation metadata to every agent for v1.
+- `src/suites/suitesData.js`: do not encode the wizard as a suite.
+- `src/components/AgentRunner.jsx`: do not prefill or alter runner behavior.
+- `src/lib/useFavorites.js` and `src/lib/useCollections.js`: do not persist wizard recommendations through these hooks automatically.
+- `src/App.jsx`: avoid route changes if the modal-on-homepage approach is used.

@@ -1,173 +1,235 @@
-# Agent Collections: Proposed Feature Architecture
+# Smart Agent Recommendation Wizard: Feature Architecture
 
-## Goals
+## Goal
 
-Agent Collections should let users create personal named groups of agents while keeping them separate from Favorites and maintainer-curated Suites. The first implementation should be browser-local only and persisted in localStorage.
+Help users choose useful agents from the current registry by answering a short guided wizard. The first implementation should be local, deterministic, and rule-based. It should not change agent definitions, routes, suites, favorites, collections, or runner behavior unless the user takes an existing explicit action such as opening/favoriting/collecting an agent.
 
-Acceptance limits:
+## Integration principles
 
-- Maximum **10 collections**.
-- Maximum **15 agents per collection**.
-- Supabase sync is a future stretch goal only.
+- Use the current agent registry from `src/agents/registry.js` / `src/lib/useAgents.jsx` as the only source of agent data.
+- Return recommendations as references to existing agent IDs plus scoring metadata.
+- Keep wizard state separate from Favorites (`src/lib/useFavorites.js`), Suites (`src/suites/suitesData.js`), Collections (`src/lib/useCollections.js`), and Agent Runner state (`src/components/AgentRunner.jsx`).
+- Do not require an API key for v1 recommendations.
+- Do not persist wizard answers in v1 unless implementation requirements change.
 
-## Data model
+## Preference model
 
-Recommended persisted shape:
+Recommended in-memory shape:
 
 ```js
 {
-  version: 1,
-  collections: [
-    {
-      id: 'col_...',
-      name: 'Writing Stack',
-      agentIds: ['tone-rewriter', 'blog-post-seo-optimizer'],
-      createdAt: '2026-06-22T00:00:00.000Z',
-      updatedAt: '2026-06-22T00:00:00.000Z'
-    }
-  ]
+  primaryGoal: 'write-content' | 'build-software' | 'learn' | 'research' | 'sell' | 'design' | 'operate' | 'other',
+  categories: ['Engineering', 'Marketing'],
+  taskTypes: ['generate', 'review', 'summarize', 'plan', 'analyze', 'debug'],
+  outputFormat: 'document' | 'code' | 'checklist' | 'strategy' | 'email' | 'data' | 'any',
+  experienceLevel: 'beginner' | 'intermediate' | 'advanced' | 'any',
+  urgency: 'quick' | 'thorough' | 'any',
+  providerPreference: 'openai' | 'anthropic' | 'gemini' | 'any',
+  freeTextGoal: ''
 }
 ```
 
-Why this shape:
+Notes:
 
-- `version` allows future migrations.
-- `id` decouples URL identity from mutable names.
-- `name` supports user-defined labels.
-- `agentIds` mirrors existing favorites/suites/workflows patterns that reference agents by ID.
-- Timestamps make sorting and future sync conflict handling easier.
+- `categories` should use category strings currently present on loaded agents, not only `src/agents/categories.js`, because the homepage also derives categories from loaded data.
+- `freeTextGoal` should be optional in the rule-based version. It can be tokenized against agent name/description/category, but should not call an LLM.
+- Keep answer IDs stable and display labels separate so copy can change without changing scoring rules.
 
-## localStorage key
+## Recommendation result model
 
-Recommended key: `ila_agent_collections_v1`.
+Recommended result shape:
 
-Rationale:
+```js
+{
+  agentId: 'code-reviewer',
+  score: 84,
+  matchPercentage: 92,
+  reasons: [
+    'Matches your Engineering focus',
+    'Strong fit for review/debug tasks',
+    'Supports your provider preference'
+  ],
+  matchedSignals: {
+    category: true,
+    taskType: ['review', 'debug'],
+    provider: true,
+    textTerms: ['code', 'review']
+  }
+}
+```
 
-- Uses the existing `ila_` prefix from `ila_favorites` and `ila_theme`.
-- Includes feature name and version.
-- Avoids collisions with `recentAgents` and `iloveAgents_history`.
+Rules:
 
-## Constants and validation
+- `agentId` is the only durable reference.
+- `score` can be raw weighted score.
+- `matchPercentage` should be normalized relative to the maximum possible score or top score so users get stable, explainable percentages.
+- `reasons` should be short human-readable explanations for “Why this agent?” UI.
+- Results should be sorted by score descending, then by exact category/provider matches, then by agent name for deterministic ordering.
 
-Create a small constants module, likely `src/lib/agentCollections/constants.js`, with:
+## Wizard state model
 
-- `COLLECTIONS_STORAGE_KEY = 'ila_agent_collections_v1'`
-- `MAX_COLLECTIONS = 10`
-- `MAX_AGENTS_PER_COLLECTION = 15`
-- `COLLECTION_NAME_MAX_LENGTH` if the UI needs a reasonable name cap.
+Use a dedicated hook in implementation, for example `src/hooks/useRecommendationWizard.js` or `src/features/agent-recommendation-wizard/useRecommendationWizard.js` if a feature folder is introduced:
 
-Validation rules should live in the collection service/hook, not just the UI:
+```js
+{
+  isOpen: false,
+  currentStepIndex: 0,
+  preferences: {},
+  results: [],
+  hasCompleted: false,
+  errors: {},
+  setPreference,
+  nextStep,
+  previousStep,
+  resetWizard,
+  completeWizard
+}
+```
 
-- Trim names before saving.
-- Reject empty names.
-- Decide whether duplicate names are allowed. Recommended: reject duplicates case-insensitively after trimming because sidebar labels become ambiguous.
-- Reject creating the 11th collection.
-- Reject adding the 16th unique agent to a collection.
-- Prevent duplicate agent IDs in one collection.
-- Ignore or surface errors for unknown agent IDs. Persisting unknown IDs is risky because renamed/removed agents could leave dead links; rendering pages can filter unknown IDs against the current registry.
+State should remain component-local for v1. A hook is useful for testability and for keeping the UI component thin, but it should not become a global app store.
 
-## Collection service/store design
+## Recommendation engine architecture
 
-Recommended structure:
+Create pure utilities that can be tested without React:
 
-- `src/lib/agentCollections/storage.js`
-  - `loadCollectionsState()`
-  - `saveCollectionsState(state)`
-  - `normalizeCollectionsState(raw)` for corrupted/missing data and future migrations.
-- `src/lib/agentCollections/useAgentCollections.js`
-  - Hook API modeled after `useFavorites.js`, with a module-level listener set for cross-component synchronization.
-  - Returns state and actions:
-    - `collections`
-    - `createCollection(name)`
-    - `deleteCollection(collectionId)`
-    - `renameCollection(collectionId, name)`
-    - `addAgentToCollection(collectionId, agentId)`
-    - `removeAgentFromCollection(collectionId, agentId)`
-    - `isAgentInCollection(collectionId, agentId)`
-    - `getCollectionsForAgent(agentId)`
-  - Actions should return a structured result such as `{ ok: true, collection }` or `{ ok: false, error }` so UI can display validation messages without throwing.
+- `src/lib/agentRecommendation/constants.js`
+  - Wizard option IDs/labels.
+  - Scoring weights.
+  - Stop words or text token settings if needed.
+- `src/lib/agentRecommendation/scoring.js`
+  - `scoreAgent(agent, preferences, weights)`.
+  - `recommendAgents(agents, preferences, options)`.
+  - `normalizeScore(score, maxScore)`.
+- `src/lib/agentRecommendation/explanations.js`
+  - `buildRecommendationReasons(agent, preferences, matchedSignals)`.
+- Optional `src/lib/agentRecommendation/rules.js`
+  - Category/task/output/provider mapping tables.
 
-This mirrors Favorites while keeping data and behavior separate. Do not overload `useFavorites()` or `suitesData.js`.
+Keep the engine independent of React, localStorage, router, and UI components.
 
-## UI components needed
+## Rule-based scoring
 
-Recommended new components:
+Suggested signals:
 
-- `src/components/collections/CreateCollectionForm.jsx`
-  - Name input, create button, validation message, disabled state at 10 collections.
-- `src/components/collections/CollectionCard.jsx`
-  - Displays collection name, count, sample agents, actions.
-- `src/components/collections/CollectionAgentPicker.jsx`
-  - Lets users add/remove agents from a specific collection from the full registry.
-- `src/components/collections/AgentCollectionMenu.jsx`
-  - Optional compact menu on `AgentCard` or `AgentPage` to add/remove the current agent from collections.
-- `src/components/collections/CollectionSidebarSection.jsx`
-  - Displays a “Collections” heading and collection links in `Sidebar.jsx`.
+1. **Category match**: strong weight when selected categories include `agent.category`.
+2. **Goal-to-category match**: map `primaryGoal` to likely categories, e.g. software → Engineering/DevOps/Developer Tools, content → Marketing/Productivity, learn → Education.
+3. **Task type match**: match task verbs against curated terms from agent names/descriptions and optional agent IDs.
+4. **Output format match**: map requested output to agent descriptions/known agent IDs, e.g. checklist → checklist/planner/runbook, code → code/API/SQL/regex/unit test.
+5. **Provider preference**: if user selects a provider, reward exact provider or `any`; do not exclude otherwise useful agents unless a strict filter is added.
+6. **Free-text terms**: tokenize `freeTextGoal` and match against `name`, `description`, `category`, and `id`.
+7. **Experience/urgency fit**: light weights only, because current agent definitions do not encode complexity or runtime depth explicitly.
 
-Keep styling consistent with existing cards: rounded borders, `dark:bg-surface-card`, `dark:border-border`, small text sizes, badges, and Lucide icons.
+Avoid making recommendations depend on mutable user data such as favorites/history in v1. If used later, keep those as low-weight personalization signals.
 
-## Route/page changes needed
+## Configurable weights
 
-Recommended routes in `src/App.jsx` under `MainLayout`:
+Recommended default weights in a constants file:
 
-- `/collections` → `src/pages/CollectionsPage.jsx`
-- `/collections/:collectionId` → `src/pages/CollectionDetailPage.jsx` if a detail route is desired.
+```js
+export const DEFAULT_RECOMMENDATION_WEIGHTS = {
+  exactCategory: 30,
+  goalCategory: 20,
+  taskType: 18,
+  outputFormat: 12,
+  providerExact: 8,
+  providerAny: 4,
+  freeTextName: 10,
+  freeTextDescription: 5,
+  experience: 3,
+  urgency: 3,
+}
+```
 
-If the initial UI can manage everything on one page, `/collections` can be enough. However, the acceptance criterion says collections appear in the sidebar, and individual collection sidebar links are more useful if `/collections/:collectionId` exists.
+Expose weights as a parameter to `recommendAgents()` so tests and future experiments can override them without editing scoring code.
 
-Recommended pages:
+## “Why this agent?” explanation generation
 
-- `src/pages/CollectionsPage.jsx`
-  - Overview of all collections, create form, empty state, max-limit messaging.
-- `src/pages/CollectionDetailPage.jsx`
-  - Single collection, rename/delete actions, agent grid, add/remove controls, empty collection state.
+Generate explanations from the scoring signals, not from a separate LLM prompt:
 
-## Sidebar integration plan
+- Category: `Matches your selected Engineering category.`
+- Goal: `Fits your goal of writing or reviewing code.`
+- Task: `Strong match for review and debugging tasks.`
+- Output: `Produces checklist-style or structured outputs.`
+- Provider: `Works with your selected provider preference.`
+- Text: `Matched terms from your goal: SEO, blog, keywords.`
 
-Modify `src/components/Sidebar.jsx` later to:
+Limit the UI to the top 2–4 reasons per result to keep cards readable. Store all `matchedSignals` internally for debugging/test assertions.
 
-1. Import `useAgentCollections()` and maybe `Icons.FolderHeart`/`Icons.Folder`.
-2. Add a top-level `/collections` link or section header below Suites.
-3. Render a “Collections” section only when collections exist, or render a small “Create collection” link for discoverability.
-4. Render each collection as a `NavLink` to `/collections/:collectionId` with a count badge.
-5. Keep collection entries outside the category reducer and outside the existing agent search results.
+## Components required
 
-Search behavior assumption: the sidebar’s current search is agent-only. Collections should not be filtered by that search unless explicitly designed later.
+Suggested new components, all feature-specific:
 
-## Add/remove agents interaction
+- `src/components/recommendation/RecommendationWizardEntry.jsx`
+  - CTA button/card for homepage hero/search area.
+- `src/components/recommendation/RecommendationWizardModal.jsx`
+  - Modal shell and step orchestration, using current modal conventions from `CollectionModal.jsx` / `KeyboardShortcutsModal.jsx`.
+- `src/components/recommendation/RecommendationWizardStep.jsx`
+  - Reusable step renderer for single-choice/multi-choice/free-text questions.
+- `src/components/recommendation/RecommendationResults.jsx`
+  - Results section with ranked recommendations, no-result state, reset/back controls.
+- `src/components/recommendation/RecommendationResultCard.jsx`
+  - Compact agent card showing rank, match percentage, explanation bullets, and actions (`Open agent`, optional existing favorite/collection affordances later).
 
-Recommended UX paths:
+Do not modify `AgentRunner.jsx` for v1. Do not replace existing `AgentCard.jsx` in the homepage grid.
 
-- From collection detail page: add agents through a searchable picker and remove from the collection’s agent grid/list.
-- From `AgentCard.jsx`: add an optional collections button/menu next to the favorite star. This is convenient but higher risk because `AgentCard` is used throughout favorites, recent, search, and future collection pages.
-- From `AgentPage.jsx`/`AgentRunner`: optional action near the agent title. This may require touching runner UI and should be considered after the collection page works.
+## Entry point
 
-For a minimal acceptance implementation, collection detail page add/remove controls are enough.
+Best v1 entry point: `src/pages/HomePage.jsx` near the hero CTA and search/filter area.
 
-## Error and validation handling
+Recommended UX:
 
-- Use inline messages near forms and buttons.
-- Do not rely on `alert()`.
-- Disable create when max collections is reached.
-- Disable add buttons when a collection already contains the agent or is at 15 agents.
-- Handle corrupted localStorage by falling back to an empty state and overwriting on next save.
-- Handle localStorage quota errors by returning a failed action result and showing a generic persistence error.
-- Filter stale agent IDs during rendering so deleted/renamed agent definitions do not break pages.
+- Add a secondary CTA like “Find my agent” next to or below “Enter Battle Mode.”
+- Open a modal wizard on the homepage.
+- Show results inside the modal or a homepage inline panel after completion.
+- Each result links to `/agent/:id` using current router behavior.
 
-## Separation from Suites and Favorites
+This keeps the wizard discoverable without changing global navigation or route structure.
 
-- Collections should use their own localStorage key and own hook/service.
-- Do not import or mutate `suites` in `src/suites/suitesData.js`.
-- Do not store collections inside `ila_favorites`.
-- Favorites remain a single ordered list of agent IDs; collections are multiple named lists.
-- Suites remain static curated objects with quizzes; collections are user-created and do not have suite quizzes or colors by default.
+## Routing vs modal decision
 
-## Future Supabase extensibility
+Recommended: **modal/panel on `/` for v1**.
 
-Prepare for sync without implementing it:
+Reasons:
 
-- Keep `storage.js` as an adapter boundary so a future `supabaseStorage.js` can implement the same load/save contract.
-- Include `id`, `createdAt`, `updatedAt`, and `version` now.
-- Keep action APIs asynchronous-ready if desired. Even if initial actions are sync, avoid UI assumptions that saving is always instant.
-- Avoid Supabase imports in collection code for Phase 1.
-- Future database shape could be either a `collections` table plus `collection_agents` join table or a JSONB `agent_ids` column. The local model should not depend on either choice yet.
+- `HomePage.jsx` already owns agent discovery.
+- No route changes are required, respecting the constraint to avoid route behavior changes until implementation.
+- The app already uses modal patterns and local UI state.
+- Users can complete the wizard and immediately open existing agent pages.
+
+Dedicated route is a future option if the wizard becomes deep-linkable or needs shareable results. If implemented later, add `/recommend` under `MainLayout` in `src/App.jsx` and consider adding a `Navbar`/`Sidebar` link deliberately.
+
+## Integration with homepage
+
+Implementation should:
+
+- Reuse the loaded `agents` state from `HomePage.jsx` or migrate the page to `useAgents()` only if done as a small, safe refactor.
+- Disable or show loading state for the wizard CTA while `agentsLoading` is true.
+- Pass the current `agents` array into recommendation utilities.
+- Keep current search/category state unchanged.
+- Keep Favorites, Recently Used, Agent Grid, Recent Runs, and workflow CTA rendering unchanged.
+
+## Separation from existing features
+
+- **Favorites**: users can favorite a recommended agent after opening it or if result cards explicitly reuse favorite controls. The recommendation engine should not mutate favorites.
+- **Collections**: result cards may later offer “Add to collection” by reusing `CollectionPicker`, but v1 can simply link to agents.
+- **Suites**: do not write to `suitesData.js`; recommendation wizard is a cross-registry discovery flow, not a suite quiz.
+- **Agent Runner**: recommendations navigate to runner pages; they do not prefill runner inputs.
+- **Workflows/Battle/Scheduler**: no integration for v1.
+
+## Future AI-powered extensibility
+
+The rule-based engine should remain the fallback even if AI recommendations are added later.
+
+Future extension path:
+
+- Add an optional `src/lib/agentRecommendation/aiAdapter.js` that receives sanitized agent summaries and preferences.
+- Use `llmAdapter.js` only when the user has provided an API key and explicitly asks for AI-powered matching.
+- Return the same `RecommendationResult` model so UI does not care whether results are rule-based or AI-assisted.
+- Keep AI explanations grounded in agent IDs and registry data; never recommend IDs that do not exist in `loadAllAgents()`.
+- Include timeout/fallback behavior to deterministic scoring.
+
+## Assumptions
+
+- Current agent definitions do not include tags beyond category/name/description/provider/icon, so task matching must use curated mappings plus text matching.
+- No automated test framework is configured in `package.json`; validation will initially rely on `npm run build` and manual QA.
+- Recommendations should be deterministic and privacy-preserving in v1.

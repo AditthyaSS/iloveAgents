@@ -1,132 +1,119 @@
-# Agent Collections: Manual QA Checklist
+# Smart Agent Recommendation Wizard: Manual QA Checklist
 
-## Setup
+Use this checklist after the feature is implemented. It also defines expected behavior for implementation planning.
 
-- [ ] Start from a clean browser profile or clear only the collections key `ila_agent_collections_v1`.
-- [ ] Keep existing `ila_favorites`, `recentAgents`, and `iloveAgents_history` values available for regression checks when possible.
-- [ ] Run the app with `npm run dev`.
-- [ ] Open the app in both desktop and mobile-width layouts because collections must appear in the sidebar.
+## Wizard entry
 
-## Creating collections
+- [ ] Homepage loads normally at `/` with existing hero, Battle Mode CTA, stats, favorites/recent sections, search/filter, and agent grid.
+- [ ] Wizard entry CTA is visible near the discovery area and does not replace existing primary navigation.
+- [ ] Wizard CTA is disabled or shows a loading state while agents are loading.
+- [ ] Opening the wizard does not clear homepage search/category state.
+- [ ] Closing the wizard returns focus to the entry CTA where practical.
 
-- [ ] Open `/collections`.
-- [ ] Verify the empty state explains that no collections exist yet.
-- [ ] Create a collection named `My Morning Tools`.
-- [ ] Verify the collection appears on the collections page.
-- [ ] Verify the collection appears under the sidebar “Collections” section.
-- [ ] Create a collection named `Writing Stack`.
-- [ ] Verify multiple collections render in a stable order, preferably newest first or created order as intentionally designed.
+## Wizard navigation
 
-## Duplicate names
+- [ ] First step renders with clear title, helper copy, and answer options.
+- [ ] Required steps prevent advancing until an answer is selected.
+- [ ] Multi-select steps allow selecting and deselecting multiple answers.
+- [ ] Back button returns to the previous step without losing answers.
+- [ ] Next/Finish buttons update correctly on each step.
+- [ ] Escape/click-close behavior matches existing modal conventions.
+- [ ] Reset/start-over clears answers and results.
+- [ ] Keyboard navigation is usable through answer cards and controls.
 
-- [ ] Try creating `Writing Stack` again.
-- [ ] Try creating ` writing stack ` with different casing/whitespace.
-- [ ] Verify the app follows the chosen rule.
-  - Recommended rule: duplicate names are rejected case-insensitively after trimming.
-- [ ] Verify the error message is inline and does not use `alert()`.
+## Recommendation ranking
 
-## Max 10 collections
+- [ ] Engineering/code-review preferences rank code/review/test agents near the top.
+- [ ] Marketing/content/SEO preferences rank marketing/content agents near the top.
+- [ ] SQL/data preferences rank SQL/database/data agents near the top.
+- [ ] Design preferences rank design/accessibility/font/color agents near the top.
+- [ ] Provider preference rewards matching providers or `any` without hiding all other useful agents unless strict filtering is explicitly implemented.
+- [ ] Ties sort deterministically and do not reorder randomly between runs with the same answers.
 
-- [ ] Create collections until there are 10 total.
-- [ ] Verify the create control is disabled or returns a clear validation error.
-- [ ] Try creating an 11th collection.
-- [ ] Verify localStorage still contains only 10 collections.
-- [ ] Delete one collection.
-- [ ] Verify creating another collection is possible again.
+## Match percentages
 
-## Adding agents
+- [ ] Every displayed match percentage is between 0% and 100%.
+- [ ] Top result has the highest percentage.
+- [ ] Percentages are stable for the same answers and registry data.
+- [ ] Low-confidence matches do not display misleadingly high percentages.
+- [ ] No `NaN%`, negative values, or blank percentages appear.
 
-- [ ] Open a collection detail page or collection management UI.
-- [ ] Add `tone-rewriter` or another known agent.
-- [ ] Verify the agent appears in the collection.
-- [ ] Verify the sidebar collection count increments.
-- [ ] Refresh the page.
-- [ ] Verify the agent remains in the collection.
+## Explanation generation
 
-## Duplicate agent prevention
+- [ ] Each recommended agent shows 2–4 concise “Why this agent?” reasons.
+- [ ] Reasons correspond to actual selected preferences or matched free-text terms.
+- [ ] Category/provider/task reasons use human-readable labels, not internal IDs only.
+- [ ] Explanations remain readable on mobile.
+- [ ] Explanations never mention an agent capability that is not supported by its name/description/category/provider or configured rules.
 
-- [ ] Attempt to add the same agent to the same collection again.
-- [ ] Verify the duplicate is blocked or the add control is disabled.
-- [ ] Verify the collection still contains only one copy of that agent ID in localStorage.
+## No-result and loading states
 
-## Max 15 agents per collection
+- [ ] Empty agent list or registry loading state is handled gracefully.
+- [ ] If strict filters produce no result, a helpful no-result state appears with actions to adjust answers or browse all agents.
+- [ ] Corrupt/partial wizard state cannot crash the page.
+- [ ] Missing agent IDs are filtered before rendering results.
 
-- [ ] Add agents until the collection contains 15 unique agents.
-- [ ] Verify the UI communicates the 15-agent limit.
-- [ ] Try adding a 16th agent.
-- [ ] Verify the 16th agent is not persisted.
-- [ ] Remove one agent.
-- [ ] Verify another agent can be added afterward.
+## Mobile layout
 
-## Removing agents
+- [ ] Wizard modal/panel fits within a narrow viewport without horizontal scrolling.
+- [ ] Answer options stack cleanly on mobile.
+- [ ] Result cards stack cleanly and action buttons remain reachable.
+- [ ] Modal content scrolls if taller than the viewport.
+- [ ] Navbar/sidebar mobile controls still work before and after using the wizard.
 
-- [ ] Remove an agent from a collection.
-- [ ] Verify it disappears from the collection UI.
-- [ ] Verify sidebar count decrements.
-- [ ] Refresh the page.
-- [ ] Verify the removed agent does not reappear.
+## Homepage integrity
 
-## Renaming collections
+- [ ] Existing Battle Mode CTA still navigates to `/battle`.
+- [ ] Stats still show the loaded agent count and static provider/open-source values.
+- [ ] Favorites section still appears only when favorites exist and no homepage filter is active.
+- [ ] Recently Used section still appears only when recent agents exist and no homepage filter is active.
+- [ ] Agent grid still renders skeletons while loading and cards after loading.
+- [ ] Existing no-matching-agents empty state still works.
 
-- [ ] Rename `My Morning Tools` to `Daily Launchpad`.
-- [ ] Verify the page title/card/sidebar label update.
-- [ ] Refresh the page.
-- [ ] Verify the new name persists.
-- [ ] Try renaming to an empty value.
-- [ ] Verify validation blocks it.
+## Search
 
-## Deleting collections
+- [ ] Homepage search by agent name still works.
+- [ ] Homepage search by description still works.
+- [ ] Homepage search by category still works.
+- [ ] Clearing search restores the previous unfiltered grid.
+- [ ] Category dropdown keyboard navigation still works.
+- [ ] Sidebar search still filters sidebar agent links independently of wizard state.
 
-- [ ] Delete a collection with agents in it.
-- [ ] Verify confirmation or clear destructive UI is shown.
-- [ ] Verify the collection is removed from `/collections`.
-- [ ] Verify it is removed from the sidebar.
-- [ ] Refresh the page.
-- [ ] Verify it remains deleted.
-- [ ] If currently on `/collections/:collectionId`, verify the app navigates gracefully or shows a not-found state.
+## Favorites
 
-## localStorage persistence after refresh
+- [ ] Favorite star on `AgentCard` still toggles `ila_favorites`.
+- [ ] Favorited cards update immediately across visible card instances.
+- [ ] Recommended result actions do not auto-favorite agents unless explicitly designed.
+- [ ] Favorite ordering remains newest-first on the homepage.
 
-- [ ] Create at least two collections with different agents.
-- [ ] Refresh on `/collections`.
-- [ ] Verify all collections and counts persist.
-- [ ] Refresh on `/collections/:collectionId`.
-- [ ] Verify detail content persists.
-- [ ] Close and reopen the tab.
-- [ ] Verify collections still persist.
+## Suites
 
-## Sidebar visibility
+- [ ] `/suites` still renders suite cards.
+- [ ] Suite quiz flow still works independently of the recommendation wizard.
+- [ ] Suite result cards still link to valid agents.
+- [ ] Beta custom suite generator behavior is unchanged.
+- [ ] Wizard implementation does not mutate `src/suites/suitesData.js`.
 
-- [ ] Verify “Collections” appears as a separate section from “Suites”.
-- [ ] Verify Collections are not included in agent category counts.
-- [ ] Verify agent search in the sidebar still filters only agents/categories unless intentionally changed.
-- [ ] Verify clicking a collection link closes the mobile sidebar.
-- [ ] Verify active route styling works for `/collections` and collection detail pages.
-- [ ] Verify `/agent/:id` still auto-expands the active agent category.
+## Collections
 
-## Empty states
+- [ ] `/collections` still renders existing collections and empty state.
+- [ ] `/collections/:id` still renders collection details and agent cards.
+- [ ] Adding/removing agents from collections still works.
+- [ ] AgentCard `FolderPlus` collection picker still opens and persists selections.
+- [ ] Sidebar Collections block still shows counts and links.
+- [ ] Wizard does not auto-create or mutate collections unless an explicit future action is added.
 
-- [ ] Clear the collections key and reload.
-- [ ] Verify `/collections` shows a helpful empty state.
-- [ ] Create an empty collection.
-- [ ] Verify the detail page explains how to add agents.
-- [ ] Remove all agents from a collection.
-- [ ] Verify the empty collection state returns.
+## Agent Runner
 
-## Existing Favorites and Suites regression
+- [ ] Opening a recommendation navigates to `/agent/:id`.
+- [ ] Agent page still writes to `recentAgents`.
+- [ ] Required inputs and API key validation still work.
+- [ ] Prompt playground, model selector, batch mode, scheduler modal, and output rendering remain unaffected.
+- [ ] Run history still saves completed runs under `iloveAgents_history`.
 
-- [ ] Favorite an agent from `AgentCard`.
-- [ ] Verify `HomePage` still shows “Your Favorites”.
-- [ ] Unfavorite the agent and verify favorites update.
-- [ ] Visit `/suites`.
-- [ ] Verify suite cards still render.
-- [ ] Open a suite quiz through `SuiteWizard`.
-- [ ] Verify suite recommendations still link to agents.
-- [ ] Confirm no collection appears inside `src/suites/suitesData.js` data-driven UI.
+## Build verification
 
-## Other regression checks
-
-- [ ] Visit `/` and verify agent search/category filter still work.
-- [ ] Visit an `/agent/:id` page and verify recent agents still persist under `recentAgents`.
-- [ ] Visit `/workflows` and verify workflow routes are unaffected.
-- [ ] Visit `/battle` and verify battle mode still uses its full-screen layout without sidebar dependencies.
+- [ ] `npm run build` passes.
+- [ ] `git diff --check` passes.
+- [ ] Browser console has no new errors when opening/completing/closing the wizard.
+- [ ] If a perceptible UI change is implemented, capture desktop and mobile screenshots for review.
