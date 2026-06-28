@@ -9,6 +9,7 @@ import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { Link } from "react-router-dom";
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -304,7 +305,12 @@ useEffect(() => {
 )}
 
       {/* ── Search & Category Filter Section ── */}
-      <div className="premium-section mb-6 space-y-4" style={{ animationDelay: '180ms' }}>
+      <div
+  className={`premium-section space-y-4 ${
+    isOpen ? "mb-80" : "mb-6"
+  }`}
+  style={{ animationDelay: "180ms" }}
+>
         {/* Search Bar */}
         <div className="relative max-w-xl mx-auto
           rounded-full
@@ -349,7 +355,7 @@ useEffect(() => {
 
         {/* Category Filter Dropdown */}
         <div className="flex justify-center" onKeyDown={handleKeyDown}>
-          <div ref={dropdownRef} className="relative w-72">
+          <div ref={dropdownRef} className="relative w-72 z-50">
             {!selectedCategory ? (
               // Default State
               <button
@@ -423,8 +429,7 @@ useEffect(() => {
                 role="listbox"
                 aria-label="Agent categories"
                 aria-activedescendant={focusedIndex >= 0 ? `option-${focusedIndex}` : undefined}
-                className="absolute left-0 right-0 mt-2 z-50 rounded-xl border shadow-2xl max-h-60 overflow-y-auto p-1.5 space-y-1
-                  dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in"
+                className="absolute left-0 right-0 mt-2 z-50 rounded-xl border shadow-2xl max-h-[70vh] overflow-y-auto p-1.5 space-y-1 bg-white dark:bg-surface-card"
               >
                 {dropdownOptions.map((opt, idx) => {
                   const isSelected = opt.value === selectedCategory
@@ -439,6 +444,8 @@ useEffect(() => {
                       ref={(el) => (optionRefs.current[idx] = el)}
                       type="button"
                       onClick={() => {
+                        
+                        
                         setSelectedCategory(opt.value)
                         setIsOpen(false)
                         setFocusedIndex(-1)
@@ -479,7 +486,8 @@ useEffect(() => {
       </div>
 
       {/* Agent Grid */}
-      <div className="premium-section flex flex-col lg:flex-row gap-8 mb-8" style={{ animationDelay: '220ms' }}>
+      <div
+        className="premium-section flex flex-col lg:flex-row gap-8 mb-8 relative z-0" style={{ animationDelay: '220ms' }}>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
@@ -586,8 +594,12 @@ useEffect(() => {
         </div>
       )}
 {/* Footer */}
-<footer className="w-full mt-auto py-12 border-t border-gray-200 dark:border-border bg-gray-50/50 dark:bg-[#0a0a0a]">
-  <div className="container mx-auto px-4 md:px-8">
+<footer className="relative w-full mt-auto py-12 border-t border-gray-200 dark:border-border overflow-hidden">
+  {/* Background gradient & blur matching Sidebar/Navbar */}
+  <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
+  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
+
+  <div className="container mx-auto px-4 md:px-8 relative z-10">
     <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
       
       {/* Column 1: Brand Info */}
@@ -595,10 +607,10 @@ useEffect(() => {
         <h3 className="font-bold text-lg text-gray-900 dark:text-white">
           iLoveAgents
         </h3>
-        <p className="text-sm text-gray-500 dark:text-text-muted leading-relaxed">
+        <p className="text-sm text-gray-700 dark:text-text-secondary leading-relaxed">
           Community built AI workflows. Connect agents and automate your process seamlessly.
         </p>
-        <div className="mt-auto text-sm font-medium text-gray-400 dark:text-gray-500">
+        <div className="mt-auto text-sm font-semibold text-gray-600 dark:text-gray-400">
           Built for GSSoC 2026
         </div>
       </div>
@@ -612,7 +624,7 @@ useEffect(() => {
           href="https://github.com/AditthyaSS/iloveAgents#readme" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
         >
           Documentation
         </a>
@@ -622,7 +634,7 @@ useEffect(() => {
           href="https://github.com/AditthyaSS/iloveAgents/issues" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
         >
           Request an Agent
         </a>
@@ -633,21 +645,19 @@ useEffect(() => {
         <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h4>
         
         {/* Placeholder Link - Disabled click behavior */}
-        <a 
-          href="#" 
-          onClick={(e) => e.preventDefault()}
-          title="Coming Soon"
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors cursor-not-allowed opacity-75"
-        >
-          Privacy Policy
-        </a>
+       <Link
+  to="/privacy"
+  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
+>
+  Privacy Policy
+</Link>
         
         {/* Placeholder Link - Disabled click behavior */}
         <a 
           href="#" 
           onClick={(e) => e.preventDefault()}
           title="Coming Soon"
-          className="text-sm text-gray-500 dark:text-text-muted hover:text-accent dark:hover:text-white transition-colors cursor-not-allowed opacity-75"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors cursor-not-allowed opacity-75"
         >
           Terms of Service
         </a>
@@ -656,14 +666,14 @@ useEffect(() => {
       {/* Column 4: Contribute CTA */}
       <div className="flex flex-col gap-3">
         <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h4>
-        <p className="text-sm text-gray-500 dark:text-text-muted mb-2">
+        <p className="text-sm text-gray-700 dark:text-text-secondary mb-2">
           Join us in building the ultimate agent library.
         </p>
         <a
           href="https://github.com/AditthyaSS/iloveAgents"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center w-fit gap-2 px-4 py-2 text-sm font-medium text-white bg-accent hover:bg-accent-hover rounded-md transition-colors"
+          className="inline-flex items-center w-fit gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-500 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-violet-500/35"
         >
           <Github size={16} />
           GitHub Repo
@@ -674,7 +684,7 @@ useEffect(() => {
     </div>
 
     {/* Bottom Copyright Bar */}
-    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center text-gray-500 dark:text-text-muted">
+    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center font-medium text-gray-600 dark:text-gray-400">
       © {new Date().getFullYear()} iLoveAgents. All rights reserved.
     </div>
   </div>
