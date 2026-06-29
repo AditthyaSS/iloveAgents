@@ -890,6 +890,8 @@ export default function AgentRunner({ agent }) {
               outputType={agent.outputType}
               agentName={agent.name}
               systemPrompt={customPrompt}
+              agent={agent}
+              inputs={inputs}
             />
             <div className="flex items-center gap-2 mt-3">
   <button

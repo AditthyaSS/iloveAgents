@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
+import ShareMenu from './ShareMenu'
 
 function stripMarkdown(text) {
   if (!text) return ''
@@ -95,25 +96,31 @@ function DownloadButton({ text, agentName }) {
   )
 }
 
-export default function OutputRenderer({ content, outputType, agentName, systemPrompt }) {
+export default function OutputRenderer({
+  content,
+  outputType,
+  agentName,
+  systemPrompt,
+  agent,
+  inputs,
+  showToolbar = true,
+}) {
   if (!content) return null
-
-  const shareText = `--- Agent: ${agentName} ---\n\n--- Output ---\n${content}`
 
   return (
     <div className="animate-fade-in">
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-3">
+      {showToolbar && <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
           Output
         </span>
         <div className="flex items-center gap-2">
           <CopyButton text={content} label="Copy output" />
           <CopyButton text={stripMarkdown(content)} label="Copy as Plain Text" icon={FileText} />
-          <CopyButton text={shareText} label="Share" />
+          {agent && <ShareMenu agent={agent} inputs={inputs} output={content} />}
           <DownloadButton text={content} agentName={agentName} />
         </div>
-      </div>
+      </div>}
 
       {/* Content */}
       <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">

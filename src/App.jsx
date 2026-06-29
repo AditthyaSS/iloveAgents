@@ -51,6 +51,7 @@ export default function App() {
           <Route path="/battle/setup" element={<BattleModeSetup />} />
           <Route path="/battle/arena" element={<BattleModeArena />} />
           <Route path="/battle/winner" element={<BattleModeWinner />} />
+          <Route path="/share/:id" element={<SharedOutputPage />} />
 
           <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
             <Route path="/" element={<HomePage />} />
