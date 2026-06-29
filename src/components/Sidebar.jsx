@@ -5,10 +5,23 @@ import { loadAllAgents } from '../agents/registry'
 import { useAgents } from '../lib/useAgents'
 import { useCollections } from '../lib/useCollections'
 
+const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
+
 export default function Sidebar({ open, onClose }) {
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
   const { agents } = useAgents()
   const [openCategories, setOpenCategories] = useState({})
+  // Stores COLLAPSED state per category (absent/false = expanded).
+  // Categories are expanded by default on first visit, since we only
+  // record an entry here when the user explicitly collapses one.
+  const [collapsedCategories, setCollapsedCategories] = useState(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_CATEGORY_STORAGE_KEY)
+      return stored ? JSON.parse(stored) : {}
+    } catch {
+      return {}
+    }
+  })
   const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
   const [agents, setAgents] = useState([])
   const { collections } = useCollections()
@@ -24,21 +37,15 @@ export default function Sidebar({ open, onClose }) {
   }, [])
 
   useEffect(() => {
-    const currentAgentId = location.pathname.startsWith('/agent/')
-      ? location.pathname.split('/agent/')[1]
-      : null
-
-    if (currentAgentId && agents.length > 0) {
-      const activeAgent = agents.find((a) => a.id === currentAgentId)
-
-      if (activeAgent?.category) {
-        setOpenCategories((prev) => ({
-          ...prev,
-          [activeAgent.category]: true,
-        }))
-      }
+    try {
+      localStorage.setItem(
+        SIDEBAR_CATEGORY_STORAGE_KEY,
+        JSON.stringify(collapsedCategories)
+      )
+    } catch {
+      // localStorage unavailable (e.g. private browsing) — fail silently
     }
-  }, [location.pathname, agents])
+  }, [collapsedCategories])
 
   const currentAgentId = location.pathname.startsWith('/agent/')
     ? location.pathname.split('/agent/')[1]
@@ -79,7 +86,7 @@ export default function Sidebar({ open, onClose }) {
         [category]: !(prev[category] ?? true),
       }))
     } else {
-      setOpenCategories((prev) => ({
+      setCollapsedCategories((prev) => ({
         ...prev,
         [category]: !prev[category],
       }))
@@ -240,10 +247,12 @@ export default function Sidebar({ open, onClose }) {
           <div className="border-b dark:border-border border-gray-100 mb-2" />
 
           {categoryOrder.map((category) => {
+            const isActiveCategory = activeCategory === category
             const isCategoryExpanded = isSearching
               ? searchExpandedCategories[category] ?? true
-              : Boolean(openCategories[category])
-            const isActiveCategory = activeCategory === category
+              : isActiveCategory
+                ? true
+                : !collapsedCategories[category]
 
             return (
               <div key={category} className="mb-3">
@@ -284,8 +293,14 @@ export default function Sidebar({ open, onClose }) {
                   </span>
                 </button>
 
-                {isCategoryExpanded && (
-                  <div className="mt-0.5">
+                <div
+                  className={`grid transition-all duration-200 ease-in-out ${
+                    isCategoryExpanded
+                      ? 'grid-rows-[1fr] opacity-100 mt-0.5'
+                      : 'grid-rows-[0fr] opacity-0'
+                  }`}
+                >
+                  <div className="overflow-hidden">
                     {categories[category].map((agent) => {
                       const IconComponent = Icons[agent.icon] || Icons.Bot
 
@@ -321,7 +336,7 @@ export default function Sidebar({ open, onClose }) {
                       )
                     })}
                   </div>
-                )}
+                </div>
               </div>
             )
           })}

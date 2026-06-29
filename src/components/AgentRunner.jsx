@@ -15,15 +15,20 @@ import {
   GitBranch,
   Trash2,
   CalendarClock,
+  Layers,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
+import TokenCounter from "./TokenCounter";
+import CostEstimator from "./CostEstimator";
+import { useSessionSpend } from "../lib/useSessionSpend";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
+import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
@@ -84,16 +89,19 @@ export default function AgentRunner({ agent }) {
   const [modelRecommendation, setModelRecommendation] = useState(null);
   const [analyserLoading, setAnalyserLoading] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
   const { addJob } = useScheduler();
+  const { addRun } = useSessionSpend();
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
 
   useKeyboardShortcuts({
-    'Control+Enter': () => {
-      if (canRun() && !loading) handleRun();
-    },
+  'Control+Enter': () => {
+    if (batchMode) return;
+    if (canRun() && !loading) handleRun();
+  },
     'Escape': () => {
       handleClear();
       setPlaygroundOpen(false);
@@ -109,6 +117,7 @@ export default function AgentRunner({ agent }) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    setLoading(false);
     setOutput(null);
     setStreamingOutput("");
     setIsStreaming(false);
@@ -116,6 +125,7 @@ export default function AgentRunner({ agent }) {
     setDuration(null);
     setCustomPrompt(agent.systemPrompt);
     setPlaygroundOpen(false);
+    setBatchMode(false);
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -239,7 +249,16 @@ export default function AgentRunner({ agent }) {
       setIsStreaming(false);
       setDuration(result.duration);
 
-      // Save to history
+      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
+
+      addRun({
+        model,
+        inputTokens: null,
+        outputTokens: null,
+        inputCost: null,
+        outputCost: null,
+      });
+
       saveRun({
         agentId: agent.id,
         agentName: agent.name,
@@ -325,6 +344,9 @@ export default function AgentRunner({ agent }) {
   };
 
   const IconComponent = Icons[agent.icon] || Icons.Bot;
+  const supportsBatchMode = agent.inputs.some((i) =>
+    ["text", "textarea", "code"].includes(i.type)
+  );
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
@@ -384,6 +406,36 @@ export default function AgentRunner({ agent }) {
         setModel={setSelectedModel}
       />
 
+      {supportsBatchMode && (
+        <div className="flex items-center gap-2 mb-4">
+          <button
+            onClick={() => setBatchMode((prev) => !prev)}
+            title="Run this agent across multiple inputs at once"
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+              ${
+                batchMode
+                  ? "bg-accent/15 text-accent border border-accent/30"
+                  : "dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-transparent"
+              }`}
+          >
+            <Layers size={14} />
+            {batchMode ? "Exit Batch Mode" : "Batch Mode"}
+          </button>
+        </div>
+      )}
+
+      {batchMode ? (
+        <div className="mb-6">
+          <BatchModeRunner
+            agent={agent}
+            provider={agent.provider === "any" ? provider : agent.provider}
+            apiKey={apiKey}
+            selectedModel={selectedModel}
+            systemPrompt={customPrompt}
+          />
+        </div>
+      ) : (
+        <>
       {/* Input Form */}
       <div className="space-y-3 mb-4">
         {agent.inputs.map((input) => (
@@ -430,10 +482,16 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
-                <CharCounter
-                  value={inputs[input.id] || ""}
-                  maxLength={5000}
-                />
+                <div className="flex items-center gap-3 mt-1">
+                  <CharCounter
+                    value={inputs[input.id] || ""}
+                    maxLength={5000}
+                  />
+                  <TokenCounter
+                    value={inputs[input.id] || ""}
+                    modelId={selectedModel}
+                  />
+                </div>
               </div>
             )}
 
@@ -455,10 +513,16 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
-                <CharCounter
-                  value={inputs[input.id] || ""}
-                  maxLength={5000}
-                />
+                <div className="flex items-center gap-3 mt-1">
+                  <CharCounter
+                    value={inputs[input.id] || ""}
+                    maxLength={5000}
+                  />
+                  <TokenCounter
+                    value={inputs[input.id] || ""}
+                    modelId={selectedModel}
+                  />
+                </div>
               </div>
             )}
 
@@ -558,6 +622,10 @@ export default function AgentRunner({ agent }) {
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
+                <TokenCounter
+                  value={customPrompt}
+                  modelId={selectedModel}
+                />
                 <CharCounter
                   value={customPrompt}
                   maxLength={5000}
@@ -732,6 +800,14 @@ export default function AgentRunner({ agent }) {
         )}
       </div>
 
+      <div className="mb-4">
+        <CostEstimator
+          inputText={buildUserMessage()}
+          systemPrompt={customPrompt}
+          modelId={selectedModel}
+        />
+      </div>
+
       {error && error.type === "invalid_api_key" ? (
   <ErrorCard message={
     <>
@@ -874,6 +950,9 @@ export default function AgentRunner({ agent }) {
             </button>
           </div>
         </div>
+      )}
+
+      </>
       )}
 
       {/* Schedule Agent Modal */}

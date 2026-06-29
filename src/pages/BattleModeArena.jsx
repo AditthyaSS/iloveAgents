@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Copy,
   Check,
+  Zap,
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
 import BattleNavbar from "../components/BattleNavbar";
@@ -30,6 +31,7 @@ const PROVIDERS = [
     btnBg:
       "bg-yellow-400/10 hover:bg-yellow-400/20 text-yellow-400 border-yellow-400/40 border-2 hover:border-yellow-300/60 battle-btn-secondary",
     loaderColor: "text-yellow-400",
+    glowHex: "#facc15",
   },
   {
     id: "anthropic",
@@ -43,6 +45,7 @@ const PROVIDERS = [
     btnBg:
       "bg-violet-400/10 hover:bg-violet-400/20 text-violet-400 border-violet-400/40 border-2 hover:border-violet-300/60 battle-btn-secondary",
     loaderColor: "text-violet-400",
+    glowHex: "#a78bfa",
   },
   {
     id: "gemini",
@@ -56,6 +59,7 @@ const PROVIDERS = [
     btnBg:
       "bg-blue-400/10 hover:bg-blue-400/20 text-blue-400 border-blue-400/40 border-2 hover:border-blue-300/60 battle-btn-secondary",
     loaderColor: "text-blue-400",
+    glowHex: "#60a5fa",
   },
   {
     id: "groq",
@@ -109,6 +113,17 @@ export default function BattleModeArena() {
 
   const [copiedProvider, setCopiedProvider] = useState(null);
 
+  // Tracks which provider finished (success or error) first
+  const [firstFinisher, setFirstFinisher] = useState(null);
+  // Flips to true once all three are done, triggers the reveal animation
+  const [revealTriggered, setRevealTriggered] = useState(false);
+
+  const allDone = PROVIDERS.every((p) => !results[p.id].loading);
+
+  useEffect(() => {
+    if (allDone) setRevealTriggered(true);
+  }, [allDone]);
+
   // Redirect if no state
   useEffect(() => {
     if (!agent || !inputs || !apiKeys) {
@@ -148,6 +163,7 @@ export default function BattleModeArena() {
               duration: result.duration,
             },
           }));
+          setFirstFinisher((prev) => prev ?? prov.id);
         })
         .catch((err) => {
           setResults((prev) => ({
@@ -159,6 +175,7 @@ export default function BattleModeArena() {
               duration: null,
             },
           }));
+          setFirstFinisher((prev) => prev ?? prov.id);
         });
     });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -188,6 +205,56 @@ export default function BattleModeArena() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
+      <style>{`
+        @keyframes battleCardPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 0 0px 0px var(--glow-color, transparent); }
+          50% { transform: scale(1.015); box-shadow: 0 0 22px 2px var(--glow-color, transparent); }
+        }
+        @keyframes battleProgressSlide {
+          0% { left: -40%; }
+          100% { left: 110%; }
+        }
+        @keyframes battleBadgePop {
+          0% { transform: scale(0.4); opacity: 0; }
+          60% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes battleReveal {
+          0% { opacity: 0.55; transform: scale(0.96) translateY(6px); filter: brightness(1.5) saturate(1.3); }
+          55% { opacity: 1; transform: scale(1.015) translateY(-2px); filter: brightness(1.25) saturate(1.15); }
+          100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1) saturate(1); }
+        }
+        @keyframes battleButtonRise {
+          0% { opacity: 0; transform: translateY(18px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes battleButtonGlow {
+          0%, 100% { box-shadow: 0 0 0px 0px var(--glow-color, transparent); }
+          50% { box-shadow: 0 0 16px 2px var(--glow-color, transparent); }
+        }
+        .battle-card-loading {
+          animation: battleCardPulse 2.2s ease-in-out infinite;
+        }
+        .battle-progress-fill {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 40%;
+          border-radius: 9999px;
+          animation: battleProgressSlide 1.3s ease-in-out infinite;
+        }
+        .battle-badge-pop {
+          animation: battleBadgePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+        .battle-card-reveal {
+          animation: battleReveal 0.7s ease-out both;
+        }
+        .battle-button-enter {
+          animation: battleButtonRise 0.45s ease-out both,
+            battleButtonGlow 2.4s ease-in-out 0.45s infinite;
+        }
+      `}</style>
+
       <BattleNavbar />
 
       <main className="pt-14 px-4 py-8">
@@ -423,84 +490,115 @@ export default function BattleModeArena() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {PROVIDERS.map((prov, idx) => {
             const r = results[prov.id];
+            const isFirstFinisher = firstFinisher === prov.id;
+            const isStillFighting =
+              r.loading && firstFinisher && firstFinisher !== prov.id;
+
             return (
               <div
                 key={prov.id}
                 className={`rounded-xl border ${prov.borderClass} bg-gray-900/50 backdrop-blur-sm
-                  shadow-lg flex flex-col battle-fade-in transition-all duration-300`}
-                style={{ animationDelay: `${idx * 100}ms` }}
+                  shadow-lg flex flex-col battle-fade-in transition-all duration-300 overflow-hidden`}
+                style={{
+                  animationDelay: `${idx * 100}ms`,
+                  "--glow-color": prov.glowHex,
+                }}
               >
-                {/* Column Header */}
                 <div
-                  className={`flex items-center gap-2.5 px-5 py-4 rounded-t-xl ${prov.headerBg}`}
+                  className={`flex flex-col flex-1 ${
+                    r.loading ? "battle-card-loading" : ""
+                  } ${revealTriggered && !r.loading ? "battle-card-reveal" : ""}`}
                 >
-                  <Cpu size={16} className={prov.textColor} />
-                  <span
-                    className={`text-sm font-bold ${prov.textColor} tracking-wide`}
+                  {/* Column Header */}
+                  <div
+                    className={`flex items-center gap-2.5 px-5 py-4 rounded-t-xl ${prov.headerBg}`}
                   >
-                    {prov.label}
-                  </span>
-                  {r.duration && (
-                    <span className="ml-auto text-[11px] text-gray-400 font-medium">
-                      {(r.duration / 1000).toFixed(1)}s
-                    </span>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 p-5 overflow-y-auto max-h-[60vh]">
-                  {r.loading && (
-                    <div className="flex flex-col items-center justify-center py-16 gap-3">
-                      <Loader2
-                        size={28}
-                        className={`animate-spin ${prov.loaderColor}`}
-                      />
-                      <span className="text-xs text-gray-400 font-medium">
-                        {prov.label} is generating...
-                      </span>
-                    </div>
-                  )}
-
-                  {r.error && (
-                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
-                      <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
-                        <AlertCircle size={24} className="text-red-400" />
-                      </div>
-                      <p className="text-xs text-red-400 max-w-xs font-medium">
-                        {r.error}
-                      </p>
-                    </div>
-                  )}
-
-                  {r.content && (
-                    <div className="markdown-output text-sm text-gray-100 leading-relaxed">
-                      {agent.outputType === "markdown" ? (
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {r.content}
-                        </ReactMarkdown>
-                      ) : (
-                        <pre className="whitespace-pre-wrap font-sans">
-                          {r.content}
-                        </pre>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Pick Winner Button */}
-                {r.content && !r.loading && (
-                  <div className="p-5 border-t border-gray-800/50">
-                    <button
-                      onClick={() => handlePickWinner(prov.id)}
-                      className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg
-                        text-xs font-bold border-2 transition-all duration-200 active:scale-95
-                        ${prov.btnBg}`}
+                    <Cpu size={16} className={prov.textColor} />
+                    <span
+                      className={`text-sm font-bold ${prov.textColor} tracking-wide`}
                     >
-                      <Trophy size={14} />
-                      Pick Winner
-                    </button>
+                      {prov.label}
+                    </span>
+
+                    {isFirstFinisher && (
+                      <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-300 bg-emerald-400/10 border border-emerald-400/30 px-2 py-0.5 rounded-full battle-badge-pop">
+                        <Zap size={10} />
+                        First to finish!
+                      </span>
+                    )}
+
+                    {r.duration && (
+                      <span className="ml-auto text-[11px] text-gray-400 font-medium">
+                        {(r.duration / 1000).toFixed(1)}s
+                      </span>
+                    )}
                   </div>
-                )}
+
+                  {/* Content */}
+                  <div className="flex-1 p-5 overflow-y-auto max-h-[60vh]">
+                    {r.loading && (
+                      <div className="flex flex-col items-center justify-center py-16 gap-3">
+                        <Loader2
+                          size={28}
+                          className={`animate-spin ${prov.loaderColor}`}
+                        />
+                        <span className="text-xs text-gray-400 font-medium">
+                          {isStillFighting
+                            ? "Still fighting..."
+                            : `${prov.label} is generating...`}
+                        </span>
+                        <div className="relative w-full max-w-[200px] h-1.5 rounded-full bg-gray-800/60 overflow-hidden mt-1">
+                          <div
+                            className="battle-progress-fill"
+                            style={{
+                              background: `linear-gradient(90deg, transparent, ${prov.glowHex}, transparent)`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {r.error && (
+                      <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+                        <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                          <AlertCircle size={24} className="text-red-400" />
+                        </div>
+                        <p className="text-xs text-red-400 max-w-xs font-medium">
+                          {r.error}
+                        </p>
+                      </div>
+                    )}
+
+                    {r.content && (
+                      <div className="markdown-output text-sm text-gray-100 leading-relaxed">
+                        {agent.outputType === "markdown" ? (
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {r.content}
+                          </ReactMarkdown>
+                        ) : (
+                          <pre className="whitespace-pre-wrap font-sans">
+                            {r.content}
+                          </pre>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Pick Winner Button */}
+                  {r.content && !r.loading && (
+                    <div className="p-5 border-t border-gray-800/50">
+                      <button
+                        onClick={() => handlePickWinner(prov.id)}
+                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg
+                          text-xs font-bold border-2 transition-all duration-200 active:scale-95
+                          battle-button-enter ${prov.btnBg}`}
+                      >
+                        <Trophy size={14} />
+                        Pick Winner
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
