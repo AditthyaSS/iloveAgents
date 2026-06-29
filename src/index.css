@@ -275,6 +275,22 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
   animation: blink 0.8s ease-in-out infinite;
 }
 
+@keyframes sound-wave {
+  0%, 100% { height: 10%; }
+  50% { height: 100%; }
+}
+
+.animate-sound-wave {
+  animation: sound-wave 1s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sound-wave {
+    animation: none;
+    height: 60%;
+  }
+}
+
 /* ===== Markdown Output Styling ===== */
 .markdown-output h1 {
   @apply text-xl font-bold mb-3 mt-4;

@@ -28,6 +28,7 @@ import { useSessionSpend } from "../lib/useSessionSpend";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
+import VoiceOutput from "./VoiceOutput";
 import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
 import ScheduleAgentModal from "./ScheduleAgentModal";
@@ -936,6 +937,7 @@ export default function AgentRunner({ agent }) {
   </div>
 )}
           </ErrorBoundary>
+          <VoiceOutput text={output} />
           <RunRating />
           <div className="flex justify-end">
             <button
