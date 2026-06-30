@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Mic } from "lucide-react";
+import { Mic, MicOff } from "lucide-react";
 
 /**
  * VoiceInput — a mic button that uses the browser-native SpeechRecognition API
@@ -20,6 +20,7 @@ export default function VoiceInput({
   onChange,
   disabled = false,
   className = "",
+  lang = "en-US",
 }) {
   // Feature-detect once. If unsupported, the component renders null below.
   const SpeechRecognition =
@@ -76,7 +77,7 @@ export default function VoiceInput({
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = lang;
 
     baseValueRef.current = value || "";
     lastWrittenRef.current = value || "";
@@ -179,7 +180,11 @@ export default function VoiceInput({
       {isRecording && (
         <span className="absolute inline-flex h-full w-full rounded-md bg-red-500/30 animate-ping" />
       )}
-      <Mic size={14} className="relative" />
+      {isRecording ? (
+  <MicOff size={14} className="relative" />
+   ) : (
+  <Mic size={14} className="relative" />
+      )}
     </button>
   );
 }
