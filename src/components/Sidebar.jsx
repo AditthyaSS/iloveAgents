@@ -4,8 +4,16 @@ import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
 
 export default function Sidebar({ open, onClose }) {
+  const STORAGE_KEY = "sidebar-category-state";
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
-  const [openCategories, setOpenCategories] = useState({})
+  const [openCategories, setOpenCategories] = useState(() => {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+});
   const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
   const [agents, setAgents] = useState([])
   const location = useLocation()
@@ -18,7 +26,12 @@ export default function Sidebar({ open, onClose }) {
 
     fetchAgents()
   }, [])
-
+useEffect(() => {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(openCategories)
+  );
+}, [openCategories]);
   // Auto-expand the category of the currently active agent
   useEffect(() => {
     const currentAgentId = location.pathname.startsWith('/agent/') ? location.pathname.split('/agent/')[1] : null
@@ -67,18 +80,20 @@ export default function Sidebar({ open, onClose }) {
   const categoryOrder = Object.keys(categories)
 
   const toggleCategory = (category) => {
-    if (isSearching) {
-      setSearchExpandedCategories((prev) => ({
-        ...prev,
-        [category]: !(prev[category] ?? true),
-      }))
-    } else {
-      setOpenCategories((prev) => ({
-        ...prev,
-        [category]: !prev[category],
-      }))
-    }
+  
+
+  if (isSearching) {
+    setSearchExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !(prev[category] ?? true),
+    }));
+  } else {
+    setOpenCategories((prev) => ({
+      ...prev,
+      [category]: !(prev[category] ?? true),
+    }));
   }
+};
 
   return (
     <>
@@ -190,10 +205,11 @@ export default function Sidebar({ open, onClose }) {
           <div className="border-b dark:border-border border-gray-100 mb-2" />
 
           {categoryOrder.map((category) => {
-            const isCategoryExpanded = isSearching
-              ? (searchExpandedCategories[category] ?? true)
-              : Boolean(openCategories[category])
-            const isActiveCategory = activeCategory === category
+            const isActiveCategory = activeCategory === category;
+
+const isCategoryExpanded = isSearching
+  ? (searchExpandedCategories[category] ?? true)
+  : (openCategories[category] ?? true);
 
             return (
               <div key={category} className="mb-3">
@@ -236,8 +252,14 @@ export default function Sidebar({ open, onClose }) {
                   </span>
                 </button>
 
-                {isCategoryExpanded && (
-                  <div className="mt-0.5">
+                <div
+  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+    isCategoryExpanded
+      ? "max-h-screen opacity-100"
+      : "max-h-0 opacity-0"
+  }`}
+>
+  <div className="mt-0.5">
                     {categories[category].map((agent) => {
                       const IconComponent = Icons[agent.icon] || Icons.Bot
 
@@ -272,7 +294,7 @@ export default function Sidebar({ open, onClose }) {
                       )
                     })}
                   </div>
-                )}
+                </div>
               </div>
             )
           })}
