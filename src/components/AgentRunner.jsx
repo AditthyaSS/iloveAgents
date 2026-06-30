@@ -22,6 +22,9 @@ import ApiKeyInfo from "./ApiKeyInfo";
 import OutputRenderer from "./OutputRenderer";
 import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
+import TokenCounter from "./TokenCounter";
+import CostEstimator from "./CostEstimator";
+import { useSessionSpend } from "../lib/useSessionSpend";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
@@ -88,6 +91,7 @@ export default function AgentRunner({ agent }) {
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
   const { addJob } = useScheduler();
+  const { addRun } = useSessionSpend();
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
@@ -112,6 +116,7 @@ export default function AgentRunner({ agent }) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    setLoading(false);
     setOutput(null);
     setStreamingOutput("");
     setIsStreaming(false);
@@ -243,7 +248,16 @@ export default function AgentRunner({ agent }) {
       setIsStreaming(false);
       setDuration(result.duration);
 
-      // Save to history
+      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
+
+      addRun({
+        model,
+        inputTokens: null,
+        outputTokens: null,
+        inputCost: null,
+        outputCost: null,
+      });
+
       saveRun({
         agentId: agent.id,
         agentName: agent.name,
@@ -467,10 +481,16 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
-                <CharCounter
-                  value={inputs[input.id] || ""}
-                  maxLength={5000}
-                />
+                <div className="flex items-center gap-3 mt-1">
+                  <CharCounter
+                    value={inputs[input.id] || ""}
+                    maxLength={5000}
+                  />
+                  <TokenCounter
+                    value={inputs[input.id] || ""}
+                    modelId={selectedModel}
+                  />
+                </div>
               </div>
             )}
 
@@ -492,10 +512,16 @@ export default function AgentRunner({ agent }) {
                   onChange={(v) => updateInput(input.id, v)}
                   className="top-2 right-2"
                 />
-                <CharCounter
-                  value={inputs[input.id] || ""}
-                  maxLength={5000}
-                />
+                <div className="flex items-center gap-3 mt-1">
+                  <CharCounter
+                    value={inputs[input.id] || ""}
+                    maxLength={5000}
+                  />
+                  <TokenCounter
+                    value={inputs[input.id] || ""}
+                    modelId={selectedModel}
+                  />
+                </div>
               </div>
             )}
 
@@ -595,6 +621,10 @@ export default function AgentRunner({ agent }) {
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
+                <TokenCounter
+                  value={customPrompt}
+                  modelId={selectedModel}
+                />
                 <CharCounter
                   value={customPrompt}
                   maxLength={5000}
@@ -767,6 +797,14 @@ export default function AgentRunner({ agent }) {
             {(duration / 1000).toFixed(1)}s
           </div>
         )}
+      </div>
+
+      <div className="mb-4">
+        <CostEstimator
+          inputText={buildUserMessage()}
+          systemPrompt={customPrompt}
+          modelId={selectedModel}
+        />
       </div>
 
       {error && error.type === "invalid_api_key" ? (

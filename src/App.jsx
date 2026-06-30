@@ -21,6 +21,7 @@ import CollectionsPage from './pages/CollectionsPage'
 import CollectionDetailPage from './pages/CollectionDetailPage'
 import SchedulerPage from './pages/SchedulerPage'
 import ErrorBoundary from './components/ErrorBoundary'
+import Privacy from './pages/Privacy'
 
 function MainLayout({ sidebarOpen, setSidebarOpen }) {
   return (
@@ -53,6 +54,7 @@ export default function App() {
 
           <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
             <Route path="/" element={<HomePage />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="/agent/:id" element={<AgentPage />} />
 
             <Route path="/suites" element={<SuitesPage />} />

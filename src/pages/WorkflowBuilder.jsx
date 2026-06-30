@@ -307,30 +307,37 @@ export default function WorkflowBuilder() {
                     No agents found
                   </div>
                 ) : (
-                  filteredAgents.map((agent) => {
-                    const IconComponent = Icons[agent.icon] || Icons.Bot
-                    return (
-                      <button
-                        key={agent.id}
-                        onClick={() => addAgent(agent)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
-                          dark:hover:bg-surface-hover dark:hover:text-text-primary
-                          hover:bg-gray-50 hover:text-gray-900"
-                      >
-                        <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
-                          <IconComponent size={13} className="text-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
-                            {agent.name}
-                          </div>
-                          <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
-                            {agent.category}
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })
+                  <>
+  {filteredAgents.map((agent) => {
+    const IconComponent = Icons[agent.icon] || Icons.Bot
+
+    return (
+      <button
+        key={agent.id}
+        onClick={() => addAgent(agent)}
+        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
+          dark:hover:bg-surface-hover dark:hover:text-text-primary
+          hover:bg-gray-50 hover:text-gray-900"
+      >
+        <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
+          <IconComponent size={13} className="text-accent" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
+            {agent.name}
+          </div>
+
+          <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
+            {agent.category}
+          </div>
+        </div>
+      </button>
+    )
+  })}
+
+  <div className="h-3" />
+</>
                 )}
               </div>
             )}
