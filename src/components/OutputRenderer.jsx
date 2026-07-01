@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
+import VoiceOutput from './VoiceOutput'
 
 function stripMarkdown(text) {
   if (!text) return ''
@@ -108,6 +109,11 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
           Output
         </span>
         <div className="flex items-center gap-2">
+          {/* VoiceOutput — reads the response aloud */}
+          <VoiceOutput
+          text={typeof content === 'string' ? content : JSON.stringify(content)}
+          />
+
           <CopyButton text={content} label="Copy output" />
           <CopyButton text={stripMarkdown(content)} label="Copy as Plain Text" icon={FileText} />
           <CopyButton text={shareText} label="Share" />
