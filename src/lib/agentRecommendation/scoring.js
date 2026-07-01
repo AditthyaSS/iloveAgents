@@ -4,13 +4,14 @@ import { buildRecommendationReasons } from './explanations.js'
 
 const normalize = (value) => String(value || '').trim().toLowerCase()
 const searchableText = (agent = {}) => normalize([agent.id, agent.name, agent.description, agent.category, agent.provider].filter(Boolean).join(' '))
+const FREE_TEXT_TOKEN_LIMIT = 12
 
 export function tokenizeFreeText(text = '') {
   return normalize(text)
     .split(/[^a-z0-9+#.-]+/i)
     .map((token) => token.trim())
     .filter((token) => token.length > 2 && !STOP_WORDS.has(token))
-    .slice(0, 12)
+    .slice(0, FREE_TEXT_TOKEN_LIMIT)
 }
 
 const getGoal = (id) => GOAL_OPTIONS.find((option) => option.id === id)
@@ -108,7 +109,8 @@ export function scoreAgent(agent = {}, preferences = {}, weights = DEFAULT_RECOM
 export function getMaxPossibleScore(preferences = {}, weights = DEFAULT_RECOMMENDATION_WEIGHTS) {
   const extras = Array.isArray(preferences.extraPreferences) ? preferences.extraPreferences.length : 0
   const taskCount = getGoal(preferences.primaryGoal)?.taskTypes?.length || 0
-  return weights.exactCategory + weights.goalCategory + Math.max(1, taskCount) * weights.taskType + extras * (weights.capabilityKeyword ?? 0) + weights.providerExact + weights.freeTextName * 3 + weights.experience + weights.urgency
+  const freeTextTokenCount = tokenizeFreeText(preferences.freeTextGoal).length
+  return weights.exactCategory + weights.goalCategory + Math.max(1, taskCount) * weights.taskType + extras * (weights.capabilityKeyword ?? 0) + weights.providerExact + weights.freeTextName * freeTextTokenCount + weights.experience + weights.urgency
 }
 
 export function recommendAgents(agents = [], preferences = {}, options = {}) {
