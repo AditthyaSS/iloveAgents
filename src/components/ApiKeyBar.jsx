@@ -13,6 +13,7 @@ const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'gemini', label: 'Gemini' },
+  { value: 'openrouter', label: 'OpenRouter' },
 ]
 
 const providerLogos = {
@@ -25,6 +26,27 @@ const providerUrls = {
   openai: 'https://platform.openai.com/account/api-keys',
   anthropic: 'https://console.anthropic.com/keys',
   gemini: 'https://console.cloud.google.com/apis/credentials',
+  openrouter: 'https://openrouter.ai/keys',
+}
+
+function ProviderIcon({ provider, label }) {
+  const logo = providerLogos[provider]
+
+  if (logo) {
+    return (
+      <img
+        src={logo}
+        alt={`${label} logo`}
+        className="w-4 h-4 flex-shrink-0"
+      />
+    )
+  }
+
+  return (
+    <span className="w-4 h-4 rounded bg-accent/10 text-[8px] font-bold text-accent flex items-center justify-center flex-shrink-0">
+      OR
+    </span>
+  )
 }
 
 
@@ -75,13 +97,7 @@ export default function ApiKeyBar({
       : PROVIDERS.filter((p) => p.value === agentProvider)
   ).map((p) => ({
     ...p,
-    icon: (
-      <img
-        src={providerLogos[p.value]}
-        alt={`${p.label} logo`}
-        className="w-4 h-4 flex-shrink-0"
-      />
-    ),
+    icon: <ProviderIcon provider={p.value} label={p.label} />,
   }))
 
   const availableModels =
@@ -99,6 +115,10 @@ export default function ApiKeyBar({
     'Alt+3': () => {
       const p = availableProviders.find(p => p.value === 'gemini');
       if (p) setProvider('gemini');
+    },
+    'Alt+4': () => {
+      const p = availableProviders.find(p => p.value === 'openrouter');
+      if (p) setProvider('openrouter');
     },
   });
 
