@@ -1,3 +1,5 @@
+import { calculateReliabilityScore } from '../lib/reliabilityScorer';
+import TrustBadge from '../components/TrustBadge';
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
@@ -526,19 +528,28 @@ export default function HomePage() {
                 <AgentCardSkeleton key={idx} />
               ))}
             </div>
-          ) : filteredAgents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filteredAgents.map((agent, idx) => (
-                <div
-                  key={agent.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${idx * 30}ms` }}
-                >
-                  <AgentCard agent={agent} />
-                </div>
-              ))}
-            </div>
-          ) : (
+         ) : filteredAgents.length > 0 ? (
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+    {filteredAgents.map((agent, idx) => (
+      <div
+        key={agent.id}
+        className="animate-fade-in"
+        style={{ animationDelay: `${idx * 30}ms` }}
+      >
+        <div className="relative">
+          <AgentCard agent={agent} />
+          <div className="absolute top-2 right-2 z-10">
+            {(() => {
+              console.log("Agent Data Check:", agent);
+              const { score, badge } = calculateReliabilityScore(agent);
+              return <TrustBadge score={score} badge={badge} />;
+            })()}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+) : (
             <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
               <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                 <Search size={24} className="text-accent" />
