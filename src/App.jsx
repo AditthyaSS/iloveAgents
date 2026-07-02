@@ -20,6 +20,7 @@ import SuitesPage from './pages/SuitesPage'
 import CollectionsPage from './pages/CollectionsPage'
 import CollectionDetailPage from './pages/CollectionDetailPage'
 import SchedulerPage from './pages/SchedulerPage'
+import MarketplacePage from './pages/MarketplacePage'
 import ErrorBoundary from './components/ErrorBoundary'
 import Privacy from './pages/Privacy'
 
@@ -63,6 +64,8 @@ export default function App() {
             <Route path="/collections/:id" element={<CollectionDetailPage />} />
 
             <Route path="/scheduler" element={<SchedulerPage />} />
+
+            <Route path="/marketplace" element={<MarketplacePage />} />
 
             <Route path="/workflows" element={<WorkflowLibrary />} />
             <Route path="/workflows/build" element={<WorkflowBuilder />} />
