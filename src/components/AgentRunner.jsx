@@ -205,6 +205,10 @@ const getTokenCount = (text) => {
 
   const canRun = () => {
     if (!apiKey) return false;
+    return hasRequiredInputs();
+  };
+
+  const hasRequiredInputs = () => {
     return agent.inputs
       .filter((i) => i.required)
       .every((i) => {
@@ -807,10 +811,16 @@ const getTokenCount = (text) => {
         {/* Schedule button */}
         <button
           onClick={() => setScheduleModalOpen(true)}
-          title="Schedule this agent to run automatically"
+          disabled={!hasRequiredInputs()}
+          title={
+            hasRequiredInputs()
+              ? "Schedule this agent to run automatically"
+              : "Fill required inputs before scheduling"
+          }
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
             dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover
-            text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            text-gray-500 hover:text-gray-900 hover:bg-gray-100
+            disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
         >
           <CalendarClock size={14} />
           Schedule
