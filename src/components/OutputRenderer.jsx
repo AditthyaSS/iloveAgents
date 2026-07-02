@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Copy, Check, FileText } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeSanitize from 'rehype-sanitize'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
@@ -129,6 +130,7 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
           <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeSanitize]}
               components={{
                 code({ node, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '')
