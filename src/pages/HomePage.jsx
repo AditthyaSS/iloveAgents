@@ -130,6 +130,42 @@ export default function HomePage() {
     },
   });
   
+ useEffect(() => {
+   try {
+     const savedFilters = localStorage.getItem('homepageFilters')
+     if (!savedFilters) return
+ 
+     const parsedFilters = JSON.parse(savedFilters)
+     if (!parsedFilters || typeof parsedFilters !== 'object') return
+
+    setSearchQuery(typeof parsedFilters.searchQuery === 'string' ? parsedFilters.searchQuery : '')
+    setSelectedCategory(
+      typeof parsedFilters.selectedCategory === 'string' ? parsedFilters.selectedCategory : null
+    )
+  } catch {
+    localStorage.removeItem('homepageFilters')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!searchQuery.trim() && !selectedCategory) {
+     localStorage.removeItem('homepageFilters')
+     return
+   }
+
+ try {
+   localStorage.setItem(
+       'homepageFilters',
+       JSON.stringify({
+         searchQuery,
+         selectedCategory,
+       })
+     )
+   } catch {
+     // Ignore unavailable storage; filtering should still work for the session.
+   }
+  }, [searchQuery, selectedCategory])
+
   const { favorites } = useFavorites()
   const { history, deleteRun, clearHistory } = useHistory()
 
@@ -549,6 +585,17 @@ export default function HomePage() {
               <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
                 Try adjusting your search or removing category filters
               </p>
+              <button
+                onClick={() => {
+               setSearchQuery('')
+               setSelectedCategory(null)
+               localStorage.removeItem('homepageFilters')
+               }}
+               
+                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+              >
+                Clear all filters <X size={12} />
+              </button>
               <div className="flex flex-col items-center gap-2">
                 <button
                   onClick={() => {
