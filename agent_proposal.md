@@ -49,7 +49,7 @@ Copy everything below this line into your GitHub Issue:
 
 | Field | Value |
 |-------|-------|
-| Provider | *(openai / anthropic / gemini / any)* |
+| Provider | *(openai / anthropic / gemini / groq / any)* |
 | Model | *(e.g. gpt-4o, claude-opus-4-20250514, gemini-2.0-flash)* |
 
 ### Input Fields

@@ -17,12 +17,21 @@ export const MODELS = {
     { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Exp)' },
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
   ],
+  groq: [
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B Versatile' },
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B Instant' },
+    { value: 'openai/gpt-oss-120b', label: 'GPT-OSS 120B' },
+    { value: 'openai/gpt-oss-20b', label: 'GPT-OSS 20B' },
+    { value: 'whisper-large-v3', label: 'Whisper' },
+    { value: 'whisper-large-v3-turbo', label: 'Whisper Large V3 Turbo' },
+  ],
 }
 
 export const MODEL_MAP = {
   openai: MODELS.openai[0].value,
   anthropic: MODELS.anthropic[0].value,
   gemini: MODELS.gemini[0].value,
+  groq: MODELS.groq[0].value,
 }
 
 export function resolveAgentModel(agent, actualProvider, selectedModel) {

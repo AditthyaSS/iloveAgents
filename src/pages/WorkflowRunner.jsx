@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useAgents } from '../lib/useAgents'
 import {
   ArrowLeft,
   Zap,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
