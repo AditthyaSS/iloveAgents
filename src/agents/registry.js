@@ -47,8 +47,4 @@ export function loadAllAgents() {
 
   return cachedAgentsPromise;
 }
-
-const modulesEager = import.meta.glob('./definitions/*.js', { eager: true });
-const agents = normalizeAgents(Object.values(modulesEager).map((m) => m.default));
-
-export default agents;
+

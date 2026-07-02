@@ -59,56 +59,57 @@
 | 52 | InterviewAI | Simulates real software engineering interviews and provides comprehensive performance feedback. | Engineering |
 | 53 | Invoice Description Generator | Turn rough notes about work you did into polished invoice line items and a professional project summary. | Business |
 | 54 | Kubernetes Manifest Generator | Generates a complete Kubernetes Deployment, Service, and ConfigMap manifest from a few app inputs. | DevOps |
-| 55 | LinkedIn Outreach Message Writer | Paste a prospect's profile summary and your product details to generate personalized connection requests and follow-up messages that feel genuine, not spammy. | Sales |
-| 56 | LinkedIn Post Writer | Generate ready-to-post LinkedIn content with a strong hook and hashtags. | Marketing |
-| 57 | Log Analysis Summarizer | Paste raw log output and get a structured summary of errors, warnings, patterns, timeline of events, and likely root cause — so you find the 5 lines that matter in 500 lines of noise. | DevOps |
-| 58 | Master Image Prompt Generator | Turn a basic idea into a highly detailed, professional prompt for Midjourney, DALL-E 3 or other AI image generation tools. | Design |
-| 59 | Meal Planner Agent | Creates personalized meal plans based on dietary preferences, health goals, budget, available ingredients, and nutritional requirements. | Productivity |
-| 60 | Medication Interaction Explainer | Understand possible medication interactions, side effects, and safety concerns in plain English. | Healthcare |
-| 61 | Meeting Notes Summarizer | Turns raw meeting notes or transcripts into a clean summary with decisions, action items, and owners. | Productivity |
-| 62 | ML Experiment Report Generator | Enter your model type, hyperparameters, training metrics, and evaluation results to get a structured experiment report ready to share with your team or include in a paper. | Engineering |
-| 63 | Mock Data Generator | Describe a data schema and get realistic mock data in JSON format instantly — names, emails, addresses, dates, and more. | Engineering |
-| 64 | Model Meltdown Detective | Diagnose failed or underperforming ML experiments using model details, dataset context, metrics, hyperparameters, and code snippets. | Engineering |
-| 65 | NFT Project Description Writer | Writes engaging and compelling descriptions for NFT collections. | Marketing |
-| 66 | NPC Dialogue & Lore Generator | Describe a game character and scenario to get fully voiced NPC dialogue trees, personality-consistent responses, ambient lore snippets, and journal entries — ready to drop into any game engine. | Gaming |
-| 67 | PathPilot | Predicts possible outcomes, risks, and emotional impact for different life or career choices. | Education |
-| 68 | Patient Discharge Summary Writer | Turn diagnosis, treatment, medications, and follow-up instructions into a clear patient-friendly discharge summary. | Healthcare |
-| 69 | Patient Pre-Consultation Note | Turn symptom descriptions into a structured pre-consultation summary patients can share with doctors. Includes symptom timeline, relevant history prompts, and helpful questions for the doctor. This tool does not provide medical diagnoses. | Healthcare |
-| 70 | PDF Summarizer | Upload a PDF and get a structured summary with key points. | Productivity |
-| 71 | Performance Review Writer | Turn bullet notes about an employee into a structured, fair, and specific performance review. | HR |
-| 72 | Persona Generator | Describe your product or service and get detailed, realistic user personas with demographics, goals, frustrations, and behavioral patterns. | Product |
-| 73 | Personal Budget Analyzer | Analyze your monthly income and expenses to get a clear breakdown, savings rate, and actionable financial recommendations. | Finance |
-| 74 | Phishing Email Detector | Analyze emails for phishing indicators, risk scoring, and safety recommendations. | Cybersecurity |
-| 75 | PR Diff Reviewer | Review a raw git/PR diff and get structured feedback on the changed lines only. | Developer Tools |
-| 76 | PRD Generator | Generates detailed Product Requirements Documents. | Product |
-| 77 | Privacy Policy Generator | Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights. | Legal |
-| 78 | Project Architecture Planner | Analyzes a project idea and recommends a practical technology stack, architecture, authentication strategy, AI components, deployment approach, and development roadmap. | Engineering |
-| 79 | Property Description Writer | Enter your property specs and get a compelling, SEO-optimized listing description, a social media caption, and a set of headline options — tailored to your target buyer and tone. | Real Estate |
-| 80 | Proposal Document Generator | Generate professional client proposal documents with project overview, pricing, timeline, deliverables, and next steps. | Sales |
-| 81 | Pull Request Description Generator | Turn a diff summary or bullet points of changes into a full, structured PR description with summary, changes list, testing instructions, and a screenshots section. | Engineering |
-| 82 | PYQ Paper Analyser | Analyzes previous year question papers, identifies recurring concepts, ranks topic importance, and generates a model question paper. | Education |
-| 83 | Real Estate Listing Generator | Generates compelling real estate listing descriptions for property portals and marketplaces. | Real Estate |
-| 84 | Regex Generator | Describe what you want to match in plain English and get a tested regex pattern with explanation. | Engineering |
-| 85 | Research Agent | Get comprehensive research on any topic with configurable depth. | Research |
-| 86 | Resume Screener | Evaluate candidates against job descriptions with scoring. | HR |
-| 87 | Salary Negotiation Script Generator | Generate personalized salary negotiation scripts with opening statements, pushback responses, and professional closing strategies. | Finance |
-| 88 | Sales Discovery Call Script Generator | Create professional sales discovery call scripts with qualification questions, pain-point exploration, objection handling, and actionable next steps. | Sales |
-| 89 | Sales Objection Handler | Generates empathetic, direct, and data-driven responses to customer objections. | Sales |
-| 90 | SEO Keyword Strategy Planner | Helps marketers generate a comprehensive SEO keyword strategy by identifying high-value keywords and content opportunities. | Marketing |
-| 91 | Skill Gap Roadmap Agent | Paste the job description for your future role and your current background. Get a week-by-week learning roadmap, project ideas, and milestone checks. | Education |
-| 92 | Smart Contract Auditor | Paste your smart contract code and get a structured security audit with vulnerability detection, severity ratings, gas optimization tips, and fix recommendations. | Web3 |
-| 93 | Smart Contract Explainer | Paste a smart contract and get a plain-English explanation of what it does, what each function does, what permissions and roles exist, and any potential red flags. | Web3 |
-| 94 | Social Media Thread Writer | Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action. | Marketing |
-| 95 | Solidity Code Reviewer | Review Solidity smart contract code for security, gas efficiency, and best practices. | Web3 |
-| 96 | SQL Query Generator | Converts plain English questions into clean SQL queries. Paste your schema and describe what you want. | Engineering |
-| 97 | SQL Query Optimizer | Analyzes SQL queries and suggests performance optimizations, indexing strategies, and cleaner alternatives. | Engineering |
-| 98 | Startup Idea Validator | Describe a startup idea and get a structured analysis with market potential, risks, competition, and a viability score. | Business |
-| 99 | Technical Debt Report Generator | Generate structured technical debt reports with business impact,estimated effort to fix,risk if ignored and prioritized recommendations. | Engineering |
-| 100 | Tone Rewriter | Paste any text and select a target tone. Get your message rewritten to match — from formal to casual, harsh to diplomatic, or verbose to concise. | Productivity |
-| 101 | Typography Pairer | Describe your project mood, brand, or use case and get 3-5 font pairings with heading, body, and accent fonts, live CSS snippets, and Tailwind config. | Design |
-| 102 | Unit Test Generator | Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios. | Engineering |
-| 103 | User Story Writer | Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes. | Product |
-| 104 | Web3 Whitepaper Writer | Generate a structured, professional blockchain project whitepaper draft from your project details, tokenomics, and team background. | Web3 |
-| 105 | Win/Loss Analysis Report Generator | Enter details about a closed deal to get a structured win/loss analysis with key factors, alternative approaches, and actionable lessons for your sales team. | Sales |
-| 106 | YouTube Script Writer | Turn any topic into a ready-to-record YouTube script with intro hook, sections, and outro. | Marketing |
+| 55 | Kubernetes Manifest Security Audit & Optimizer Agent | Audit Kubernetes YAML configurations for security vulnerabilities, container misconfigurations, and performance bottlenecks, and generate optimized manifests. | DevOps |
+| 56 | LinkedIn Outreach Message Writer | Paste a prospect's profile summary and your product details to generate personalized connection requests and follow-up messages that feel genuine, not spammy. | Sales |
+| 57 | LinkedIn Post Writer | Generate ready-to-post LinkedIn content with a strong hook and hashtags. | Marketing |
+| 58 | Log Analysis Summarizer | Paste raw log output and get a structured summary of errors, warnings, patterns, timeline of events, and likely root cause — so you find the 5 lines that matter in 500 lines of noise. | DevOps |
+| 59 | Master Image Prompt Generator | Turn a basic idea into a highly detailed, professional prompt for Midjourney, DALL-E 3 or other AI image generation tools. | Design |
+| 60 | Meal Planner Agent | Creates personalized meal plans based on dietary preferences, health goals, budget, available ingredients, and nutritional requirements. | Productivity |
+| 61 | Medication Interaction Explainer | Understand possible medication interactions, side effects, and safety concerns in plain English. | Healthcare |
+| 62 | Meeting Notes Summarizer | Turns raw meeting notes or transcripts into a clean summary with decisions, action items, and owners. | Productivity |
+| 63 | ML Experiment Report Generator | Enter your model type, hyperparameters, training metrics, and evaluation results to get a structured experiment report ready to share with your team or include in a paper. | Engineering |
+| 64 | Mock Data Generator | Describe a data schema and get realistic mock data in JSON format instantly — names, emails, addresses, dates, and more. | Engineering |
+| 65 | Model Meltdown Detective | Diagnose failed or underperforming ML experiments using model details, dataset context, metrics, hyperparameters, and code snippets. | Engineering |
+| 66 | NFT Project Description Writer | Writes engaging and compelling descriptions for NFT collections. | Marketing |
+| 67 | NPC Dialogue & Lore Generator | Describe a game character and scenario to get fully voiced NPC dialogue trees, personality-consistent responses, ambient lore snippets, and journal entries — ready to drop into any game engine. | Gaming |
+| 68 | PathPilot | Predicts possible outcomes, risks, and emotional impact for different life or career choices. | Education |
+| 69 | Patient Discharge Summary Writer | Turn diagnosis, treatment, medications, and follow-up instructions into a clear patient-friendly discharge summary. | Healthcare |
+| 70 | Patient Pre-Consultation Note | Turn symptom descriptions into a structured pre-consultation summary patients can share with doctors. Includes symptom timeline, relevant history prompts, and helpful questions for the doctor. This tool does not provide medical diagnoses. | Healthcare |
+| 71 | PDF Summarizer | Upload a PDF and get a structured summary with key points. | Productivity |
+| 72 | Performance Review Writer | Turn bullet notes about an employee into a structured, fair, and specific performance review. | HR |
+| 73 | Persona Generator | Describe your product or service and get detailed, realistic user personas with demographics, goals, frustrations, and behavioral patterns. | Product |
+| 74 | Personal Budget Analyzer | Analyze your monthly income and expenses to get a clear breakdown, savings rate, and actionable financial recommendations. | Finance |
+| 75 | Phishing Email Detector | Analyze emails for phishing indicators, risk scoring, and safety recommendations. | Cybersecurity |
+| 76 | PR Diff Reviewer | Review a raw git/PR diff and get structured feedback on the changed lines only. | Developer Tools |
+| 77 | PRD Generator | Generates detailed Product Requirements Documents. | Product |
+| 78 | Privacy Policy Generator | Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights. | Legal |
+| 79 | Project Architecture Planner | Analyzes a project idea and recommends a practical technology stack, architecture, authentication strategy, AI components, deployment approach, and development roadmap. | Engineering |
+| 80 | Property Description Writer | Enter your property specs and get a compelling, SEO-optimized listing description, a social media caption, and a set of headline options — tailored to your target buyer and tone. | Real Estate |
+| 81 | Proposal Document Generator | Generate professional client proposal documents with project overview, pricing, timeline, deliverables, and next steps. | Sales |
+| 82 | Pull Request Description Generator | Turn a diff summary or bullet points of changes into a full, structured PR description with summary, changes list, testing instructions, and a screenshots section. | Engineering |
+| 83 | PYQ Paper Analyser | Analyzes previous year question papers, identifies recurring concepts, ranks topic importance, and generates a model question paper. | Education |
+| 84 | Real Estate Listing Generator | Generates compelling real estate listing descriptions for property portals and marketplaces. | Real Estate |
+| 85 | Regex Generator | Describe what you want to match in plain English and get a tested regex pattern with explanation. | Engineering |
+| 86 | Research Agent | Get comprehensive research on any topic with configurable depth. | Research |
+| 87 | Resume Screener | Evaluate candidates against job descriptions with scoring. | HR |
+| 88 | Salary Negotiation Script Generator | Generate personalized salary negotiation scripts with opening statements, pushback responses, and professional closing strategies. | Finance |
+| 89 | Sales Discovery Call Script Generator | Create professional sales discovery call scripts with qualification questions, pain-point exploration, objection handling, and actionable next steps. | Sales |
+| 90 | Sales Objection Handler | Generates empathetic, direct, and data-driven responses to customer objections. | Sales |
+| 91 | SEO Keyword Strategy Planner | Helps marketers generate a comprehensive SEO keyword strategy by identifying high-value keywords and content opportunities. | Marketing |
+| 92 | Skill Gap Roadmap Agent | Paste the job description for your future role and your current background. Get a week-by-week learning roadmap, project ideas, and milestone checks. | Education |
+| 93 | Smart Contract Auditor | Paste your smart contract code and get a structured security audit with vulnerability detection, severity ratings, gas optimization tips, and fix recommendations. | Web3 |
+| 94 | Smart Contract Explainer | Paste a smart contract and get a plain-English explanation of what it does, what each function does, what permissions and roles exist, and any potential red flags. | Web3 |
+| 95 | Social Media Thread Writer | Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action. | Marketing |
+| 96 | Solidity Code Reviewer | Review Solidity smart contract code for security, gas efficiency, and best practices. | Web3 |
+| 97 | SQL Query Generator | Converts plain English questions into clean SQL queries. Paste your schema and describe what you want. | Engineering |
+| 98 | SQL Query Optimizer | Analyzes SQL queries and suggests performance optimizations, indexing strategies, and cleaner alternatives. | Engineering |
+| 99 | Startup Idea Validator | Describe a startup idea and get a structured analysis with market potential, risks, competition, and a viability score. | Business |
+| 100 | Technical Debt Report Generator | Generate structured technical debt reports with business impact,estimated effort to fix,risk if ignored and prioritized recommendations. | Engineering |
+| 101 | Tone Rewriter | Paste any text and select a target tone. Get your message rewritten to match — from formal to casual, harsh to diplomatic, or verbose to concise. | Productivity |
+| 102 | Typography Pairer | Describe your project mood, brand, or use case and get 3-5 font pairings with heading, body, and accent fonts, live CSS snippets, and Tailwind config. | Design |
+| 103 | Unit Test Generator | Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios. | Engineering |
+| 104 | User Story Writer | Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes. | Product |
+| 105 | Web3 Whitepaper Writer | Generate a structured, professional blockchain project whitepaper draft from your project details, tokenomics, and team background. | Web3 |
+| 106 | Win/Loss Analysis Report Generator | Enter details about a closed deal to get a structured win/loss analysis with key factors, alternative approaches, and actionable lessons for your sales team. | Sales |
+| 107 | YouTube Script Writer | Turn any topic into a ready-to-record YouTube script with intro hook, sections, and outro. | Marketing |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
