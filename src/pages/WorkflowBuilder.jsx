@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -27,6 +27,7 @@ export default function WorkflowBuilder() {
   const [agents, setAgents] = useState([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const descriptionRef = useRef(null)
   const [selectedAgents, setSelectedAgents] = useState([])
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -171,20 +172,38 @@ export default function WorkflowBuilder() {
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Description <span className="dark:text-text-muted text-gray-400 font-normal">(optional)</span>
         </label>
-        <textarea
-          id="workflow-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="What does this workflow do?"
-          rows={2}
-          className="w-full px-3 py-2.5 rounded-lg border text-sm transition-all resize-none
-            dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
-            bg-white border-gray-200 text-gray-900 placeholder-gray-400
-            focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50"
-        />
-        <div className="mt-1 text-xs text-right dark:text-text-muted text-gray-500">
-         {description.length} characters
-        </div>
+        <div className="relative">
+  <textarea
+    ref={descriptionRef}
+    id="workflow-description"
+    value={description}
+    onChange={(e) => setDescription(e.target.value)}
+    placeholder="What does this workflow do?"
+    rows={2}
+    className="w-full px-3 py-2.5 rounded-lg border text-sm transition-all resize-none
+      dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
+      bg-white border-gray-200 text-gray-900 placeholder-gray-400
+      focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50"
+  />
+
+  {description.trim() && (
+    <button
+      type="button"
+      onClick={() => {
+        setDescription('')
+        descriptionRef.current?.focus()
+      }}
+      className="absolute top-2 right-2 p-1 rounded text-gray-400 hover:text-gray-600 dark:text-text-muted dark:hover:text-text-primary"
+      aria-label="Clear description"
+    >
+      <X size={14} />
+    </button>
+  )}
+</div>
+
+<div className="mt-1 text-xs text-right dark:text-text-muted text-gray-500">
+  {description.length} characters
+</div>
       </div>
 
       {/* Agent Sequence Builder */}
