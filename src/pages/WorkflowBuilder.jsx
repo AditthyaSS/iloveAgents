@@ -182,6 +182,9 @@ export default function WorkflowBuilder() {
             bg-white border-gray-200 text-gray-900 placeholder-gray-400
             focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50"
         />
+        <div className="mt-1 text-xs text-right dark:text-text-muted text-gray-500">
+         {description.length} characters
+        </div>
       </div>
 
       {/* Agent Sequence Builder */}
