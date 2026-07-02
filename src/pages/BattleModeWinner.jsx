@@ -44,8 +44,7 @@ export default function BattleModeWinner() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
-      <BattleNavbar />
+    <div className="min-h-screen dark:bg-surface bg-gray-50 text-white battle-page-transition">
 
       <main className="pt-14 max-w-3xl mx-auto px-4 py-8">
         {/* Hero */}
@@ -63,7 +62,7 @@ export default function BattleModeWinner() {
           <p className={`text-lg font-bold mb-1 ${colors.text}`}>
             {provider.label}
           </p>
-          <p className="text-xs text-gray-400 font-medium">
+          <p className="text-xs dark:text-text-muted dark:text-text-muted text-gray-500 font-medium">
             {agentName && `Agent: ${agentName}`}
             {duration && ` \u00B7 ${(duration / 1000).toFixed(1)}s`}
           </p>
@@ -74,11 +73,11 @@ export default function BattleModeWinner() {
           hover:border-opacity-60 transition-all duration-300`}
           style={{ animationDelay: '150ms' }}>
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-gray-400">
+            <span className="text-xs font-bold uppercase tracking-widest dark:text-text-muted text-gray-500">
               Winning Output
             </span>
           </div>
-          <div className="markdown-output text-sm text-gray-100 leading-relaxed">
+          <div className="markdown-output text-sm dark:text-text-primary text-gray-900 leading-relaxed">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {content}
             </ReactMarkdown>
@@ -91,7 +90,7 @@ export default function BattleModeWinner() {
           <button
             onClick={handleCopy}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-xl text-sm font-semibold
-              bg-gray-900/60 border border-gray-700/60 text-gray-100 
+              dark:bg-surface-input bg-gray-50 border border-gray-700/60 dark:text-text-primary text-gray-900
               hover:bg-gray-900/80 hover:border-gray-600 hover:shadow-lg hover:shadow-gray-900/40
               transition-all duration-200 active:scale-95 battle-btn-secondary"
           >
@@ -102,7 +101,7 @@ export default function BattleModeWinner() {
           <button
             onClick={() => navigate('/battle/setup')}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-xl text-sm font-semibold
-              bg-gray-900/60 border border-gray-700/60 text-gray-100
+              dark:bg-surface-input bg-gray-50 border border-gray-700/60 dark:text-text-primary text-gray-900
               hover:bg-gray-900/80 hover:border-gray-600 hover:shadow-lg hover:shadow-gray-900/40
               transition-all duration-200 active:scale-95 battle-btn-secondary"
           >
@@ -113,7 +112,7 @@ export default function BattleModeWinner() {
           <button
             onClick={() => navigate('/')}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-xl text-sm font-semibold
-              bg-gray-900/60 border border-gray-700/60 text-gray-100
+              dark:bg-surface-input bg-gray-50 border border-gray-700/60 dark:text-text-primary text-gray-900
               hover:bg-gray-900/80 hover:border-gray-600 hover:shadow-lg hover:shadow-gray-900/40
               transition-all duration-200 active:scale-95 battle-btn-secondary"
           >
