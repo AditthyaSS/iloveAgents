@@ -1,5 +1,5 @@
-import { fetchGeminiModels } from '../lib/llmAdapter'
-import { useState, useEffect } from 'react'
+import { fetchGeminiModels, validateProviderKey } from '../lib/llmAdapter'
+import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import CustomSelect from './CustomSelect'
 import { MODELS } from '../lib/resolveAgentModel'
@@ -44,6 +44,12 @@ export default function ApiKeyBar({
   const [geminiModels, setGeminiModels] = useState([])
   const [geminiLoading, setGeminiLoading] = useState(false)
   const [geminiError, setGeminiError] = useState(null)
+  const [testStatusByProvider, setTestStatusByProvider] = useState({})
+  const [testMessageByProvider, setTestMessageByProvider] = useState({})
+  const [validatedKeyByProvider, setValidatedKeyByProvider] = useState({})
+  const testRequestIdRef = useRef(0)
+  const providerRef = useRef(provider)
+  const apiKeyRef = useRef(apiKey)
 
   useEffect(() => {
     if (provider !== 'gemini' || !apiKey?.trim()) {
@@ -67,6 +73,14 @@ export default function ApiKeyBar({
     }, 400)
     return () => clearTimeout(timer)
   }, [provider, apiKey])
+
+  useEffect(() => {
+    providerRef.current = provider
+  }, [provider])
+
+  useEffect(() => {
+    apiKeyRef.current = apiKey
+  }, [apiKey])
 
   // Filter providers if agent requires a specific one
   const availableProviders = (
@@ -102,6 +116,98 @@ export default function ApiKeyBar({
     },
   });
 
+  const currentTestStatus = testStatusByProvider[provider]
+  const currentTestMessage = testMessageByProvider[provider]
+  const validatedKey = validatedKeyByProvider[provider]
+  const isStale = Boolean(
+    currentTestStatus === 'success' &&
+      validatedKey &&
+      apiKey &&
+      apiKey !== validatedKey
+  )
+  const displayStatus = apiKey ? (isStale ? 'stale' : currentTestStatus) : null
+  const displayMessage = apiKey
+    ? (isStale ? 'Key modified - re-test recommended.' : currentTestMessage)
+    : null
+  const isTesting = currentTestStatus === 'loading'
+  const testButtonDisabled = !apiKey?.trim() || isTesting
+
+  const handleApiKeyChange = (value) => {
+    setApiKey(value)
+
+    if (currentTestStatus === 'loading') {
+      setTestStatusByProvider((prev) => {
+        if (!prev[provider]) return prev
+        const next = { ...prev }
+        delete next[provider]
+        return next
+      })
+      setTestMessageByProvider((prev) => {
+        if (!prev[provider]) return prev
+        const next = { ...prev }
+        delete next[provider]
+        return next
+      })
+    }
+  }
+
+  const handleTestKey = async () => {
+    if (!apiKey?.trim()) return
+
+    const requestId = ++testRequestIdRef.current
+    const requestProvider = provider
+    const requestKey = apiKey
+
+    setTestStatusByProvider((prev) => ({
+      ...prev,
+      [requestProvider]: 'loading',
+    }))
+    setTestMessageByProvider((prev) => ({
+      ...prev,
+      [requestProvider]: '',
+    }))
+
+    let result
+    try {
+      result = await validateProviderKey(requestProvider, requestKey)
+    } catch {
+      result = {
+        valid: false,
+        code: 'unknown_error',
+        message: 'API key validation failed. Please try again.',
+      }
+    }
+
+    if (requestId !== testRequestIdRef.current) return
+    if (providerRef.current !== requestProvider) return
+    if (apiKeyRef.current !== requestKey) return
+
+    if (result.valid) {
+      setValidatedKeyByProvider((prev) => ({
+        ...prev,
+        [requestProvider]: requestKey,
+      }))
+      setTestStatusByProvider((prev) => ({
+        ...prev,
+        [requestProvider]: 'success',
+      }))
+      setTestMessageByProvider((prev) => ({
+        ...prev,
+        [requestProvider]: result.message || 'API key verified.',
+      }))
+      return
+    }
+
+    setTestStatusByProvider((prev) => ({
+      ...prev,
+      [requestProvider]: 'error',
+    }))
+    setTestMessageByProvider((prev) => ({
+      ...prev,
+      [requestProvider]: result.message || 'API key validation failed.',
+    }))
+  }
+
   return (
     <div className="rounded-lg border p-3 mb-4 transition-theme
       dark:bg-surface-card dark:border-border bg-white border-gray-200">
@@ -131,7 +237,7 @@ export default function ApiKeyBar({
           <input
             type={showKey ? 'text' : 'password'}
             value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            onChange={(e) => handleApiKeyChange(e.target.value)}
             placeholder={`Enter your ${provider} API key...`}
             className="w-full h-8 px-3 pr-10 rounded-md text-xs font-mono transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
@@ -150,6 +256,17 @@ export default function ApiKeyBar({
             {showKey ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={handleTestKey}
+          disabled={testButtonDisabled}
+          className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white
+            bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
+            transition-all duration-200 active:scale-[0.98]"
+        >
+          {isTesting ? 'Testing...' : 'Test Key'}
+        </button>
 
         {/* Save checkbox */}
         <label className="flex items-center gap-1.5 cursor-pointer select-none">
@@ -172,6 +289,29 @@ export default function ApiKeyBar({
           Your key is never sent to our servers. It's used directly from your browser.
         </span>
       </div>
+
+      {displayStatus && (
+        <div className="mt-2">
+          <span
+            className={`text-[11px] font-medium ${
+              displayStatus === 'success'
+                ? 'text-success'
+                : displayStatus === 'loading'
+                ? 'text-gray-500'
+                : displayStatus === 'error'
+                ? 'text-error'
+                : 'text-warning'
+            }`}
+          >
+            {displayStatus === 'loading'
+              ? 'Validating key...'
+              : displayMessage ||
+                (displayStatus === 'success'
+                  ? 'API key verified.'
+                  : 'API key validation failed.')}
+          </span>
+        </div>
+      )}
 
       {/* Warning if no key */}
       {!apiKey && (
