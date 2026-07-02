@@ -1,5 +1,6 @@
-const gitCommitFormatterAgent = {
+export default {
   id: 'git-commit-formatter-agent',
+  createdAt: '2026-06-27',
   name: 'Git Commit & Conventional Commits Formatter Agent',
   description: 'Parses messy developer notes or raw git diffs and outputs perfectly formatted Conventional Commits messages, plus a ready-to-use PR summary.',
   category: 'Productivity',
@@ -7,6 +8,11 @@ const gitCommitFormatterAgent = {
   provider: 'any',
   defaultProvider: 'openai',
   model: 'gpt-4o',
+  exampleInputs: {
+    inputDiff: "fixed the user sign in bug where the session wasn't setting cookies properly. Also cleaned up some unused imports in authController.js",
+    type: 'Bug Fix',
+    scope: 'auth',
+  },
   inputs: [
     {
       id: 'inputDiff',
@@ -70,5 +76,3 @@ A ready-to-paste markdown template for the pull request description, including:
 Format the response using clean, beautiful markdown, and ensure the Commit Title and Commit Body together also form a complete, copy-pasteable git commit message.`,
   outputType: 'markdown',
 };
-
-export default gitCommitFormatterAgent;
