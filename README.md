@@ -316,6 +316,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 
 ---
 
+## 👥 Contributors
+
+Thanks to all contributors ❤️
+
+[![Contributors](https://contrib.rocks/image?repo=aditthyass/iloveagents)](https://github.com/aditthyass/iloveagents/graphs/contributors)
+
+---
+
 ## License
 
 Licensed under the [MIT License](LICENSE) — use it, fork it, build on it.

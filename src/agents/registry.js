@@ -13,11 +13,22 @@
 
 const modules = import.meta.glob('./definitions/*.js', { eager: false });
 
-/**
- * Load all agent definitions and return the array.
- * Results are cached after the first call.
- * @returns {Promise<Array>} Array of agent definition objects.
- */
+const normalizeAgents = (agents) => {
+  const seenIds = new Set();
+  return agents.filter(Boolean).filter((agent) => {
+    if (!agent?.id) {
+      console.warn('Skipping agent without an id:', agent);
+      return false;
+    }
+    if (seenIds.has(agent.id)) {
+      console.warn(`Skipping duplicate agent id "${agent.id}".`);
+      return false;
+    }
+    seenIds.add(agent.id);
+    return true;
+  });
+};
+
 let cachedAgentsPromise = null;
 
 export function loadAllAgents() {
@@ -26,8 +37,18 @@ export function loadAllAgents() {
   cachedAgentsPromise = Promise.all(
     Object.values(modules).map((loader) => loader())
   ).then((entries) => {
-    return entries.map((mod) => mod.default);
+    return normalizeAgents(entries.map((mod) => mod.default));
+  })
+  .catch((error) => {
+    // Allow future calls to retry initialization after a failed load.
+    cachedAgentsPromise = null;
+    throw error;
   });
 
   return cachedAgentsPromise;
 }
+
+const modulesEager = import.meta.glob('./definitions/*.js', { eager: true });
+const agents = normalizeAgents(Object.values(modulesEager).map((m) => m.default));
+
+export default agents;

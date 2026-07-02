@@ -21,6 +21,7 @@ const MAX_AGENTS = 5
 export default function WorkflowBuilder() {
   const navigate = useNavigate()
   const location = useLocation()
+  const forkedWorkflow = location.state?.forkedWorkflow
   useDocumentTitle('Build a Workflow')
 
   const [agents, setAgents] = useState([])
@@ -51,17 +52,17 @@ export default function WorkflowBuilder() {
     }
   }, [agents, location.state?.preselectedAgents, hasResolvedPreselected])
 
-  // Pre-select agent if coming from AgentRunner
+  // Pre-populate fields if forking an existing workflow
   useEffect(() => {
-    if (location.state?.preSelectedAgent) {
-      const agent = location.state.preSelectedAgent
-      setSelectedAgents([agent])
-      setTitle(`${agent.name} Workflow`)
-      
-      // Clear location state to prevent re-adding on refresh
-      window.history.replaceState({}, document.title)
+    if (forkedWorkflow && agents.length > 0) {
+      setTitle(`Copy of ${forkedWorkflow.title}`)
+      setDescription(forkedWorkflow.description || '')
+      const loaded = (forkedWorkflow.agents || [])
+        .map((id) => agents.find((a) => a.id === id))
+        .filter(Boolean)
+      setSelectedAgents(loaded)
     }
-  }, [location.state])
+  }, [forkedWorkflow, agents])
 
   // Agents already in the chain — prevent duplicates
   const selectedIds = new Set(selectedAgents.map((a) => a.id))
@@ -85,6 +86,7 @@ export default function WorkflowBuilder() {
   }
 
   const canSave = title.trim() && selectedAgents.length >= 1
+  const estimatedRuntime = selectedAgents.length * 20
 
   const handleSave = async () => {
     if (!canSave) return
@@ -305,30 +307,37 @@ export default function WorkflowBuilder() {
                     No agents found
                   </div>
                 ) : (
-                  filteredAgents.map((agent) => {
-                    const IconComponent = Icons[agent.icon] || Icons.Bot
-                    return (
-                      <button
-                        key={agent.id}
-                        onClick={() => addAgent(agent)}
-                        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
-                          dark:hover:bg-surface-hover dark:hover:text-text-primary
-                          hover:bg-gray-50 hover:text-gray-900"
-                      >
-                        <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
-                          <IconComponent size={13} className="text-accent" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
-                            {agent.name}
-                          </div>
-                          <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
-                            {agent.category}
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })
+                  <>
+  {filteredAgents.map((agent) => {
+    const IconComponent = Icons[agent.icon] || Icons.Bot
+
+    return (
+      <button
+        key={agent.id}
+        onClick={() => addAgent(agent)}
+        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
+          dark:hover:bg-surface-hover dark:hover:text-text-primary
+          hover:bg-gray-50 hover:text-gray-900"
+      >
+        <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
+          <IconComponent size={13} className="text-accent" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
+            {agent.name}
+          </div>
+
+          <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
+            {agent.category}
+          </div>
+        </div>
+      </button>
+    )
+  })}
+
+  <div className="h-3" />
+</>
                 )}
               </div>
             )}
@@ -375,6 +384,68 @@ export default function WorkflowBuilder() {
           )}
         </div>
       )}
+
+      {/* Workflow Summary */}
+{(title.trim() || description.trim() || selectedAgents.length > 0) && (
+  <div
+    className="mb-6 rounded-lg border p-4
+      dark:bg-surface-card dark:border-border
+      bg-white border-gray-200"
+  >
+    <div className="text-[11px] font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400 mb-3">
+      Workflow Summary
+    </div>
+
+    <div className="space-y-3 text-sm">
+      <div className="flex justify-between">
+        <span className="dark:text-text-muted text-gray-500">Title</span>
+       <span
+         className="font-medium dark:text-text-primary text-gray-900 max-w-[60%] text-right break-words"
+      >
+  {title.trim() || "Not provided"}
+</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="dark:text-text-muted text-gray-500">
+          Description
+        </span>
+        <span
+  className="font-medium dark:text-text-primary text-gray-900 max-w-[60%] text-right break-words"
+>
+  {description.trim() || "Not provided"}
+</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="dark:text-text-muted text-gray-500">
+          Agents Selected
+        </span>
+        <span className="font-medium dark:text-text-primary text-gray-900">
+          {selectedAgents.length}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="dark:text-text-muted text-gray-500">
+          Execution Flow
+        </span>
+        <span className="font-medium dark:text-text-primary text-gray-900">
+          Sequential
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="dark:text-text-muted text-gray-500">
+          Estimated Runtime
+        </span>
+        <span className="font-medium text-accent">
+          ~{estimatedRuntime} sec
+        </span>
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Error */}
       {error && (

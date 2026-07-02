@@ -1,97 +1,78 @@
 const pathPilot = {
   id: 'path-pilot',
-
   name: 'PathPilot',
-
   description:
-    'Predicts possible outcomes, risks, and emotional impact for different life or career choices.',
-
-  category: 'Education',
-
-  icon: 'Route',
-
-  provider: 'gemini',
-
+    'Takes your life choices and predicts all possibilities for each one, helping you make better decisions based on your personal priorities.',
+  category: 'Productivity',
+  icon: 'Compass',
+  provider: 'any',
+  defaultProvider: 'gemini',
   model: 'gemini-1.5-pro',
-
   inputs: [
     {
       id: 'choice_1',
       label: 'Choice 1',
-      type: 'textarea',
-      placeholder: 'Example: Learn AI Engineering',
+      type: 'text',
+      placeholder: 'e.g. Learn AI Engineering',
       required: true,
     },
-
     {
       id: 'choice_2',
       label: 'Choice 2',
-      type: 'textarea',
-      placeholder: 'Example: Focus on Full Stack Development',
-      required: true,
+      type: 'text',
+      placeholder: 'e.g. Focus on Full Stack Development',
+      required: false,
     },
-
     {
       id: 'choice_3',
       label: 'Choice 3',
-      type: 'textarea',
-      placeholder: 'Example: Prepare for Government Exams',
-      required: true,
+      type: 'text',
+      placeholder: 'e.g. Prepare for Government Exams',
+      required: false,
     },
-
     {
       id: 'priorities',
       label: 'Your Priorities',
       type: 'textarea',
-      placeholder:
-        'Example: financial stability, growth, work-life balance',
+      placeholder: 'e.g. financial stability, growth, work-life balance',
       required: true,
     },
   ],
-
   systemPrompt: `
-You are PathPilot, an AI decision-making assistant.
+You are PathPilot, an intelligent life decision assistant.
+Your task is to analyze each choice the user provides and predict all possibilities based on their personal priorities.
 
-Your task is to analyze multiple life or career choices and predict:
-- Best-case outcomes
-- Risks and downsides
-- Emotional outlook
-- Comparative analysis
-- Final recommendation
+For each choice provided, generate:
+- Best Case scenario
+- Worst Case scenario
+- Risks
+- Emotional Outlook
 
-For EACH choice return:
+Then provide:
+- A Comparative Analysis table
+- A Final Insight recommending the best choice based on the user's priorities
 
-## Choice Name
+Output Format:
 
-### Best Case
-- Point
-- Point
+# Choice 1 — [Choice Name]
+## Best Case
+- bullet points
+## Worst Case
+- bullet points
+## Risks
+- bullet points
+## Emotional Outlook
+- bullet points
 
-### Risks
-- Point
-- Point
+(Repeat for each choice)
 
-### Emotional Outlook
-Short emotional summary.
-
-After all choices, generate:
-
-## Comparative Analysis
-
-Create a markdown table with:
+# Comparative Analysis
 | Choice | Stability | Growth | Stress | Risk |
+|--------|-----------|--------|--------|------|
 
-Finally generate:
-
-## Final Insight
-
-Recommend the best option based on the user's priorities.
-
-Keep the response practical, realistic, balanced, and easy to read.
-Avoid extreme claims or fake guarantees.
+# Final Insight
+A short paragraph recommending the best path based on the user's stated priorities.
 `,
-
   outputType: 'markdown',
 };
-
 export default pathPilot;
