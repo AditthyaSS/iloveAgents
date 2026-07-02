@@ -13,6 +13,7 @@ import {
   RotateCcw,
   AlertCircle,
   ArrowRight,
+  ListTree,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
@@ -24,6 +25,8 @@ import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
+import { createTrace, recordStep, finalizeTrace } from '../lib/executionTrace'
+import TraceViewer from '../components/TraceViewer'
 import { exportWorkflowAsMarkdown } from '../lib/exportMarkdown'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -94,6 +97,8 @@ export default function WorkflowRunner() {
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
   const [hasRun, setHasRun] = useState(false)
+  const [trace, setTrace] = useState(null)
+  const [showTrace, setShowTrace] = useState(false)
   useDocumentTitle(workflow?.title ? `Run ${workflow.title}` : 'Run Workflow')
 
   // Fetch workflow if not passed via state
@@ -149,14 +154,26 @@ export default function WorkflowRunner() {
 
     // Reset all steps to waiting
     setSteps((prev) => prev.map((s) => ({ ...s, status: 'waiting', output: null, error: null })))
+    setShowTrace(false)
 
     let currentInput = userInput.trim()
     let failed = false
+    const runTrace = createTrace({ workflowId: workflow?.id ?? null, workflowTitle: workflow?.title ?? '' })
 
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i]
       if (!step.agent) {
-        setStepField(i, { status: 'failed', error: `Agent "${step.agentId}" not found in registry.` })
+        const error = `Agent "${step.agentId}" not found in registry.`
+        setStepField(i, { status: 'failed', error })
+        recordStep(runTrace, {
+          stepName: step.agentName,
+          stepType: 'agent',
+          input: currentInput,
+          output: null,
+          durationMs: 0,
+          status: 'failed',
+          error,
+        })
         failed = true
         break
       }
@@ -169,6 +186,7 @@ export default function WorkflowRunner() {
           : step.agent.provider
 
       const model = resolveAgentModel(step.agent, actualProvider)
+      const stepStart = performance.now()
 
       try {
         const result = await runAgent({
@@ -179,13 +197,36 @@ export default function WorkflowRunner() {
           userMessage: currentInput,
         })
         setStepField(i, { status: 'done', output: result.content })
+        recordStep(runTrace, {
+          stepName: step.agentName,
+          stepType: 'agent',
+          input: currentInput,
+          output: result.content,
+          durationMs: performance.now() - stepStart,
+          status: 'done',
+        })
         currentInput = result.content // pass output to next step
       } catch (err) {
         setStepField(i, { status: 'failed', error: err.message })
+        recordStep(runTrace, {
+          stepName: step.agentName,
+          stepType: 'agent',
+          input: currentInput,
+          output: null,
+          durationMs: performance.now() - stepStart,
+          status: 'failed',
+          error: err.message,
+        })
         failed = true
         break
       }
     }
+
+    finalizeTrace(runTrace, {
+      status: failed ? 'failed' : 'done',
+      finalOutput: failed ? null : currentInput,
+    })
+    setTrace(runTrace)
 
     if (!failed) {
       setAllDone(true)
@@ -201,6 +242,8 @@ export default function WorkflowRunner() {
   const handleRunAgain = () => {
     setAllDone(false)
     setHasRun(false)
+    setTrace(null)
+    setShowTrace(false)
     setSteps((prev) => prev.map((s) => ({ ...s, status: 'waiting', output: null, error: null })))
   }
 
@@ -349,7 +392,33 @@ export default function WorkflowRunner() {
             </button>
           </>
         )}
+
+        {trace && (allDone || hasFailed) && (
+          <button
+            onClick={() => setShowTrace((v) => !v)}
+            aria-expanded={showTrace}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+              dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
+              bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
+          >
+            <ListTree size={14} />
+            {showTrace ? 'Hide Trace' : 'View Trace'}
+          </button>
+        )}
       </div>
+
+      {/* Execution trace panel */}
+      {showTrace && trace && (
+        <div className="mb-8 animate-fade-in">
+          <h2 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-3">
+            Execution Trace
+            <span className="ml-2 text-[11px] font-normal dark:text-text-muted text-gray-400">
+              {trace.runId}
+            </span>
+          </h2>
+          <TraceViewer trace={trace} />
+        </div>
+      )}
 
       {/* Steps */}
       {hasRun && (

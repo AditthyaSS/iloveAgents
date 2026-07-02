@@ -76,7 +76,7 @@ for running AI agents directly in the browser. No sign-up. No backend. Bring you
 - **Blog Post SEO Optimizer** — optimise blog posts for search with keyword and structure suggestions
 - **Cold Email Writer** — personalised B2B cold emails with tone and length control
 - **LinkedIn Outreach Message Writer** — personalised LinkedIn connection messages
-- **LinkedIn Outreach Writer** — longer-form LinkedIn outreach sequences
+
 - **LinkedIn Post Writer** — ready-to-post LinkedIn content with hooks and hashtags
 - **Social Media Thread Writer** — X/Twitter threads with hooks and call to action
 - **SEO Keyword Planner** — keyword research and content strategy from a topic

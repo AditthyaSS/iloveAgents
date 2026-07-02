@@ -203,6 +203,11 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
   animation: cursorReveal 500ms ease-out forwards;
 }
 
+.recommendation-wizard-open .premium-cursor-core,
+.recommendation-wizard-open .premium-cursor-trail {
+  display: none;
+}
+
 @keyframes cursorReveal {
   to {
     opacity: 1;
