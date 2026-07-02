@@ -50,7 +50,7 @@ Output in this exact format:
 # ADR: [Short, specific title — e.g. "Use GraphQL for Public API"]
 
 **Status:** [status provided]
-**Date:** [today's date or "Not specified"]
+**Date:** Not specified
 
 ---
 
