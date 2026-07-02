@@ -58,6 +58,7 @@ export default function App() {
       <ScrollToTop />
       <ScrollToBottom />
       <ErrorBoundary>
+        <Routes>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/battle" element={<BattleModeLanding />} />
@@ -83,7 +84,14 @@ export default function App() {
             <Route path="/workflows/build" element={<WorkflowBuilder />} />
             <Route path="/workflows/:id" element={<WorkflowDetail />} />
             <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
+            <Route path="/battle" element={<BattleModeLanding />} />
+            <Route path="/battle/setup" element={<BattleModeSetup />} />
+            <Route path="/battle/arena" element={<BattleModeArena />} />
+            <Route path="/battle/winner" element={<BattleModeWinner />} />
 
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>

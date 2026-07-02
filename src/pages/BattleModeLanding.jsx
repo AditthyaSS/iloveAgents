@@ -22,8 +22,6 @@ export default function BattleModeLanding() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
-      <BattleNavbar />
-
       <main className="pt-24 flex flex-col items-center justify-center min-h-screen px-4 pb-12">
         {/* Back button */}
         <button

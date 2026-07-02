@@ -45,7 +45,6 @@ export default function BattleModeWinner() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
-      <BattleNavbar />
 
       <main className="pt-14 max-w-3xl mx-auto px-4 py-8">
         {/* Hero */}

@@ -13,7 +13,6 @@ import {
   Zap,
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
-import BattleNavbar from "../components/BattleNavbar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
@@ -239,8 +238,6 @@ export default function BattleModeArena() {
             battleButtonGlow 2.4s ease-in-out 0.45s infinite;
         }
       `}</style>
-
-      <BattleNavbar />
 
       <main className="pt-14 px-4 py-8">
         {/* Back */}

@@ -9,7 +9,6 @@ import {
   ChevronDown,
   Search,
 } from "lucide-react";
-import BattleNavbar from "../components/BattleNavbar";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { loadAllAgents } from "../agents/registry";
 
@@ -201,7 +200,6 @@ export default function BattleModeSetup() {
 
   return (
     <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
-      <BattleNavbar />
 
       <main className="pt-20 px-4 pb-12 max-w-4xl mx-auto">
         {/* Back */}
