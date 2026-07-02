@@ -260,12 +260,16 @@ const getTokenCount = (text) => {
       setIsStreaming(false);
       setDuration(result.duration);
 
+      const inputTokenEstimate = Math.max(
+        1,
+        Math.round((customPrompt.length + buildUserMessage().length) / 4),
+      );
       const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
 
       addRun({
         model,
-        inputTokens: null,
-        outputTokens: null,
+        inputTokens: inputTokenEstimate,
+        outputTokens: outputTokenEstimate,
         inputCost: null,
         outputCost: null,
       });
