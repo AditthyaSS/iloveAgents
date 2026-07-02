@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Clock, Zap, AlertCircle } from 'lucide-react'
 import { SCHEDULE_OPTIONS } from '../lib/useScheduler'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
+import CustomSelect from './CustomSelect'
 
 /**
  * ScheduleAgentModal
@@ -132,18 +133,11 @@ export default function ScheduleAgentModal({
             <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
               Model
             </label>
-            <select
+            <CustomSelect
               value={selectedModel}
-              onChange={e => setSelectedModel(e.target.value)}
-              className="w-full h-9 px-3 rounded-md text-sm transition-colors
-                dark:bg-surface-input dark:border-border dark:text-text-primary
-                bg-gray-50 border border-gray-200 text-gray-900
-                focus:ring-1 focus:ring-accent focus:border-accent outline-none"
-            >
-              {modelsForProvider.map(m => (
-                <option key={m.value} value={m.value}>{m.label}</option>
-              ))}
-            </select>
+              onChange={setSelectedModel}
+              options={modelsForProvider.map(m => ({ value: m.value, label: m.label }))}
+            />
           </div>
 
           {/* API Key */}
