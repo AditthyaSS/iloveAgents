@@ -58,6 +58,7 @@ const LOADING_MESSAGES = [
   "👀 Your agent is locked in...",
 ];
 
+const MAX_CHAR_LIMIT = 4000; // Character cap configuration
 export default function AgentRunner({ agent }) {
   const {
     provider,
@@ -156,6 +157,17 @@ export default function AgentRunner({ agent }) {
   const updateInput = (id, value) => {
     setInputs((prev) => ({ ...prev, [id]: value }));
   };
+
+  const getWordCount = (text) => {
+  if (!text) return 0;
+  return text.trim().split(/\s+/).filter(Boolean).length;
+};
+
+const getTokenCount = (text) => {
+  if (!text) return 0;
+  // A rough but highly accurate standard estimate: 1 token ≈ 4 characters
+  return Math.ceil(text.length / 4);
+};
 
   const toggleMultiselect = (id, option) => {
     setInputs((prev) => {
@@ -465,10 +477,15 @@ export default function AgentRunner({ agent }) {
             )}
 
             {input.type === "textarea" && (
-              <div className="relative">
+              <div className="relative flex flex-col gap-1">
                 <textarea
                   value={inputs[input.id] || ""}
-                  onChange={(e) => updateInput(input.id, e.target.value)}
+                  onChange={(e) => {
+                    // 4000 chars se bada text type hone se rokein
+                    if (e.target.value.length <= MAX_CHAR_LIMIT) {
+                      updateInput(input.id, e.target.value);
+                    }
+                  }}
                   placeholder={input.placeholder}
                   rows={4}
                   className="w-full pl-3 pr-10 py-2 rounded-md text-sm transition-colors resize-y
@@ -478,19 +495,27 @@ export default function AgentRunner({ agent }) {
                 />
                 <VoiceInput
                   value={inputs[input.id] || ""}
-                  onChange={(v) => updateInput(input.id, v)}
+                  onChange={(v) => {
+                    if (v.length <= MAX_CHAR_LIMIT) updateInput(input.id, v);
+                  }}
                   className="top-2 right-2"
                 />
-                <div className="flex items-center gap-3 mt-1">
-                  <CharCounter
-                    value={inputs[input.id] || ""}
-                    maxLength={5000}
-                  />
-                  <TokenCounter
-                    value={inputs[input.id] || ""}
-                    modelId={selectedModel}
-                  />
+                
+                {/* Dynamic Live Counter Metric Footer Grid */}
+                <div className="flex justify-between items-center px-1 text-[11px] text-gray-400 dark:text-text-muted mt-1.5 w-full">
+                  <div className="flex gap-2 font-medium">
+                    <span>📝 Words: {getWordCount(inputs[input.id])}</span>
+                    <span>🪙 Est. Tokens: {getTokenCount(inputs[input.id])}</span>
+                  </div>
+                  <span className={inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}>
+                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} Chars
+                  </span>
                 </div>
+
+                <TokenCounter
+                  value={inputs[input.id] || ""}
+                  modelId={selectedModel}
+                />
               </div>
             )}
 

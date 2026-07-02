@@ -1,96 +1,78 @@
 export default {
-  id: "git-commit-formatter-agent",
-  createdAt: "2026-06-27",
-  name: "Git Commit & Conventional Commits Formatter",
-  description:
-    "Parse messy, unstructured developer notes or raw git diffs and generate clean, standardized git commit messages conforming to the Conventional Commits specification.",
-  category: "Productivity",
-  icon: "GitBranch",
-  provider: "any",
-  defaultProvider: "openai",
-  model: "gpt-4o-mini",
+  id: 'git-commit-formatter-agent',
+  createdAt: '2026-06-27',
+  name: 'Git Commit & Conventional Commits Formatter Agent',
+  description: 'Parses messy developer notes or raw git diffs and outputs perfectly formatted Conventional Commits messages, plus a ready-to-use PR summary.',
+  category: 'Productivity',
+  icon: 'GitCommit',
+  provider: 'any',
+  defaultProvider: 'openai',
+  model: 'gpt-4o',
   exampleInputs: {
-    notes: "fixed the user sign in bug where the session wasn't setting cookies properly. Also cleaned up some unused imports in authController.js",
-    type: "Bug Fix (fix)",
-    scope: "auth",
+    inputDiff: "fixed the user sign in bug where the session wasn't setting cookies properly. Also cleaned up some unused imports in authController.js",
+    type: 'Bug Fix',
+    scope: 'auth',
   },
   inputs: [
     {
-      id: "notes",
-      label: "Developer Notes or Git Diff",
-      type: "textarea",
-      placeholder:
-        "Paste your raw bullet notes, git diff, or a brief explanation of changes...",
+      id: 'inputDiff',
+      label: 'Git Diff / Raw Notes',
+      type: 'textarea',
+      placeholder: 'Paste a git diff, or just jot rough bullet notes about what changed (e.g. "fixed login bug, added retry logic, cleaned up auth service")',
       required: true,
     },
     {
-      id: "type",
-      label: "Commit Type",
-      type: "select",
-      options: [
-        "Auto-Detect",
-        "Feature (feat)",
-        "Bug Fix (fix)",
-        "Documentation (docs)",
-        "Style/Formatting (style)",
-        "Refactoring (refactor)",
-        "Performance (perf)",
-        "Testing (test)",
-        "Build (build)",
-        "CI (ci)",
-        "Chore (chore)",
-      ],
-      defaultValue: "Auto-Detect",
+      id: 'type',
+      label: 'Commit Type',
+      type: 'select',
+      options: ['Feature', 'Bug Fix', 'Refactor', 'Docs', 'Chore', 'Auto-Detect'],
+      defaultValue: 'Auto-Detect',
       required: true,
     },
     {
-      id: "scope",
-      label: "Commit Scope (Optional)",
-      type: "text",
-      placeholder: "e.g., auth, routing, database, ui",
+      id: 'scope',
+      label: 'Scope',
+      type: 'text',
+      placeholder: 'e.g. auth, routing, api',
       required: false,
     },
   ],
-  systemPrompt: `You are a principal developer and git workflow expert. Your task is to take developer notes or git diffs and output a perfectly formatted git commit message and PR description template that complies with the **Conventional Commits** specification.
+  systemPrompt: `You are an expert Software Engineer and Git historian who specializes in writing clean, professional commit histories using the Conventional Commits specification.
 
-Use the provided 'Commit Type' and 'Commit Scope' if specified. If 'Commit Type' is set to 'Auto-Detect', infer the correct type from the notes or diff (e.g., 'fix' for bugs, 'feat' for new features, 'docs' for documentation, etc.).
+Based on the user's inputs:
+- Input Diff / Notes: raw git diff output or unstructured developer notes describing what changed.
+- Commit Type: the intended Conventional Commits type, or "Auto-Detect" if the user wants you to infer it from the content.
+- Scope: an optional scope to include in the commit type prefix (e.g. feat(auth): ...). If no scope is given, omit the parentheses entirely.
 
-Always respond in this exact format:
+Conventional Commits types to choose from: feat, fix, refactor, docs, style, test, chore, perf, build, ci. Map the user-facing "Commit Type" values as follows: Feature -> feat, Bug Fix -> fix, Refactor -> refactor, Docs -> docs, Chore -> chore. If "Auto-Detect" is selected, infer the single most appropriate type from the diff/notes content.
 
-## Generated Conventional Commit
+Provide a highly professional, detailed, and tailored output using the following structure:
 
-\`\`\`text
-[type][(scope if provided)]: [short, active-voice summary under 50 characters in lowercase]
-\`\`\`
+# Git Commit Recommendation
 
----
+## 1. Commit Title
+A single line, formatted exactly as: \`type(scope): short active-voice summary\`
+- Must be 50 characters or fewer (excluding the type/scope prefix where feasible, but keep the whole line as close to 50 chars as possible).
+- Use imperative, active voice (e.g. "add", "fix", "remove", not "added" or "fixes").
+- No trailing period.
 
-### Detailed Commit Body
-(Provide a clear description of the change, starting with a blank line after the title. Keep lines under 72 characters. Use bullet points for readability if there are multiple logical changes.)
-- [description of change 1]
-- [description of change 2]
+## 2. Commit Body
+A bulleted list of the logical, distinct changes found in the diff/notes. Each bullet should:
+- Start with a capital letter, use imperative mood.
+- Describe *what* changed and briefly *why*, when the reason is inferable.
+- Be grouped logically if multiple unrelated changes are present (call out if a commit should actually be split into multiple commits).
 
----
+## 3. Breaking Changes (if any)
+If the diff/notes indicate a breaking change, include a \`BREAKING CHANGE:\` footer explaining the impact and migration path. If none, state "None detected."
 
-### Pull Request Summary
-**Type of Change:** [Feature / Bug Fix / Documentation / Refactor / Style / Performance / Test / Build / CI / Chore]
-**Scope:** [scope or N/A]
+## 4. PR Summary Description
+A ready-to-paste markdown template for the pull request description, including:
+- **Summary**: 1-2 sentence overview of the change.
+- **Changes**: bulleted list (can mirror the commit body).
+- **Type of Change**: checklist-style list (Feature / Bug Fix / Refactor / Docs / Chore) with the relevant one marked.
+- **Testing**: brief note on how this was or should be tested, inferred from the diff where possible.
+- **Checklist**: standard PR checklist (e.g. code self-reviewed, docs updated if needed, no new warnings).
 
-#### Description
-[1-2 sentences summarizing the change and the reasoning behind it]
-
-#### Checklist
-- [ ] Code is clean and conforms to standard style guidelines
-- [ ] Existing tests pass successfully
-- [ ] Documentation has been updated if required
-
----
-
-Rules:
-- If no scope is provided, omit the parentheses entirely (for example: \`fix: handle missing session cookie\`).
-- Keep the commit title short, concise, and in the imperative mood (e.g. "add user auth" instead of "added user auth" or "adds user auth").
-- Do not capitalize the first letter of the commit title.
-- Ensure the commit body explains the 'what' and 'why' of the change, not the 'how'.
-- Output must be copy-paste ready and formatted clearly in markdown as shown above.`,
-  outputType: "markdown",
+Format the response using clean, beautiful markdown, and ensure the Commit Title and Commit Body together also form a complete, copy-pasteable git commit message.`,
+  outputType: 'markdown',
 };
