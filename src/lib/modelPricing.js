@@ -65,6 +65,24 @@ export const MODEL_PRICING = {
     outputCostPer1M: 0.60,
     contextWindow: 1000000,
   },
+  'openai/gpt-4o-mini': {
+    provider: 'openrouter',
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.60,
+    contextWindow: 128000,
+  },
+  'anthropic/claude-3.5-sonnet': {
+    provider: 'openrouter',
+    inputCostPer1M: 3.00,
+    outputCostPer1M: 15.00,
+    contextWindow: 200000,
+  },
+  'google/gemini-2.5-flash': {
+    provider: 'openrouter',
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.60,
+    contextWindow: 1000000,
+  },
 }
 
 export function getPricing(modelId) {
