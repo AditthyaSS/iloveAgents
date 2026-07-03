@@ -44,6 +44,7 @@ const providerLabels = {
   anthropic: "Anthropic",
   gemini: "Gemini",
   groq: "Groq",
+  openrouter: "OpenRouter",
   any: "Any",
 };
 
@@ -365,7 +366,7 @@ const getTokenCount = (text) => {
       {/* Breadcrumb */}
       <a
         href="/"
-        className="inline-block mb-4 text-xs dark:text-text-muted text-gray-400 hover:underline"
+        className="inline-block mb-4 text-xs dark:text-text-muted dark:text-text-muted text-gray-500 hover:underline"
       >
         ← All agents
       </a>
@@ -399,7 +400,7 @@ const getTokenCount = (text) => {
           onClick={handleClear}
           disabled={!hasInputContent()}
           title="Clear Chat"
-          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg dark:text-text-muted text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Trash2 size={18} />
         </button>
@@ -466,7 +467,7 @@ const getTokenCount = (text) => {
                   placeholder={input.placeholder}
                   className="w-full h-9 pl-3 pr-10 rounded-md text-sm transition-colors
                     dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
-                    bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
+                    bg-gray-50 border border-gray-200 text-gray-900 placeholder:dark:text-text-muted text-gray-500
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 />
                 <VoiceInput
@@ -674,7 +675,7 @@ const getTokenCount = (text) => {
                 rows={10}
                 spellCheck={false}
                 className="w-full pl-3 pr-10 py-2.5 rounded-lg text-xs font-mono leading-relaxed transition-colors resize-y
-                  dark:bg-[#0d1117] dark:border-border dark:text-gray-300 dark:placeholder:text-text-muted
+                  dark:bg-[#0d1117] dark:border-border dark:text-text-secondary text-gray-600 dark:placeholder:text-text-muted
                   bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400
                   focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 placeholder="Enter your custom system prompt..."
@@ -941,6 +942,7 @@ const getTokenCount = (text) => {
         { value: "openai", label: "OpenAI" },
         { value: "anthropic", label: "Anthropic" },
         { value: "gemini", label: "Gemini" },
+        { value: "openrouter", label: "OpenRouter" },
       ]}
     />
 

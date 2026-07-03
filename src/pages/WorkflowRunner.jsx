@@ -13,7 +13,7 @@ import {
   RotateCcw,
   AlertCircle,
   ArrowRight,
-  ListTree,
+  GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
@@ -25,8 +25,11 @@ import { useApiKey } from '../lib/useApiKey'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
-import { createTrace, recordStep, finalizeTrace } from '../lib/executionTrace'
-import TraceViewer from '../components/TraceViewer'
+import {
+  isConditionalStep,
+  evaluateConditionalStep,
+  validateConditionalStep,
+} from '../lib/pipelineBranching'
 import { exportWorkflowAsMarkdown } from '../lib/exportMarkdown'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -97,8 +100,6 @@ export default function WorkflowRunner() {
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
   const [hasRun, setHasRun] = useState(false)
-  const [trace, setTrace] = useState(null)
-  const [showTrace, setShowTrace] = useState(false)
   useDocumentTitle(workflow?.title ? `Run ${workflow.title}` : 'Run Workflow')
 
   // Fetch workflow if not passed via state
@@ -124,27 +125,41 @@ export default function WorkflowRunner() {
     loadAllAgents().then(setAgents)
   }, [])
 
-  // Initialize step states when workflow is ready
-  useEffect(() => {
-    if (!workflow) return
-    setSteps(
-      (workflow.agents ?? []).map((agentId) => {
-        const agent = agents.find((a) => a.id === agentId)
+  // Build the initial (pre-run) step list. Conditional entries render as a
+  // single branch node; their selected branch expands at run time.
+  const buildInitialSteps = (workflowDef, agentList) =>
+    (workflowDef.agents ?? []).map((entry) => {
+      if (isConditionalStep(entry)) {
         return {
-          agentId,
-          agentName: agent?.name ?? agentId,
-          agent,
+          kind: 'conditional',
+          stepDef: entry,
+          agentId: entry.id ?? 'conditional',
+          agentName: entry.id ? `Branch: ${entry.id}` : 'Conditional Branch',
+          agent: null,
           status: 'waiting',
           output: null,
           error: null,
+          conditionValue: null,
+          branchLabel: null,
         }
-      })
-    )
-  }, [workflow, agents])
+      }
+      const agent = agentList.find((a) => a.id === entry)
+      return {
+        kind: 'agent',
+        agentId: entry,
+        agentName: agent?.name ?? entry,
+        agent,
+        status: 'waiting',
+        output: null,
+        error: null,
+      }
+    })
 
-  const setStepField = (index, fields) => {
-    setSteps((prev) => prev.map((s, i) => (i === index ? { ...s, ...fields } : s)))
-  }
+  // Initialize step states when workflow is ready
+  useEffect(() => {
+    if (!workflow) return
+    setSteps(buildInitialSteps(workflow, agents))
+  }, [workflow, agents])
 
   const handleRun = async () => {
     if (!userInput.trim() || !apiKey || running) return
@@ -152,33 +167,72 @@ export default function WorkflowRunner() {
     setAllDone(false)
     setHasRun(true)
 
-    // Reset all steps to waiting
-    setSteps((prev) => prev.map((s) => ({ ...s, status: 'waiting', output: null, error: null })))
-    setShowTrace(false)
+    // Rebuild from the workflow definition so branch steps injected by a
+    // previous run are dropped before this run starts.
+    const execSteps = buildInitialSteps(workflow, agents)
+    setSteps(execSteps)
 
+    // Pipeline context available to condition templates:
+    // { input, steps: { <stepId>: { output, branch? } } }
+    const context = { input: userInput.trim(), steps: {} }
     let currentInput = userInput.trim()
     let failed = false
-    const runTrace = createTrace({ workflowId: workflow?.id ?? null, workflowTitle: workflow?.title ?? '' })
+    let i = 0
 
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i]
-      if (!step.agent) {
-        const error = `Agent "${step.agentId}" not found in registry.`
-        setStepField(i, { status: 'failed', error })
-        recordStep(runTrace, {
-          stepName: step.agentName,
-          stepType: 'agent',
-          input: currentInput,
-          output: null,
-          durationMs: 0,
-          status: 'failed',
-          error,
+    const syncSteps = () => setSteps([...execSteps])
+
+    while (i < execSteps.length) {
+      const step = execSteps[i]
+
+      if (step.kind === 'conditional') {
+        const problems = validateConditionalStep(step.stepDef)
+        const { conditionValue, branchLabel, branchAgents } = evaluateConditionalStep(step.stepDef, context)
+
+        if (!branchLabel) {
+          execSteps[i] = {
+            ...step,
+            status: 'failed',
+            conditionValue,
+            error:
+              problems[0] ??
+              `No branch matched "${conditionValue}" and no default branch is defined.`,
+          }
+          syncSteps()
+          failed = true
+          break
+        }
+
+        // Exactly one branch executes: splice its agents in right after this node
+        const branchSteps = branchAgents.map((agentId) => {
+          const agent = agents.find((a) => a.id === agentId)
+          return {
+            kind: 'agent',
+            agentId,
+            agentName: agent?.name ?? agentId,
+            agent,
+            status: 'waiting',
+            output: null,
+            error: null,
+            branchLabel,
+            parentConditionalId: step.stepDef.id,
+          }
         })
+        execSteps[i] = { ...step, status: 'done', conditionValue, branchLabel }
+        execSteps.splice(i + 1, 0, ...branchSteps)
+        syncSteps()
+        i += 1
+        continue
+      }
+
+      if (!step.agent) {
+        execSteps[i] = { ...step, status: 'failed', error: `Agent "${step.agentId}" not found in registry.` }
+        syncSteps()
         failed = true
         break
       }
 
-      setStepField(i, { status: 'running' })
+      execSteps[i] = { ...step, status: 'running' }
+      syncSteps()
 
       const actualProvider =
         step.agent.provider === 'any'
@@ -186,7 +240,6 @@ export default function WorkflowRunner() {
           : step.agent.provider
 
       const model = resolveAgentModel(step.agent, actualProvider)
-      const stepStart = performance.now()
 
       try {
         const result = await runAgent({
@@ -196,37 +249,28 @@ export default function WorkflowRunner() {
           systemPrompt: step.agent.systemPrompt,
           userMessage: currentInput,
         })
-        setStepField(i, { status: 'done', output: result.content })
-        recordStep(runTrace, {
-          stepName: step.agentName,
-          stepType: 'agent',
-          input: currentInput,
-          output: result.content,
-          durationMs: performance.now() - stepStart,
-          status: 'done',
-        })
+        execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
+        syncSteps()
         currentInput = result.content // pass output to next step
+
+        // Expose this step's output to later condition templates. Branch
+        // output also merges under the parent conditional's id.
+        context.steps[step.agentId] = { output: result.content }
+        if (step.parentConditionalId) {
+          context.steps[step.parentConditionalId] = {
+            output: result.content,
+            branch: step.branchLabel,
+          }
+        }
       } catch (err) {
-        setStepField(i, { status: 'failed', error: err.message })
-        recordStep(runTrace, {
-          stepName: step.agentName,
-          stepType: 'agent',
-          input: currentInput,
-          output: null,
-          durationMs: performance.now() - stepStart,
-          status: 'failed',
-          error: err.message,
-        })
+        execSteps[i] = { ...execSteps[i], status: 'failed', error: err.message }
+        syncSteps()
         failed = true
         break
       }
-    }
 
-    finalizeTrace(runTrace, {
-      status: failed ? 'failed' : 'done',
-      finalOutput: failed ? null : currentInput,
-    })
-    setTrace(runTrace)
+      i += 1
+    }
 
     if (!failed) {
       setAllDone(true)
@@ -242,9 +286,8 @@ export default function WorkflowRunner() {
   const handleRunAgain = () => {
     setAllDone(false)
     setHasRun(false)
-    setTrace(null)
-    setShowTrace(false)
-    setSteps((prev) => prev.map((s) => ({ ...s, status: 'waiting', output: null, error: null })))
+    // Rebuild from the definition so previously injected branch steps are removed
+    setSteps(buildInitialSteps(workflow, agents))
   }
 
   // Loading workflow from Supabase
@@ -392,39 +435,16 @@ export default function WorkflowRunner() {
             </button>
           </>
         )}
-
-        {trace && (allDone || hasFailed) && (
-          <button
-            onClick={() => setShowTrace((v) => !v)}
-            aria-expanded={showTrace}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-              dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
-              bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
-          >
-            <ListTree size={14} />
-            {showTrace ? 'Hide Trace' : 'View Trace'}
-          </button>
-        )}
       </div>
-
-      {/* Execution trace panel */}
-      {showTrace && trace && (
-        <div className="mb-8 animate-fade-in">
-          <h2 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-3">
-            Execution Trace
-            <span className="ml-2 text-[11px] font-normal dark:text-text-muted text-gray-400">
-              {trace.runId}
-            </span>
-          </h2>
-          <TraceViewer trace={trace} />
-        </div>
-      )}
 
       {/* Steps */}
       {hasRun && (
         <div className="space-y-4">
           {steps.map((step, index) => {
-            const IconComponent = (step.agent && Icons[step.agent.icon]) || Icons.Bot
+            const IconComponent =
+              step.kind === 'conditional'
+                ? GitBranch
+                : (step.agent && Icons[step.agent.icon]) || Icons.Bot
             return (
               <div
                 key={step.agentId + index}
@@ -444,6 +464,11 @@ export default function WorkflowRunner() {
                     <span className="text-sm font-medium dark:text-text-primary text-gray-900">
                       {step.agentName}
                     </span>
+                    {step.branchLabel && step.kind !== 'conditional' && (
+                      <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium bg-accent/10 text-accent">
+                        {step.branchLabel}
+                      </span>
+                    )}
                   </div>
                   <div className="flex items-center gap-1.5">
                     <StepStatusIcon status={step.status} />
@@ -459,6 +484,51 @@ export default function WorkflowRunner() {
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 size={14} className="animate-spin text-accent" />
                       <span className="text-xs dark:text-text-secondary text-gray-500">Processing...</span>
+                    </div>
+                  </div>
+                )}
+
+                {step.kind === 'conditional' && step.status === 'done' && (
+                  <div className="p-4">
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/5 border border-accent/20">
+                      <GitBranch size={14} className="text-accent flex-shrink-0 mt-0.5" />
+                      <p className="text-xs dark:text-text-secondary text-gray-600">
+                        Condition resolved to{' '}
+                        <span className="font-semibold text-accent">"{step.conditionValue}"</span>, taking the{' '}
+                        <span className="font-semibold text-accent">{step.branchLabel}</span> branch.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {step.kind === 'conditional' && step.branches && (
+                  <div className="p-4 border-t dark:border-border border-gray-100">
+                    <p className="text-xs font-semibold dark:text-text-secondary text-gray-700 mb-3">
+                      Branch Paths (Labeled Edges):
+                    </p>
+                    <div className="grid grid-cols-1 gap-2">
+                      {Object.entries(step.branches).map(([label, agents]) => (
+                        <div
+                          key={label}
+                          className={`p-3 rounded-md text-xs transition-colors flex items-start gap-2 ${
+                            label === step.branchLabel && step.status === 'done'
+                              ? 'bg-accent/15 border border-accent/40 text-accent'
+                              : 'bg-gray-50 dark:bg-surface-secondary border border-gray-200 dark:border-border text-gray-700 dark:text-text-secondary'
+                          }`}
+                        >
+                          <div className="flex-shrink-0 mt-0.5">
+                            <div className="w-2 h-2 rounded-full bg-current" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium">{label === 'default' ? 'Default' : label}</div>
+                            <div className="text-[10px] opacity-75 mt-1">
+                              {Array.isArray(agents) && agents.length > 0
+                                ? agents.join(' → ')
+                                : 'No agents'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}

@@ -25,6 +25,11 @@ export const MODELS = {
     { value: 'whisper-large-v3', label: 'Whisper' },
     { value: 'whisper-large-v3-turbo', label: 'Whisper Large V3 Turbo' },
   ],
+  openrouter: [
+    { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+  ],
 }
 
 export const MODEL_MAP = {
@@ -32,6 +37,7 @@ export const MODEL_MAP = {
   anthropic: MODELS.anthropic[0].value,
   gemini: MODELS.gemini[0].value,
   groq: MODELS.groq[0].value,
+  openrouter: MODELS.openrouter[0].value,
 }
 
 export function resolveAgentModel(agent, actualProvider, selectedModel) {
