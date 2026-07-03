@@ -932,20 +932,22 @@ const getTokenCount = (text) => {
 </div>
 {showModelSwitcher && (
   <div className="mt-3 p-4 border rounded-lg flex flex-wrap gap-3 items-center">
-<CustomSelect
-      value={provider}
-      onChange={setProvider}
-      options={[
-        { value: "openai", label: "OpenAI" },
-        { value: "anthropic", label: "Anthropic" },
-        { value: "gemini", label: "Gemini" },
-      ]}
-    />
+    {agent.provider === "any" && (
+      <CustomSelect
+        value={provider}
+        onChange={setProvider}
+        options={[
+          { value: "openai", label: "OpenAI" },
+          { value: "anthropic", label: "Anthropic" },
+          { value: "gemini", label: "Gemini" },
+        ]}
+      />
+    )}
 
     <CustomSelect
       value={selectedModel}
       onChange={setSelectedModel}
-      options={MODELS[provider] || []}
+      options={MODELS[agent.provider === "any" ? provider : agent.provider] || []}
     />
 
     <button
