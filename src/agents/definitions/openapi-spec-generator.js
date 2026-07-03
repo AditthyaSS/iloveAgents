@@ -61,18 +61,19 @@ Return ONLY the YAML code block, nothing else. The output must start with \`\`\`
 
 The spec must include:
 
-1. **Info section** — title, description, version ("1.0.0")
-2. **Servers section** — a generic localhost server URL (http://localhost:3000)
-3. **Paths** — every endpoint the user listed
-4. **Parameters** — path parameters, query parameters (e.g. pagination, filtering), and header parameters inferred from the context
-5. **Request bodies** — for POST, PUT, and PATCH endpoints, define JSON request body schemas with proper types
-6. **Response schemas** — for every operation, define success (200/201) and error (400/404/500) response schemas
-7. **Components** — reusable schemas in the components/schemas section
+1. **OpenAPI version field** — \`openapi: 3.0.3\` as the very first top-level field
+2. **Info section** — title, description, version ("1.0.0")
+3. **Servers section** — a generic localhost server URL (http://localhost:3000)
+4. **Paths** — every endpoint the user listed
+5. **Parameters** — path parameters, query parameters (e.g. pagination, filtering), and header parameters inferred from the context
+6. **Request bodies** — for POST, PUT, and PATCH endpoints, define JSON request body schemas with proper types
+7. **Response schemas** — for every operation, define success (200/201) and error (400/404/500) response schemas
+8. **Components** — reusable schemas in the components/schemas section
 
 If the user selected an auth type:
 - **API Key** → add a header parameter "X-API-Key" globally or via security scheme
 - **Bearer JWT** → add BearerAuth security scheme with type: http, scheme: bearer, bearerFormat: JWT
-- **OAuth2** → add OAuth2 security scheme with implicit flow and a placeholder authorizationUrl
+- **OAuth2** → add OAuth2 security scheme with type: oauth2, the appropriate flow (implicit, authorizationCode, clientCredentials, or password), placeholder authorization/token URLs where applicable, and a non-empty scopes object (use placeholder scopes such as \`read\` and \`write\` if the user doesn't specify any)
 
 If examples are enabled (includeExamples === "yes"), include example values for:
 - Request body properties (use realistic but fake data)
