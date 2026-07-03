@@ -60,11 +60,6 @@ export default function App() {
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/battle" element={<BattleModeLanding />} />
-            <Route path="/battle/setup" element={<BattleModeSetup />} />
-            <Route path="/battle/arena" element={<BattleModeArena />} />
-            <Route path="/battle/winner" element={<BattleModeWinner />} />
-
             <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/privacy" element={<Privacy />} />
@@ -72,19 +67,16 @@ export default function App() {
               <Route path="/suites" element={<SuitesPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
               <Route path="/collections/:id" element={<CollectionDetailPage />} />
-
               <Route path="/scheduler" element={<SchedulerPage />} />
-
-
-            <Route path="/marketplace" element={<MarketplacePage />} />
-            <Route path="/workflows" element={<WorkflowLibrary />} />
-            <Route path="/workflows/build" element={<WorkflowBuilder />} />
-            <Route path="/workflows/:id" element={<WorkflowDetail />} />
-            <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
-            <Route path="/battle" element={<BattleModeLanding />} />
-            <Route path="/battle/setup" element={<BattleModeSetup />} />
-            <Route path="/battle/arena" element={<BattleModeArena />} />
-            <Route path="/battle/winner" element={<BattleModeWinner />} />
+              <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/workflows" element={<WorkflowLibrary />} />
+              <Route path="/workflows/build" element={<WorkflowBuilder />} />
+              <Route path="/workflows/:id" element={<WorkflowDetail />} />
+              <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
+              <Route path="/battle" element={<BattleModeLanding />} />
+              <Route path="/battle/setup" element={<BattleModeSetup />} />
+              <Route path="/battle/arena" element={<BattleModeArena />} />
+              <Route path="/battle/winner" element={<BattleModeWinner />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
