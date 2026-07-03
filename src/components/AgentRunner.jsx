@@ -43,6 +43,7 @@ const providerLabels = {
   openai: "OpenAI",
   anthropic: "Anthropic",
   gemini: "Gemini",
+  openrouter: "OpenRouter",
   any: "Any",
 };
 
@@ -939,6 +940,7 @@ const getTokenCount = (text) => {
         { value: "openai", label: "OpenAI" },
         { value: "anthropic", label: "Anthropic" },
         { value: "gemini", label: "Gemini" },
+        { value: "openrouter", label: "OpenRouter" },
       ]}
     />
 
