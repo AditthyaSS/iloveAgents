@@ -231,12 +231,17 @@ const handleRun = async () => {
       timestamp: new Date().toLocaleTimeString(),
       configSnapshot: { ...inputs }
     };
-    setVersionHistory((prevHistory) => [newVersion, ...prevHistory]);
-
+    setVersionHistory((prevHistory) => [
+      {
+        versionNumber: prevHistory.length + 1,
+        timestamp: new Date().toLocaleTimeString(),
+        configSnapshot: { ...inputs },
+      },
+      ...prevHistory,
+    ]);
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
