@@ -326,10 +326,8 @@ export default function HomePage() {
 )}
 
       {/* ── Search & Category Filter Section ── */}
-      <div
-  className={`premium-section space-y-4 ${
-    isOpen ? "mb-80" : "mb-6"
-  }`}
+    <div
+  className={`premium-section space-y-4 relative z-30 ${isOpen ? "mb-80" : "mb-6"}`}
   style={{ animationDelay: "180ms" }}
 >
         {/* Search Bar */}
