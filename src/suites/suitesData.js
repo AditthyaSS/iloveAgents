@@ -127,11 +127,9 @@ export const suites = [
     description: 'Close more deals with better outreach, scripts, and analysis',
     color: '#10b981',
     agents: [
-      'sales-discovery-call-script-generator',
       'salesDiscoveryCallGenerator',
       'sales_objection_handler',
       'linkedin-outreach-message-writer',
-      'linkedin-outreach-writer',
       'win-loss-analysis-report-generator',
       'salary-negotiation-script',
     ],
@@ -141,8 +139,8 @@ export const suites = [
           id: 'task',
           question: 'What do you need help with?',
           options: [
-            { label: 'Reaching out to prospects', tags: ['linkedin-outreach-message-writer', 'linkedin-outreach-writer', 'cold-email-writer'] },
-            { label: 'Running discovery calls', tags: ['sales-discovery-call-script-generator', 'salesDiscoveryCallGenerator'] },
+            { label: 'Reaching out to prospects', tags: ['linkedin-outreach-message-writer', 'cold-email-writer'] },
+            { label: 'Running discovery calls', tags: ['salesDiscoveryCallGenerator'] },
             { label: 'Handling objections', tags: ['sales_objection_handler', 'win-loss-analysis-report-generator'] },
             { label: 'Negotiating salary', tags: ['salary-negotiation-script'] },
           ],

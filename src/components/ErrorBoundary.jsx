@@ -21,10 +21,10 @@ class ErrorBoundary extends React.Component {
         <div className="p-6 bg-red-500/10 border border-red-500/30 rounded-xl my-4 text-center">
           <AlertTriangle className="mx-auto text-red-400 mb-4" size={48} />
           <h3 className="text-xl font-bold text-red-400 mb-2">Failed to render output</h3>
-          <p className="text-gray-300 text-sm mb-4">
+          <p className="dark:text-text-secondary text-gray-600 text-sm mb-4">
             The AI generated content that our renderer could not process.
           </p>
-          <pre className="text-left bg-gray-900/50 p-4 rounded-lg text-xs text-red-300 overflow-x-auto whitespace-pre-wrap">
+          <pre className="text-left dark:bg-surface-card bg-white p-4 rounded-lg text-xs text-red-300 overflow-x-auto whitespace-pre-wrap">
             {this.state.error?.toString() || 'Unknown rendering error'}
           </pre>
           <button
