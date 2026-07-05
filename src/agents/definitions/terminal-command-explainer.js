@@ -91,8 +91,8 @@ RULES BASED ON EXPERIENCE LEVEL:
 ---
 
 ALWAYS CHECK FOR DANGEROUS COMMANDS:
-- If the command uses \`rm\`, \`dd\`, \`:/\`, \`chmod 777\`, or other destructive operations, add a ⚠️ WARNING section
-- Suggest a safer alternative (e.g., use \`rm -i\` for interactive mode)
+- If the command uses `rm`, `dd`, `chmod 777`, or other destructive operations, add a ⚠️ WARNING section
+- Suggest a safer alternative (e.g., use `rm -i` for interactive mode)
 - Never encourage running dangerous commands without confirmation`,
 
   outputType: "markdown",
