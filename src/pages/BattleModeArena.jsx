@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Cpu,
@@ -16,6 +16,11 @@ import { runAgent } from "../lib/llmAdapter";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
+
+// Timeout configuration for LLM requests (in milliseconds)
+// Prevents runaway API calls from indefinitely blocking the UI
+const LLM_REQUEST_TIMEOUT_MS = 60000; // 60 seconds - reasonable for most LLM calls
+const TIMEOUT_ERROR_MESSAGE = "Request timed out - the LLM took too long to respond. Please try again.";
 
 const PROVIDERS = [
   {
@@ -112,6 +117,13 @@ export default function BattleModeArena() {
 
   const [copiedProvider, setCopiedProvider] = useState(null);
 
+  // Store AbortControllers for each provider so we can cancel requests if needed
+  const abortControllersRef = useRef({
+    openai: new AbortController(),
+    anthropic: new AbortController(),
+    gemini: new AbortController(),
+  });
+
   // Tracks which provider finished (success or error) first
   const [firstFinisher, setFirstFinisher] = useState(null);
   // Flips to true once all three are done, triggers the reveal animation
@@ -145,14 +157,26 @@ export default function BattleModeArena() {
         },
       }));
 
+      // Reset AbortController for this request
+      abortControllersRef.current[prov.id] = new AbortController();
+      const controller = abortControllersRef.current[prov.id];
+
+      // Create a timeout that aborts the request after LLM_REQUEST_TIMEOUT_MS
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, LLM_REQUEST_TIMEOUT_MS);
+
       runAgent({
         provider: prov.id,
         model: prov.model,
         apiKey: apiKeys[prov.id],
         systemPrompt: agent.systemPrompt,
         userMessage,
+      }, {
+        signal: controller.signal, // Pass the abort signal to runAgent
       })
         .then((result) => {
+          clearTimeout(timeoutId);
           setResults((prev) => ({
             ...prev,
             [prov.id]: {
@@ -165,18 +189,30 @@ export default function BattleModeArena() {
           setFirstFinisher((prev) => prev ?? prov.id);
         })
         .catch((err) => {
+          clearTimeout(timeoutId);
+          // Handle timeout errors specifically
+          let errorMessage = err.message || "An unknown error occurred";
+          if (err.name === "AbortError" || err.code === "ABORT_ERR") {
+            errorMessage = TIMEOUT_ERROR_MESSAGE;
+          }
           setResults((prev) => ({
             ...prev,
             [prov.id]: {
               loading: false,
               content: null,
-              error: err.message || "An unknown error occurred",
+              error: errorMessage,
               duration: null,
             },
           }));
-          setFirstFinisher((prev) => prev ?? prov.id);
         });
     });
+
+    // Cleanup: abort all pending requests when component unmounts
+    return () => {
+      Object.values(abortControllersRef.current).forEach(controller => {
+        controller.abort();
+      });
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePickWinner = (providerId) => {

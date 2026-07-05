@@ -1,49 +1,53 @@
 export default {
-  id: "docker-container-audit-agent",
-  createdAt: "2026-06-28",
-  name: "Docker Container Security & Optimization Audit",
-  description:
-    "Analyze your Dockerfiles or Docker Compose configurations to discover security vulnerabilities, size bloat, and run-time optimization opportunities, and generate a fully secure, optimized production-ready version.",
-  category: "DevOps",
-  icon: "Container",
-  provider: "any",
-  defaultProvider: "openai",
-  model: "gpt-4o-mini",
+  id: 'docker-container-audit-agent',
+  createdAt: '2026-06-28',
+  name: 'Docker Container Security & Optimization Audit',
+  description: 'Analyze your Dockerfiles or Docker Compose configurations to discover security vulnerabilities, size bloat, and run-time optimization opportunities, and generate a fully secure, optimized production-ready version.',
+  category: 'DevOps',
+  icon: 'Container',
+  provider: 'any',
+  defaultProvider: 'openai',
+  model: 'gpt-4o-mini',
   exampleInputs: {
-    dockerCode: "FROM node:18\nWORKDIR /app\nCOPY . .\nRUN npm install\nEXPOSE 3000\nCMD [\"npm\", \"start\"]",
-    targetEnv: "Production",
-    strictness: "High - Strict compliance",
+    dockerCode: 'FROM node:18\nWORKDIR /app\nCOPY . .\nRUN npm install\nEXPOSE 3000\nCMD ["npm", "start"]',
+    targetEnv: 'Production',
+    strictness: 'High - Strict compliance',
   },
   inputs: [
     {
-      id: "dockerCode",
-      label: "Dockerfile or Docker Compose Content",
-      type: "code",
-      placeholder: "Paste your Dockerfile or docker-compose.yml here...",
+      id: 'dockerCode',
+      label: 'Dockerfile or Docker Compose Content',
+      type: 'code',
+      placeholder: 'Paste your Dockerfile or docker-compose.yml here...',
       required: true,
     },
     {
-      id: "targetEnv",
-      label: "Target Environment",
-      type: "select",
-      options: ["Development", "Staging", "Production"],
-      defaultValue: "Production",
+      id: 'targetEnv',
+      label: 'Target Environment',
+      type: 'select',
+      options: ['Development', 'Staging', 'Production'],
+      defaultValue: 'Production',
       required: true,
     },
     {
-      id: "strictness",
-      label: "Strictness Level",
-      type: "select",
+      id: 'strictness',
+      label: 'Strictness Level',
+      type: 'select',
       options: [
-        "Low - Recommendations only",
-        "Medium - Standard security",
-        "High - Strict compliance",
+        'Low - Recommendations only',
+        'Medium - Standard security',
+        'High - Strict compliance',
       ],
-      defaultValue: "Medium - Standard security",
+      defaultValue: 'Medium - Standard security',
       required: true,
     },
   ],
   systemPrompt: `You are a principal DevOps engineer and Container Security (DevSecOps) specialist. Your task is to perform a thorough audit of the user's Dockerfile or Docker Compose configuration.
+
+Given:
+- Dockerfile/Compose Content: the raw configuration code.
+- Target Environment: Staging, Production, or Development.
+- Strictness Level: Low, Medium, or High compliance rules.
 
 Always respond in this exact format:
 
@@ -81,8 +85,15 @@ Always respond in this exact format:
 ---
 
 Rules:
-- Audit for common issues: running as root (lack of USER directive), using 'latest' tags, exposing sensitive ports/secrets in env, bloated base images, missing .dockerignore optimization, lack of multi-stage build, lack of HEALTHCHECK, using copy-all before npm/pip install (losing layer caching).
-- Code blocks must be complete and ready to deploy.
-- Explain the logic clearly under the recommendations.`,
-  outputType: "markdown",
+1. Audit for common container security and packaging issues:
+   - Running as root (check if USER directive is missing).
+   - Using 'latest' tags for base images instead of pinned versions/SHA digests.
+   - Leaking sensitive credentials, passwords, or tokens in ENV instructions.
+   - Bloated parent base images (suggest slim or alpine versions).
+   - Missing .dockerignore checks resulting in bloated build contexts.
+   - Inefficient cache utilization (check if COPY . . happens before npm install / pip install).
+   - Missing HEALTHCHECK instruction.
+2. Code blocks must be complete, syntax-valid, and ready to deploy.
+3. Keep explanations clear, technical, and actionable.`,
+  outputType: 'markdown',
 };

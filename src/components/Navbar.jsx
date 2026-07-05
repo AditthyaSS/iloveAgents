@@ -13,6 +13,7 @@ import {
   LibraryBig,
   DollarSign,
   RotateCcw,
+  Settings,
 } from 'lucide-react'
 
 import Logo from './Logo'
@@ -250,6 +251,24 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           >
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
+
+          {/* Settings icon link */}
+          <Link
+            to="/settings"
+            className="
+              hidden md:inline-flex items-center justify-center p-2.5
+              rounded-full
+              transition-all duration-200 hover:scale-105
+              dark:hover:bg-white/10
+              dark:text-text-secondary
+              hover:bg-white/70
+              text-gray-500
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
+            "
+            aria-label="Settings"
+          >
+            <Settings size={16} />
+          </Link>
 
           <button
             onClick={() => setMobileMenuOpen((open) => !open)}
