@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Cpu,
@@ -13,10 +13,14 @@ import {
   Zap,
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
-import BattleNavbar from "../components/BattleNavbar";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
+
+// Timeout configuration for LLM requests (in milliseconds)
+// Prevents runaway API calls from indefinitely blocking the UI
+const LLM_REQUEST_TIMEOUT_MS = 60000; // 60 seconds - reasonable for most LLM calls
+const TIMEOUT_ERROR_MESSAGE = "Request timed out - the LLM took too long to respond. Please try again.";
 
 const PROVIDERS = [
   {
@@ -98,6 +102,13 @@ export default function BattleModeArena() {
 
   const [copiedProvider, setCopiedProvider] = useState(null);
 
+  // Store AbortControllers for each provider so we can cancel requests if needed
+  const abortControllersRef = useRef({
+    openai: new AbortController(),
+    anthropic: new AbortController(),
+    gemini: new AbortController(),
+  });
+
   // Tracks which provider finished (success or error) first
   const [firstFinisher, setFirstFinisher] = useState(null);
   // Flips to true once all three are done, triggers the reveal animation
@@ -131,14 +142,26 @@ export default function BattleModeArena() {
         },
       }));
 
+      // Reset AbortController for this request
+      abortControllersRef.current[prov.id] = new AbortController();
+      const controller = abortControllersRef.current[prov.id];
+
+      // Create a timeout that aborts the request after LLM_REQUEST_TIMEOUT_MS
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+      }, LLM_REQUEST_TIMEOUT_MS);
+
       runAgent({
         provider: prov.id,
         model: prov.model,
         apiKey: apiKeys[prov.id],
         systemPrompt: agent.systemPrompt,
         userMessage,
+      }, {
+        signal: controller.signal, // Pass the abort signal to runAgent
       })
         .then((result) => {
+          clearTimeout(timeoutId);
           setResults((prev) => ({
             ...prev,
             [prov.id]: {
@@ -151,18 +174,30 @@ export default function BattleModeArena() {
           setFirstFinisher((prev) => prev ?? prov.id);
         })
         .catch((err) => {
+          clearTimeout(timeoutId);
+          // Handle timeout errors specifically
+          let errorMessage = err.message || "An unknown error occurred";
+          if (err.name === "AbortError" || err.code === "ABORT_ERR") {
+            errorMessage = TIMEOUT_ERROR_MESSAGE;
+          }
           setResults((prev) => ({
             ...prev,
             [prov.id]: {
               loading: false,
               content: null,
-              error: err.message || "An unknown error occurred",
+              error: errorMessage,
               duration: null,
             },
           }));
-          setFirstFinisher((prev) => prev ?? prov.id);
         });
     });
+
+    // Cleanup: abort all pending requests when component unmounts
+    return () => {
+      Object.values(abortControllersRef.current).forEach(controller => {
+        controller.abort();
+      });
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePickWinner = (providerId) => {
@@ -189,7 +224,7 @@ export default function BattleModeArena() {
   if (!agent) return null;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white battle-page-transition">
+  <div className="min-h-screen transition-colors duration-300 dark:bg-surface bg-gray-50 dark:text-text-primary text-gray-900 battle-page-transition">
       <style>{`
         @keyframes battleCardPulse {
           0%, 100% { transform: scale(1); box-shadow: 0 0 0px 0px var(--glow-color, transparent); }
@@ -240,13 +275,13 @@ export default function BattleModeArena() {
         }
       `}</style>
 
-      <BattleNavbar />
-
       <main className="pt-14 px-4 py-8">
         {/* Back */}
         <button
           onClick={() => navigate("/battle/setup")}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-white 
+          className="flex items-center gap-1.5 text-xs font-medium
+            dark:text-text-secondary text-gray-700
+            hover:dark:text-text-primary hover:text-gray-900
             transition-all duration-200 hover:gap-2 mb-8"
         >
           <ArrowLeft size={14} />
@@ -255,12 +290,12 @@ export default function BattleModeArena() {
 
         {/* Header */}
         <div className="text-center mb-10 battle-fade-in">
-          <h1 className="text-3xl font-extrabold tracking-wider mb-2 text-white">
+          <h1 className="text-3xl font-extrabold tracking-wider mb-2 dark:text-text-primary text-gray-900">
             Battle Arena
           </h1>
-          <p className="text-sm text-gray-300">
+          <p className="text-base dark:text-text-primary text-gray-900">
             Running{" "}
-            <span className="text-white font-semibold">{agent.name}</span>{" "}
+            <span className="dark:text-text-primary text-gray-900 font-semibold">{agent.name}</span>{" "}
             across three providers
           </p>
         </div>
@@ -269,15 +304,20 @@ export default function BattleModeArena() {
         <div className="max-w-7xl mx-auto mb-6">
           <button
             onClick={() => setPromptViewerOpen(!promptViewerOpen)}
-            className="w-full flex items-center justify-between px-5 py-3 rounded-lg bg-gray-900/50 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-all duration-200"
+            className="w-full flex items-center justify-between px-5 py-3 rounded-lg
+                  dark:bg-surface-card dark:bg-gray-900/60  backdrop-blur-md
+                  backdrop-blur-sm
+                  dark:border-border border-gray-200
+                  hover:border-gray-300 dark:hover:border-gray-600
+                  transition-all duration-200"
           >
-            <span className="text-sm font-semibold text-gray-200">
+            <span className="text-base font-semibold dark:text-text-primary text-gray-900">
               Prompt Comparison Viewer
             </span>
             {promptViewerOpen ? (
-              <ChevronDown size={18} className="text-gray-400" />
+              <ChevronDown size={18} className=" dark:text-text-muted text-gray-700" />
             ) : (
-              <ChevronRight size={18} className="text-gray-400" />
+              <ChevronRight size={18} className=" dark:text-text-muted text-gray-700" />
             )}
           </button>
 
@@ -285,14 +325,14 @@ export default function BattleModeArena() {
             <div className="mt-4 battle-fade-in">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* OpenAI Column */}
-                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
-                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
-                    <span className="text-sm font-bold text-yellow-400">
+                <div className="rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
+                    <span className="text-base font-bold text-yellow-400">
                       OpenAI
                     </span>
                     <button
                       onClick={() => handleCopyPrompt("openai", prompts.openai)}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
                     >
                       {copiedProvider === "openai" ? (
                         <>
@@ -302,26 +342,26 @@ export default function BattleModeArena() {
                       ) : (
                         <Copy
                           size={14}
-                          className="text-gray-400 hover:text-gray-300"
+                          className=" dark:text-text-muted text-gray-700 hover:text-gray-800"
                         />
                       )}
                     </button>
                   </div>
                   <div className="p-4 space-y-4">
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         System Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.openai?.systemPrompt ||
                           "Prompt not available yet."}
                       </pre>
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         User Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.openai?.userMessage ||
                           "Prompt not available yet."}
                       </pre>
@@ -330,16 +370,16 @@ export default function BattleModeArena() {
                 </div>
 
                 {/* Claude Column */}
-                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
-                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
-                    <span className="text-sm font-bold text-violet-400">
+                <div className="rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="dark:bg-surface-card bg-white border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
+                    <span className="text-base font-bold text-violet-400">
                       Claude
                     </span>
                     <button
                       onClick={() =>
                         handleCopyPrompt("anthropic", prompts.anthropic)
                       }
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
                     >
                       {copiedProvider === "anthropic" ? (
                         <>
@@ -349,26 +389,26 @@ export default function BattleModeArena() {
                       ) : (
                         <Copy
                           size={14}
-                          className="text-gray-400 hover:text-gray-300"
+                          className="dark:text-text-muted text-gray-700 hover:text-gray-800"
                         />
                       )}
                     </button>
                   </div>
                   <div className="p-4 space-y-4">
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         System Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.anthropic?.systemPrompt ||
                           "Prompt not available yet."}
                       </pre>
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         User Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.anthropic?.userMessage ||
                           "Prompt not available yet."}
                       </pre>
@@ -377,14 +417,14 @@ export default function BattleModeArena() {
                 </div>
 
                 {/* Gemini Column */}
-                <div className="rounded-xl border border-gray-800 bg-gray-900/30 backdrop-blur-sm flex flex-col overflow-hidden">
-                  <div className="bg-gray-900/50 border-b border-gray-800 px-4 py-3 flex items-center justify-between">
-                    <span className="text-sm font-bold text-blue-400">
+                <div className="rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="dark:bg-surface-card bg-white border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
+                    <span className="text-base font-bold text-blue-400">
                       Gemini
                     </span>
                     <button
                       onClick={() => handleCopyPrompt("gemini", prompts.gemini)}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-gray-800/50 transition-all duration-200"
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
                     >
                       {copiedProvider === "gemini" ? (
                         <>
@@ -394,26 +434,26 @@ export default function BattleModeArena() {
                       ) : (
                         <Copy
                           size={14}
-                          className="text-gray-400 hover:text-gray-300"
+                          className=" dark:text-text-primary text-gray-800 hover:text-gray-800"
                         />
                       )}
                     </button>
                   </div>
                   <div className="p-4 space-y-4">
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      <span className="text-base font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         System Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                      <pre className="whitespace-pre-wrap mt-2 text-base dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.gemini?.systemPrompt ||
                           "Prompt not available yet."}
                       </pre>
                     </div>
                     <div>
-                      <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                      <span className="text-base font-semibold dark:text-text-secondary dark:text-text-muted dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         User Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs text-gray-300 bg-gray-900/50 p-3 rounded-lg border border-gray-800">
+                      <pre className="whitespace-pre-wrap mt-2 text-base dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.gemini?.userMessage ||
                           "Prompt not available yet."}
                       </pre>
@@ -436,8 +476,10 @@ export default function BattleModeArena() {
             return (
               <div
                 key={prov.id}
-                className={`rounded-xl border ${prov.borderClass} bg-gray-900/50 backdrop-blur-sm
-                  shadow-lg flex flex-col battle-fade-in transition-all duration-300 overflow-hidden`}
+                className={`rounded-xl border ${prov.borderClass}
+                    dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md
+                    backdrop-blur-sm shadow-lg flex flex-col battle-fade-in
+                    transition-all duration-300 overflow-hidden`}
                 style={{
                   animationDelay: `${idx * 100}ms`,
                   "--glow-color": prov.glowHex,
@@ -454,7 +496,7 @@ export default function BattleModeArena() {
                   >
                     <Cpu size={16} className={prov.textColor} />
                     <span
-                      className={`text-sm font-bold ${prov.textColor} tracking-wide`}
+                      className={`text-base font-bold ${prov.textColor} tracking-wide`}
                     >
                       {prov.label}
                     </span>
@@ -467,7 +509,7 @@ export default function BattleModeArena() {
                     )}
 
                     {r.duration && (
-                      <span className="ml-auto text-[11px] text-gray-400 font-medium">
+                      <span className="ml-auto text-[11px] dark:text-text-muted text-gray-700 font-medium">
                         {(r.duration / 1000).toFixed(1)}s
                       </span>
                     )}
@@ -481,7 +523,7 @@ export default function BattleModeArena() {
                           size={28}
                           className={`animate-spin ${prov.loaderColor}`}
                         />
-                        <span className="text-xs text-gray-400 font-medium">
+                        <span className="text-xs dark:text-text-muted dark:text-text-muted text-gray-700 font-medium">
                           {isStillFighting
                             ? "Still fighting..."
                             : `${prov.label} is generating...`}
@@ -502,14 +544,14 @@ export default function BattleModeArena() {
                         <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20">
                           <AlertCircle size={24} className="text-red-400" />
                         </div>
-                        <p className="text-xs text-red-400 max-w-xs font-medium">
+                        <p className="text-xs dark:text-text-muted text-gray-700 max-w-xs font-medium">
                           {r.error}
                         </p>
                       </div>
                     )}
 
                     {r.content && (
-                      <div className="markdown-output text-sm text-gray-100 leading-relaxed">
+                      <div className="markdown-output text-base dark:text-text-primary text-gray-900 leading-relaxed">
                         {agent.outputType === "markdown" ? (
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {r.content}
@@ -525,7 +567,7 @@ export default function BattleModeArena() {
 
                   {/* Pick Winner Button */}
                   {r.content && !r.loading && (
-                    <div className="p-5 border-t border-gray-800/50">
+                    <div className="p-5 border-t dark:border-border border-gray-200/50">
                       <button
                         onClick={() => handlePickWinner(prov.id)}
                         className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg

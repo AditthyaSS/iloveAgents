@@ -43,6 +43,7 @@ const providerLabels = {
   openai: "OpenAI",
   anthropic: "Anthropic",
   gemini: "Gemini",
+  openrouter: "OpenRouter",
   any: "Any",
 };
 
@@ -82,6 +83,7 @@ export default function AgentRunner({ agent }) {
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
   );
+  const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
   const [msgIndex, setMsgIndex] = useState(0);
@@ -205,6 +207,10 @@ const getTokenCount = (text) => {
 
   const canRun = () => {
     if (!apiKey) return false;
+    return hasRequiredInputs();
+  };
+
+  const hasRequiredInputs = () => {
     return agent.inputs
       .filter((i) => i.required)
       .every((i) => {
@@ -228,7 +234,7 @@ const getTokenCount = (text) => {
     setIsStreaming(true);
   }, []);
 
-  const handleRun = async () => {
+const handleRun = async () => {
     setLoading(true);
     setError(null);
     setOutput(null);
@@ -237,9 +243,22 @@ const getTokenCount = (text) => {
     setDuration(null);
     setMsgIndex(0);
 
+      const newVersion = {
+      versionNumber: versionHistory.length + 1,
+      timestamp: new Date().toLocaleTimeString(),
+      configSnapshot: { ...inputs }
+    };
+    setVersionHistory((prevHistory) => [
+      {
+        versionNumber: prevHistory.length + 1,
+        timestamp: new Date().toLocaleTimeString(),
+        configSnapshot: { ...inputs },
+      },
+      ...prevHistory,
+    ]);
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
-
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
@@ -260,12 +279,16 @@ const getTokenCount = (text) => {
       setIsStreaming(false);
       setDuration(result.duration);
 
+      const inputTokenEstimate = Math.max(
+        1,
+        Math.round((customPrompt.length + buildUserMessage().length) / 4),
+      );
       const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
 
       addRun({
         model,
-        inputTokens: null,
-        outputTokens: null,
+        inputTokens: inputTokenEstimate,
+        outputTokens: outputTokenEstimate,
         inputCost: null,
         outputCost: null,
       });
@@ -359,15 +382,60 @@ const getTokenCount = (text) => {
     ["text", "textarea", "code"].includes(i.type)
   );
 
-  return (
+ return (
     <div className="max-w-3xl mx-auto animate-fade-in">
       {/* Breadcrumb */}
       <a
         href="/"
-        className="inline-block mb-4 text-xs dark:text-text-muted text-gray-400 hover:underline"
+        className="inline-flex items-center gap-2 mb-5
+          px-3 py-2 rounded-lg
+          bg-indigo-50 dark:bg-indigo-500/10
+          border border-indigo-200 dark:border-indigo-500/20
+          text-sm font-semibold
+          text-indigo-700 dark:text-indigo-300
+          hover:bg-indigo-100 dark:hover:bg-indigo-500/20
+          transition-all duration-200"
       >
-        ← All agents
+        ← All Agents
       </a>
+
+      <div className="mt-2 mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-zinc-900 dark:border-zinc-800 text-gray-900 dark:text-gray-100">
+        <h3 className="
+          text-xl
+          font-bold
+          tracking-tight
+          mb-3
+          bg-gradient-to-r
+          from-amber-500
+          to-orange-500
+          dark:from-yellow-300
+          dark:to-orange-400
+          bg-clip-text
+          text-transparent
+          ">
+          Version History
+          </h3>
+        {versionHistory.length === 0 ? (
+          <p className="text-gray-500 text-sm dark:text-gray-400">No versions saved yet. Click "Run" to create one.</p>
+        ) : (
+          <ul className="space-y-2">
+            {versionHistory.map((v) => (
+              <li key={v.versionNumber} className="flex justify-between items-center p-2 bg-white dark:bg-zinc-800 rounded shadow-sm text-sm">
+                <div>
+                  <span className="font-medium text-blue-600 dark:text-blue-400">Version {v.versionNumber}</span>
+                  <span className="text-gray-400 dark:text-gray-500 text-xs ml-2">({v.timestamp})</span>
+                </div>
+                <button
+                  onClick={() => setInputs(v.configSnapshot)}
+                  className="px-2 py-1 text-xs bg-gray-200 dark:bg-zinc-700 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white rounded transition"
+                >
+                  Restore
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       {/* Agent Header */}
       <div className="flex items-start gap-4 mb-5">
@@ -398,7 +466,7 @@ const getTokenCount = (text) => {
           onClick={handleClear}
           disabled={!hasInputContent()}
           title="Clear Chat"
-          className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          className="p-2 rounded-lg dark:text-text-muted text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Trash2 size={18} />
         </button>
@@ -422,14 +490,15 @@ const getTokenCount = (text) => {
           <button
             onClick={() => setBatchMode((prev) => !prev)}
             title="Run this agent across multiple inputs at once"
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold
+              transition-all duration-200 active:scale-95
               ${
                 batchMode
-                  ? "bg-accent/15 text-accent border border-accent/30"
-                  : "dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-transparent"
+                  ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 border border-violet-500/30"
+                  : "bg-white dark:bg-surface-card border border-gray-200 dark:border-border text-gray-700 dark:text-text-primary hover:border-violet-400 dark:hover:border-violet-500 hover:shadow-md"
               }`}
           >
-            <Layers size={14} />
+            <Layers size={16} />
             {batchMode ? "Exit Batch Mode" : "Batch Mode"}
           </button>
         </div>
@@ -465,7 +534,7 @@ const getTokenCount = (text) => {
                   placeholder={input.placeholder}
                   className="w-full h-9 pl-3 pr-10 rounded-md text-sm transition-colors
                     dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
-                    bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
+                    bg-gray-50 border border-gray-200 text-gray-900 placeholder:dark:text-text-muted text-gray-500
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 />
                 <VoiceInput
@@ -589,14 +658,26 @@ const getTokenCount = (text) => {
       {/* Suggested workflow chain pills */}
       <SuggestedChainPills agent={agent} />
 
-      <div className="mb-4">
-        <button
-          onClick={handleFillExample}
-          className="text-xs font-medium text-accent hover:underline transition-colors"
-        >
-          Try an example →
-        </button>
-      </div>
+<div className="mb-4">
+  <button
+    onClick={handleFillExample}
+    className="
+      inline-flex items-center gap-2
+      px-3 py-1.5
+      rounded-full
+      bg-accent/10
+      text-accent
+      font-semibold
+      border border-accent/20
+      hover:bg-accent/20
+      hover:border-accent/30
+      hover:gap-3
+      transition-all duration-200
+    "
+  >
+    ✨ Try an example
+  </button>
+</div>
 
       {/* Prompt Playground */}
       <div
@@ -673,7 +754,7 @@ const getTokenCount = (text) => {
                 rows={10}
                 spellCheck={false}
                 className="w-full pl-3 pr-10 py-2.5 rounded-lg text-xs font-mono leading-relaxed transition-colors resize-y
-                  dark:bg-[#0d1117] dark:border-border dark:text-gray-300 dark:placeholder:text-text-muted
+                  dark:bg-[#0d1117] dark:border-border dark:text-text-secondary text-gray-600 dark:placeholder:text-text-muted
                   bg-gray-50 border border-gray-200 text-gray-700 placeholder:text-gray-400
                   focus:ring-1 focus:ring-accent focus:border-accent outline-none"
                 placeholder="Enter your custom system prompt..."
@@ -733,9 +814,12 @@ const getTokenCount = (text) => {
             {apiKey && !modelRecommendation && !analyserLoading && (
               <button
                 onClick={handleAnalyseModels}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs
-                  font-semibold text-white bg-accent hover:bg-accent-hover
-                  transition-all duration-200 active:scale-[0.98]"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl
+                font-semibold text-white
+                bg-gradient-to-r from-emerald-600 to-teal-600
+                hover:from-emerald-500 hover:to-teal-500
+                shadow-md shadow-emerald-500/25
+                transition-all duration-200"
               >
                 <Zap size={12} />
                 Analyse Models
@@ -807,10 +891,16 @@ const getTokenCount = (text) => {
         {/* Schedule button */}
         <button
           onClick={() => setScheduleModalOpen(true)}
-          title="Schedule this agent to run automatically"
+          disabled={!hasRequiredInputs()}
+          title={
+            hasRequiredInputs()
+              ? "Schedule this agent to run automatically"
+              : "Fill required inputs before scheduling"
+          }
           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors
             dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover
-            text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            text-gray-500 hover:text-gray-900 hover:bg-gray-100
+            disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent dark:disabled:hover:bg-transparent"
         >
           <CalendarClock size={14} />
           Schedule
@@ -939,6 +1029,7 @@ const getTokenCount = (text) => {
         { value: "openai", label: "OpenAI" },
         { value: "anthropic", label: "Anthropic" },
         { value: "gemini", label: "Gemini" },
+        { value: "openrouter", label: "OpenRouter" },
       ]}
     />
 

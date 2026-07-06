@@ -2,11 +2,12 @@ import { Link } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { ArrowRight } from 'lucide-react'
 
-const providerLabels = { openai: 'OpenAI', anthropic: 'Anthropic', gemini: 'Gemini', any: 'Any Provider' }
+const providerLabels = { openai: 'OpenAI', anthropic: 'Anthropic', gemini: 'Gemini', openrouter: 'OpenRouter', any: 'Any Provider' }
 const providerClasses = {
   openai: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
   anthropic: 'bg-orange-500/10 text-orange-500 border-orange-500/20',
   gemini: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  openrouter: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
   any: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
 }
 

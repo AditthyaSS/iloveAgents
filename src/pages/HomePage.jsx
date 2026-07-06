@@ -12,6 +12,7 @@ import { useAgents } from '../lib/useAgents'
 import RecommendationWizardEntry from '../components/recommendation/RecommendationWizardEntry'
 import RecommendationWizardModal from '../components/recommendation/RecommendationWizardModal'
 import { Link } from "react-router-dom";
+import { getGlobalKeys } from '../lib/globalKeys'
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -38,6 +39,18 @@ export default function HomePage() {
   const recommendationWizardHeroTriggerRef = useRef(null)
   const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
+
+  // ── First-time banner: show only if no global keys saved and not dismissed
+  const [showBanner, setShowBanner] = useState(() => {
+    if (localStorage.getItem('iloveagents_banner_dismissed') === 'true') return false
+    const keys = getGlobalKeys()
+    return !keys.openai && !keys.anthropic && !keys.gemini
+  })
+
+  const dismissBanner = () => {
+    localStorage.setItem('iloveagents_banner_dismissed', 'true')
+    setShowBanner(false)
+  }
   const allCategories = useMemo(() => {
     return [...new Set(agents.map((a) => a.category))].sort()
   }, [agents])
@@ -191,6 +204,35 @@ export default function HomePage() {
         onClose={() => setIsRecommendationWizardOpen(false)}
         triggerRef={recommendationWizardReturnFocusRef}
       />
+
+      {/* First-time user banner — shows only when no global keys saved and not dismissed */}
+      {showBanner && (
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 animate-fade-in
+          dark:bg-accent/5 dark:border-accent/20 bg-indigo-50 border-indigo-200">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <span className="text-lg flex-shrink-0">👋</span>
+            <p className="text-sm dark:text-text-secondary text-gray-700 leading-snug">
+              <strong className="dark:text-text-primary text-gray-900">First time here?</strong>{' '}
+              Save your API keys once in Settings and use all agents instantly. No re-entering ever.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              to="/settings"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-accent hover:bg-accent-hover transition-colors whitespace-nowrap"
+            >
+              Go to Settings →
+            </Link>
+            <button
+              onClick={dismissBanner}
+              className="p-1.5 rounded-md dark:text-text-muted text-gray-400 hover:text-gray-600 dark:hover:text-text-secondary transition-colors"
+              aria-label="Dismiss banner"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Hero */}
       <div className="premium-section text-center mb-10 pt-2 overflow-hidden">
         <h1 className="text-3xl sm:text-4xl font-bold dark:text-text-primary text-gray-900 mb-3 tracking-tight text-balance">
@@ -326,10 +368,8 @@ export default function HomePage() {
 )}
 
       {/* ── Search & Category Filter Section ── */}
-      <div
-  className={`premium-section space-y-4 ${
-    isOpen ? "mb-80" : "mb-6"
-  }`}
+    <div
+  className={`premium-section space-y-4 relative z-30 ${isOpen ? "mb-80" : "mb-6"}`}
   style={{ animationDelay: "180ms" }}
 >
         {/* Search Bar */}
