@@ -31,6 +31,14 @@ const categoryMeta = {
 
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
 
+const providerLabels = {
+  any: 'Any Provider',
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
@@ -39,6 +47,7 @@ export default function HomePage() {
   const recommendationWizardHeroTriggerRef = useRef(null)
   const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedProvider, setSelectedProvider] = useState(null)
 
   // ── First-time banner: show only if no global keys saved and not dismissed
   const [showBanner, setShowBanner] = useState(() => {
@@ -73,6 +82,32 @@ export default function HomePage() {
       })),
     ]
   }, [allCategories, categoryCounts, agents.length])
+
+  const allProviders = useMemo(() => {
+    return [...new Set(agents.map((agent) => agent.provider || 'any'))].sort((a, b) => {
+      return (providerLabels[a] || a).localeCompare(providerLabels[b] || b)
+    })
+  }, [agents])
+
+  const providerCounts = useMemo(() => {
+    const counts = {}
+    agents.forEach((agent) => {
+      const provider = agent.provider || 'any'
+      counts[provider] = (counts[provider] || 0) + 1
+    })
+    return counts
+  }, [agents])
+
+  const providerOptions = useMemo(() => {
+    return [
+      { value: null, label: 'All Providers', count: agents.length },
+      ...allProviders.map((provider) => ({
+        value: provider,
+        label: providerLabels[provider] || provider,
+        count: providerCounts[provider] || 0,
+      })),
+    ]
+  }, [allProviders, providerCounts, agents.length])
 
   const [isOpen, setIsOpen] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
@@ -165,20 +200,34 @@ export default function HomePage() {
 
   // Filter agents based on search + category
   const filteredAgents = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+
     return agents.filter((agent) => {
       const matchesCategory = !selectedCategory || agent.category === selectedCategory
       if (!matchesCategory) return false
 
-      if (!searchQuery.trim()) return true
+      const provider = agent.provider || 'any'
+      const matchesProvider = !selectedProvider || provider === selectedProvider
+      if (!matchesProvider) return false
 
-      const q = searchQuery.toLowerCase()
-      return (
-        agent.name.toLowerCase().includes(q) ||
-        agent.description.toLowerCase().includes(q) ||
-        agent.category.toLowerCase().includes(q)
-      )
+      if (!q) return true
+
+      const searchableText = [
+        agent.name,
+        agent.description,
+        agent.category,
+        agent.id,
+        agent.model,
+        providerLabels[provider],
+        provider,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return searchableText.includes(q)
     })
-  }, [agents, searchQuery, selectedCategory])
+  }, [agents, searchQuery, selectedCategory, selectedProvider])
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
@@ -194,7 +243,7 @@ export default function HomePage() {
     navigator.clipboard.writeText(text)
   }
 
-  const showingFiltered = searchQuery.trim() || selectedCategory
+  const showingFiltered = searchQuery.trim() || selectedCategory || selectedProvider
 
   return (
     <div className="animate-fade-in">
@@ -544,6 +593,38 @@ export default function HomePage() {
             )}
           </div>
         </div>
+
+        {/* Provider Filter Pills */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {providerOptions.map((option) => {
+            const isSelected = option.value === selectedProvider
+
+            return (
+              <button
+                key={option.value || 'all-providers'}
+                type="button"
+                onClick={() => setSelectedProvider(option.value)}
+                aria-pressed={isSelected}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors
+                  ${isSelected
+                    ? 'border-accent bg-accent text-white shadow-sm'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-accent/40 hover:text-gray-900 dark:border-border dark:bg-surface-card dark:text-text-secondary dark:hover:border-accent/40 dark:hover:text-text-primary'
+                  }`}
+              >
+                <span>{option.label}</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] leading-none
+                    ${isSelected
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 text-gray-500 dark:bg-surface-input dark:text-text-muted'
+                    }`}
+                >
+                  {option.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Agent Grid */}
@@ -594,6 +675,7 @@ export default function HomePage() {
                   onClick={() => {
                     setSearchQuery("");
                     setSelectedCategory(null);
+                    setSelectedProvider(null);
                   }}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
                 >
