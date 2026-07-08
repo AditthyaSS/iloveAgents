@@ -98,6 +98,8 @@ export default function AgentRunner({ agent }) {
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
+  const textareaRefs = useRef({});
+  
 
   useKeyboardShortcuts({
   'Control+Enter': () => {
@@ -548,16 +550,21 @@ const handleRun = async () => {
             {input.type === "textarea" && (
               <div className="relative flex flex-col gap-1">
                 <textarea
+  ref={(el) => {
+    textareaRefs.current[input.id] = el;
+  }}
                   value={inputs[input.id] || ""}
                   onChange={(e) => {
-                    // 4000 chars se bada text type hone se rokein
-                    if (e.target.value.length <= MAX_CHAR_LIMIT) {
-                      updateInput(input.id, e.target.value);
-                    }
-                  }}
+  if (e.target.value.length <= MAX_CHAR_LIMIT) {
+    updateInput(input.id, e.target.value);
+
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }
+}}
                   placeholder={input.placeholder}
                   rows={4}
-                  className="w-full pl-3 pr-10 py-2 rounded-md text-sm transition-colors resize-y
+                  className="w-full pl-3 pr-10 py-2 rounded-md text-sm transition-colors resize-none overflow-hidden
                     dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
