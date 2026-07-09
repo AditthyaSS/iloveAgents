@@ -15,6 +15,8 @@ import {
   GitBranch,
   Trash2,
   CalendarClock,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
@@ -53,6 +55,15 @@ const LOADING_MESSAGES = [
   "👀 Your agent is locked in...",
 ];
 
+// Timeline steps for AI Response Timeline
+const TIMELINE_STEPS = [
+  { id: 1, label: "Understanding Query", duration: 600 },
+  { id: 2, label: "Gathering Context", duration: 900 },
+  { id: 3, label: "Processing Information", duration: 1200 },
+  { id: 4, label: "Generating Response", duration: 1500 },
+  { id: 5, label: "Finalizing Output", duration: 1800 },
+];
+
 export default function AgentRunner({ agent }) {
   const {
     provider,
@@ -84,6 +95,11 @@ export default function AgentRunner({ agent }) {
   const [analyserLoading, setAnalyserLoading] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+
+  // Timeline state
+  const [activeStep, setActiveStep] = useState(0);
+  const timelineTimersRef = useRef([]);
+
   const { addJob } = useScheduler();
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
@@ -142,6 +158,27 @@ export default function AgentRunner({ agent }) {
     }, 2500);
     return () => clearInterval(interval);
   }, [loading, isStreaming]);
+
+  // Start timeline steps when loading begins
+  const startTimeline = () => {
+    setActiveStep(0);
+    timelineTimersRef.current.forEach(clearTimeout);
+    timelineTimersRef.current = [];
+
+    TIMELINE_STEPS.forEach((step) => {
+      const timer = setTimeout(() => {
+        setActiveStep(step.id);
+      }, step.duration);
+      timelineTimersRef.current.push(timer);
+    });
+  };
+
+  // Clear timeline when done
+  const clearTimeline = () => {
+    timelineTimersRef.current.forEach(clearTimeout);
+    timelineTimersRef.current = [];
+    setActiveStep(0);
+  };
 
   const updateInput = (id, value) => {
     setInputs((prev) => ({ ...prev, [id]: value }));
@@ -206,6 +243,7 @@ export default function AgentRunner({ agent }) {
     setIsStreaming(false);
     setDuration(null);
     setMsgIndex(0);
+    startTimeline();
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -229,6 +267,7 @@ export default function AgentRunner({ agent }) {
       setStreamingOutput("");
       setIsStreaming(false);
       setDuration(result.duration);
+      clearTimeline();
 
       // Save to history
       saveRun({
@@ -246,6 +285,7 @@ export default function AgentRunner({ agent }) {
       setError({ type: "generic", message: err.message });
     }
   }
+  clearTimeline();
 } finally {
       setLoading(false);
       abortControllerRef.current = null;
@@ -261,6 +301,7 @@ export default function AgentRunner({ agent }) {
     setStreamingOutput("");
     setIsStreaming(false);
     setLoading(false);
+    clearTimeline();
   };
 
   const handleClear = () => {
@@ -273,6 +314,7 @@ export default function AgentRunner({ agent }) {
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    clearTimeline();
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -759,17 +801,49 @@ export default function AgentRunner({ agent }) {
         error && <ErrorCard message={error.message || error} />
       )}
 
+      {/* AI Response Timeline */}
       {loading && !isStreaming && (
-        <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Loader2 size={16} className="animate-spin text-accent" />
-            <span className="text-xs font-medium text-accent">
-              Connecting to API...
+        <div className="rounded-lg border p-5 dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in mb-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Loader2 size={14} className="animate-spin text-accent" />
+            <span className="text-xs font-semibold text-accent uppercase tracking-wider">
+              AI Thought Process
             </span>
           </div>
-          <p className="text-sm dark:text-text-secondary text-gray-500 transition-all duration-500">
-            {LOADING_MESSAGES[msgIndex]}
-          </p>
+          <div className="space-y-3">
+            {TIMELINE_STEPS.map((step) => {
+              const isCompleted = activeStep > step.id;
+              const isActive = activeStep === step.id;
+              const isPending = activeStep < step.id;
+              return (
+                <div key={step.id} className="flex items-center gap-3">
+                  {isCompleted ? (
+                    <CheckCircle2 size={16} className="text-green-500 flex-shrink-0" />
+                  ) : isActive ? (
+                    <Loader2 size={16} className="animate-spin text-accent flex-shrink-0" />
+                  ) : (
+                    <Circle size={16} className="dark:text-text-muted text-gray-300 flex-shrink-0" />
+                  )}
+                  <span
+                    className={`text-xs transition-all duration-300 ${
+                      isCompleted
+                        ? "dark:text-green-400 text-green-600 line-through opacity-60"
+                        : isActive
+                        ? "dark:text-text-primary text-gray-900 font-semibold"
+                        : "dark:text-text-muted text-gray-400"
+                    }`}
+                  >
+                    {step.label}
+                  </span>
+                  {isActive && (
+                    <span className="text-[10px] text-accent animate-pulse">
+                      ...
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -888,9 +962,3 @@ export default function AgentRunner({ agent }) {
     </div>
   );
 }
-
-
-
- 
-
-  
