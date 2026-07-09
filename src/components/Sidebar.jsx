@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { useCollections } from '../lib/useCollections'
 
 const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
 
 export default function Sidebar({ open, onClose }) {
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
+  const { agents } = useAgents()
+  const [openCategories, setOpenCategories] = useState({})
   // Stores COLLAPSED state per category (absent/false = expanded).
   // Categories are expanded by default on first visit, since we only
   // record an entry here when the user explicitly collapses one.

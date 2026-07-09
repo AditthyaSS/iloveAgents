@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { saveWorkflow } from '../hooks/useWorkflows'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -35,6 +36,19 @@ export default function WorkflowBuilder() {
   const [searchQuery, setSearchQuery] = useState('')
   const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
 
+  // Seed the chain from SuggestedChainPills once the registry has loaded
+  useEffect(() => {
+    const preselected = location.state?.preselectedAgents
+    if (!preselected.length || !agents.length) return
+    setSelectedAgents((prev) =>
+      prev.length
+        ? prev
+        : preselected.map((id) => agents.find((a) => a.id === id)).filter(Boolean)
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents, location.state?.preselectedAgents])
+
+  // Pre-select agent if coming from AgentRunner
   useEffect(() => {
     loadAllAgents().then(setAgents)
   }, [])

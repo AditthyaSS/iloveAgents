@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { GitBranch } from 'lucide-react'
 import * as Icons from 'lucide-react'
+import { useAgents } from '../lib/useAgents'
 import { loadAllAgents } from '../agents/registry'
 
 /**

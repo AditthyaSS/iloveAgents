@@ -11,27 +11,10 @@ const steps = [
 ]
 
 const providers = [
-  {
-    name: 'GPT-4o',
-    label: 'OpenAI',
-    color: 'text-green-600 dark:text-green-400',
-    border: 'border-green-300 dark:border-green-400/30',
-    bg: 'bg-green-100 dark:bg-green-400/10',
-  },
-  {
-    name: 'Claude',
-    label: 'Anthropic',
-    color: 'text-amber-600 dark:text-orange-400',
-    border: 'border-amber-300 dark:border-orange-400/30',
-    bg: 'bg-amber-100 dark:bg-orange-400/10',
-  },
-  {
-    name: 'Gemini',
-    label: 'Google',
-    color: 'text-blue-600 dark:text-blue-400',
-    border: 'border-blue-300 dark:border-blue-400/30',
-    bg: 'bg-blue-100 dark:bg-blue-400/10',
-  },
+  { name: 'GPT-4o',         label: 'OpenAI',   color: 'text-green-400 dark:text-green-400',  border: 'border-green-400/30 dark:border-green-400/300',  bg: 'bg-green-400/10 dark:bg-green-400/10',  side: 'battle-slide-left'   },
+  { name: 'Claude',         label: 'Anthropic', color: 'text-orange-400 dark:text-orange-400', border: 'border-orange-400/30 dark:border-orange-400/30', bg: 'bg-orange-400/10 dark:bg-orange-400/10', side: 'battle-slide-right'  },
+  { name: 'Gemini',         label: 'Google',    color: 'text-blue-400 dark:text-blue 400',   border: 'border-blue-400/30 dark:border-blue-400/30',   bg: 'bg-blue-400/10 dark:bg-blue-400/10',   side: 'battle-slide-right'  },
+  { name: 'Groq',         label: 'Groq',    color: 'text-red-400 dark:text-red 400',   border: 'border-red-400/30 dark:border-red-400/30',   bg: 'bg-red-400/10 dark:bg-red-400/10',   side: 'battle-slide-right'  },
 ]
 
 export default function BattleModeLanding() {
@@ -123,6 +106,17 @@ export default function BattleModeLanding() {
             <Bot size={28} className={providers[2].color} />
             <span className={`text-sm font-bold ${providers[2].color}`}>{providers[2].name}</span>
             <span className="text-[10px] dark:text-text-muted text-gray-700 dark:text-text-secondary dark:text-text-secondary uppercase tracking-widest">{providers[2].label}</span>
+          </div>
+
+          {/* Groq */}
+          <div
+            className={`flex-1 flex flex-col items-center gap-2 p-4 rounded-xl border
+              ${providers[3].border} ${providers[3].bg} battle-slide-right`}
+            style={{ animationDelay: '200ms' }}
+          >
+            <Bot size={28} className={providers[3].color} />
+            <span className={`text-sm font-bold ${providers[3].color}`}>{providers[3].name}</span>
+            <span className="text-[10px] text-gray-500 uppercase tracking-widest">{providers[3].label}</span>
           </div>
         </div>
 

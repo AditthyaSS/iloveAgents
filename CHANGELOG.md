@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 > Changes that are merged but not yet formally versioned.
 
+### Added
+
+- **Groq API provider support** ([#284](https://github.com/AditthyaSS/iloveAgents/issues/284)) — Groq is now selectable in the provider bar alongside OpenAI, Anthropic, Gemini, and Groq, with one-shot and streaming support via Groq's OpenAI-compatible endpoint. Ships curated production models (Llama 3.3 70B, Llama 3.1 8B, GPT-OSS 120B/20B), a provider logo, an `Alt+4` quick-switch shortcut, and invalid-key error handling. Adds a dependency-free Node test suite for the provider (`npm test`).
+
 ---
 
 ## [Current Project Overview]
@@ -21,7 +25,7 @@ for running AI agents directly in the browser. No sign-up. No backend. Bring you
 
 - Config-driven agent registry (`src/agents/registry.js`) — agents are auto-collected from `src/agents/definitions/`
 - Unified LLM adapter (`src/lib/llmAdapter.js`) supporting one-shot and streaming modes
-- Support for **OpenAI**, **Anthropic**, and **Google Gemini** providers — switchable at runtime
+- Support for **OpenAI**, **Anthropic**, **Google Gemini**, and **Groq** providers — switchable at runtime
 - `ApiKeyBar` component with password-masked key input, eye toggle, and session-save option
 - API key stored in `sessionStorage` only — never sent to any server
 - `resolveAgentModel` logic for safe model resolution with fallback chain

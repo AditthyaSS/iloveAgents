@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
+import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
@@ -41,6 +43,7 @@ const providerLabels = {
 
 export default function HomePage() {
   const navigate = useNavigate()
+  const { agents } = useAgents()
   const [searchQuery, setSearchQuery] = useState('')
   const { agents, loading: agentsLoading } = useAgents()
   const [isRecommendationWizardOpen, setIsRecommendationWizardOpen] = useState(false)
@@ -170,6 +173,12 @@ export default function HomePage() {
   }
 
   useDocumentTitle()
+
+  // Derive unique sorted categories from the loaded registry
+  const allCategories = useMemo(
+    () => [...new Set(agents.map((a) => a.category))].sort(),
+    [agents]
+  )
 
   useKeyboardShortcuts({
     '/': (e) => {

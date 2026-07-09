@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { fetchWorkflowById, subscribeToWorkflow } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../lib/useDocumentTitle'

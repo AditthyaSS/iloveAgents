@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import AgentRunner from '../components/AgentRunner'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 

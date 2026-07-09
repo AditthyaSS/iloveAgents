@@ -53,6 +53,7 @@ body:
         - OpenAI
         - Anthropic
         - Google Gemini
+        - Groq
         - Any
     validations:
       required: true
