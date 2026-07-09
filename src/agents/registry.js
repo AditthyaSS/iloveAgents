@@ -38,12 +38,13 @@ export function loadAllAgents() {
     Object.values(modules).map((loader) => loader())
   ).then((entries) => {
     return normalizeAgents(entries.map((mod) => mod.default));
+  })
+  .catch((error) => {
+    // Allow future calls to retry initialization after a failed load.
+    cachedAgentsPromise = null;
+    throw error;
   });
 
   return cachedAgentsPromise;
 }
-
-const modulesEager = import.meta.glob('./definitions/*.js', { eager: true });
-const agents = normalizeAgents(Object.values(modulesEager).map((m) => m.default));
-
-export default agents;
+

@@ -4,6 +4,7 @@ import { resolveAgentModel } from './resolveAgentModel'
 
 const STORAGE_KEY = 'ila_scheduled_jobs'
 const HISTORY_KEY = 'ila_scheduler_results'
+const API_KEY_PREFIX = 'ila_scheduler_key_'
 const MAX_RESULTS = 50
 
 // ── Intervals in milliseconds
@@ -14,13 +15,37 @@ export const SCHEDULE_OPTIONS = [
 ]
 
 // ── Read / write helpers
+function getStoredJobKey(jobId) {
+  try { return sessionStorage.getItem(API_KEY_PREFIX + jobId) || '' }
+  catch { return '' }
+}
+
+function setStoredJobKey(jobId, apiKey) {
+  try {
+    if (apiKey) sessionStorage.setItem(API_KEY_PREFIX + jobId, apiKey)
+    else sessionStorage.removeItem(API_KEY_PREFIX + jobId)
+  } catch {}
+}
+
+function removeStoredJobKey(jobId) {
+  setStoredJobKey(jobId, '')
+}
+
+function stripJobSecret(job) {
+  const { apiKey, ...safeJob } = job
+  return safeJob
+}
+
 function loadJobs() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]') }
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+      .map(job => ({ ...job, apiKey: getStoredJobKey(job.id) }))
+  }
   catch { return [] }
 }
 
 function saveJobs(jobs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs))
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map(stripJobSecret)))
 }
 
 function loadResults() {
@@ -86,14 +111,17 @@ export function useScheduler() {
   const addJob = useCallback((jobData) => {
     const interval = SCHEDULE_OPTIONS.find(s => s.value === jobData.schedule)
     const now = Date.now()
+    const { apiKey, ...safeJobData } = jobData
     const job = {
-      ...jobData,
+      ...safeJobData,
       id: `job_${now}_${Math.random().toString(36).slice(2)}`,
       createdAt: now,
       lastRunAt: null,
       nextRunAt: now + (interval?.ms ?? 86_400_000),
       enabled: true,
+      apiKey,
     }
+    setStoredJobKey(job.id, apiKey)
     setJobs(prev => [job, ...prev])
     return job
   }, [])
@@ -107,6 +135,7 @@ export function useScheduler() {
 
   // ── Delete a job
   const deleteJob = useCallback((jobId) => {
+    removeStoredJobKey(jobId)
     setJobs(prev => prev.filter(j => j.id !== jobId))
   }, [])
 

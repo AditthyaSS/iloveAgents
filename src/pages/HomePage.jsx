@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
@@ -9,6 +8,11 @@ import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { useAgents } from '../lib/useAgents'
+import RecommendationWizardEntry from '../components/recommendation/RecommendationWizardEntry'
+import RecommendationWizardModal from '../components/recommendation/RecommendationWizardModal'
+import { Link } from "react-router-dom";
+import { getGlobalKeys } from '../lib/globalKeys'
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -27,16 +31,35 @@ const categoryMeta = {
 
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
 
+const providerLabels = {
+  any: 'Any Provider',
+  openai: 'OpenAI',
+  anthropic: 'Anthropic',
+  gemini: 'Gemini',
+  openrouter: 'OpenRouter',
+}
+
 export default function HomePage() {
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
-  const [agents, setAgents] = useState([])
-  const [agentsLoading, setAgentsLoading] = useState(true)
-
-useEffect(() => {
-  loadAllAgents().then(setAgents).finally(() => setAgentsLoading(false))
-}, [])
+  const { agents, loading: agentsLoading } = useAgents()
+  const [isRecommendationWizardOpen, setIsRecommendationWizardOpen] = useState(false)
+  const recommendationWizardHeroTriggerRef = useRef(null)
+  const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [selectedProvider, setSelectedProvider] = useState(null)
+
+  // ── First-time banner: show only if no global keys saved and not dismissed
+  const [showBanner, setShowBanner] = useState(() => {
+    if (localStorage.getItem('iloveagents_banner_dismissed') === 'true') return false
+    const keys = getGlobalKeys()
+    return !keys.openai && !keys.anthropic && !keys.gemini
+  })
+
+  const dismissBanner = () => {
+    localStorage.setItem('iloveagents_banner_dismissed', 'true')
+    setShowBanner(false)
+  }
   const allCategories = useMemo(() => {
     return [...new Set(agents.map((a) => a.category))].sort()
   }, [agents])
@@ -59,6 +82,32 @@ useEffect(() => {
       })),
     ]
   }, [allCategories, categoryCounts, agents.length])
+
+  const allProviders = useMemo(() => {
+    return [...new Set(agents.map((agent) => agent.provider || 'any'))].sort((a, b) => {
+      return (providerLabels[a] || a).localeCompare(providerLabels[b] || b)
+    })
+  }, [agents])
+
+  const providerCounts = useMemo(() => {
+    const counts = {}
+    agents.forEach((agent) => {
+      const provider = agent.provider || 'any'
+      counts[provider] = (counts[provider] || 0) + 1
+    })
+    return counts
+  }, [agents])
+
+  const providerOptions = useMemo(() => {
+    return [
+      { value: null, label: 'All Providers', count: agents.length },
+      ...allProviders.map((provider) => ({
+        value: provider,
+        label: providerLabels[provider] || provider,
+        count: providerCounts[provider] || 0,
+      })),
+    ]
+  }, [allProviders, providerCounts, agents.length])
 
   const [isOpen, setIsOpen] = useState(false)
   const [focusedIndex, setFocusedIndex] = useState(-1)
@@ -151,20 +200,40 @@ useEffect(() => {
 
   // Filter agents based on search + category
   const filteredAgents = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+
     return agents.filter((agent) => {
       const matchesCategory = !selectedCategory || agent.category === selectedCategory
       if (!matchesCategory) return false
 
-      if (!searchQuery.trim()) return true
+      const provider = agent.provider || 'any'
+      const matchesProvider = !selectedProvider || provider === selectedProvider
+      if (!matchesProvider) return false
 
-      const q = searchQuery.toLowerCase()
-      return (
-        agent.name.toLowerCase().includes(q) ||
-        agent.description.toLowerCase().includes(q) ||
-        agent.category.toLowerCase().includes(q)
-      )
+      if (!q) return true
+
+      const searchableText = [
+        agent.name,
+        agent.description,
+        agent.category,
+        agent.id,
+        agent.model,
+        providerLabels[provider],
+        provider,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+
+      return searchableText.includes(q)
     })
-  }, [agents, searchQuery, selectedCategory])
+  }, [agents, searchQuery, selectedCategory, selectedProvider])
+
+  const handleOpenRecommendationWizard = (event) => {
+    event?.preventDefault()
+    if (event?.currentTarget) recommendationWizardReturnFocusRef.current = event.currentTarget
+    setIsRecommendationWizardOpen(true)
+  }
 
   const handleRerun = (run) => {
     navigate(`/agent/${run.agentId}`, { state: { prefill: run.inputs } })
@@ -174,10 +243,45 @@ useEffect(() => {
     navigator.clipboard.writeText(text)
   }
 
-  const showingFiltered = searchQuery.trim() || selectedCategory
+  const showingFiltered = searchQuery.trim() || selectedCategory || selectedProvider
 
   return (
     <div className="animate-fade-in">
+      <RecommendationWizardModal
+        agents={agents}
+        isOpen={isRecommendationWizardOpen}
+        onClose={() => setIsRecommendationWizardOpen(false)}
+        triggerRef={recommendationWizardReturnFocusRef}
+      />
+
+      {/* First-time user banner — shows only when no global keys saved and not dismissed */}
+      {showBanner && (
+        <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 animate-fade-in
+          dark:bg-accent/5 dark:border-accent/20 bg-indigo-50 border-indigo-200">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <span className="text-lg flex-shrink-0">👋</span>
+            <p className="text-sm dark:text-text-secondary text-gray-700 leading-snug">
+              <strong className="dark:text-text-primary text-gray-900">First time here?</strong>{' '}
+              Save your API keys once in Settings and use all agents instantly. No re-entering ever.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link
+              to="/settings"
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-accent hover:bg-accent-hover transition-colors whitespace-nowrap"
+            >
+              Go to Settings →
+            </Link>
+            <button
+              onClick={dismissBanner}
+              className="p-1.5 rounded-md dark:text-text-muted text-gray-400 hover:text-gray-600 dark:hover:text-text-secondary transition-colors"
+              aria-label="Dismiss banner"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
+      )}
       {/* Hero */}
       <div className="premium-section text-center mb-10 pt-2 overflow-hidden">
         <h1 className="text-3xl sm:text-4xl font-bold dark:text-text-primary text-gray-900 mb-3 tracking-tight text-balance">
@@ -186,16 +290,25 @@ useEffect(() => {
         <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md mx-auto leading-relaxed mb-4 text-balance">
           Open source. Community-built. Bring your own key.
         </p>
-        <button
-          onClick={() => navigate('/battle')}
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold
-            bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-950
-            hover:from-yellow-400 hover:to-amber-400 transition-all duration-200
-            shadow-md shadow-yellow-500/20 hover:shadow-yellow-500/30 active:scale-[0.97]"
-        >
-          <Swords size={16} />
-          Enter Battle Mode
-        </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => navigate('/battle')}
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold
+              bg-gradient-to-r from-yellow-500 to-amber-500 text-gray-950
+              hover:from-yellow-400 hover:to-amber-400 transition-all duration-200
+              shadow-md shadow-yellow-500/20 hover:shadow-yellow-500/30 active:scale-[0.97]"
+          >
+            <Swords size={16} />
+            Enter Battle Mode
+          </button>
+          <RecommendationWizardEntry
+            ref={recommendationWizardHeroTriggerRef}
+            onOpen={handleOpenRecommendationWizard}
+            disabled={agentsLoading}
+            loading={agentsLoading}
+          />
+        </div>
+        <p className="mt-2 text-xs text-gray-400 dark:text-text-muted">Not sure where to start? Answer a few questions for personalized picks.</p>
       </div>
 
       {/* Stat Cards */}
@@ -304,10 +417,8 @@ useEffect(() => {
 )}
 
       {/* ── Search & Category Filter Section ── */}
-      <div
-  className={`premium-section space-y-4 ${
-    isOpen ? "mb-80" : "mb-6"
-  }`}
+    <div
+  className={`premium-section space-y-4 relative z-30 ${isOpen ? "mb-80" : "mb-6"}`}
   style={{ animationDelay: "180ms" }}
 >
         {/* Search Bar */}
@@ -482,6 +593,38 @@ useEffect(() => {
             )}
           </div>
         </div>
+
+        {/* Provider Filter Pills */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {providerOptions.map((option) => {
+            const isSelected = option.value === selectedProvider
+
+            return (
+              <button
+                key={option.value || 'all-providers'}
+                type="button"
+                onClick={() => setSelectedProvider(option.value)}
+                aria-pressed={isSelected}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors
+                  ${isSelected
+                    ? 'border-accent bg-accent text-white shadow-sm'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-accent/40 hover:text-gray-900 dark:border-border dark:bg-surface-card dark:text-text-secondary dark:hover:border-accent/40 dark:hover:text-text-primary'
+                  }`}
+              >
+                <span>{option.label}</span>
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] leading-none
+                    ${isSelected
+                      ? 'bg-white/20 text-white'
+                      : 'bg-gray-100 text-gray-500 dark:bg-surface-input dark:text-text-muted'
+                    }`}
+                >
+                  {option.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Agent Grid */}
@@ -527,15 +670,25 @@ useEffect(() => {
               <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
                 Try adjusting your search or removing category filters
               </p>
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory(null);
-                }}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
-              >
-                Clear all filters <X size={12} />
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory(null);
+                    setSelectedProvider(null);
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
+                >
+                  Clear all filters <X size={12} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleOpenRecommendationWizard}
+                  className="text-xs text-gray-500 transition-colors hover:text-accent dark:text-text-secondary"
+                >
+                  Need help choosing? <span className="font-medium">Try the recommendation wizard</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -644,24 +797,19 @@ useEffect(() => {
         <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h4>
         
         {/* Placeholder Link - Disabled click behavior */}
-        <a 
-          href="#" 
-          onClick={(e) => e.preventDefault()}
-          title="Coming Soon"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors cursor-not-allowed opacity-75"
-        >
-          Privacy Policy
-        </a>
+       <Link
+  to="/privacy"
+  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
+>
+  Privacy Policy
+</Link>
         
-        {/* Placeholder Link - Disabled click behavior */}
-        <a 
-          href="#" 
-          onClick={(e) => e.preventDefault()}
-          title="Coming Soon"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors cursor-not-allowed opacity-75"
+        <Link
+          to="/terms"
+          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
         >
           Terms of Service
-        </a>
+        </Link>
       </div>
 
       {/* Column 4: Contribute CTA */}

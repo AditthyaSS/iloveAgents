@@ -17,12 +17,18 @@ export const MODELS = {
     { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Exp)' },
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
   ],
+  openrouter: [
+    { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
+    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+  ],
 }
 
 export const MODEL_MAP = {
   openai: MODELS.openai[0].value,
   anthropic: MODELS.anthropic[0].value,
   gemini: MODELS.gemini[0].value,
+  openrouter: MODELS.openrouter[0].value,
 }
 
 export function resolveAgentModel(agent, actualProvider, selectedModel) {
