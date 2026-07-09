@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { ArrowRight, FolderPlus, Star } from "lucide-react";
 import { useFavorites } from "../lib/useFavorites";
+import { useAgentRatings } from "../lib/useAgentRatings";
 import { useState } from "react";
 import CollectionPicker from "./CollectionPicker";
 
@@ -61,8 +62,10 @@ export default function AgentCard({ agent }) {
 const prov = providerColors[agent?.provider] || providerColors.any;
 const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Provider";
   const { isFavorite, toggleFavorite } = useFavorites();
+  const { getRating } = useAgentRatings();
   const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const favorited = isFavorite(agent.id);
+  const { total: ratingTotal, percentage: ratingPercentage } = getRating(agent.id);
 
   const handleFavorite = (e) => {
     e.preventDefault(); // prevent Link navigation
@@ -152,12 +155,24 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
       </p>
 
       {/* Bottom: provider badge + run link */}
-      <div className="flex items-center justify-between mt-auto">
-        <span
-          className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${prov.bg} ${prov.text} ${prov.border}`}
-        >
-          {provLabel}
-        </span>
+<div className="flex items-center justify-between mt-auto">
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${prov.bg} ${prov.text} ${prov.border}`}
+          >
+            {provLabel}
+          </span>
+          {ratingTotal > 0 && (
+            <span
+              className="text-[10px] font-medium px-2 py-0.5 rounded-full border
+              bg-gray-100 text-gray-500 border-gray-200
+              dark:bg-surface-input dark:text-text-muted dark:border-border"
+              title={`${ratingPercentage}% positive from ${ratingTotal} rating${ratingTotal === 1 ? "" : "s"}`}
+            >
+              👍 {ratingPercentage}%
+            </span>
+          )}
+        </div>
         <span className="flex items-center gap-1 text-xs font-medium text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 group-focus-visible:translate-x-0">
           Run <ArrowRight size={12} className="transition-transform duration-300 transform group-hover:translate-x-1 group-focus-visible:translate-x-1" />
         </span>
