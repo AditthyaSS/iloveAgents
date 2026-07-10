@@ -8,6 +8,7 @@ import ApiKeyInfo from './ApiKeyInfo'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import openrouterLogo from "../assets/openrouter.svg";
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getGlobalKeys, getAvailableProviders } from '../lib/globalKeys'
 
@@ -22,7 +23,9 @@ const providerLogos = {
   openai: openaiLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
+  openrouter: openrouterLogo,
 }
+
 
 const providerUrls = {
   openai: 'https://platform.openai.com/account/api-keys',

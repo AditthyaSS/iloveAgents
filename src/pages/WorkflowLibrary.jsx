@@ -32,33 +32,7 @@ function AgentPill({ agentId }) {
 }
 
 function WorkflowCard({ workflow, onRun, onView, onFork }) {
-  const [usageCount, setUsageCount] = useState(workflow.usage_count ?? 0)
-
-  // Sync when parent data refreshes
-  useEffect(() => {
-    setUsageCount(workflow.usage_count ?? 0)
-  }, [workflow.usage_count])
-
-  // Per-card realtime subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel(`workflow-usage-${workflow.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'workflows',
-          filter: `id=eq.${workflow.id}`,
-        },
-        (payload) => {
-          setUsageCount(payload.new.usage_count ?? 0)
-        }
-      )
-      .subscribe()
-
-    return () => supabase.removeChannel(channel)
-  }, [workflow.id])
+  const usageCount = workflow.usage_count ?? 0
 
   return (
     <div

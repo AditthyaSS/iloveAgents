@@ -183,7 +183,7 @@ export default function WorkflowRunner() {
       const step = execSteps[i]
 
       if (step.kind === 'conditional') {
-        const problems = validateConditionalStep(step.stepDef)
+        const problems = validateConditionalStep(step.stepDef, workflow.agents)
         const { conditionValue, branchLabel, branchAgents } = evaluateConditionalStep(step.stepDef, context)
 
         if (!branchLabel) {

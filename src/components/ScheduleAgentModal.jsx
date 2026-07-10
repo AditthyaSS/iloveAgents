@@ -170,7 +170,7 @@ export default function ScheduleAgentModal({
                 focus:ring-1 focus:ring-accent focus:border-accent outline-none"
             />
             <p className="mt-1 text-[10px] dark:text-text-muted text-gray-400">
-              Stored in your browser's localStorage only. Never sent to any server except the AI provider.
+              Stored for this browser session. Never sent to any server except the model provider.
             </p>
           </div>
 
