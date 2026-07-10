@@ -30,7 +30,10 @@ export default function SuiteWizard({ suite, onBack }) {
 
   // ── State
   const [step, setStep] = useState(0)           // current question index, -1 = results
-  const [selected, setSelected] = useState(null) // selected option index for current question
+ const [answers, setAnswers] = useState(
+  Array(questions.length).fill(null)
+)
+ // selected option index for current question
   // tagCounts maps agentId → number of times it appeared in chosen tags
   const [tagCounts, setTagCounts] = useState({})
   const [answeredCount, setAnsweredCount] = useState(0)
@@ -43,25 +46,38 @@ export default function SuiteWizard({ suite, onBack }) {
 
   // Commit the current answer and advance
   const handleNext = () => {
-    if (selected !== null) {
-      const option = questions[step].options[selected]
-      const newCounts = { ...tagCounts }
-      option.tags.forEach((tag) => {
-        newCounts[tag] = (newCounts[tag] || 0) + 1
-      })
-      setTagCounts(newCounts)
-      setAnsweredCount((c) => c + 1)
-    }
-    advance()
-  }
+  const newCounts = {}
+  let newAnsweredCount = 0
+
+  answers.forEach((selected, questionIndex) => {
+    if (selected == null) return
+
+    newAnsweredCount++
+
+    const option = questions[questionIndex].options[selected]
+
+    option.tags.forEach((tag) => {
+      newCounts[tag] = (newCounts[tag] || 0) + 1
+    })
+  })
+
+  setTagCounts(newCounts)
+  setAnsweredCount(newAnsweredCount)
+
+  advance()
+}
 
   // Skip current question without recording an answer
   const handleSkip = () => {
     advance()
   }
 
+    const handleBack = () => {
+  if (step > 0) {
+    setStep((s) => s - 1)
+  }
+}
   const advance = () => {
-    setSelected(null)
     if (step + 1 >= questions.length) {
       setShowResults(true)
     } else {
@@ -242,9 +258,13 @@ export default function SuiteWizard({ suite, onBack }) {
         {question.options.map((opt, idx) => (
           <button
             key={idx}
-            onClick={() => setSelected(idx)}
+           onClick={() => {
+              const updated = [...answers]
+              updated[step] = idx
+              setAnswers(updated)
+            }}
             className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all duration-150
-              ${selected === idx
+              ${answers[step] === idx
                 ? 'border-accent bg-accent/10 dark:bg-accent/10 dark:border-accent text-accent'
                 : 'dark:bg-surface-card dark:border-border dark:text-text-primary dark:hover:border-accent/40 bg-white border-gray-200 text-gray-700 hover:border-indigo-300'
               }`}
@@ -265,6 +285,14 @@ export default function SuiteWizard({ suite, onBack }) {
         </button>
 
         <div className="flex items-center gap-2">
+     <button
+        onClick={handleBack}
+        disabled={step === 0}
+        className="px-3 py-2 text-sm rounded-lg border
+          disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
           <button
             onClick={handleViewAll}
             className="text-xs dark:text-text-muted text-gray-400 hover:text-accent transition-colors px-2 py-1.5"
@@ -273,7 +301,7 @@ export default function SuiteWizard({ suite, onBack }) {
           </button>
           <button
             onClick={handleNext}
-            disabled={selected === null}
+            disabled={answers[step] === null}
             className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
               transition-all duration-150 active:scale-[0.97]"
