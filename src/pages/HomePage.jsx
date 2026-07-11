@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown } from 'lucide-react'
+import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown, Lightbulb } from 'lucide-react'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
@@ -254,7 +254,7 @@ export default function HomePage() {
         triggerRef={recommendationWizardReturnFocusRef}
       />
 
-      {/* First-time user banner — shows only when no global keys saved and not dismissed */}
+      {/* First-time user banner */}
       {showBanner && (
         <div className="mb-5 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 animate-fade-in
           dark:bg-accent/5 dark:border-accent/20 bg-indigo-50 border-indigo-200">
@@ -282,6 +282,7 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
       {/* Hero */}
       <div className="premium-section text-center mb-10 pt-2 overflow-hidden">
         <h1 className="text-3xl sm:text-4xl font-bold dark:text-text-primary text-gray-900 mb-3 tracking-tight text-balance">
@@ -362,7 +363,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ── Favorites Section ── */}
+      {/* Favorites Section */}
       {favoriteAgents.length > 0 && !showingFiltered && (
         <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '140ms' }}>
           <div className="flex items-center gap-2 mb-4">
@@ -376,57 +377,45 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {favoriteAgents.map((agent, idx) => (
-              <div
-                key={agent.id}
-                className="animate-fade-in"
-                style={{ animationDelay: `${idx * 40}ms` }}
-              >
+              <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
                 <AgentCard agent={agent} />
               </div>
             ))}
           </div>
         </div>
       )}
-      {/* ── Recently Used Section ── */}
-{recentAgents.length > 0 && !showingFiltered && (
-  <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '160ms' }}>
-    <div className="flex items-center gap-2 mb-4">
-      <Heart size={14} className="text-pink-400 fill-pink-400" />
 
-      <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
-        Recently Used
-      </h2>
-
-      <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-pink-400/10 text-pink-500 border border-pink-400/20">
-        {recentAgents.length}
-      </span>
-    </div>
-
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {recentAgents.map((agent, idx) => (
-        <div
-          key={agent.id}
-          className="animate-fade-in"
-          style={{ animationDelay: `${idx * 40}ms` }}
-        >
-          <AgentCard agent={agent} />
+      {/* Recently Used Section */}
+      {recentAgents.length > 0 && !showingFiltered && (
+        <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '160ms' }}>
+          <div className="flex items-center gap-2 mb-4">
+            <Heart size={14} className="text-pink-400 fill-pink-400" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+              Recently Used
+            </h2>
+            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-pink-400/10 text-pink-500 border border-pink-400/20">
+              {recentAgents.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recentAgents.map((agent, idx) => (
+              <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 40}ms` }}>
+                <AgentCard agent={agent} />
+              </div>
+            ))}
+          </div>
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
 
-      {/* ── Search & Category Filter Section ── */}
-    <div
-  className={`premium-section space-y-4 relative z-30 ${isOpen ? "mb-80" : "mb-6"}`}
-  style={{ animationDelay: "180ms" }}
->
+      {/* Search & Category Filter Section */}
+      <div
+        className={`premium-section space-y-4 relative z-30 ${isOpen ? "mb-80" : "mb-6"}`}
+        style={{ animationDelay: "180ms" }}
+      >
         {/* Search Bar */}
         <div className="relative max-w-xl mx-auto
-          rounded-full
-          border border-white/40 dark:border-white/10
-          bg-white/70 dark:bg-[#101014]/70
-          backdrop-blur-2xl
+          rounded-full border border-white/40 dark:border-white/10
+          bg-white/70 dark:bg-[#101014]/70 backdrop-blur-2xl
           shadow-[0_18px_55px_rgba(15,23,42,0.14),0_0_28px_rgba(99,102,241,0.10)]
           transition-all duration-300
           before:pointer-events-none before:absolute before:inset-0 before:-z-10 before:rounded-full
@@ -447,15 +436,12 @@ export default function HomePage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search agents by name, description, or category..."
             className="w-full pl-3 pr-12 py-3 bg-transparent text-sm font-semibold tracking-wide transition-all duration-300
-              dark:text-text-primary dark:placeholder-text-muted
-              text-gray-900 placeholder-gray-400
-              focus:outline-none"
+              dark:text-text-primary dark:placeholder-text-muted text-gray-900 placeholder-gray-400 focus:outline-none"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-4 flex items-center
-                dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
+              className="absolute inset-y-0 right-0 pr-4 flex items-center dark:text-text-muted text-gray-400 hover:text-accent transition-colors"
               aria-label="Clear search"
             >
               <X size={16} />
@@ -467,7 +453,6 @@ export default function HomePage() {
         <div className="flex justify-center" onKeyDown={handleKeyDown}>
           <div ref={dropdownRef} className="relative w-72 z-50">
             {!selectedCategory ? (
-              // Default State
               <button
                 id="category-select-trigger"
                 type="button"
@@ -477,10 +462,8 @@ export default function HomePage() {
                 aria-expanded={isOpen}
                 aria-controls="category-select-menu"
                 className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all duration-200
-                  dark:bg-surface-card dark:border-border dark:text-text-primary
-                  bg-white border-gray-200 text-gray-900
-                  hover:border-accent/30 dark:hover:border-accent/40
-                  focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+                  dark:bg-surface-card dark:border-border dark:text-text-primary bg-white border-gray-200 text-gray-900
+                  hover:border-accent/30 dark:hover:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
               >
                 <span className="flex items-center gap-2 truncate">
                   <SlidersHorizontal size={14} className="dark:text-text-muted text-gray-400" />
@@ -488,19 +471,14 @@ export default function HomePage() {
                 </span>
                 <ChevronDown
                   size={16}
-                  className={`text-gray-400 dark:text-text-muted transition-transform duration-200 flex-shrink-0 ${
-                    isOpen ? 'rotate-180' : ''
-                  }`}
+                  className={`text-gray-400 dark:text-text-muted transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
                 />
               </button>
             ) : (
-              // Active State
               (() => {
                 const meta = categoryMeta[selectedCategory] || defaultMeta
                 return (
-                  <div
-                    className={`flex items-center justify-between w-full rounded-xl text-sm transition-all duration-200 bg-gradient-to-r ${meta.color} text-white border-transparent shadow-md ring-2 ${meta.ring}`}
-                  >
+                  <div className={`flex items-center justify-between w-full rounded-xl text-sm transition-all duration-200 bg-gradient-to-r ${meta.color} text-white border-transparent shadow-md ring-2 ${meta.ring}`}>
                     <button
                       id="category-select-trigger"
                       type="button"
@@ -519,7 +497,6 @@ export default function HomePage() {
                         e.stopPropagation()
                         setSelectedCategory(null)
                         setIsOpen(false)
-                        // Focus the reset trigger button after layout update
                         setTimeout(() => triggerRef.current?.focus(), 0)
                       }}
                       aria-label={`Clear filter for ${selectedCategory}`}
@@ -532,7 +509,6 @@ export default function HomePage() {
               })()
             )}
 
-            {/* Dropdown Options Menu */}
             {isOpen && (
               <div
                 id="category-select-menu"
@@ -544,7 +520,6 @@ export default function HomePage() {
                 {dropdownOptions.map((opt, idx) => {
                   const isSelected = opt.value === selectedCategory
                   const meta = opt.value ? (categoryMeta[opt.value] || defaultMeta) : null
-
                   return (
                     <button
                       key={opt.value || 'all'}
@@ -554,12 +529,9 @@ export default function HomePage() {
                       ref={(el) => (optionRefs.current[idx] = el)}
                       type="button"
                       onClick={() => {
-                        
-                        
                         setSelectedCategory(opt.value)
                         setIsOpen(false)
                         setFocusedIndex(-1)
-                        // Return focus to the trigger
                         setTimeout(() => triggerRef.current?.focus(), 0)
                       }}
                       className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg border transition-all duration-150 text-left
@@ -579,10 +551,7 @@ export default function HomePage() {
                         <span className="truncate">{opt.label}</span>
                       </span>
                       <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full
-                        ${isSelected
-                          ? 'bg-white/20 text-white'
-                          : 'dark:bg-surface-card dark:text-text-muted bg-gray-100 text-gray-500'
-                        }`}
+                        ${isSelected ? 'bg-white/20 text-white' : 'dark:bg-surface-card dark:text-text-muted bg-gray-100 text-gray-500'}`}
                       >
                         {opt.count}
                       </span>
@@ -598,7 +567,6 @@ export default function HomePage() {
         <div className="flex flex-wrap justify-center gap-2">
           {providerOptions.map((option) => {
             const isSelected = option.value === selectedProvider
-
             return (
               <button
                 key={option.value || 'all-providers'}
@@ -612,12 +580,8 @@ export default function HomePage() {
                   }`}
               >
                 <span>{option.label}</span>
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] leading-none
-                    ${isSelected
-                      ? 'bg-white/20 text-white'
-                      : 'bg-gray-100 text-gray-500 dark:bg-surface-input dark:text-text-muted'
-                    }`}
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] leading-none
+                  ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 dark:bg-surface-input dark:text-text-muted'}`}
                 >
                   {option.count}
                 </span>
@@ -628,16 +592,14 @@ export default function HomePage() {
       </div>
 
       {/* Agent Grid */}
-      <div
-        className="premium-section flex flex-col lg:flex-row gap-8 mb-8 relative z-0" style={{ animationDelay: '220ms' }}>
+      <div className="premium-section flex flex-col lg:flex-row gap-8 mb-8 relative z-0" style={{ animationDelay: '220ms' }}>
         <div className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
               {showingFiltered ? "Matching Agents" : "Available Agents"}
             </h2>
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-              {filteredAgents.length}{" "}
-              {filteredAgents.length === 1 ? "agent" : "agents"}
+              {filteredAgents.length}{" "}{filteredAgents.length === 1 ? "agent" : "agents"}
             </span>
           </div>
 
@@ -650,11 +612,7 @@ export default function HomePage() {
           ) : filteredAgents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
               {filteredAgents.map((agent, idx) => (
-                <div
-                  key={agent.id}
-                  className="animate-fade-in"
-                  style={{ animationDelay: `${idx * 30}ms` }}
-                >
+                <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
                   <AgentCard agent={agent} />
                 </div>
               ))}
@@ -664,19 +622,13 @@ export default function HomePage() {
               <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                 <Search size={24} className="text-accent" />
               </div>
-              <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
-                No agents found
-              </h3>
+              <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">No agents found</h3>
               <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
                 Try adjusting your search or removing category filters
               </p>
               <div className="flex flex-col items-center gap-2">
                 <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setSelectedCategory(null);
-                    setSelectedProvider(null);
-                  }}
+                  onClick={() => { setSearchQuery(""); setSelectedCategory(null); setSelectedProvider(null); }}
                   className="inline-flex items-center gap-1.5 text-xs font-medium text-accent hover:text-accent-hover transition-colors"
                 >
                   Clear all filters <X size={12} />
@@ -705,21 +657,17 @@ export default function HomePage() {
         </aside>
       </div>
 
-      {/* ── Workflows Section ── */}
+      {/* Workflows Section */}
       {!showingFiltered && (
         <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '260ms' }}>
-          <div
-            className="rounded-xl border p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4
-              dark:bg-surface-card dark:border-border bg-white border-gray-200"
-          >
+          <div className="rounded-xl border p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4
+            dark:bg-surface-card dark:border-border bg-white border-gray-200">
             <div className="flex items-center gap-3 flex-1">
               <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
                 <GitBranch size={20} className="text-accent" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold dark:text-text-primary text-gray-900">
-                  Workflows
-                </h2>
+                <h2 className="text-sm font-semibold dark:text-text-primary text-gray-900">Workflows</h2>
                 <p className="text-xs dark:text-text-secondary text-gray-500 mt-0.5">
                   Community built AI workflows — connect agents and automate your process
                 </p>
@@ -745,99 +693,158 @@ export default function HomePage() {
           </div>
         </div>
       )}
-{/* Footer */}
-<footer className="relative w-full mt-auto py-12 border-t border-gray-200 dark:border-border overflow-hidden">
-  {/* Background gradient & blur matching Sidebar/Navbar */}
-  <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
-  <div className="absolute inset-0 -z-10 bg-gradient-to-r from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
 
-  <div className="container mx-auto px-4 md:px-8 relative z-10">
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
-      
-      {/* Column 1: Brand Info */}
-      <div className="flex flex-col gap-4">
-        <h3 className="font-bold text-lg text-gray-900 dark:text-white">
-          iLoveAgents
-        </h3>
-        <p className="text-sm text-gray-700 dark:text-text-secondary leading-relaxed">
-          Community built AI workflows. Connect agents and automate your process seamlessly.
-        </p>
-        <div className="mt-auto text-sm font-semibold text-gray-600 dark:text-gray-400">
-          Built for GSSoC 2026
+      {/* ── Agent Request Panel ── */}
+      {!showingFiltered && (
+        <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '280ms' }}>
+          <div className="rounded-xl border p-5 dark:bg-surface-card dark:border-border bg-white border-gray-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center flex-shrink-0">
+                <Lightbulb size={20} className="text-accent" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold dark:text-text-primary text-gray-900">
+                  Want us to build you an agent?
+                </h2>
+                <p className="text-xs dark:text-text-secondary text-gray-500 mt-0.5">
+                  Don't see the agent you need? Tell us what you want and we'll build it.
+                </p>
+              </div>
+            </div>
+            <AgentRequestPanel />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Column 2: Resources */}
-      <div className="flex flex-col gap-3">
-        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Resources</h4>
-        
-        {/* Links directly to the GitHub README */}
-        <a 
-          href="https://github.com/AditthyaSS/iloveAgents#readme" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
-        >
-          Documentation
-        </a>
-        
-        {/* Links directly to the GitHub Issues page */}
-        <a 
-          href="https://github.com/AditthyaSS/iloveAgents/issues" 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
-        >
-          Request an Agent
-        </a>
-      </div>
+      {/* Footer */}
+      <footer className="relative w-full mt-auto py-12 border-t border-gray-200 dark:border-border overflow-hidden">
+        <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
 
-      {/* Column 3: Legal */}
-      <div className="flex flex-col gap-3">
-        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h4>
-        
-        {/* Placeholder Link - Disabled click behavior */}
-       <Link
-  to="/privacy"
-  className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
->
-  Privacy Policy
-</Link>
-        
-        <Link
-          to="/terms"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors"
-        >
-          Terms of Service
-        </Link>
-      </div>
+        <div className="container mx-auto px-4 md:px-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
+            <div className="flex flex-col gap-4">
+              <h3 className="font-bold text-lg text-gray-900 dark:text-white">iLoveAgents</h3>
+              <p className="text-sm text-gray-700 dark:text-text-secondary leading-relaxed">
+                Community built AI workflows. Connect agents and automate your process seamlessly.
+              </p>
+              <div className="mt-auto text-sm font-semibold text-gray-600 dark:text-gray-400">
+                Built for GSSoC 2026
+              </div>
+            </div>
 
-      {/* Column 4: Contribute CTA */}
-      <div className="flex flex-col gap-3">
-        <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h4>
-        <p className="text-sm text-gray-700 dark:text-text-secondary mb-2">
-          Join us in building the ultimate agent library.
+            <div className="flex flex-col gap-3">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Resources</h4>
+              <a href="https://github.com/AditthyaSS/iloveAgents#readme" target="_blank" rel="noopener noreferrer"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
+                Documentation
+              </a>
+              <a href="https://github.com/AditthyaSS/iloveAgents/issues" target="_blank" rel="noopener noreferrer"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
+                Request an Agent
+              </a>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h4>
+              <Link to="/privacy" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
+                Privacy Policy
+              </Link>
+              <Link to="/terms" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
+                Terms of Service
+              </Link>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h4>
+              <p className="text-sm text-gray-700 dark:text-text-secondary mb-2">
+                Join us in building the ultimate agent library.
+              </p>
+              <a
+                href="https://github.com/AditthyaSS/iloveAgents"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center w-fit gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-500 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-violet-500/35"
+              >
+                <Github size={16} />
+                GitHub Repo
+                <ArrowRight size={14} />
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center font-medium text-gray-600 dark:text-gray-400">
+            © {new Date().getFullYear()} iLoveAgents. All rights reserved.
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}
+
+// ── Agent Request Panel
+function AgentRequestPanel() {
+  const [agentName, setAgentName] = useState('')
+  const [description, setDescription] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleRequest = () => {
+    if (!agentName.trim() || !description.trim()) return
+    const title = encodeURIComponent(`[Agent Request]: ${agentName}`)
+    const body = encodeURIComponent(
+`### What should this agent do?
+${description}
+
+### Additional context
+-Requested via iloveagents.vercel.app`
+    )
+    const url = `https://github.com/AditthyaSS/iloveAgents/issues/new?title=${title}&body=${body}&labels=agent-request`
+    window.open(url, '_blank')
+    setSubmitted(true)
+    setTimeout(() => setSubmitted(false), 3000)
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <input
+        type="text"
+        value={agentName}
+        onChange={(e) => setAgentName(e.target.value)}
+        placeholder="Agent name — e.g. Resume Bullet Point Generator"
+        className="w-full h-9 pl-3 pr-3 rounded-md text-sm transition-colors
+          dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
+          bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
+          focus:ring-1 focus:ring-accent focus:border-accent outline-none"
+      />
+      <textarea
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Describe what it should do — e.g. Takes a job description and rewrites my resume bullet points to match it"
+        rows={3}
+        className="w-full pl-3 pr-3 py-2 rounded-md text-sm transition-colors resize-none
+          dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
+          bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
+          focus:ring-1 focus:ring-accent focus:border-accent outline-none"
+      />
+      <div className="flex items-center justify-between">
+        <p className="text-[11px] dark:text-text-muted text-gray-400">
+          Opens a pre-filled GitHub issue — you'll need a GitHub account to submit.
         </p>
-        <a
-          href="https://github.com/AditthyaSS/iloveAgents"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center w-fit gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-500 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-violet-500/35"
+        <button
+          onClick={handleRequest}
+          disabled={!agentName.trim() || !description.trim()}
+          className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold text-white
+            bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
+            transition-all duration-200 active:scale-[0.98]"
         >
-          <Github size={16} />
-          GitHub Repo
-          <ArrowRight size={14} />
-        </a>
+          {submitted ? '✓ Opening GitHub...' : (
+            <>
+              <ArrowRight size={13} />
+              Request Agent
+            </>
+          )}
+        </button>
       </div>
-
     </div>
-
-    {/* Bottom Copyright Bar */}
-    <div className="mt-12 pt-6 border-t border-gray-200 dark:border-border/50 text-sm text-center font-medium text-gray-600 dark:text-gray-400">
-      © {new Date().getFullYear()} iLoveAgents. All rights reserved.
-    </div>
-  </div>
-</footer>
-</div>
-)
+  )
 }
