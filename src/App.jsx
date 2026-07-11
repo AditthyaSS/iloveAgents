@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
-import ScrollToTop from './components/ScrollToTop'
+import ScrollToTopButton from './components/ScrollToTopButton'
 import ScrollToBottom from './components/ScrollToBottom'
 import ErrorBoundary from './components/ErrorBoundary'
 
@@ -57,7 +57,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen transition-theme dark:bg-surface bg-gray-50">
-      <ScrollToTop />
+      <ScrollToTopButton />
       <ScrollToBottom />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
