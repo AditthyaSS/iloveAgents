@@ -123,13 +123,28 @@ export default yourAgentName;
 That is it. The registry automatically collects every file in `src/agents/definitions/` —
 just drop your file in and your agent appears in the sidebar.
 
-### Step 5 — Test it
+### Step 5 — Add your agent to AGENTS.md
+
+Open `AGENTS.md` in the project root and add a new row to the table for your agent.
+Follow the existing format:
+
+```
+| # | Your Agent Name | One-line description of what it does. | Category |
+```
+
+- Use the next available number.
+- Keep the description short (one sentence).
+- Use an existing category from the table.
+
+This keeps the directory in sync with the codebase and helps users discover your agent.
+
+### Step 6 — Test it
 
 Run the app and find your agent in the sidebar.
 Test it with a real API key from at least one provider.
 Make sure the output looks right and the inputs make sense.
 
-### Step 6 — Open a PR
+### Step 7 — Open a PR
 
 Push your branch and open a pull request.
 Use the PR template that appears automatically — it is just a quick checklist.

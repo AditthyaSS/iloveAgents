@@ -28,8 +28,16 @@ export default function ScheduleAgentModal({
   const [keyOverride, setKeyOverride] = useState(apiKey || '')
   const [error, setError] = useState('')
 
+  const missingRequiredInputs = agent.inputs.filter((input) => {
+    if (!input.required) return false
+    const value = inputs[input.id]
+    if (Array.isArray(value)) return value.length === 0
+    return !value || String(value).trim() === ''
+  })
+
   const handleConfirm = () => {
     if (!label.trim()) { setError('Please give this schedule a name.'); return }
+    if (missingRequiredInputs.length > 0) { setError('Fill all required inputs before scheduling.'); return }
     if (!keyOverride.trim()) { setError('An API key is required to run scheduled jobs.'); return }
     setError('')
     onSchedule({
@@ -162,7 +170,7 @@ export default function ScheduleAgentModal({
                 focus:ring-1 focus:ring-accent focus:border-accent outline-none"
             />
             <p className="mt-1 text-[10px] dark:text-text-muted text-gray-400">
-              Stored in your browser's localStorage only. Never sent to any server except the AI provider.
+              Stored for this browser session. Never sent to any server except the model provider.
             </p>
           </div>
 
