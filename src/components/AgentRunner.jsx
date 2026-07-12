@@ -8,6 +8,9 @@ import {
   Clock,
   Zap,
   StopCircle,
+  StopCircle,
+CheckCircle2,
+Circle,
   ChevronDown,
   ChevronRight,
   Sparkles,
@@ -57,9 +60,29 @@ const LOADING_MESSAGES = [
   "🔥 Almost done, hold tight...",
   "🚀 Sending it...",
   "👀 Your agent is locked in...",
+];// Timeline steps for AI Response Timeline
+const TIMELINE_STEPS = [
+  { id: 1, label: "Understanding Query", duration: 600 },
+  { id: 2, label: "Gathering Context", duration: 900 },
+  { id: 3, label: "Processing Information", duration: 1200 },
+  { id: 4, label: "Generating Response", duration: 1500 },
+  { id: 5, label: "Finalizing Output", duration: 1800 },
+]; 
+
+
+<<<<<<< HEAD
+// Timeline steps for AI Response Timeline
+const TIMELINE_STEPS = [
+  { id: 1, label: "Understanding Query", duration: 600 },
+  { id: 2, label: "Gathering Context", duration: 900 },
+  { id: 3, label: "Processing Information", duration: 1200 },
+  { id: 4, label: "Generating Response", duration: 1500 },
+  { id: 5, label: "Finalizing Output", duration: 1800 },
 ];
 
+=======
 const MAX_CHAR_LIMIT = 4000; // Character cap configuration
+>>>>>>> upstream/main
 export default function AgentRunner({ agent }) {
   const {
     provider,
@@ -91,8 +114,15 @@ export default function AgentRunner({ agent }) {
   const [modelRecommendation, setModelRecommendation] = useState(null);
   const [analyserLoading, setAnalyserLoading] = useState(false);
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+const timelineTimersRef = useRef([]);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+
+  // Timeline state
+  const [activeStep, setActiveStep] = useState(0);
+  const timelineTimersRef = useRef([]);
+
   const { addJob } = useScheduler();
   const { addRun } = useSessionSpend();
 
@@ -157,7 +187,46 @@ export default function AgentRunner({ agent }) {
     }, 2500);
     return () => clearInterval(interval);
   }, [loading, isStreaming]);
+  
 
+  // Start timeline steps when loading begins
+  const startTimeline = () => {
+    setActiveStep(0);
+    timelineTimersRef.current.forEach(clearTimeout);
+    timelineTimersRef.current = [];
+
+    TIMELINE_STEPS.forEach((step) => {
+      const timer = setTimeout(() => {
+        setActiveStep(step.id);
+      }, step.duration);
+      timelineTimersRef.current.push(timer);
+    });
+  };
+
+  // Clear timeline when done
+  const clearTimeline = () => {
+    timelineTimersRef.current.forEach(clearTimeout);
+    timelineTimersRef.current = [];
+    setActiveStep(0);
+  };
+
+  const startTimeline = () => {
+    setActiveStep(0);
+    timelineTimersRef.current.forEach(clearTimeout);
+    timelineTimersRef.current = [];
+    TIMELINE_STEPS.forEach((step) => {
+      const timer = setTimeout(() => {
+        setActiveStep(step.id);
+      }, step.duration);
+      timelineTimersRef.current.push(timer);
+    });
+  };
+
+  const clearTimeline = () => {
+    timelineTimersRef.current.forEach(clearTimeout);
+    timelineTimersRef.current = [];
+    setActiveStep(0);
+  };
   const updateInput = (id, value) => {
     setInputs((prev) => ({ ...prev, [id]: value }));
   };
@@ -244,6 +313,7 @@ const handleRun = async () => {
     setIsStreaming(false);
     setDuration(null);
     setMsgIndex(0);
+    startTimeline();
 
       const newVersion = {
       versionNumber: versionHistory.length + 1,
@@ -277,9 +347,16 @@ const handleRun = async () => {
       });
 
       setOutput(result.content);
+      setOutput(result.content);
+setStreamingOutput("");
+setIsStreaming(false);
+setDuration(result.duration);
+clearTimeline();
       setStreamingOutput("");
       setIsStreaming(false);
       setDuration(result.duration);
+      clearTimeline();
+      
 
       const inputTokenEstimate = Math.max(
         1,
@@ -308,10 +385,18 @@ const handleRun = async () => {
       setError(err);
     } else {
       setError({ type: "generic", message: err.message });
+      } else {
+    setError({ type: "generic", message: err.message });
+  }
+  clearTimeline();
+}
     }
   }
+  clearTimeline();
 } finally {
-      setLoading(false);
+      clearTimeline();
+setLoading(false);
+setLoading(false);
       abortControllerRef.current = null;
     }
   };
@@ -325,6 +410,7 @@ const handleRun = async () => {
     setStreamingOutput("");
     setIsStreaming(false);
     setLoading(false);
+    clearTimeline();
   };
 
   const handleClear = () => {
@@ -332,11 +418,15 @@ const handleRun = async () => {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
+    setDuration(null);
+clearTimeline();
+
     setOutput(null);
     setStreamingOutput("");
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    clearTimeline();
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -965,142 +1055,47 @@ const handleRun = async () => {
         error && <ErrorCard message={error.message || error} />
       )}
 
+      {/* AI Response Timeline */}
       {loading && !isStreaming && (
-        <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Loader2 size={16} className="animate-spin text-accent" />
-            <span className="text-xs font-medium text-accent">
-              Connecting to API...
+  <div className="rounded-lg border p-5 dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in mb-4">
+    <div className="flex items-center gap-2 mb-4">
+      <Loader2 size={14} className="animate-spin text-accent" />
+      <span className="text-xs font-semibold text-accent uppercase tracking-wider">
+        AI Thought Process
+      </span>
+    </div>
+    <div className="space-y-3">
+      {TIMELINE_STEPS.map((step) => {
+        const isCompleted = activeStep > step.id;
+        const isActive = activeStep === step.id;
+        return (
+          <div key={step.id} className="flex items-center gap-3">
+            {isCompleted ? (
+              <CheckCircle2 size={16} className="text-green-500 flex-shrink-0" />
+            ) : isActive ? (
+              <Loader2 size={16} className="animate-spin text-accent flex-shrink-0" />
+            ) : (
+              <Circle size={16} className="dark:text-text-muted text-gray-300 flex-shrink-0" />
+            )}
+            <span
+              className={`text-xs transition-all duration-300 ${
+                isCompleted
+                  ? "dark:text-green-400 text-green-600 line-through opacity-60"
+                  : isActive
+                  ? "dark:text-text-primary text-gray-900 font-semibold"
+                  : "dark:text-text-muted text-gray-400"
+              }`}
+            >
+              {step.label}
             </span>
-          </div>
-          <p className="text-sm dark:text-text-secondary text-gray-500 transition-all duration-500">
-            {LOADING_MESSAGES[msgIndex]}
-          </p>
-        </div>
-      )}
-
-      {isStreaming && streamingOutput && (
-        <div className="animate-fade-in">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
-              Output
-            </span>
-            <span className="flex items-center gap-1.5 text-[11px] font-medium text-accent">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+            {isActive && (
+              <span className="text-[10px] text-accent animate-pulse">
+                ...
               </span>
-              Streaming...
-            </span>
+            )}
           </div>
-          <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
-            <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
-              <pre className="whitespace-pre-wrap font-sans leading-relaxed">
-                {streamingOutput}
-                <span className="inline-block w-[2px] h-[1em] bg-accent animate-blink ml-0.5 align-middle" />
-              </pre>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {output && !isStreaming && (
-        <div className="space-y-4">
-          <ErrorBoundary>
-            <OutputRenderer
-              content={output}
-              outputType={agent.outputType}
-              agentName={agent.name}
-              systemPrompt={customPrompt}
-            />
-            <div className="flex items-center gap-2 mt-3">
-  <button
-    onClick={() => setShowModelSwitcher(!showModelSwitcher)}
-    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm
-      bg-accent/10 hover:bg-accent/20 text-accent"
-  >
-    <RotateCw size={14} />
-    Try Different Model
-  </button>
-
-  <span className="text-xs text-gray-500">
-    Current: {selectedModel}
-  </span>
-</div>
-{showModelSwitcher && (
-  <div className="mt-3 p-4 border rounded-lg flex flex-wrap gap-3 items-center">
-<CustomSelect
-      value={provider}
-      onChange={setProvider}
-      options={[
-        { value: "openai", label: "OpenAI" },
-        { value: "anthropic", label: "Anthropic" },
-        { value: "gemini", label: "Gemini" },
-        { value: "openrouter", label: "OpenRouter" },
-      ]}
-    />
-
-    <CustomSelect
-      value={selectedModel}
-      onChange={setSelectedModel}
-      options={MODELS[provider] || []}
-    />
-
-    <button
-      onClick={async () => {
-        setShowModelSwitcher(false);
-        await handleRun();
-      }}
-      className="px-4 py-2 rounded-lg bg-accent text-white"
-    >
-      Run Again
-    </button>
-
+        );
+      })}
+    </div>
   </div>
 )}
-          </ErrorBoundary>
-          <RunRating />
-          <div className="flex justify-end">
-            <button
-              onClick={handleSendToWorkflow}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
-                text-accent bg-accent/10 hover:bg-accent/20 transition-all border border-accent/20"
-            >
-              <GitBranch size={16} />
-              Send output to Workflow Builder →
-            </button>
-          </div>
-        </div>
-      )}
-
-      </>
-      )}
-
-      {/* Schedule Agent Modal */}
-      {scheduleModalOpen && (
-        <ScheduleAgentModal
-          agent={agent}
-          inputs={inputs}
-          provider={provider}
-          apiKey={apiKey}
-          onSchedule={(scheduleData) => {
-            addJob({
-              agentId: agent.id,
-              agentName: agent.name,
-              agentDefinition: agent,
-              inputs: { ...inputs },
-              ...scheduleData,
-            })
-          }}
-          onClose={() => setScheduleModalOpen(false)}
-        />
-      )}
-    </div>
-  );
-}
-
-
-
- 
-
-  
