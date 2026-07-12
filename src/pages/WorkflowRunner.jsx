@@ -538,7 +538,8 @@ export default function WorkflowRunner() {
                       outputType={step.agent?.outputType ?? 'text'}
                       agentName={step.agentName}
                     />
-                    <RunRating />
+                    <RunRating agentId={step.agent?.id} /> 
+
                   </div>
                 )}
 
