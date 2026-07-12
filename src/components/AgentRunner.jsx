@@ -1059,7 +1059,7 @@ const handleRun = async () => {
   </div>
 )}
           </ErrorBoundary>
-          <RunRating />
+          <RunRating agentId={agent.id} />
           <div className="flex justify-end">
             <button
               onClick={handleSendToWorkflow}
