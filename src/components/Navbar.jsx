@@ -10,17 +10,23 @@ import {
   Sparkles,
   PanelsTopLeft,
   Workflow,
-  LibraryBig
+  LibraryBig,
+  DollarSign,
+  RotateCcw,
+  Settings,
 } from 'lucide-react'
 
 import Logo from './Logo'
 import KeyboardShortcutsModal from './KeyboardShortcutsModal'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { useSessionSpend } from '../lib/useSessionSpend'
 
 export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const [darkMode, setDarkMode] = useState(true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showSpendPopup, setShowSpendPopup] = useState(false)
+  const { totalSpend, runs, clearSession } = useSessionSpend()
 
   useKeyboardShortcuts({
     '?': () => setShowShortcuts(true),
@@ -178,6 +184,57 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
             <HelpCircle size={16} />
           </button>
 
+          {totalSpend > 0 && (
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => setShowSpendPopup((p) => !p)}
+                className="flex items-center gap-1.5 px-2.5 py-2 rounded-full
+                  text-xs font-semibold
+                  dark:text-emerald-400 text-emerald-600
+                  dark:bg-emerald-500/10 bg-emerald-50
+                  border dark:border-emerald-500/20 border-emerald-300/30
+                  hover:dark:bg-emerald-500/20 hover:bg-emerald-100
+                  transition-all duration-200"
+                aria-label="Session spend"
+              >
+                <DollarSign size={12} />
+                <span className="tabular-nums">${totalSpend.toFixed(2)}</span>
+              </button>
+              {showSpendPopup && (
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border
+                  dark:bg-surface-card dark:border-border bg-white border-gray-200
+                  shadow-xl z-50 p-3 animate-fade-in">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold dark:text-text-primary text-gray-900">
+                      Session Spend
+                    </span>
+                    <span className="text-[10px] dark:text-text-muted text-gray-400">
+                      {runs.length} run{runs.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold dark:text-text-primary text-gray-900 tabular-nums mb-2">
+                    ${totalSpend.toFixed(4)}
+                  </div>
+                  <div className="max-h-32 overflow-y-auto space-y-1 mb-2">
+                    {runs.slice(0, 10).map((run, i) => (
+                      <div key={i} className="flex justify-between text-[10px] dark:text-text-muted text-gray-400">
+                        <span className="truncate max-w-[140px]">{run.model || 'Unknown'}</span>
+                        <span className="tabular-nums font-medium">${run.totalCost.toFixed(4)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { clearSession(); setShowSpendPopup(false); }}
+                    className="flex items-center gap-1 text-[10px] font-medium dark:text-text-muted text-gray-400 hover:text-error transition-colors"
+                  >
+                    <RotateCcw size={10} />
+                    Reset session
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           <button
             onClick={toggleTheme}
             className="
@@ -194,6 +251,24 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           >
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
+
+          {/* Settings icon link */}
+          <Link
+            to="/settings"
+            className="
+              hidden md:inline-flex items-center justify-center p-2.5
+              rounded-full
+              transition-all duration-200 hover:scale-105
+              dark:hover:bg-white/10
+              dark:text-text-secondary
+              hover:bg-white/70
+              text-gray-500
+              focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
+            "
+            aria-label="Settings"
+          >
+            <Settings size={16} />
+          </Link>
 
           <button
             onClick={() => setMobileMenuOpen((open) => !open)}

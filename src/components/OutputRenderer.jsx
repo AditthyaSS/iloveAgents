@@ -5,6 +5,16 @@ import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
+import VoiceOutput from './VoiceOutput'
+
+/**
+ * XSS Protection:
+ * - ReactMarkdown v9 by default does NOT render raw HTML or script tags
+ * - Markdown input is safely escaped; only safe markdown syntax is rendered
+ * - Agent prompts cannot inject <script> or HTML attributes via output
+ * - Code blocks are syntax-highlighted but never evaluated
+ * - Do NOT use dangerouslySetInnerHTML with agent output under any circumstances
+ */
 
 function stripMarkdown(text) {
   if (!text) return ''
@@ -108,6 +118,11 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
           Output
         </span>
         <div className="flex items-center gap-2">
+          {/* VoiceOutput — reads the response aloud */}
+          <VoiceOutput
+          text={typeof content === 'string' ? content : JSON.stringify(content)}
+          />
+
           <CopyButton text={content} label="Copy output" />
           <CopyButton text={stripMarkdown(content)} label="Copy as Plain Text" icon={FileText} />
           <CopyButton text={shareText} label="Share" />
@@ -122,6 +137,7 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
         ) : outputType === 'markdown' ? (
           <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
             <ReactMarkdown
+              skipHtml={true}
               remarkPlugins={[remarkGfm]}
               components={{
                 code({ node, className, children, ...props }) {
