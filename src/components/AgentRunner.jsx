@@ -373,7 +373,7 @@ const handleRun = async () => {
   const handleSendToWorkflow = () => {
     navigate("/workflows/build", {
       state: {
-        preSelectedAgent: agent,
+        preselectedAgents: [agent.id],
         preFilledOutput: output,
       },
     });
