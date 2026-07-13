@@ -13,7 +13,13 @@ function loadRatings() {
 }
  
 function saveRatings(ratings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings))
+  //localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings))
+   } catch {
+    // localStorage can throw in private browsing or when storage quota
+    // is full — fail silently rather than breaking the rating flow.
+    }
 }
  
 // Global listeners so multiple components stay in sync
