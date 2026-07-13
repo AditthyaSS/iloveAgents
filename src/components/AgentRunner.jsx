@@ -309,7 +309,7 @@ export default function AgentRunner({ agent }) {
   const handleSendToWorkflow = () => {
     navigate("/workflows/build", {
       state: {
-        preSelectedAgent: agent,
+        preselectedAgents: [agent.id],
         preFilledOutput: output,
       },
     });
