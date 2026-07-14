@@ -407,7 +407,12 @@ export default function WorkflowRunner() {
                 <Loader2 size={15} className="animate-spin" />
                 Running...
               </>
-            ) : hasRun && (allDone || hasFailed) ? (
+            ) : hasRun && hasFailed ? (
+              <>
+                <RotateCcw size={15} />
+                Retry
+              </>
+            ) : hasRun && allDone ? (
               <>
                 <RotateCcw size={15} />
                 Run Again
