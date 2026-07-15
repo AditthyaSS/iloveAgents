@@ -7,7 +7,9 @@ import { useCollections } from '../lib/useCollections'
 const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
 
 export default function Sidebar({ open, onClose }) {
+  const STORAGE_KEY = "sidebar-category-state";
   const [sidebarSearchQuery, setSidebarSearchQuery] = useState('')
+
   // Stores COLLAPSED state per category (absent/false = expanded).
   // Categories are expanded by default on first visit, since we only
   // record an entry here when the user explicitly collapses one.
@@ -19,6 +21,7 @@ export default function Sidebar({ open, onClose }) {
       return {}
     }
   })
+
   const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
   const [agents, setAgents] = useState([])
   const { collections } = useCollections()
@@ -77,6 +80,7 @@ export default function Sidebar({ open, onClose }) {
   const categoryOrder = Object.keys(categories)
 
   const toggleCategory = (category) => {
+
     if (isSearching) {
       setSearchExpandedCategories((prev) => ({
         ...prev,
@@ -89,6 +93,7 @@ export default function Sidebar({ open, onClose }) {
       }))
     }
   }
+
 
   return (
     <>
@@ -260,12 +265,14 @@ export default function Sidebar({ open, onClose }) {
           <div className="border-b dark:border-border border-gray-100 mb-2" />
 
           {categoryOrder.map((category) => {
+
             const isActiveCategory = activeCategory === category
             const isCategoryExpanded = isSearching
               ? searchExpandedCategories[category] ?? true
               : isActiveCategory
                 ? true
                 : !collapsedCategories[category]
+
 
             return (
               <div key={category} className="mb-3">
@@ -307,6 +314,7 @@ export default function Sidebar({ open, onClose }) {
                 </button>
 
                 <div
+
                   className={`grid transition-all duration-200 ease-in-out ${
                     isCategoryExpanded
                       ? 'grid-rows-[1fr] opacity-100 mt-0.5'
@@ -314,6 +322,7 @@ export default function Sidebar({ open, onClose }) {
                   }`}
                 >
                   <div className="overflow-hidden">
+
                     {categories[category].map((agent) => {
                       const IconComponent = Icons[agent.icon] || Icons.Bot
 
