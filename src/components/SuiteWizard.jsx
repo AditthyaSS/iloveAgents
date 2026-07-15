@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, ArrowRight, SkipForward, Sparkles,
@@ -38,6 +38,40 @@ export default function SuiteWizard({ suite, onBack }) {
   const [tagCounts, setTagCounts] = useState({})
   const [answeredCount, setAnsweredCount] = useState(0)
   const [showResults, setShowResults] = useState(false)
+  
+  useEffect(() => {
+  const handleKeyDown = (event) => {
+    if (event.key !== "Enter" || event.repeat) return
+
+    const active = document.activeElement
+
+    if (active) {
+      const tag = active.tagName
+
+      const isInteractive =
+        ["BUTTON", "INPUT", "TEXTAREA", "SELECT", "A"].includes(tag)
+
+      const isSelectedOptionButton =
+  active.dataset.option === "true" &&
+  Number(active.dataset.index) === answers[step]
+
+if (isInteractive && !isSelectedOptionButton) {
+  return
+}
+    }
+
+    if (answers[step] == null) return
+
+    event.preventDefault()
+    handleNext()
+  }
+
+  window.addEventListener("keydown", handleKeyDown)
+
+  return () => {
+    window.removeEventListener("keydown", handleKeyDown)
+  }
+}, [answers, step])
 
   // ── Helpers
 
@@ -258,11 +292,13 @@ export default function SuiteWizard({ suite, onBack }) {
         {question.options.map((opt, idx) => (
           <button
             key={idx}
-           onClick={() => {
-              const updated = [...answers]
-              updated[step] = idx
-              setAnswers(updated)
-            }}
+data-option="true"
+data-index={idx}
+onClick={() => {
+  const updated = [...answers]
+  updated[step] = idx
+  setAnswers(updated)
+}}
             className={`text-left px-4 py-3.5 rounded-xl border text-sm font-medium transition-all duration-150
               ${answers[step] === idx
                 ? 'border-accent bg-accent/10 dark:bg-accent/10 dark:border-accent text-accent'
