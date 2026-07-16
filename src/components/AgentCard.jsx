@@ -64,6 +64,11 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
   const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const favorited = isFavorite(agent.id);
 
+  const handleDragStart = (event) => {
+    event.dataTransfer.setData('text/plain', agent.id);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
   const handleFavorite = (e) => {
     e.preventDefault(); // prevent Link navigation
     e.stopPropagation();
@@ -80,7 +85,9 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
     <>
     <Link
       to={`/agent/${agent.id}`}
-      className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 
+      draggable
+      onDragStart={handleDragStart}
+      className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 cursor-grab
       dark:bg-surface-card dark:border-border
       transition-all duration-500 
       hover:[transform:perspective(1000px)_rotateX(6deg)_rotateY(-6deg)_translateY(-8px)] 

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { Edit3, FolderPlus, Plus, Trash2 } from 'lucide-react'
 import CollectionModal from '../components/CollectionModal'
 import { useAgents } from '../lib/useAgents'
-import { MAX_COLLECTIONS, useCollections } from '../lib/useCollections'
+import { DEFAULT_COLLECTION_ID, MAX_COLLECTIONS, useCollections } from '../lib/useCollections'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function CollectionsPage() {
@@ -14,6 +14,10 @@ export default function CollectionsPage() {
   const [name, setName] = useState('')
   const [error, setError] = useState('')
 
+  const customCollections = useMemo(
+    () => collections.filter((collection) => collection.id !== DEFAULT_COLLECTION_ID),
+    [collections]
+  )
   const agentMap = useMemo(() => new Map(agents.map((agent) => [agent.id, agent])), [agents])
   const openCreate = () => { setModal('create'); setName(''); setError('') }
   const submitCreate = (event) => { event.preventDefault(); const result = createCollection(name); if (!result.ok) return setError(result.error); setModal(null) }
@@ -40,11 +44,11 @@ export default function CollectionsPage() {
   return <div className="animate-fade-in space-y-8">
     <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div><h1 className="text-3xl font-bold text-gray-900 dark:text-text-primary">Collections</h1><p className="mt-2 text-sm text-gray-500 dark:text-text-secondary">Create custom groups of agents for your workflows.</p></div>
-      <button onClick={openCreate} disabled={collections.length >= MAX_COLLECTIONS} className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"><Plus size={16} />New Collection</button>
+      <button onClick={openCreate} disabled={customCollections.length >= MAX_COLLECTIONS} className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"><Plus size={16} />New Collection</button>
     </div>
 
-    {collections.length === 0 ? <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-border dark:bg-surface-card"><div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent"><FolderPlus size={24} /></div><h2 className="text-lg font-semibold text-gray-900 dark:text-text-primary">No collections yet</h2><p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-text-secondary">Start by creating a collection, then add agents from the agent cards.</p><button onClick={openCreate} className="mt-5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover">Create Collection</button></div> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      {collections.map((collection) => {
+    {customCollections.length === 0 ? <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-border dark:bg-surface-card"><div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent"><FolderPlus size={24} /></div><h2 className="text-lg font-semibold text-gray-900 dark:text-text-primary">No collections yet</h2><p className="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-text-secondary">Start by creating a collection, then add agents from the agent cards.</p><button onClick={openCreate} className="mt-5 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover">Create Collection</button></div> : <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {customCollections.map((collection) => {
         return <article key={collection.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg dark:border-border dark:bg-surface-card">
           <div className="mb-4 flex items-start justify-between gap-3"><div className="flex items-center gap-3"><div className="rounded-lg bg-accent/10 p-2 text-accent"><FolderPlus size={20} /></div><div><h2 className="font-semibold text-gray-900 dark:text-text-primary">{collection.name}</h2><p className="text-xs text-gray-500 dark:text-text-muted">{collection.agentIds.length} agents</p></div></div></div>
           <p className="min-h-10 text-sm text-gray-500 dark:text-text-secondary">{getPreviewText(collection)}</p>

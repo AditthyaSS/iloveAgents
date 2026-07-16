@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown, Lightbulb } from 'lucide-react'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
@@ -10,6 +10,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { useAgents } from '../lib/useAgents'
 import RecommendationWizardEntry from '../components/recommendation/RecommendationWizardEntry'
+import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
 import RecommendationWizardModal from '../components/recommendation/RecommendationWizardModal'
 import { Link } from "react-router-dom";
 import { getGlobalKeys } from '../lib/globalKeys'
@@ -48,6 +49,8 @@ export default function HomePage() {
   const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedProvider, setSelectedProvider] = useState(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const { collections, getAgentCollectionId } = useCollections()
 
   // ── First-time banner: show only if no global keys saved and not dismissed
   const [showBanner, setShowBanner] = useState(() => {
@@ -180,6 +183,10 @@ export default function HomePage() {
   
   const { favorites } = useFavorites()
   const { history, deleteRun, clearHistory } = useHistory()
+  const activeCollectionId = searchParams.get('collection') || DEFAULT_COLLECTION_ID
+  const selectedCollection = collections.find(
+    (collection) => collection.id === activeCollectionId
+  )
 
   const recentAgents = useMemo(() => {
     const recentIds = JSON.parse(
@@ -210,6 +217,13 @@ export default function HomePage() {
       const matchesProvider = !selectedProvider || provider === selectedProvider
       if (!matchesProvider) return false
 
+      const matchesCollection =
+        activeCollectionId === DEFAULT_COLLECTION_ID
+          ? true
+          : getAgentCollectionId(agent.id) === activeCollectionId
+
+      if (!matchesCollection) return false
+
       if (!q) return true
 
       const searchableText = [
@@ -227,7 +241,7 @@ export default function HomePage() {
 
       return searchableText.includes(q)
     })
-  }, [agents, searchQuery, selectedCategory, selectedProvider])
+  }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider])
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
@@ -243,7 +257,8 @@ export default function HomePage() {
     navigator.clipboard.writeText(text)
   }
 
-  const showingFiltered = searchQuery.trim() || selectedCategory || selectedProvider
+  const showingFiltered =
+    searchQuery.trim() || selectedCategory || selectedProvider || activeCollectionId !== DEFAULT_COLLECTION_ID
 
   return (
     <div className="animate-fade-in">
@@ -594,10 +609,24 @@ export default function HomePage() {
       {/* Agent Grid */}
       <div className="premium-section flex flex-col lg:flex-row gap-8 mb-8 relative z-0" style={{ animationDelay: '220ms' }}>
         <div className="flex-1">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
-              {showingFiltered ? "Matching Agents" : "Available Agents"}
-            </h2>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
+                {showingFiltered ? 'Matching Agents' : 'Available Agents'}
+              </h2>
+              <span className="inline-flex items-center gap-2 rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent">
+                {activeCollectionId === DEFAULT_COLLECTION_ID ? 'All Agents' : selectedCollection?.name || 'Collection'}
+                {activeCollectionId !== DEFAULT_COLLECTION_ID && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchParams({})}
+                    className="text-[10px] font-medium text-accent/80 hover:text-accent"
+                  >
+                    Show all
+                  </button>
+                )}
+              </span>
+            </div>
             <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
               {filteredAgents.length}{" "}{filteredAgents.length === 1 ? "agent" : "agents"}
             </span>
@@ -624,7 +653,9 @@ export default function HomePage() {
               </div>
               <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">No agents found</h3>
               <p className="text-xs dark:text-text-secondary text-gray-500 mb-4">
-                Try adjusting your search or removing category filters
+                {activeCollectionId === DEFAULT_COLLECTION_ID
+                  ? 'Try adjusting your search or removing category filters'
+                  : 'This collection is empty right now. Try switching back to All Agents or moving an agent into it.'}
               </p>
               <div className="flex flex-col items-center gap-2">
                 <button
