@@ -246,7 +246,10 @@ if (isInteractive && !isSelectedOptionButton) {
   // QUIZ VIEW
   // ─────────────────────────────────────────────────────
   const question = questions[step]
-  const progress = questions.length > 0 ? ((step) / questions.length) * 100 : 0
+  const progress =
+  questions.length > 0
+    ? ((step + 1) / questions.length) * 100
+    : 0
   const SuiteIcon = SUITE_ICONS[suite.icon] || Code2
 
   return (
@@ -275,12 +278,22 @@ if (isInteractive && !isSelectedOptionButton) {
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-surface-hover mb-8 overflow-hidden">
+      <div
+  className="w-full h-1.5 rounded-full bg-gray-200 dark:bg-surface-hover mb-2 overflow-hidden"
+  role="progressbar"
+  aria-valuemin={0}
+  aria-valuemax={100}
+  aria-valuenow={Math.round(progress)}
+>
         <div
           className="h-full rounded-full bg-accent transition-all duration-300"
           style={{ width: `${progress}%` }}
         />
       </div>
+
+      <p className="text-xs text-gray-500 dark:text-text-muted mb-8">
+  {Math.round(progress)}% complete
+</p>
 
       {/* Question */}
       <h3 className="text-xl font-bold dark:text-text-primary text-gray-900 mb-6 leading-snug">
