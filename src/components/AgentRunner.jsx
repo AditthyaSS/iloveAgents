@@ -86,6 +86,8 @@ export default function AgentRunner({ agent }) {
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
+  const [lastRunSystemPrompt, setLastRunSystemPrompt] = useState("");
+  const [lastRunUserMessage, setLastRunUserMessage] = useState("");
   const [msgIndex, setMsgIndex] = useState(0);
   const [analyserOpen, setAnalyserOpen] = useState(false);
   const [modelRecommendation, setModelRecommendation] = useState(null);
@@ -258,6 +260,9 @@ const handleRun = async () => {
       },
       ...prevHistory,
     ]);
+
+    setLastRunSystemPrompt(customPrompt);
+    setLastRunUserMessage(buildUserMessage());
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -1011,7 +1016,8 @@ const handleRun = async () => {
               content={output}
               outputType={agent.outputType}
               agentName={agent.name}
-              systemPrompt={customPrompt}
+              systemPrompt={lastRunSystemPrompt}
+              userMessage={lastRunUserMessage}
             />
             <div className="flex items-center gap-2 mt-3">
   <button
