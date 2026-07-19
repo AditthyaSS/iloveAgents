@@ -37,34 +37,36 @@ export function useSessionSpend() {
   }, [])
 
   const addRun = useCallback(({ model, inputTokens, outputTokens, inputCost, outputCost }) => {
-    setSessionData((prev) => {
-      let inputC = inputCost
-      let outputC = outputCost
+    let inputC = inputCost
+    let outputC = outputCost
 
-      if (inputC == null && inputTokens != null && model) {
-        inputC = estimateInputCost(model, inputTokens) || 0
-      }
-      if (outputC == null && outputTokens != null && model) {
-        outputC = estimateOutputCost(model, outputTokens) || 0
-      }
+    if (inputC == null && inputTokens != null && model) {
+      inputC = estimateInputCost(model, inputTokens) || 0
+    }
+    if (outputC == null && outputTokens != null && model) {
+      outputC = estimateOutputCost(model, outputTokens) || 0
+    }
 
-      const runCost = (inputC || 0) + (outputC || 0)
-      const run = {
-        model,
-        inputTokens: inputTokens || 0,
-        outputTokens: outputTokens || 0,
-        inputCost: inputC || 0,
-        outputCost: outputC || 0,
-        totalCost: runCost,
-        timestamp: Date.now(),
-      }
+    const runCost = (inputC || 0) + (outputC || 0)
+    const run = {
+      model,
+      inputTokens: inputTokens || 0,
+      outputTokens: outputTokens || 0,
+      inputCost: inputC || 0,
+      outputCost: outputC || 0,
+      totalCost: runCost,
+      timestamp: Date.now(),
+    }
 
-      const runs = [run, ...prev.runs].slice(0, MAX_RUNS)
-      const totalSpend = runs.reduce((sum, r) => sum + r.totalCost, 0)
-      const newData = { runs, totalSpend }
-      saveSession(newData)
-      return newData
-    })
+    // Merge against the current on-disk value, not stale in-memory state,
+    // so a concurrent write (another tab, or two runs completing close
+    // together) isn't silently discarded by the last write winning.
+    const prev = loadSession()
+    const runs = [run, ...prev.runs].slice(0, MAX_RUNS)
+    const totalSpend = runs.reduce((sum, r) => sum + r.totalCost, 0)
+    const newData = { runs, totalSpend }
+    saveSession(newData)
+    setSessionData(newData)
   }, [])
 
   const clearSession = useCallback(() => {

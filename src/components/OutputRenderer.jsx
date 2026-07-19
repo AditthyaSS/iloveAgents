@@ -1,11 +1,20 @@
 import { useState } from 'react'
-import { Copy, Check, FileText } from 'lucide-react'
+import { Copy, Check, FileText, Download } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
 import VoiceOutput from './VoiceOutput'
+
+/**
+ * XSS Protection:
+ * - ReactMarkdown v9 by default does NOT render raw HTML or script tags
+ * - Markdown input is safely escaped; only safe markdown syntax is rendered
+ * - Agent prompts cannot inject <script> or HTML attributes via output
+ * - Code blocks are syntax-highlighted but never evaluated
+ * - Do NOT use dangerouslySetInnerHTML with agent output under any circumstances
+ */
 
 function stripMarkdown(text) {
   if (!text) return ''
@@ -72,34 +81,58 @@ function CopyButton({ text, label, icon: Icon = Copy }) {
   )
 }
 
-function DownloadButton({ text, agentName }) {
-  const handleDownload = () => {
-    const blob = new Blob([text], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${agentName || 'output'}.txt`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
-
-  return (
-    <button
-      onClick={handleDownload}
-      title="Download as .txt"
-      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
-        dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
-        bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
-    >
-      ⬇ Download
-    </button>
-  )
-}
-
-export default function OutputRenderer({ content, outputType, agentName, systemPrompt }) {
+export default function OutputRenderer({ content, outputType, agentName, systemPrompt, userMessage }) {
   if (!content) return null
 
-  const shareText = `--- Agent: ${agentName} ---\n\n--- Output ---\n${content}`
+  // Normalize content to string for safe text operations (JSON outputs might be objects)
+  const stringContent = typeof content === 'object' && content !== null
+    ? JSON.stringify(content, null, 2)
+    : String(content || '');
+
+  const shareText = `--- Agent: ${agentName} ---\n\n--- Output ---\n${stringContent}`
+
+  const handleDownloadTxt = () => {
+    const timestamp = new Date().toISOString();
+    const logText = `==================================================
+AGENT RUN LOG: ${agentName || 'Agent'}
+Timestamp: ${timestamp}
+==================================================
+
+--- System Prompt ---
+${systemPrompt || 'N/A'}
+
+--- User Inputs ---
+${userMessage || 'N/A'}
+
+--- Output ---
+${stringContent}
+`;
+    const blob = new Blob([logText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'}_run_log.txt`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const handleDownloadJson = () => {
+    const timestamp = new Date().toISOString();
+    const logObj = {
+      agentName: agentName || 'Agent',
+      timestamp: timestamp,
+      systemPrompt: systemPrompt || '',
+      inputs: userMessage || '',
+      output: content || ''
+    };
+    const blob = new Blob([JSON.stringify(logObj, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'}_run_log.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
 
   return (
     <div className="animate-fade-in">
@@ -111,13 +144,32 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
         <div className="flex items-center gap-2">
           {/* VoiceOutput — reads the response aloud */}
           <VoiceOutput
-          text={typeof content === 'string' ? content : JSON.stringify(content)}
+            text={stringContent}
           />
 
-          <CopyButton text={content} label="Copy output" />
-          <CopyButton text={stripMarkdown(content)} label="Copy as Plain Text" icon={FileText} />
+          <CopyButton text={stringContent} label="Copy output" />
+          <CopyButton text={stripMarkdown(stringContent)} label="Copy as Plain Text" icon={FileText} />
           <CopyButton text={shareText} label="Share" />
-          <DownloadButton text={content} agentName={agentName} />
+          <button
+            onClick={handleDownloadTxt}
+            title="Download full run log as Text"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+              dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+              bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+          >
+            <Download size={12} />
+            Export TXT
+          </button>
+          <button
+            onClick={handleDownloadJson}
+            title="Download full run log as JSON"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+              dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+              bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+          >
+            <Download size={12} />
+            Export JSON
+          </button>
         </div>
       </div>
 
@@ -128,6 +180,7 @@ export default function OutputRenderer({ content, outputType, agentName, systemP
         ) : outputType === 'markdown' ? (
           <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
             <ReactMarkdown
+              skipHtml={true}
               remarkPlugins={[remarkGfm]}
               components={{
                 code({ node, className, children, ...props }) {

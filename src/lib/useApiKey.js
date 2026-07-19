@@ -1,6 +1,42 @@
 import { useState, useEffect, useCallback } from 'react'
 
 const STORAGE_PREFIX = 'ila_apikey_'
+const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours
+
+/**
+ * Safely retrieve an API key if it exists and hasn't expired.
+ * Keys are wrapped with expiry timestamps to prevent indefinite persistence
+ * even if storage backend is changed to localStorage.
+ */
+function getSafeApiKey(provider) {
+  const raw = sessionStorage.getItem(STORAGE_PREFIX + provider)
+  if (!raw) return null
+  try {
+    const { key, expiresAt } = JSON.parse(raw)
+    if (Date.now() > expiresAt) {
+      sessionStorage.removeItem(STORAGE_PREFIX + provider)
+      return null
+    }
+    return key
+  } catch {
+    // Migrate legacy plaintext keys (no expiry)
+    return raw
+  }
+}
+
+/**
+ * Store an API key with an expiry timestamp.
+ */
+function setSafeApiKey(provider, key) {
+  if (key) {
+    sessionStorage.setItem(STORAGE_PREFIX + provider, JSON.stringify({
+      key,
+      expiresAt: Date.now() + EXPIRY_MS,
+    }))
+  } else {
+    sessionStorage.removeItem(STORAGE_PREFIX + provider)
+  }
+}
 
 /**
  * Custom hook for managing API key state with optional sessionStorage persistence.
@@ -12,7 +48,7 @@ export function useApiKey() {
 
   // Load saved key on mount and provider change
   useEffect(() => {
-    const saved = sessionStorage.getItem(STORAGE_PREFIX + provider)
+    const saved = getSafeApiKey(provider)
     if (saved) {
       setApiKey(saved)
       setSaveForSession(true)
@@ -27,7 +63,7 @@ export function useApiKey() {
     (key) => {
       setApiKey(key)
       if (saveForSession && key) {
-        sessionStorage.setItem(STORAGE_PREFIX + provider, key)
+        setSafeApiKey(provider, key)
       }
     },
     [provider, saveForSession]
@@ -37,9 +73,9 @@ export function useApiKey() {
     (save) => {
       setSaveForSession(save)
       if (save && apiKey) {
-        sessionStorage.setItem(STORAGE_PREFIX + provider, apiKey)
+        setSafeApiKey(provider, apiKey)
       } else {
-        sessionStorage.removeItem(STORAGE_PREFIX + provider)
+        setSafeApiKey(provider, null)
       }
     },
     [provider, apiKey]

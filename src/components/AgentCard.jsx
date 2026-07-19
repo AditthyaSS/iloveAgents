@@ -26,6 +26,11 @@ const providerColors = {
     text: "text-blue-400",
     border: "border-blue-500/20",
   },
+  openrouter: {
+    bg: "bg-sky-500/10",
+    text: "text-sky-400",
+    border: "border-sky-500/20",
+  },
   any: {
     bg: "bg-purple-500/10",
     text: "text-purple-400",
@@ -37,6 +42,7 @@ const providerLabels = {
   openai: "OpenAI",
   anthropic: "Anthropic",
   gemini: "Gemini",
+  openrouter: "OpenRouter",
   any: "Any Provider",
 };
 
@@ -58,6 +64,11 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
   const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const favorited = isFavorite(agent.id);
 
+  const handleDragStart = (event) => {
+    event.dataTransfer.setData('text/plain', agent.id);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+
   const handleFavorite = (e) => {
     e.preventDefault(); // prevent Link navigation
     e.stopPropagation();
@@ -74,7 +85,9 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
     <>
     <Link
       to={`/agent/${agent.id}`}
-      className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 
+      draggable
+      onDragStart={handleDragStart}
+      className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 cursor-grab
       dark:bg-surface-card dark:border-border
       transition-all duration-500 
       hover:[transform:perspective(1000px)_rotateX(6deg)_rotateY(-6deg)_translateY(-8px)] 
@@ -111,7 +124,7 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
           </span>
           <button
             onClick={handleCollectionPicker}
-            className="p-1 rounded-md dark:text-text-muted text-gray-300 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
             aria-label="Add to collection"
             title="Add to collection"
           >
@@ -122,7 +135,7 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
             className={`p-1 rounded-md transition-all duration-200
               ${favorited
                 ? "text-yellow-400 hover:text-yellow-300 scale-110"
-                : "dark:text-text-muted text-gray-300 hover:text-yellow-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                : "dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-yellow-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
               }`}
             aria-label={
               favorited ? "Remove from favorites" : "Add to favorites"
