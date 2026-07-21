@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sparkles, ArrowRight, Code2, BarChart3, TrendingUp, DollarSign, Palette, PenLine, GraduationCap, Briefcase, HeartPulse, ShieldCheck, Gamepad2, Wand2, Loader2 } from 'lucide-react'
+import { Sparkles, ArrowRight, Code2, BarChart3, TrendingUp, DollarSign, Palette, PenLine, GraduationCap, Briefcase, HeartPulse, ShieldCheck, Gamepad2, Wand2, Loader2, GitBranch } from 'lucide-react'
 import { suites } from '../suites/suitesData'
 import SuiteWizard from '../components/SuiteWizard'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -54,6 +54,15 @@ export default function SuitesPage() {
     } finally {
       setGenerating(false)
     }
+  }
+
+  const handleCreateWorkflow = () => {
+    navigate('/workflows/build', {
+      state: {
+        preselectedAgents: customSuite.agents.map((a) => a.id),
+        workflowTitle: customSuite.title,
+      }
+    })
   }
 
   // ── QUIZ state
@@ -187,12 +196,24 @@ export default function SuitesPage() {
                 </div>
               ))}
             </div>
-            <button
-              onClick={() => { setCustomSuite(null); setGoal('') }}
-              className="mt-3 text-[11px] text-accent hover:underline"
-            >
-              ↺ Try a different goal
-            </button>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                onClick={handleCreateWorkflow}
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold text-white
+                  bg-accent hover:bg-accent-hover transition-all duration-200 active:scale-[0.98]"
+              >
+                <GitBranch size={13} />
+                Create Workflow from this Suite →
+              </button>
+              <button
+                onClick={() => { setCustomSuite(null); setGoal('') }}
+                className="text-[11px] text-accent hover:underline"
+              >
+                ↺ Try a different goal
+              </button>
+            </div>
           </div>
         )}
       </div>
