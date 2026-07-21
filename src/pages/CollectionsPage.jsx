@@ -48,9 +48,12 @@ export default function CollectionsPage() {
     })
   }, [])
 
+  // ── Custom (user-created) collections ───────────────────────────────────
+  const customCollections = useMemo(() => collections, [collections])
+
   const selectAll = useCallback(() => {
-    setSelectedIds(new Set(collections.map((c) => c.id)))
-  }, [collections])
+    setSelectedIds(new Set(customCollections.map((c) => c.id)))
+  }, [customCollections])
 
   const deselectAll = useCallback(() => {
     setSelectedIds(new Set())
@@ -97,7 +100,7 @@ export default function CollectionsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {collections.length > 0 && !isBulkMode && (
+          {customCollections.length > 0 && !isBulkMode && (
             <button
               id="manage-collections-btn"
               onClick={enterBulkMode}
@@ -112,7 +115,7 @@ export default function CollectionsPage() {
           <button
             id="new-collection-btn"
             onClick={openCreate}
-            disabled={collections.length >= MAX_COLLECTIONS}
+            disabled={customCollections.length >= MAX_COLLECTIONS}
             className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Plus size={16} />
@@ -139,7 +142,7 @@ export default function CollectionsPage() {
           <button
             id="select-all-btn"
             onClick={selectAll}
-            disabled={selectedCount === collections.length}
+            disabled={selectedCount === customCollections.length}
             className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-border dark:bg-surface-input dark:text-text-primary dark:hover:bg-surface-hover"
             aria-label="Select all collections"
           >
@@ -185,7 +188,7 @@ export default function CollectionsPage() {
       )}
 
       {/* ── Collection grid / empty state ─────────────────────────────────── */}
-      {collections.length === 0 ? (
+      {customCollections.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-10 text-center dark:border-border dark:bg-surface-card">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 text-accent">
             <FolderPlus size={24} />
@@ -203,7 +206,7 @@ export default function CollectionsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {collections.map((collection) => {
+          {customCollections.map((collection) => {
             const isSelected = selectedIds.has(collection.id)
 
             return (
