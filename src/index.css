@@ -656,3 +656,49 @@ html:not(.dark) .light-text-secondary {
   }
 }
 
+/* ===== Onboarding Tour ===== */
+
+@keyframes onboarding-spotlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3),
+      0 0 20px 4px rgba(99, 102, 241, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.2),
+      0 0 30px 8px rgba(99, 102, 241, 0.1);
+  }
+}
+
+@keyframes onboarding-tooltip-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.onboarding-spotlight-ring {
+  animation: onboarding-spotlight-pulse 2s ease-in-out infinite;
+  border: 2px solid rgba(99, 102, 241, 0.4);
+}
+
+.onboarding-tooltip-entering {
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+}
+
+.onboarding-tooltip-visible {
+  animation: onboarding-tooltip-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Prevent body scroll while tour is active */
+body:has(.onboarding-overlay-wrapper) {
+  overflow: hidden;
+}
+
