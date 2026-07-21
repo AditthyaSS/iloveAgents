@@ -107,7 +107,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
 
-        <div className="px-4 py-3 flex items-center justify-between">
+        <div className="px-4 py-3 flex items-center justify-between" data-tour="sidebar-agents">
           <span className="text-xs font-bold uppercase tracking-wider dark:text-text-primary text-gray-800">
             Agents
           </span>
