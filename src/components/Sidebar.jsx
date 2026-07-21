@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
-import { useCollections } from '../lib/useCollections'
+import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
 
 const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
 
@@ -21,7 +21,8 @@ export default function Sidebar({ open, onClose }) {
   })
   const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
   const [agents, setAgents] = useState([])
-  const { collections } = useCollections()
+  const [feedback, setFeedback] = useState('')
+  const { collections, moveAgentToCollection } = useCollections()
   const location = useLocation()
 
   useEffect(() => {
@@ -48,6 +49,7 @@ export default function Sidebar({ open, onClose }) {
     ? location.pathname.split('/agent/')[1]
     : null
 
+  const activeCollectionId = new URLSearchParams(location.search).get('collection')
   const activeAgent = agents.find((a) => a.id === currentAgentId)
   const activeCategory = activeAgent ? activeAgent.category : null
 
@@ -89,6 +91,28 @@ export default function Sidebar({ open, onClose }) {
       }))
     }
   }
+
+  const handleCollectionDrop = (event, collectionId) => {
+    event.preventDefault()
+    const agentId = event.dataTransfer.getData('text/plain')
+    if (!agentId) return
+
+    const collection = collections.find((item) => item.id === collectionId)
+    const result = moveAgentToCollection(agentId, collectionId)
+
+    setFeedback(
+      result.ok
+        ? `Moved to ${collection?.name || 'the selected collection'}.`
+        : result.error
+    )
+
+    window.setTimeout(() => setFeedback(''), 2200)
+  }
+
+  const customCollections = collections.filter(
+    (collection) => collection.id !== DEFAULT_COLLECTION_ID
+  )
+  const allAgentsCount = agents.length
 
   return (
     <>
@@ -180,9 +204,15 @@ export default function Sidebar({ open, onClose }) {
             <div className="mb-1 flex items-center justify-between px-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-text-muted">
               <span>Collections</span>
               <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] text-accent">
-                {collections.length}
+                {customCollections.length}
               </span>
             </div>
+
+            {feedback && (
+              <div className="mb-2 rounded-md border border-accent/20 bg-accent/10 px-2 py-1.5 text-[11px] text-accent">
+                {feedback}
+              </div>
+            )}
 
             <NavLink
               to="/collections"
@@ -200,28 +230,45 @@ export default function Sidebar({ open, onClose }) {
               <span className="truncate">All Collections</span>
             </NavLink>
 
-            {collections.slice(0, 10).map((collection) => (
-              <NavLink
+            <Link
+              to="/"
+              onClick={onClose}
+              onDragOver={(event) => event.preventDefault()}
+              onDrop={(event) => handleCollectionDrop(event, DEFAULT_COLLECTION_ID)}
+              className={`relative mb-0.5 flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
+                ${
+                  location.pathname === '/' && !activeCollectionId
+                    ? 'bg-accent/15 text-accent font-semibold shadow-sm'
+                    : 'text-gray-700 hover:bg-gray-150/50 hover:text-gray-950 dark:text-text-secondary dark:hover:bg-white/10 dark:hover:text-text-primary'
+                }`}
+            >
+              <Icons.FolderInput size={14} className="flex-shrink-0" />
+              <span className="min-w-0 flex-1 truncate">All Agents</span>
+              <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold text-accent">
+                {allAgentsCount}
+              </span>
+            </Link>
+
+            {customCollections.map((collection) => (
+              <Link
                 key={collection.id}
-                to={`/collections/${collection.id}`}
+                to={collection.id === DEFAULT_COLLECTION_ID ? '/' : `/?collection=${collection.id}`}
                 onClick={onClose}
-                className={({ isActive }) =>
-                  `relative flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => handleCollectionDrop(event, collection.id)}
+                className={`relative flex items-center gap-2.5 rounded-md py-1.5 pl-2 pr-2 text-[12px] font-medium transition-all duration-200 group
                   ${
-                    isActive
+                    location.pathname === '/' && activeCollectionId === collection.id
                       ? 'bg-accent/15 text-accent font-semibold shadow-sm'
                       : 'text-gray-700 hover:bg-gray-150/50 hover:text-gray-950 dark:text-text-secondary dark:hover:bg-white/10 dark:hover:text-text-primary'
-                  }`
-                }
+                  }`}
               >
                 <Icons.Folder size={14} className="flex-shrink-0" />
-                <span className="min-w-0 flex-1 truncate">
-                  {collection.name}
-                </span>
+                <span className="min-w-0 flex-1 truncate">{collection.name}</span>
                 <span className="rounded-full bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold text-accent">
                   {collection.agentIds.length}
                 </span>
-              </NavLink>
+              </Link>
             ))}
           </div>
 

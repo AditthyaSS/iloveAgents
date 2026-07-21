@@ -86,6 +86,8 @@ export default function AgentRunner({ agent }) {
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
+  const [lastRunSystemPrompt, setLastRunSystemPrompt] = useState("");
+  const [lastRunUserMessage, setLastRunUserMessage] = useState("");
   const [msgIndex, setMsgIndex] = useState(0);
   const [analyserOpen, setAnalyserOpen] = useState(false);
   const [modelRecommendation, setModelRecommendation] = useState(null);
@@ -259,6 +261,9 @@ const handleRun = async () => {
       ...prevHistory,
     ]);
 
+    setLastRunSystemPrompt(customPrompt);
+    setLastRunUserMessage(buildUserMessage());
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
     try {
@@ -373,7 +378,7 @@ const handleRun = async () => {
   const handleSendToWorkflow = () => {
     navigate("/workflows/build", {
       state: {
-        preSelectedAgent: agent,
+        preselectedAgents: [agent.id],
         preFilledOutput: output,
       },
     });
@@ -951,7 +956,7 @@ const handleRun = async () => {
               className="underline text-accent"
               onClick={() => window.location.reload()}
             >
-              Retry
+              Reloads page after an invalid API key error
             </button>
             {error.detail && (
               <>
@@ -990,7 +995,7 @@ const handleRun = async () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
-              Streaming...
+              Streaming....
             </span>
           </div>
           <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
@@ -1011,7 +1016,8 @@ const handleRun = async () => {
               content={output}
               outputType={agent.outputType}
               agentName={agent.name}
-              systemPrompt={customPrompt}
+              systemPrompt={lastRunSystemPrompt}
+              userMessage={lastRunUserMessage}
             />
             <div className="flex items-center gap-2 mt-3">
   <button

@@ -201,12 +201,16 @@ export default function ApiKeyBar({
         </div>
 
         {/* Save checkbox */}
-        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+        <label className="flex items-center gap-1.5 select-none ${!apiKey?.trim() ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`">
           <input
             type="checkbox"
             checked={saveForSession}
-            onChange={(e) => setSaveForSession(e.target.checked)}
-            className="w-3.5 h-3.5 rounded accent-accent cursor-pointer"
+            disabled={!apiKey?.trim()}
+            onChange={(e) => {
+              if (!apiKey?.trim()) return;
+              setSaveForSession(e.target.checked);
+            }}
+            className="w-3.5 h-3.5 rounded accent-accent cursor-pointer disabled:cursor-not-allowed"
           />
           <span className="text-[11px] dark:text-text-secondary text-gray-500 whitespace-nowrap">
             Save for session
