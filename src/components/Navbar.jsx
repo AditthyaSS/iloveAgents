@@ -14,6 +14,7 @@ import {
   DollarSign,
   RotateCcw,
   Settings,
+  Compass,
 } from 'lucide-react'
 
 import Logo from './Logo'
@@ -21,7 +22,7 @@ import KeyboardShortcutsModal from './KeyboardShortcutsModal'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { useSessionSpend } from '../lib/useSessionSpend'
 
-export default function Navbar({ sidebarOpen, setSidebarOpen }) {
+export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   const [darkMode, setDarkMode] = useState(true)
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -59,8 +60,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
   const navItems = [
     { label: 'Agents', to: '/', icon: Sparkles, end: true },
     { label: 'Suites', to: '/suites', icon: LibraryBig },
-    { label: 'Workflows', to: '/workflows', icon: Workflow },
-    { label: 'Battle', to: '/battle', icon: PanelsTopLeft },
+    { label: 'Workflows', to: '/workflows', icon: Workflow, id: 'nav-workflows-link' },
+    { label: 'Battle', to: '/battle', icon: PanelsTopLeft, id: 'nav-battle-link' },
   ]
 
   const navLinkClass = ({ isActive }) =>
@@ -133,8 +134,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
         </div>
 
         <div className="hidden md:flex items-center justify-center rounded-full border border-white/50 bg-white/45 p-1 shadow-inner shadow-white/50 dark:border-white/10 dark:bg-black/20 dark:shadow-black/20">
-          {navItems.map(({ label, to, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={navLinkClass} aria-label={label}>
+          {navItems.map(({ label, to, icon: Icon, end, id }) => (
+            <NavLink key={to} to={to} end={end} className={navLinkClass} aria-label={label} id={id}>
               {({isactive }) => (
                 <>
                   <Icon size={14} />
@@ -166,6 +167,26 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
             <Github size={15} aria-hidden="true" />
             <span>Star</span>
           </a>
+
+          {onStartTour && (
+            <button
+              onClick={onStartTour}
+              className="
+                hidden md:inline-flex items-center justify-center p-2.5
+                rounded-full
+                transition-all duration-200 hover:scale-105
+                dark:hover:bg-white/10
+                dark:text-text-secondary
+                hover:bg-white/70
+                text-gray-500
+                focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
+              "
+              aria-label="Take a tour"
+              title="Take a tour"
+            >
+              <Compass size={16} />
+            </button>
+          )}
 
           <button
             onClick={() => setShowShortcuts(true)}
@@ -236,6 +257,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
           )}
 
           <button
+            id="nav-theme-toggle"
             onClick={toggleTheme}
             className="
               hidden md:inline-flex items-center justify-center p-2.5
@@ -254,6 +276,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
 
           {/* Settings icon link */}
           <Link
+            id="nav-settings-link"
             to="/settings"
             className="
               hidden md:inline-flex items-center justify-center p-2.5
