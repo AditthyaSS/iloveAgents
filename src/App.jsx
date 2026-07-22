@@ -29,6 +29,7 @@ const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 
 function PageLoader() {
   return (
@@ -89,6 +90,7 @@ export default function App() {
               <Route path="/collections/:id" element={<CollectionDetailPage />} />
               <Route path="/scheduler" element={<SchedulerPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/workflows" element={<WorkflowLibrary />} />
               <Route path="/workflows/build" element={<WorkflowBuilder />} />
               <Route path="/workflows/:id" element={<WorkflowDetail />} />
