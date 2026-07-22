@@ -289,6 +289,22 @@ export default function Sidebar({ open, onClose }) {
           </NavLink>
 
           <NavLink
+            to="/analytics"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
+              ${
+                isActive
+                  ? 'bg-accent/10 text-accent dark:text-accent'
+                  : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`
+            }
+          >
+            <Icons.BarChart3 size={15} className="flex-shrink-0" />
+            <span className="truncate">Analytics</span>
+          </NavLink>
+
+          <NavLink
             to="/marketplace"
             onClick={onClose}
             className={({ isActive }) =>
