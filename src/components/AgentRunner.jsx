@@ -598,8 +598,8 @@ const handleRun = async () => {
                     <span>📝 Words: {getWordCount(inputs[input.id])}</span>
                     <span>🪙 Est. Tokens: {getTokenCount(inputs[input.id])}</span>
                   </div>
-                  <span className={inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}>
-                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} Chars
+                  <span className={`self-end ${inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}`}>
+                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} characters
                   </span>
                 </div>
 
