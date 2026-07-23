@@ -136,7 +136,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
         <div className="hidden md:flex items-center justify-center rounded-full border border-white/50 bg-white/45 p-1 shadow-inner shadow-white/50 dark:border-white/10 dark:bg-black/20 dark:shadow-black/20">
           {navItems.map(({ label, to, icon: Icon, end, id }) => (
             <NavLink key={to} to={to} end={end} className={navLinkClass} aria-label={label} id={id}>
-              {({isactive }) => (
+              {({ isActive }) => (
                 <>
                   <Icon size={14} />
                 <span>{label}</span>
