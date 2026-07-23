@@ -17,6 +17,7 @@ import {
   Trash2,
   CalendarClock,
   Layers,
+  History,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
@@ -31,6 +32,8 @@ import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
 import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
+import PromptHistoryPanel from "./PromptHistoryPanel";
+import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
@@ -96,6 +99,8 @@ export default function AgentRunner({ agent }) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
+  const { savePrompt } = usePromptHistory();
   const { addJob } = useScheduler();
   const { addRun } = useSessionSpend();
 
@@ -163,6 +168,30 @@ export default function AgentRunner({ agent }) {
 
   const updateInput = (id, value) => {
     setInputs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  // Finds the first free-text style input (textarea/text/code) with content,
+  // used as the "prompt" for saving to / reusing from Prompt History.
+  const getPrimaryPromptInput = () => {
+    return agent.inputs.find(
+      (i) => ["textarea", "text", "code"].includes(i.type) && (inputs[i.id] || "").trim()
+    );
+  };
+
+  const handleSavePrompt = () => {
+    const primary = getPrimaryPromptInput();
+    if (!primary) return;
+    savePrompt({
+      text: inputs[primary.id],
+      agentId: agent.id,
+      agentName: agent.name,
+    });
+  };
+
+  const handleUsePrompt = (text) => {
+    const primary = agent.inputs.find((i) => ["textarea", "text", "code"].includes(i.type));
+    if (!primary) return;
+    updateInput(primary.id, text);
   };
 
   const getWordCount = (text) => {
@@ -480,6 +509,13 @@ const handleRun = async () => {
           </p>
         </div>
         <button
+          onClick={() => setHistoryPanelOpen(true)}
+          title="Prompt History & Favorites"
+          className="p-2 rounded-lg dark:text-text-muted text-gray-500 hover:text-accent hover:bg-accent/10 transition-colors"
+        >
+          <History size={18} />
+        </button>
+        <button
           onClick={handleClear}
           disabled={!hasInputContent()}
           title="Clear Chat"
@@ -680,7 +716,7 @@ const handleRun = async () => {
       {/* Suggested workflow chain pills */}
       <SuggestedChainPills agent={agent} />
 
-<div className="mb-4">
+<div className="mb-4 flex items-center gap-2 flex-wrap">
   <button
     onClick={handleFillExample}
     className="
@@ -698,6 +734,26 @@ const handleRun = async () => {
     "
   >
     ✨ Try an example
+  </button>
+  <button
+    onClick={handleSavePrompt}
+    disabled={!getPrimaryPromptInput()}
+    title="Save this prompt to your Prompt History"
+    className="
+      inline-flex items-center gap-2
+      px-3 py-1.5
+      rounded-full
+      dark:bg-surface-input bg-gray-100
+      dark:text-text-secondary text-gray-600
+      font-semibold
+      border dark:border-border border-gray-200
+      hover:border-accent/30 hover:text-accent
+      disabled:opacity-40 disabled:cursor-not-allowed
+      transition-all duration-200
+    "
+  >
+    <History size={14} />
+    Save Prompt
   </button>
 </div>
 
@@ -1091,6 +1147,13 @@ const handleRun = async () => {
 
       </>
       )}
+
+      {/* Prompt History Panel */}
+      <PromptHistoryPanel
+        open={historyPanelOpen}
+        onClose={() => setHistoryPanelOpen(false)}
+        onUsePrompt={handleUsePrompt}
+      />
 
       {/* Schedule Agent Modal */}
       {scheduleModalOpen && (
