@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   BarChart3, Activity, Users, Flame, Zap,
-  TrendingUp, ArrowRight, Trash2, Bot,
+  TrendingUp, ArrowRight, Trash2, Bot, Trophy,
+  Calendar, Clock, Target, Download, Filter,
 } from 'lucide-react'
 import { useAnalytics } from '../lib/useAnalytics'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -41,6 +42,14 @@ const CATEGORY_COLORS = {
 }
 const DEFAULT_CATEGORY_COLOR = 'from-gray-500 to-gray-400'
 
+// ── Time range options ──────────────────────────────────────────────────────
+const TIME_RANGES = [
+  { value: 'all', label: 'All Time' },
+  { value: '7d',  label: 'Last 7 Days' },
+  { value: '30d', label: 'Last 30 Days' },
+  { value: '90d', label: 'Last 90 Days' },
+]
+
 // ── Heatmap intensity ───────────────────────────────────────────────────────
 function getHeatmapIntensity(count) {
   if (count === 0) return 'bg-gray-100 dark:bg-white/5'
@@ -54,15 +63,16 @@ function getHeatmapIntensity(count) {
 // ═════════════════════════════════════════════════════════════════════════════
 
 export default function AnalyticsPage() {
-  useDocumentTitle('Analytics')
+  useDocumentTitle('Dashboard')
   const navigate = useNavigate()
-  const { stats, clearAnalytics } = useAnalytics()
+  const [timeRange, setTimeRange] = useState('all')
+  const { stats, clearAnalytics } = useAnalytics(timeRange)
 
   // ── Empty state ───────────────────────────────────────────────────────────
-  if (stats.totalRuns === 0) {
+  if (stats.totalRuns === 0 && timeRange === 'all') {
     return (
       <div className="animate-fade-in max-w-4xl mx-auto">
-        <PageHeader onClear={clearAnalytics} hasData={false} />
+        <PageHeader onClear={clearAnalytics} hasData={false} timeRange={timeRange} setTimeRange={setTimeRange} />
         <div className="rounded-2xl border p-12 text-center flex flex-col items-center gap-4
           dark:bg-surface-card dark:border-border bg-white border-gray-200">
           <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
@@ -89,12 +99,40 @@ export default function AnalyticsPage() {
     )
   }
 
+  // ── Filtered-empty state (has data but not in this range) ─────────────────
+  if (stats.totalRuns === 0 && timeRange !== 'all') {
+    return (
+      <div className="animate-fade-in max-w-5xl mx-auto">
+        <PageHeader onClear={clearAnalytics} hasData={true} timeRange={timeRange} setTimeRange={setTimeRange} />
+        <div className="rounded-2xl border p-12 text-center flex flex-col items-center gap-4
+          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+            <Filter size={28} className="text-amber-500" />
+          </div>
+          <h2 className="text-lg font-bold dark:text-text-primary text-gray-900">
+            No data in this range
+          </h2>
+          <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md leading-relaxed">
+            No agent runs found in the selected time range. Try selecting a broader range or "All Time".
+          </p>
+          <button
+            onClick={() => setTimeRange('all')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+              text-accent border border-accent/30 hover:bg-accent/10 transition-all duration-200 active:scale-[0.97] mt-2"
+          >
+            Show All Time
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="animate-fade-in max-w-5xl mx-auto">
-      <PageHeader onClear={clearAnalytics} hasData={true} />
+      <PageHeader onClear={clearAnalytics} hasData={true} timeRange={timeRange} setTimeRange={setTimeRange} />
 
-      {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+      {/* ── Primary Stat Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <StatCard
           icon={<Activity size={18} />}
           label="Total Runs"
@@ -125,34 +163,74 @@ export default function AnalyticsPage() {
         />
       </div>
 
+      {/* ── Secondary Insights Row ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+        <MiniStatCard
+          icon={<Trophy size={14} />}
+          label="Best Streak"
+          value={`${stats.longestStreak} days`}
+          color="text-yellow-500"
+          delay={240}
+        />
+        <MiniStatCard
+          icon={<Target size={14} />}
+          label="Avg/Day"
+          value={stats.avgRunsPerDay}
+          color="text-cyan-500"
+          delay={280}
+        />
+        <MiniStatCard
+          icon={<Calendar size={14} />}
+          label="Peak Day"
+          value={stats.mostProductiveDay || '—'}
+          color="text-violet-500"
+          delay={320}
+        />
+        <MiniStatCard
+          icon={<BarChart3 size={14} />}
+          label="Categories"
+          value={stats.categoryDistribution.length}
+          color="text-pink-500"
+          delay={360}
+        />
+      </div>
+
       {/* ── Activity Heatmap ── */}
-      <SectionCard title="Activity" icon={<TrendingUp size={16} />} delay={220}>
+      <SectionCard title="Activity" icon={<TrendingUp size={16} />} delay={400}>
         <ActivityHeatmap data={stats.heatmapData} />
       </SectionCard>
 
       {/* ── Two-column: Top Agents + Provider Donut ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
         <div className="lg:col-span-3">
-          <SectionCard title="Top Agents" icon={<BarChart3 size={16} />} delay={280}>
-            <TopAgentsChart agents={stats.topAgents} />
+          <SectionCard title="Top Agents" icon={<BarChart3 size={16} />} delay={460}>
+            <TopAgentsChart agents={stats.topAgents} navigate={navigate} />
           </SectionCard>
         </div>
         <div className="lg:col-span-2">
-          <SectionCard title="Providers" icon={<Users size={16} />} delay={340}>
+          <SectionCard title="Providers" icon={<Users size={16} />} delay={520}>
             <ProviderDonut data={stats.providerDistribution} total={stats.totalRuns} />
           </SectionCard>
         </div>
       </div>
 
       {/* ── Two-column: Categories + Sparkline ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-        <SectionCard title="Categories" icon={<BarChart3 size={16} />} delay={400}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <SectionCard title="Categories" icon={<BarChart3 size={16} />} delay={580}>
           <CategoryBars data={stats.categoryDistribution} />
         </SectionCard>
-        <SectionCard title="Last 30 Days" icon={<Activity size={16} />} delay={460}>
+        <SectionCard title="Last 30 Days" icon={<Activity size={16} />} delay={640}>
           <Sparkline data={stats.dailyRuns} />
         </SectionCard>
       </div>
+
+      {/* ── Recent Activity Timeline ── */}
+      <SectionCard title="Recent Activity" icon={<Clock size={16} />} delay={700}>
+        <RecentTimeline runs={stats.recentRuns} navigate={navigate} />
+      </SectionCard>
+
+      {/* ── Export Bar ── */}
+      <ExportBar stats={stats} />
     </div>
   )
 }
@@ -161,28 +239,46 @@ export default function AnalyticsPage() {
 // Sub-components
 // ═════════════════════════════════════════════════════════════════════════════
 
-function PageHeader({ onClear, hasData }) {
+function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
           <BarChart3 size={20} className="text-accent" />
         </div>
         <div>
-          <h1 className="text-lg font-bold dark:text-text-primary text-gray-900">Analytics</h1>
+          <h1 className="text-lg font-bold dark:text-text-primary text-gray-900">Dashboard</h1>
           <p className="text-xs dark:text-text-secondary text-gray-500">Your agent usage at a glance</p>
         </div>
       </div>
-      {hasData && (
-        <button
-          onClick={onClear}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-            text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-        >
-          <Trash2 size={13} />
-          Clear Data
-        </button>
-      )}
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Time range pills */}
+        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-border">
+          {TIME_RANGES.map((range) => (
+            <button
+              key={range.value}
+              onClick={() => setTimeRange(range.value)}
+              className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all duration-200
+                ${timeRange === range.value
+                  ? 'bg-accent text-white shadow-sm'
+                  : 'text-gray-500 dark:text-text-muted hover:text-gray-700 dark:hover:text-text-primary'
+                }`}
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+        {hasData && (
+          <button
+            onClick={onClear}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+              text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 size={13} />
+            Clear Data
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -205,6 +301,29 @@ function StatCard({ icon, label, value, color, delay }) {
       </div>
       <div className="text-[11px] dark:text-text-muted text-gray-400 font-medium mt-0.5">
         {label}
+      </div>
+    </div>
+  )
+}
+
+function MiniStatCard({ icon, label, value, color, delay }) {
+  return (
+    <div
+      className="flex items-center gap-3 p-3 rounded-xl border
+        dark:bg-surface-card dark:border-border bg-white border-gray-200
+        animate-fade-in transition-all duration-200 hover:shadow-md"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className={`p-2 rounded-lg bg-current/10 ${color}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <div className="text-sm font-bold dark:text-text-primary text-gray-900 tabular-nums truncate">
+          {value}
+        </div>
+        <div className="text-[10px] dark:text-text-muted text-gray-400 font-medium">
+          {label}
+        </div>
       </div>
     </div>
   )
@@ -247,7 +366,6 @@ function ActivityHeatmap({ data }) {
   }, [data])
 
   const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
-  const maxCount = Math.max(...data.map((d) => d.count), 1)
 
   return (
     <div>
@@ -293,7 +411,7 @@ function ActivityHeatmap({ data }) {
 
 // ── Top Agents Bar Chart ────────────────────────────────────────────────────
 
-function TopAgentsChart({ agents }) {
+function TopAgentsChart({ agents, navigate }) {
   if (agents.length === 0) return <EmptyMini text="No agent data yet" />
 
   const maxCount = agents[0]?.count || 1
@@ -303,9 +421,14 @@ function TopAgentsChart({ agents }) {
       {agents.map((agent, i) => {
         const pct = Math.max(5, (agent.count / maxCount) * 100)
         return (
-          <div key={agent.agentId} className="group">
+          <div
+            key={agent.agentId}
+            className="group cursor-pointer"
+            onClick={() => navigate(`/agent/${agent.agentId}`)}
+          >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium dark:text-text-primary text-gray-700 truncate max-w-[200px]">
+              <span className="text-xs font-medium dark:text-text-primary text-gray-700 truncate max-w-[200px]
+                group-hover:text-accent transition-colors">
                 {agent.agentName}
               </span>
               <span className="text-[11px] font-bold tabular-nums dark:text-text-muted text-gray-400">
@@ -314,7 +437,8 @@ function TopAgentsChart({ agents }) {
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-accent to-indigo-400 transition-all duration-700 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-accent to-indigo-400 transition-all duration-700 ease-out
+                  group-hover:from-accent group-hover:to-cyan-400"
                 style={{
                   width: `${pct}%`,
                   animationDelay: `${i * 80}ms`,
@@ -435,6 +559,8 @@ function CategoryBars({ data }) {
 // ── Sparkline (last 30 days) ────────────────────────────────────────────────
 
 function Sparkline({ data }) {
+  if (!data || data.length < 2) return <EmptyMini text="Not enough data" />
+
   const maxCount = Math.max(...data.map((d) => d.count), 1)
   const width = 400
   const height = 100
@@ -480,6 +606,144 @@ function Sparkline({ data }) {
         <span className="text-[9px] dark:text-text-muted text-gray-400">30 days ago</span>
         <span className="text-[9px] dark:text-text-muted text-gray-400">Today</span>
       </div>
+    </div>
+  )
+}
+
+// ── Recent Activity Timeline ────────────────────────────────────────────────
+
+function RecentTimeline({ runs, navigate }) {
+  if (!runs || runs.length === 0) return <EmptyMini text="No recent activity" />
+
+  return (
+    <div className="space-y-1">
+      {runs.map((run, i) => {
+        const time = new Date(run.timestamp)
+        const timeStr = time.toLocaleString(undefined, {
+          month: 'short', day: 'numeric',
+          hour: '2-digit', minute: '2-digit',
+        })
+        const providerInfo = PROVIDER_COLORS[run.provider] || PROVIDER_COLORS.unknown
+        const durationStr = run.duration ? `${(run.duration / 1000).toFixed(1)}s` : null
+
+        return (
+          <div
+            key={run.id || i}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg
+              hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group
+              animate-fade-in"
+            style={{ animationDelay: `${i * 40}ms` }}
+            onClick={() => {
+              const agentId = run.id?.split('_')[0]
+              if (agentId) navigate(`/agent/${agentId}`)
+            }}
+          >
+            {/* Timeline dot */}
+            <div className="relative flex-shrink-0">
+              <div
+                className="w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-[#101014]"
+                style={{ backgroundColor: providerInfo.color }}
+              />
+              {i < runs.length - 1 && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-px h-6 bg-gray-200 dark:bg-white/10" />
+              )}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold dark:text-text-primary text-gray-800 truncate
+                  group-hover:text-accent transition-colors">
+                  {run.agentName || 'Unknown Agent'}
+                </span>
+                {run.category && (
+                  <span className="text-[9px] font-medium px-1.5 py-0.5 rounded-full
+                    bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-text-muted shrink-0">
+                    {run.category}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] font-medium" style={{ color: providerInfo.color }}>
+                  {providerInfo.label}
+                </span>
+                {run.model && (
+                  <>
+                    <span className="text-[10px] dark:text-text-muted text-gray-300">·</span>
+                    <span className="text-[10px] dark:text-text-muted text-gray-400 truncate max-w-[120px]">
+                      {run.model}
+                    </span>
+                  </>
+                )}
+                {durationStr && (
+                  <>
+                    <span className="text-[10px] dark:text-text-muted text-gray-300">·</span>
+                    <span className="text-[10px] dark:text-text-muted text-gray-400 flex items-center gap-0.5">
+                      <Clock size={8} />
+                      {durationStr}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Time */}
+            <span className="text-[10px] dark:text-text-muted text-gray-400 tabular-nums shrink-0">
+              {timeStr}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ── Export Bar ───────────────────────────────────────────────────────────────
+
+function ExportBar({ stats }) {
+  const handleExport = () => {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      summary: {
+        totalRuns: stats.totalRuns,
+        uniqueAgents: stats.uniqueAgents,
+        favoriteProvider: stats.favoriteProvider,
+        currentStreak: stats.currentStreak,
+        longestStreak: stats.longestStreak,
+        avgRunsPerDay: stats.avgRunsPerDay,
+        mostProductiveDay: stats.mostProductiveDay,
+      },
+      topAgents: stats.topAgents,
+      providerDistribution: stats.providerDistribution,
+      categoryDistribution: stats.categoryDistribution,
+      dailyRuns: stats.dailyRuns,
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `dashboard-export-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <div className="flex justify-center mb-8 animate-fade-in" style={{ animationDelay: '760ms' }}>
+      <button
+        onClick={handleExport}
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold
+          dark:text-text-secondary text-gray-500
+          border dark:border-border border-gray-200
+          hover:border-accent/30 dark:hover:border-accent/30
+          hover:text-accent dark:hover:text-accent
+          transition-all duration-200 active:scale-[0.97]"
+      >
+        <Download size={14} />
+        Export Dashboard Data
+      </button>
     </div>
   )
 }
