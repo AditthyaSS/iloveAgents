@@ -590,12 +590,11 @@ export default function AgentRunner({ agent }) {
                       }}
                       value={inputs[input.id] || ""}
                       onChange={(e) => {
-                        if (e.target.value.length <= MAX_CHAR_LIMIT) {
-                          updateInput(input.id, e.target.value);
+                        const truncated = e.target.value.slice(0, MAX_CHAR_LIMIT);
+                        updateInput(input.id, truncated);
 
-                          e.target.style.height = "auto";
-                          e.target.style.height = `${e.target.scrollHeight}px`;
-                        }
+                        e.target.style.height = "auto";
+                        e.target.style.height = `${e.target.scrollHeight}px`;
                       }}
                       placeholder={input.placeholder}
                       rows={4}
@@ -607,8 +606,7 @@ export default function AgentRunner({ agent }) {
                     <VoiceInput
                       value={inputs[input.id] || ""}
                       onChange={(v) => {
-                        if (v.length <= MAX_CHAR_LIMIT)
-                          updateInput(input.id, v);
+                        updateInput(input.id, v.slice(0, MAX_CHAR_LIMIT));
                       }}
                       className="top-2 right-2"
                     />
@@ -1013,7 +1011,7 @@ export default function AgentRunner({ agent }) {
                     className="underline text-accent"
                     onClick={() => window.location.reload()}
                   >
-                    Reloads page after an invalid API key error
+                    Reload page
                   </button>
                   {error.detail && (
                     <>
