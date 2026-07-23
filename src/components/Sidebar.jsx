@@ -307,7 +307,7 @@ export default function Sidebar({ open, onClose }) {
             }
           >
             <Icons.BarChart3 size={15} className="flex-shrink-0" />
-            <span className="truncate">Analytics</span>
+            <span className="truncate">Dashboard</span>
           </NavLink>
 
           <NavLink
