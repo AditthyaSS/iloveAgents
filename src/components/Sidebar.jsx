@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
@@ -62,21 +62,27 @@ export default function Sidebar({ open, onClose }) {
     }
   }, [isSearching])
 
-  const filteredAgents = !normalizedQuery
-    ? agents
-    : agents.filter(
-        (agent) =>
-          agent.name.toLowerCase().includes(normalizedQuery) ||
-          agent.category.toLowerCase().includes(normalizedQuery)
-      )
+  const { filteredAgents, categories, categoryOrder } = useMemo(() => {
+    const filtered = !normalizedQuery
+      ? agents
+      : agents.filter(
+          (agent) =>
+            agent.name.toLowerCase().includes(normalizedQuery) ||
+            agent.category.toLowerCase().includes(normalizedQuery)
+        )
 
-  const categories = filteredAgents.reduce((acc, agent) => {
-    if (!acc[agent.category]) acc[agent.category] = []
-    acc[agent.category].push(agent)
-    return acc
-  }, {})
+    const cats = filtered.reduce((acc, agent) => {
+      if (!acc[agent.category]) acc[agent.category] = []
+      acc[agent.category].push(agent)
+      return acc
+    }, {})
 
-  const categoryOrder = Object.keys(categories)
+    return {
+      filteredAgents: filtered,
+      categories: cats,
+      categoryOrder: Object.keys(cats)
+    }
+  }, [agents, normalizedQuery])
 
   const toggleCategory = (category) => {
     if (isSearching) {
