@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 
 const STORAGE_KEY = 'ila_analytics'
 const MAX_EVENTS = 500
@@ -85,29 +85,46 @@ export function recordAnalyticsRun({ agentId, agentName, category, provider, mod
 
 // ── Stats computation ───────────────────────────────────────────────────────
 
-function computeStats(events) {
-  if (events.length === 0) {
+const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+function computeStats(events, timeRange = 'all') {
+  // ── Time-range filtering
+  const now = new Date()
+  let filteredEvents = events
+
+  if (timeRange !== 'all') {
+    const daysMap = { '7d': 7, '30d': 30, '90d': 90 }
+    const days = daysMap[timeRange] || Infinity
+    const cutoff = now.getTime() - days * 86400000
+    filteredEvents = events.filter((e) => e.timestamp >= cutoff)
+  }
+
+  if (filteredEvents.length === 0) {
     return {
       totalRuns: 0,
       uniqueAgents: 0,
       favoriteProvider: null,
       currentStreak: 0,
+      longestStreak: 0,
+      avgRunsPerDay: 0,
+      mostProductiveDay: null,
       topAgents: [],
       providerDistribution: [],
       categoryDistribution: [],
       dailyRuns: [],
       heatmapData: [],
+      recentRuns: [],
     }
   }
 
   // ── Basic counts
-  const totalRuns = events.length
-  const agentSet = new Set(events.map((e) => e.agentId))
+  const totalRuns = filteredEvents.length
+  const agentSet = new Set(filteredEvents.map((e) => e.agentId))
   const uniqueAgents = agentSet.size
 
   // ── Provider distribution
   const providerCounts = {}
-  events.forEach((e) => {
+  filteredEvents.forEach((e) => {
     const p = e.provider || 'unknown'
     providerCounts[p] = (providerCounts[p] || 0) + 1
   })
@@ -118,7 +135,7 @@ function computeStats(events) {
 
   // ── Top agents (top 8)
   const agentCounts = {}
-  events.forEach((e) => {
+  filteredEvents.forEach((e) => {
     if (!agentCounts[e.agentId]) {
       agentCounts[e.agentId] = { agentId: e.agentId, agentName: e.agentName, count: 0 }
     }
@@ -130,7 +147,7 @@ function computeStats(events) {
 
   // ── Category distribution
   const categoryCounts = {}
-  events.forEach((e) => {
+  filteredEvents.forEach((e) => {
     const cat = e.category || 'Uncategorized'
     categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
   })
@@ -139,7 +156,6 @@ function computeStats(events) {
     .sort((a, b) => b.count - a.count)
 
   // ── Daily runs (last 30 days) for sparkline
-  const now = new Date()
   const dailyRuns = []
   for (let i = 29; i >= 0; i--) {
     const d = new Date(now)
@@ -148,7 +164,7 @@ function computeStats(events) {
     dailyRuns.push({ date: key, count: 0 })
   }
   const dailyMap = Object.fromEntries(dailyRuns.map((d) => [d.date, d]))
-  events.forEach((e) => {
+  filteredEvents.forEach((e) => {
     const key = toDateKey(new Date(e.timestamp))
     if (dailyMap[key]) dailyMap[key].count++
   })
@@ -162,18 +178,17 @@ function computeStats(events) {
     heatmapData.push({ date: key, dayOfWeek: d.getDay(), count: 0 })
   }
   const heatmapMap = Object.fromEntries(heatmapData.map((d) => [d.date, d]))
-  events.forEach((e) => {
+  filteredEvents.forEach((e) => {
     const key = toDateKey(new Date(e.timestamp))
     if (heatmapMap[key]) heatmapMap[key].count++
   })
 
-  // ── Current streak (consecutive days with ≥1 run, ending today or yesterday)
-  const allDayKeys = new Set(events.map((e) => toDateKey(new Date(e.timestamp))))
-  let streak = 0
+  // ── Streak calculations (current + longest)
+  const allDayKeys = new Set(filteredEvents.map((e) => toDateKey(new Date(e.timestamp))))
+  let currentStreak = 0
   const today = toDateKey(now)
   const yesterday = toDateKey(new Date(now.getTime() - 86400000))
 
-  // Start counting from today (or yesterday if today has no runs)
   let startDate = allDayKeys.has(today) ? now : (allDayKeys.has(yesterday) ? new Date(now.getTime() - 86400000) : null)
 
   if (startDate) {
@@ -181,7 +196,7 @@ function computeStats(events) {
     while (true) {
       const key = toDateKey(cursor)
       if (allDayKeys.has(key)) {
-        streak++
+        currentStreak++
         cursor.setDate(cursor.getDate() - 1)
       } else {
         break
@@ -189,16 +204,62 @@ function computeStats(events) {
     }
   }
 
+  // Longest streak ever
+  const sortedDays = [...allDayKeys].sort()
+  let longestStreak = 0
+  let tempStreak = 1
+  for (let i = 1; i < sortedDays.length; i++) {
+    const prev = new Date(sortedDays[i - 1])
+    const curr = new Date(sortedDays[i])
+    const diffDays = Math.round((curr - prev) / 86400000)
+    if (diffDays === 1) {
+      tempStreak++
+    } else {
+      longestStreak = Math.max(longestStreak, tempStreak)
+      tempStreak = 1
+    }
+  }
+  longestStreak = Math.max(longestStreak, tempStreak, currentStreak)
+  if (sortedDays.length === 0) longestStreak = 0
+
+  // ── Average runs per day (over days with at least 1 run)
+  const activeDays = allDayKeys.size
+  const avgRunsPerDay = activeDays > 0 ? +(totalRuns / activeDays).toFixed(1) : 0
+
+  // ── Most productive day of the week
+  const dayOfWeekCounts = [0, 0, 0, 0, 0, 0, 0]
+  filteredEvents.forEach((e) => {
+    const d = new Date(e.timestamp)
+    dayOfWeekCounts[d.getDay()]++
+  })
+  const maxDayCount = Math.max(...dayOfWeekCounts)
+  const mostProductiveDay = maxDayCount > 0 ? DAY_LABELS[dayOfWeekCounts.indexOf(maxDayCount)] : null
+
+  // ── Recent runs (last 10)
+  const recentRuns = filteredEvents.slice(0, 10).map((e) => ({
+    id: e.id,
+    agentName: e.agentName,
+    provider: e.provider,
+    category: e.category,
+    model: e.model,
+    duration: e.duration,
+    timestamp: e.timestamp,
+  }))
+
   return {
     totalRuns,
     uniqueAgents,
     favoriteProvider,
     currentStreak,
+    longestStreak,
+    avgRunsPerDay,
+    mostProductiveDay,
     topAgents,
     providerDistribution,
     categoryDistribution,
     dailyRuns,
     heatmapData,
+    recentRuns,
   }
 }
 
@@ -208,7 +269,7 @@ function toDateKey(d) {
 
 // ── React hook ──────────────────────────────────────────────────────────────
 
-export function useAnalytics() {
+export function useAnalytics(timeRange = 'all') {
   // Seed on first ever mount
   useEffect(() => { seedFromHistory() }, [])
 
@@ -217,14 +278,16 @@ export function useAnalytics() {
   // Listen to updates from recordAnalyticsRun (possibly same or other component)
   useEffect(() => {
     const sync = () => setEvents(loadEvents())
+    const handleStorage = (e) => { if (e.key === STORAGE_KEY) sync() }
     window.addEventListener('ila_analytics_update', sync)
-    window.addEventListener('storage', (e) => { if (e.key === STORAGE_KEY) sync() })
+    window.addEventListener('storage', handleStorage)
     return () => {
       window.removeEventListener('ila_analytics_update', sync)
+      window.removeEventListener('storage', handleStorage)
     }
   }, [])
 
-  const stats = computeStats(events)
+  const stats = useMemo(() => computeStats(events, timeRange), [events, timeRange])
 
   const clearAnalytics = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
