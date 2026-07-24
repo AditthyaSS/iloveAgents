@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Copy, Check, FileText, Download } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeSanitize from 'rehype-sanitize'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
@@ -182,6 +183,7 @@ ${stringContent}
             <ReactMarkdown
               skipHtml={true}
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeSanitize]}
               components={{
                 code({ node, className, children, ...props }) {
                   const match = /language-(\w+)/.exec(className || '')
