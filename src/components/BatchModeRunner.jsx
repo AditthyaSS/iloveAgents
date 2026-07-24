@@ -14,6 +14,8 @@ import CustomSelect from './CustomSelect'
 import { runBatch, parsePastedLines, parseCSV } from '../lib/batchRunner'
 import { exportBatchAsCSV, exportBatchAsMarkdown } from '../lib/exportBatch'
 
+const MAX_BATCH_SIZE = 25
+
 const STATUS_COLORS = {
   waiting: 'dark:text-text-muted text-gray-400',
   running: 'text-accent',
@@ -121,7 +123,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
   }
 
   const canRun = () => {
-    if (!apiKey || items.length === 0 || !batchFieldId) return false
+    if (!apiKey || items.length === 0 || items.length > MAX_BATCH_SIZE || !batchFieldId) return false
     return agent.inputs
       .filter((i) => i.required && i.id !== batchFieldId)
       .every((i) => {
