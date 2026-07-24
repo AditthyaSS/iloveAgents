@@ -31,6 +31,7 @@ import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
 import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
+import AgentPreviewPanel from "./AgentPreviewPanel";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
@@ -96,6 +97,7 @@ export default function AgentRunner({ agent }) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+  const [viewMode, setViewMode] = useState("code");
   const { addJob } = useScheduler();
   const { addRun } = useSessionSpend();
 
@@ -489,6 +491,34 @@ const handleRun = async () => {
         </button>
       </div>
 
+      {/* Code / Preview Toggle */}
+      <div className="flex items-center gap-1 mb-4 p-1 rounded-lg w-fit dark:bg-surface-input bg-gray-100 border dark:border-border border-gray-200">
+        <button
+          onClick={() => setViewMode("code")}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            viewMode === "code"
+              ? "bg-accent text-white shadow-sm"
+              : "dark:text-text-secondary text-gray-500 hover:dark:text-text-primary hover:text-gray-900"
+          }`}
+        >
+          Code
+        </button>
+        <button
+          onClick={() => setViewMode("preview")}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            viewMode === "preview"
+              ? "bg-accent text-white shadow-sm"
+              : "dark:text-text-secondary text-gray-500 hover:dark:text-text-primary hover:text-gray-900"
+          }`}
+        >
+          Preview
+        </button>
+      </div>
+
+      {viewMode === "preview" ? (
+        <AgentPreviewPanel agent={agent} />
+      ) : (
+        <>
       {/* API Key Bar */}
       <ApiKeyBar
         provider={provider}
@@ -1110,6 +1140,8 @@ const handleRun = async () => {
           }}
           onClose={() => setScheduleModalOpen(false)}
         />
+      )}
+      </>
       )}
     </div>
   );
