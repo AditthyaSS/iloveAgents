@@ -32,6 +32,7 @@
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Run Locally](#run-locally)
+  - [Troubleshooting](#troubleshooting)
   - [Deploy Your Own](#deploy-your-own)
 - [How It Works](#how-it-works)
 - [Contributing](#contributing)
@@ -183,6 +184,38 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 Note: AI provider API keys are still entered at runtime 
 and are never stored anywhere.
 
+## Troubleshooting
+
+### Missing or Invalid `VITE_SUPABASE_URL`
+
+If you encounter connection errors, verify that the `VITE_SUPABASE_URL` in your `.env.local` file matches your Supabase project URL.
+
+### Missing or Invalid `VITE_SUPABASE_ANON_KEY`
+
+Make sure the `VITE_SUPABASE_ANON_KEY` is copied correctly from your Supabase project's API settings.
+
+### Supabase Connection Failures
+
+- Verify that your Supabase project is active.
+- Confirm that both environment variables are present and correct.
+- Ensure there are no extra spaces or quotation marks in `.env.local`.
+
+### Environment Variables Not Loading
+
+If you recently created or updated `.env.local`, restart the development server:
+
+Stop the development server and start it again:
+
+```bash
+npm run dev
+
+### Still Having Problems?
+
+Before opening an issue, verify that:
+
+- `.env.local` is in the project root.
+- Variable names start with `VITE_`.
+- The values are copied correctly from your Supabase dashboard.
 
 ### Deploy Your Own
 
