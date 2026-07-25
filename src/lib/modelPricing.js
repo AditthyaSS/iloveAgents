@@ -41,7 +41,7 @@ export const MODEL_PRICING = {
     outputCostPer1M: 75.00,
     contextWindow: 200000,
   },
-  'gemini-1.5-flash': {
+  'gemini-2.5-flash': {
     provider: 'gemini',
     inputCostPer1M: 0.075,
     outputCostPer1M: 0.30,

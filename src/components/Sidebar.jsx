@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { loadAllAgents } from '../agents/registry'
@@ -62,21 +62,27 @@ export default function Sidebar({ open, onClose }) {
     }
   }, [isSearching])
 
-  const filteredAgents = !normalizedQuery
-    ? agents
-    : agents.filter(
-        (agent) =>
-          agent.name.toLowerCase().includes(normalizedQuery) ||
-          agent.category.toLowerCase().includes(normalizedQuery)
-      )
+  const { filteredAgents, categories, categoryOrder } = useMemo(() => {
+    const filtered = !normalizedQuery
+      ? agents
+      : agents.filter(
+          (agent) =>
+            agent.name.toLowerCase().includes(normalizedQuery) ||
+            agent.category.toLowerCase().includes(normalizedQuery)
+        )
 
-  const categories = filteredAgents.reduce((acc, agent) => {
-    if (!acc[agent.category]) acc[agent.category] = []
-    acc[agent.category].push(agent)
-    return acc
-  }, {})
+    const cats = filtered.reduce((acc, agent) => {
+      if (!acc[agent.category]) acc[agent.category] = []
+      acc[agent.category].push(agent)
+      return acc
+    }, {})
 
-  const categoryOrder = Object.keys(categories)
+    return {
+      filteredAgents: filtered,
+      categories: cats,
+      categoryOrder: Object.keys(cats)
+    }
+  }, [agents, normalizedQuery])
 
   const toggleCategory = (category) => {
     if (isSearching) {
@@ -131,7 +137,7 @@ export default function Sidebar({ open, onClose }) {
         <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
 
-        <div className="px-4 py-3 flex items-center justify-between">
+        <div className="px-4 py-3 flex items-center justify-between" data-tour="sidebar-agents">
           <span className="text-xs font-bold uppercase tracking-wider dark:text-text-primary text-gray-800">
             Agents
           </span>
@@ -286,6 +292,22 @@ export default function Sidebar({ open, onClose }) {
           >
             <Icons.CalendarClock size={15} className="flex-shrink-0" />
             <span className="truncate">Scheduler</span>
+          </NavLink>
+
+          <NavLink
+            to="/analytics"
+            onClick={onClose}
+            className={({ isActive }) =>
+              `flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
+              ${
+                isActive
+                  ? 'bg-accent/10 text-accent dark:text-accent'
+                  : 'dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`
+            }
+          >
+            <Icons.BarChart3 size={15} className="flex-shrink-0" />
+            <span className="truncate">Dashboard</span>
           </NavLink>
 
           <NavLink

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import CustomSelect from "./CustomSelect";
@@ -30,6 +31,7 @@ import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
 import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
+import AgentPreviewPanel from "./AgentPreviewPanel";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
@@ -95,6 +97,7 @@ export default function AgentRunner({ agent }) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+  const [viewMode, setViewMode] = useState("code");
   const { addJob } = useScheduler();
   const { addRun } = useSessionSpend();
 
@@ -307,6 +310,15 @@ const handleRun = async () => {
         output: result.content,
         provider: actualProvider,
       });
+
+      recordAnalyticsRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        category: agent.category,
+        provider: actualProvider,
+        model,
+        duration: result.duration,
+      });
    } catch (err) {
   if (err.name !== "AbortError") {
     if (err && err.type === "invalid_api_key") {
@@ -479,6 +491,34 @@ const handleRun = async () => {
         </button>
       </div>
 
+      {/* Code / Preview Toggle */}
+      <div className="flex items-center gap-1 mb-4 p-1 rounded-lg w-fit dark:bg-surface-input bg-gray-100 border dark:border-border border-gray-200">
+        <button
+          onClick={() => setViewMode("code")}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            viewMode === "code"
+              ? "bg-accent text-white shadow-sm"
+              : "dark:text-text-secondary text-gray-500 hover:dark:text-text-primary hover:text-gray-900"
+          }`}
+        >
+          Code
+        </button>
+        <button
+          onClick={() => setViewMode("preview")}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            viewMode === "preview"
+              ? "bg-accent text-white shadow-sm"
+              : "dark:text-text-secondary text-gray-500 hover:dark:text-text-primary hover:text-gray-900"
+          }`}
+        >
+          Preview
+        </button>
+      </div>
+
+      {viewMode === "preview" ? (
+        <AgentPreviewPanel agent={agent} />
+      ) : (
+        <>
       {/* API Key Bar */}
       <ApiKeyBar
         provider={provider}
@@ -588,8 +628,8 @@ const handleRun = async () => {
                     <span>📝 Words: {getWordCount(inputs[input.id])}</span>
                     <span>🪙 Est. Tokens: {getTokenCount(inputs[input.id])}</span>
                   </div>
-                  <span className={inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}>
-                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} Chars
+                  <span className={`self-end ${inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}`}>
+                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} characters
                   </span>
                 </div>
 
@@ -1100,6 +1140,8 @@ const handleRun = async () => {
           }}
           onClose={() => setScheduleModalOpen(false)}
         />
+      )}
+      </>
       )}
     </div>
   );

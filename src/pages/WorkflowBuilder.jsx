@@ -22,10 +22,11 @@ export default function WorkflowBuilder() {
   const navigate = useNavigate()
   const location = useLocation()
   const forkedWorkflow = location.state?.forkedWorkflow
+  const workflowTitle = location.state?.workflowTitle
   useDocumentTitle('Build a Workflow')
 
   const [agents, setAgents] = useState([])
-  const [title, setTitle] = useState('')
+  const [title, setTitle] = useState(workflowTitle || '')
   const [description, setDescription] = useState('')
   const descriptionRef = useRef(null)
   const [selectedAgents, setSelectedAgents] = useState([])
@@ -149,6 +150,18 @@ export default function WorkflowBuilder() {
         </div>
       </div>
 
+      {/* Custom Suite Banner — shows when workflow was generated from suite */}
+      {location.state?.preselectedAgents && (
+        <div className="mb-4 flex items-center gap-3 rounded-xl border px-4 py-3 animate-fade-in
+          dark:bg-accent/5 dark:border-accent/20 bg-indigo-50 border-indigo-200">
+          <span className="text-lg flex-shrink-0">✨</span>
+          <p className="text-sm dark:text-text-secondary text-gray-700 leading-snug">
+            <strong className="dark:text-text-primary text-gray-900">Suite imported!</strong>{' '}
+            We've pre-loaded your custom suite agents. Add, remove or reorder them before saving.
+          </p>
+        </div>
+      )}
+
       {/* Title */}
       <div className="mb-4">
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
@@ -173,37 +186,35 @@ export default function WorkflowBuilder() {
           Description <span className="dark:text-text-muted text-gray-400 font-normal">(optional)</span>
         </label>
         <div className="relative">
-  <textarea
-    ref={descriptionRef}
-    id="workflow-description"
-    value={description}
-    onChange={(e) => setDescription(e.target.value)}
-    placeholder="What does this workflow do?"
-    rows={2}
-   className="w-full px-3 pr-10 py-2.5 rounded-lg border text-sm transition-all resize-none
-      dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
-      bg-white border-gray-200 text-gray-900 placeholder-gray-400
-      focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50"
-  />
-
-  {description.trim() && (
-    <button
-      type="button"
-      onClick={() => {
-        setDescription('')
-        descriptionRef.current?.focus()
-      }}
-      className="absolute top-2 right-2 p-1 rounded text-gray-400 hover:text-gray-600 dark:text-text-muted dark:hover:text-text-primary"
-      aria-label="Clear description"
-    >
-      <X size={14} />
-    </button>
-  )}
-</div>
-
-<div className="mt-1 text-xs text-right dark:text-text-muted text-gray-500">
-  {description.length} characters
-</div>
+          <textarea
+            ref={descriptionRef}
+            id="workflow-description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What does this workflow do?"
+            rows={2}
+            className="w-full px-3 pr-10 py-2.5 rounded-lg border text-sm transition-all resize-none
+              dark:bg-surface-card dark:border-border dark:text-text-primary dark:placeholder-text-muted
+              bg-white border-gray-200 text-gray-900 placeholder-gray-400
+              focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/50"
+          />
+          {description.trim() && (
+            <button
+              type="button"
+              onClick={() => {
+                setDescription('')
+                descriptionRef.current?.focus()
+              }}
+              className="absolute top-2 right-2 p-1 rounded text-gray-400 hover:text-gray-600 dark:text-text-muted dark:hover:text-text-primary"
+              aria-label="Clear description"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+        <div className="mt-1 text-xs text-right dark:text-text-muted text-gray-500">
+          {description.length} characters
+        </div>
       </div>
 
       {/* Agent Sequence Builder */}
@@ -224,24 +235,15 @@ export default function WorkflowBuilder() {
               const IconComponent = Icons[agent.icon] || Icons.Bot
               return (
                 <div key={`${agent.id}-${index}`} className="animate-fade-in">
-                  <div
-                    className="flex items-center gap-3 p-3 rounded-lg border
-                      dark:bg-surface-card dark:border-border bg-white border-gray-200"
-                  >
-                    {/* Step number */}
-                    <div
-                      className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center
-                        text-[11px] font-bold text-accent flex-shrink-0"
-                    >
+                  <div className="flex items-center gap-3 p-3 rounded-lg border
+                    dark:bg-surface-card dark:border-border bg-white border-gray-200">
+                    <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center
+                      text-[11px] font-bold text-accent flex-shrink-0">
                       {index + 1}
                     </div>
-
-                    {/* Agent icon */}
                     <div className="w-8 h-8 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
                       <IconComponent size={15} className="text-accent" />
                     </div>
-
-                    {/* Agent info */}
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
                         {agent.name}
@@ -250,8 +252,6 @@ export default function WorkflowBuilder() {
                         {agent.category}
                       </div>
                     </div>
-
-                    {/* Remove button */}
                     <button
                       onClick={() => removeAgent(index)}
                       className="p-1 rounded-md transition-colors flex-shrink-0
@@ -263,7 +263,6 @@ export default function WorkflowBuilder() {
                     </button>
                   </div>
 
-                  {/* Arrow connector */}
                   {index < selectedAgents.length - 1 && (
                     <div className="flex justify-center my-1">
                       <div className="flex flex-col items-center gap-0.5">
@@ -305,12 +304,9 @@ export default function WorkflowBuilder() {
             </button>
 
             {dropdownOpen && (
-              <div
-                className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
-                  dark:bg-surface-card dark:border-border bg-white border-gray-200
-                  max-h-64 overflow-y-auto animate-fade-in p-1.5 space-y-1"
-              >
-                {/* 🔍 STICKY SEARCH BAR INPUT */}
+              <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
+                dark:bg-surface-card dark:border-border bg-white border-gray-200
+                max-h-64 overflow-y-auto animate-fade-in p-1.5 space-y-1">
                 <div className="p-1.5 sticky top-0 bg-white dark:bg-surface-card border-b border-gray-100 dark:border-border/60 z-10 mb-1">
                   <input
                     type="text"
@@ -330,36 +326,32 @@ export default function WorkflowBuilder() {
                   </div>
                 ) : (
                   <>
-  {filteredAgents.map((agent) => {
-    const IconComponent = Icons[agent.icon] || Icons.Bot
-
-    return (
-      <button
-        key={agent.id}
-        onClick={() => addAgent(agent)}
-        className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
-          dark:hover:bg-surface-hover dark:hover:text-text-primary
-          hover:bg-gray-50 hover:text-gray-900"
-      >
-        <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
-          <IconComponent size={13} className="text-accent" />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
-            {agent.name}
-          </div>
-
-          <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
-            {agent.category}
-          </div>
-        </div>
-      </button>
-    )
-  })}
-
-  <div className="h-3" />
-</>
+                    {filteredAgents.map((agent) => {
+                      const IconComponent = Icons[agent.icon] || Icons.Bot
+                      return (
+                        <button
+                          key={agent.id}
+                          onClick={() => addAgent(agent)}
+                          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-left transition-colors duration-150
+                            dark:hover:bg-surface-hover dark:hover:text-text-primary
+                            hover:bg-gray-50 hover:text-gray-900"
+                        >
+                          <div className="w-7 h-7 rounded-md bg-accent/10 flex items-center justify-center flex-shrink-0">
+                            <IconComponent size={13} className="text-accent" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
+                              {agent.name}
+                            </div>
+                            <div className="text-[11px] dark:text-text-muted text-gray-400 truncate">
+                              {agent.category}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                    <div className="h-3" />
+                  </>
                 )}
               </div>
             )}
@@ -376,21 +368,17 @@ export default function WorkflowBuilder() {
 
       {/* Workflow Preview */}
       {selectedAgents.length > 0 && (
-        <div
-          className="mb-6 rounded-lg border p-4
-            dark:bg-surface-card dark:border-border bg-white border-gray-200"
-        >
+        <div className="mb-6 rounded-lg border p-4
+          dark:bg-surface-card dark:border-border bg-white border-gray-200">
           <div className="text-[11px] font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400 mb-3">
             Workflow Preview
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {selectedAgents.map((agent, index) => (
               <span key={`${agent.id}-preview-${index}`} className="flex items-center gap-1.5">
-                <span
-                  className="text-xs font-medium px-2 py-1 rounded-md
-                    dark:bg-surface-input dark:text-text-secondary dark:border-border
-                    bg-gray-100 text-gray-700 border border-gray-200"
-                >
+                <span className="text-xs font-medium px-2 py-1 rounded-md
+                  dark:bg-surface-input dark:text-text-secondary dark:border-border
+                  bg-gray-100 text-gray-700 border border-gray-200">
                   {agent.name}
                 </span>
                 {index < selectedAgents.length - 1 && (
@@ -408,66 +396,42 @@ export default function WorkflowBuilder() {
       )}
 
       {/* Workflow Summary */}
-{(title.trim() || description.trim() || selectedAgents.length > 0) && (
-  <div
-    className="mb-6 rounded-lg border p-4
-      dark:bg-surface-card dark:border-border
-      bg-white border-gray-200"
-  >
-    <div className="text-[11px] font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400 mb-3">
-      Workflow Summary
-    </div>
-
-    <div className="space-y-3 text-sm">
-      <div className="flex justify-between">
-        <span className="dark:text-text-muted text-gray-500">Title</span>
-       <span
-         className="font-medium dark:text-text-primary text-gray-900 max-w-[60%] text-right break-words"
-      >
-  {title.trim() || "Not provided"}
-</span>
-      </div>
-
-      <div className="flex justify-between">
-        <span className="dark:text-text-muted text-gray-500">
-          Description
-        </span>
-        <span
-  className="font-medium dark:text-text-primary text-gray-900 max-w-[60%] text-right break-words"
->
-  {description.trim() || "Not provided"}
-</span>
-      </div>
-
-      <div className="flex justify-between">
-        <span className="dark:text-text-muted text-gray-500">
-          Agents Selected
-        </span>
-        <span className="font-medium dark:text-text-primary text-gray-900">
-          {selectedAgents.length}
-        </span>
-      </div>
-
-      <div className="flex justify-between">
-        <span className="dark:text-text-muted text-gray-500">
-          Execution Flow
-        </span>
-        <span className="font-medium dark:text-text-primary text-gray-900">
-          Sequential
-        </span>
-      </div>
-
-      <div className="flex justify-between">
-        <span className="dark:text-text-muted text-gray-500">
-          Estimated Runtime
-        </span>
-        <span className="font-medium text-accent">
-          ~{estimatedRuntime} sec
-        </span>
-      </div>
-    </div>
-  </div>
-)}
+      {(title.trim() || description.trim() || selectedAgents.length > 0) && (
+        <div className="mb-6 rounded-lg border p-4
+          dark:bg-surface-card dark:border-border bg-white border-gray-200">
+          <div className="text-[11px] font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400 mb-3">
+            Workflow Summary
+          </div>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="dark:text-text-muted text-gray-500">Title</span>
+              <span className="font-medium dark:text-text-primary text-gray-900 max-w-[60%] text-right break-words">
+                {title.trim() || "Not provided"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="dark:text-text-muted text-gray-500">Description</span>
+              <span className="font-medium dark:text-text-primary text-gray-900 max-w-[60%] text-right break-words">
+                {description.trim() || "Not provided"}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="dark:text-text-muted text-gray-500">Agents Selected</span>
+              <span className="font-medium dark:text-text-primary text-gray-900">
+                {selectedAgents.length}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="dark:text-text-muted text-gray-500">Execution Flow</span>
+              <span className="font-medium dark:text-text-primary text-gray-900">Sequential</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="dark:text-text-muted text-gray-500">Estimated Runtime</span>
+              <span className="font-medium text-accent">~{estimatedRuntime} sec</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -496,8 +460,7 @@ export default function WorkflowBuilder() {
               <Save size={15} />
               Save Workflow
             </>
-          )
-          }
+          )}
         </button>
 
         <button
