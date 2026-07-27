@@ -39,6 +39,7 @@
   - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
   - [Other Ways to Help](#other-ways-to-help)
 - [Tech Stack](#tech-stack)
+- [Frequently Asked Questions](#-frequently-asked-questions)
 - [Community](#community)
 - [License](#license)
 
@@ -208,6 +209,7 @@ Stop the development server and start it again:
 
 ```bash
 npm run dev
+```
 
 ### Still Having Problems?
 
@@ -338,6 +340,42 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 | [Lucide React](https://lucide.dev) | Icons |
 | [react-markdown](https://github.com/remarkjs/react-markdown) | Markdown rendering |
 | [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) | Code highlighting |
+
+---
+
+## ❓ Frequently Asked Questions
+
+### Do I need a backend to run the project?
+
+No. Most features run entirely in the browser without a backend. However, Workflow-related features require Supabase, which is configured using a `.env.local` file.
+
+### Where can I obtain API keys for OpenAI, Anthropic, or Google Gemini?
+
+You can create API keys from the official provider dashboards. Enter the keys directly in the application at runtime—they are never stored by the project.
+
+### Why isn't my `.env.local` file being detected?
+
+Make sure `.env.local` is placed in the project root, uses the correct `VITE_` variable names, and restart the development server after making changes.
+
+### Is Supabase required for all features?
+
+No. Supabase is only required for Workflow-related functionality. Basic agent execution works without it.
+
+### What is the difference between Battle Mode and Workflow Builder?
+
+Battle Mode compares responses from multiple AI providers using the same prompt, while Workflow Builder lets you chain multiple AI agents together into a sequential workflow.
+
+### How do I add a new AI agent?
+
+Create a new agent definition inside `src/agents/definitions/`, test it locally with `npm run dev`, and submit a pull request following the contribution guidelines.
+
+### Which Node.js version is recommended?
+
+Use **Node.js v18 or later**, as listed in the project prerequisites.
+
+### Where can I find the contribution guidelines?
+
+See the `CONTRIBUTING.md` file for coding standards, pull request instructions, and contribution workflow.
 
 ---
 
