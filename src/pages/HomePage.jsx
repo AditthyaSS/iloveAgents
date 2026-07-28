@@ -56,7 +56,7 @@ export default function HomePage() {
   const [showBanner, setShowBanner] = useState(() => {
     if (localStorage.getItem('iloveagents_banner_dismissed') === 'true') return false
     const keys = getGlobalKeys()
-    return !keys.openai && !keys.anthropic && !keys.gemini
+    return !keys.openai && !keys.anthropic && !keys.gemini && !keys.openrouter
   })
 
   const dismissBanner = () => {
