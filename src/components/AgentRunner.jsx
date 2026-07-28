@@ -165,6 +165,16 @@ export default function AgentRunner({ agent }) {
     setInputs((prev) => ({ ...prev, [id]: value }));
   };
 
+  const sanitizeInputValues = (values) => {
+    const sanitized = { ...values };
+    agent.inputs.forEach((input) => {
+      if (input.type === "textarea" && typeof sanitized[input.id] === "string") {
+        sanitized[input.id] = sanitized[input.id].slice(0, MAX_CHAR_LIMIT);
+      }
+    });
+    return sanitized;
+  };
+
   const getWordCount = (text) => {
     if (!text) return 0;
     return text.trim().split(/\s+/).filter(Boolean).length;
@@ -371,7 +381,7 @@ export default function AgentRunner({ agent }) {
 
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
-    setInputs((prev) => ({ ...prev, ...agent.exampleInputs }));
+    setInputs((prev) => sanitizeInputValues({ ...prev, ...agent.exampleInputs }));
   };
 
   const handleAnalyseModels = async () => {
@@ -457,7 +467,7 @@ export default function AgentRunner({ agent }) {
                   </span>
                 </div>
                 <button
-                  onClick={() => setInputs(v.configSnapshot)}
+                  onClick={() => setInputs(sanitizeInputValues(v.configSnapshot))}
                   className="px-2 py-1 text-xs bg-gray-200 dark:bg-zinc-700 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white rounded transition"
                 >
                   Restore
