@@ -96,6 +96,7 @@ export default function AgentRunner({ agent }) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
+  const [viewMode, setViewMode] = useState("code");
   const { addJob } = useScheduler();
   const { addRun } = useSessionSpend();
 
@@ -1157,6 +1158,8 @@ export default function AgentRunner({ agent }) {
           }}
           onClose={() => setScheduleModalOpen(false)}
         />
+      )}
+      </>
       )}
     </div>
   );

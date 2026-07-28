@@ -62,7 +62,7 @@ export function useApiKey() {
   const updateApiKey = useCallback(
     (key) => {
       setApiKey(key)
-      if (saveForSession && key) {
+      if (saveForSession) {
         setSafeApiKey(provider, key)
       }
     },
