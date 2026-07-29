@@ -4,6 +4,7 @@
  */
 
 import { runAgent } from './llmAdapter'
+import { recordAnalyticsRun } from './useAnalytics'
 
 /**
  * Parse pasted multi-line text into batch items.
@@ -159,6 +160,14 @@ export async function runBatch({
           { signal }
         )
         if (signal?.aborted) return
+        recordAnalyticsRun({
+          agentId: agent.id,
+          agentName: agent.name,
+          category: agent.category,
+          provider,
+          model,
+          duration: result.duration,
+        })
         onItemUpdate(index, { status: 'done', output: result.content })
       } catch (err) {
         if (signal?.aborted) return
