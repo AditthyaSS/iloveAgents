@@ -29,6 +29,7 @@
 - [What you can do](#what-you-can-do)
   - [How sequential execution works](#how-sequential-execution-works)
   - [Navigation](#navigation)
+- [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Run Locally](#run-locally)
@@ -143,6 +144,21 @@ If any step fails, the workflow stops at that step and shows you exactly what we
 | `/workflows/build` | Create and save a new workflow |
 | `/workflows/:id` | View full details of a workflow |
 | `/workflows/:id/run` | Run a workflow step-by-step |
+
+---
+
+## Quick Start
+
+Get the project running quickly with the following commands:
+
+```bash
+git clone https://github.com/AditthyaSS/iloveAgents.git
+cd iloveAgents
+npm install
+npm run dev
+```
+
+For complete setup instructions, environment variables, and troubleshooting, see the **Getting Started** section below.
 
 ---
 
