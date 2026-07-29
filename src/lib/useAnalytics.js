@@ -55,6 +55,7 @@ function seedFromHistory() {
     if (seeded.length > 0) {
       const merged = [...seeded, ...existing].slice(0, MAX_EVENTS)
       saveEvents(merged)
+      window.dispatchEvent(new Event('ila_analytics_update'))
     }
   } catch {}
 
@@ -270,8 +271,11 @@ function toDateKey(d) {
 // ── React hook ──────────────────────────────────────────────────────────────
 
 export function useAnalytics(timeRange = 'all') {
-  // Seed on first ever mount
-  useEffect(() => { seedFromHistory() }, [])
+  // Seed on first ever mount and sync state
+  useEffect(() => {
+    seedFromHistory()
+    setEvents(loadEvents())
+  }, [])
 
   const [events, setEvents] = useState(loadEvents)
 
