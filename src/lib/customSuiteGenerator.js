@@ -1,4 +1,5 @@
 import { streamAgent } from "./llmAdapter";
+import { recordAnalyticsRun } from "./useAnalytics";
 import { suites } from "../suites/suitesData";
 
 const MODEL_DEFAULTS = {
@@ -52,6 +53,15 @@ Rules:
     systemPrompt,
     userMessage,
     onChunk: () => {},
+  });
+
+  recordAnalyticsRun({
+    agentId: 'custom-suite-generator',
+    agentName: 'Custom Suite Generator',
+    category: 'Suites',
+    provider,
+    model: MODEL_DEFAULTS[provider] || "gemini-2.5-flash",
+    duration: result.duration,
   });
 
   // Parse the JSON response

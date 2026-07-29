@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
+import { recordAnalyticsRun } from "../lib/useAnalytics";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
@@ -162,6 +163,14 @@ export default function BattleModeArena() {
       })
         .then((result) => {
           clearTimeout(timeoutId);
+          recordAnalyticsRun({
+            agentId: agent.id,
+            agentName: agent.name,
+            category: agent.category,
+            provider: prov.id,
+            model: prov.model,
+            duration: result.duration,
+          });
           setResults((prev) => ({
             ...prev,
             [prov.id]: {
