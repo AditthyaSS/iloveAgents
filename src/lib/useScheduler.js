@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { streamAgent } from './llmAdapter'
 import { resolveAgentModel } from './resolveAgentModel'
+import { recordAnalyticsRun } from './useAnalytics'
 
 const STORAGE_KEY = 'ila_scheduled_jobs'
 const HISTORY_KEY = 'ila_scheduler_results'
 const API_KEY_PREFIX = 'ila_scheduler_key_'
 const MAX_RESULTS = 50
+
+const activeJobIds = new Set()
 
 // ── Intervals in milliseconds
 export const SCHEDULE_OPTIONS = [
@@ -98,7 +101,7 @@ function notify(title, body) {
  *   error: string | null,
  * }
  */
-export function useScheduler() {
+export function useScheduler({ autoRun = true } = {}) {
   const [jobs, setJobs] = useState(loadJobs)
   const [results, setResults] = useState(loadResults)
   const [running, setRunning] = useState({}) // jobId → boolean
@@ -151,7 +154,10 @@ export function useScheduler() {
 
   // ── Manually run a job right now
   const runJob = useCallback(async (job) => {
+    if (activeJobIds.has(job.id)) return null
+    activeJobIds.add(job.id)
     setRunning(prev => ({ ...prev, [job.id]: true }))
+
     const startTime = Date.now()
     let output = ''
     let errorMsg = null
@@ -184,6 +190,14 @@ export function useScheduler() {
       })
 
       output = result.content
+      recordAnalyticsRun({
+        agentId: job.agentId,
+        agentName: job.agentName,
+        category: job.agentDefinition?.category || 'Scheduled',
+        provider: actualProvider,
+        model,
+        duration: result.duration,
+      })
       notify(
         `✅ ${job.label} — Agent run complete`,
         `${job.agentName} finished. Open iloveAgents to see the output.`
@@ -194,6 +208,9 @@ export function useScheduler() {
         `❌ ${job.label} — Agent run failed`,
         `${job.agentName}: ${errorMsg}`
       )
+    } finally {
+      activeJobIds.delete(job.id)
+      setRunning(prev => ({ ...prev, [job.id]: false }))
     }
 
     const duration = Date.now() - startTime
@@ -225,18 +242,20 @@ export function useScheduler() {
         : j
     ))
 
-    setRunning(prev => ({ ...prev, [job.id]: false }))
     return newResult
   }, [])
 
-  // ── On mount and every minute: check for due jobs and run them
+  // ── On mount and every minute: check for due jobs and run them (if autoRun is true)
   useEffect(() => {
+    if (!autoRun) return
+
     const checkDue = () => {
       const currentJobs = loadJobs()
       const now = Date.now()
       currentJobs.forEach(job => {
         if (!job.enabled) return
         if (!job.apiKey) return
+        if (activeJobIds.has(job.id)) return
         if (now >= job.nextRunAt) {
           runJob(job)
         }
@@ -249,7 +268,7 @@ export function useScheduler() {
     // Then check every 60 seconds
     const interval = setInterval(checkDue, 60_000)
     return () => clearInterval(interval)
-  }, [runJob])
+  }, [runJob, autoRun])
 
   return {
     jobs,

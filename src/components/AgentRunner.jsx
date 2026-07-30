@@ -101,7 +101,7 @@ export default function AgentRunner({ agent }) {
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const { savePrompt } = usePromptHistory();
-  const { addJob } = useScheduler();
+  const { addJob } = useScheduler({ autoRun: false });
   const { addRun } = useSessionSpend();
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
