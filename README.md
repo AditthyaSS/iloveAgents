@@ -19,6 +19,7 @@
 ---
 ## Table of Contents
 
+- [Repository Highlights](#repository-highlights)
 - [What is iloveAgents?](#what-is-iloveagents)
 - [Why iloveAgents?](#why-iloveagents)
 - [Available Agents](#available-agents)
@@ -45,6 +46,18 @@
 - [License](#license)
 
 ---
+## Repository Highlights
+
+- **Open-source and community-driven** — built and run entirely by contributors
+- **Supports multiple AI providers** — OpenAI, Anthropic, and Google Gemini
+- **Battle Mode** — compare model responses side by side
+- **Workflow Builder** — chain multiple agents into a single automated run
+- **Browser-based** — run AI agents directly in your browser
+- **Extensible architecture** — add new agents easily
+- **Contributor-friendly** — active community, easy to get started
+
+---
+
 
 ## What is iloveAgents?
 
