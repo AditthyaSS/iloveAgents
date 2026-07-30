@@ -31,6 +31,8 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 
+const AgentEditor = lazy(() => import('./pages/AgentEditor'))
+
 function PageLoader() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
@@ -101,6 +103,7 @@ export default function App() {
               <Route path="/battle/winner" element={<BattleModeWinner />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
+            <Route path="/agents/editor/:id" element={<AgentEditor />} />
           </Routes>
         </Suspense>
       </ErrorBoundary>
