@@ -7,6 +7,11 @@
  * indefinitely in plaintext and defeat that policy. The non-sensitive
  * default-provider preference stays in localStorage.
  *
+ * Note: sessionStorage is still readable by injected scripts, so it does not by
+ * itself protect keys from XSS — the 8-hour expiry only bounds the exposure
+ * window. Stronger protection would require a server-side session or an
+ * HttpOnly cookie for the secret material.
+ *
  * Session key names:
  *   iloveagents_openai_key
  *   iloveagents_anthropic_key
@@ -30,8 +35,16 @@ const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours, matching useApiKey.js
  * legacy plaintext key an older version may have left in localStorage.
  */
 function readSecret(storageKey) {
-  // Clean up legacy localStorage leak from previous versions.
-  if (localStorage.getItem(storageKey) !== null) localStorage.removeItem(storageKey)
+  // Migrate a legacy plaintext key an older version left in localStorage:
+  // move its value into sessionStorage (with a fresh expiry) so the user does
+  // not lose it, then remove the insecure localStorage copy.
+  const legacy = localStorage.getItem(storageKey)
+  if (legacy !== null) {
+    localStorage.removeItem(storageKey)
+    if (legacy !== '' && sessionStorage.getItem(storageKey) === null) {
+      writeSecret(storageKey, legacy)
+    }
+  }
 
   const raw = sessionStorage.getItem(storageKey)
   if (!raw) return ''
