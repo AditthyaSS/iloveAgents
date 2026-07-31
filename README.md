@@ -37,6 +37,7 @@
   - [Troubleshooting](#troubleshooting)
   - [Deploy Your Own](#deploy-your-own)
 - [How It Works](#how-it-works)
+- [Project Structure Overview](#project-structure-overview)
 - [Contributing](#contributing)
   - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
   - [Other Ways to Help](#other-ways-to-help)
@@ -307,7 +308,19 @@ src/
 6. **No backend** — Every API call goes directly from your browser to the provider. Nothing passes through our servers because there are no servers.
 
 ---
+## Project Structure Overview
 
+| Directory | Purpose |
+|-----------|---------|
+| `src/agents/` | AI agent definitions and registry |
+| `src/components/` | Reusable React components |
+| `src/pages/` | Application pages |
+| `src/hooks/` | Custom React hooks |
+| `src/lib/` | Shared utilities and API adapters |
+| `src/assets/` | Images, icons, and other bundled assets |
+| `public/` | Static files served directly by the app |
+
+---
 ## Contributing
 
 iloveAgents is built by the community. Every contribution matters — whether it is a new agent, a bug fix, a UI improvement, or just fixing a typo.
