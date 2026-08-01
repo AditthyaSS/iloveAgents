@@ -17,6 +17,7 @@ import {
   Trash2,
   CalendarClock,
   Layers,
+  History,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
@@ -96,8 +97,9 @@ export default function AgentRunner({ agent }) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
-  const [viewMode, setViewMode] = useState("code");
-  const { addJob } = useScheduler();
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
+  const { savePrompt } = usePromptHistory();
+  const { addJob } = useScheduler({ autoRun: false });
   const { addRun } = useSessionSpend();
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
@@ -503,6 +505,13 @@ export default function AgentRunner({ agent }) {
             {agent.description}
           </p>
         </div>
+        <button
+          onClick={() => setHistoryPanelOpen(true)}
+          title="Prompt History & Favorites"
+          className="p-2 rounded-lg dark:text-text-muted text-gray-500 hover:text-accent hover:bg-accent/10 transition-colors"
+        >
+          <History size={18} />
+        </button>
         <button
           onClick={handleClear}
           disabled={!hasInputContent()}
@@ -1149,6 +1158,13 @@ export default function AgentRunner({ agent }) {
           )}
         </>
       )}
+
+      {/* Prompt History Panel */}
+      <PromptHistoryPanel
+        open={historyPanelOpen}
+        onClose={() => setHistoryPanelOpen(false)}
+        onUsePrompt={handleUsePrompt}
+      />
 
       {/* Schedule Agent Modal */}
       {scheduleModalOpen && (

@@ -19,6 +19,7 @@
 ---
 ## Table of Contents
 
+- [Repository Highlights](#repository-highlights)
 - [What is iloveAgents?](#what-is-iloveagents)
 - [Why iloveAgents?](#why-iloveagents)
 - [Available Agents](#available-agents)
@@ -29,12 +30,14 @@
 - [What you can do](#what-you-can-do)
   - [How sequential execution works](#how-sequential-execution-works)
   - [Navigation](#navigation)
+- [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Run Locally](#run-locally)
   - [Troubleshooting](#troubleshooting)
   - [Deploy Your Own](#deploy-your-own)
 - [How It Works](#how-it-works)
+- [Project Structure Overview](#project-structure-overview)
 - [Contributing](#contributing)
   - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
   - [Other Ways to Help](#other-ways-to-help)
@@ -44,6 +47,18 @@
 - [License](#license)
 
 ---
+## Repository Highlights
+
+- **Open-source and community-driven** — built and run entirely by contributors
+- **Supports multiple AI providers** — OpenAI, Anthropic, and Google Gemini
+- **Battle Mode** — compare model responses side by side
+- **Workflow Builder** — chain multiple agents into a single automated run
+- **Browser-based** — run AI agents directly in your browser
+- **Extensible architecture** — add new agents easily
+- **Contributor-friendly** — active community, easy to get started
+
+---
+
 
 ## What is iloveAgents?
 
@@ -144,6 +159,21 @@ If any step fails, the workflow stops at that step and shows you exactly what we
 | `/workflows/build` | Create and save a new workflow |
 | `/workflows/:id` | View full details of a workflow |
 | `/workflows/:id/run` | Run a workflow step-by-step |
+
+---
+
+## Quick Start
+
+Get the project running quickly with the following commands:
+
+```bash
+git clone https://github.com/AditthyaSS/iloveAgents.git
+cd iloveAgents
+npm install
+npm run dev
+```
+
+For complete setup instructions, environment variables, and troubleshooting, see the **Getting Started** section below.
 
 ---
 
@@ -278,7 +308,19 @@ src/
 6. **No backend** — Every API call goes directly from your browser to the provider. Nothing passes through our servers because there are no servers.
 
 ---
+## Project Structure Overview
 
+| Directory | Purpose |
+|-----------|---------|
+| `src/agents/` | AI agent definitions and registry |
+| `src/components/` | Reusable React components |
+| `src/pages/` | Application pages |
+| `src/hooks/` | Custom React hooks |
+| `src/lib/` | Shared utilities and API adapters |
+| `src/assets/` | Images, icons, and other bundled assets |
+| `public/` | Static files served directly by the app |
+
+---
 ## Contributing
 
 iloveAgents is built by the community. Every contribution matters — whether it is a new agent, a bug fix, a UI improvement, or just fixing a typo.
