@@ -101,6 +101,14 @@ export default function AnalyticsPage() {
             <ArrowRight size={14} />
           </button>
         </div>
+
+        {/* Session spend can exist even with no recorded analytics events
+            (e.g. analytics was cleared but session spend wasn't) */}
+        {spendRuns.length > 0 && (
+          <SectionCard title="Token Usage & Cost (This Session)" icon={<Zap size={16} />} delay={200}>
+            <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
+          </SectionCard>
+        )}
       </div>
     )
   }
@@ -129,6 +137,14 @@ export default function AnalyticsPage() {
             Show All Time
           </button>
         </div>
+
+        {/* Session spend is not filtered by time range, so it can still
+            be shown here even when the selected range has no runs */}
+        {spendRuns.length > 0 && (
+          <SectionCard title="Token Usage & Cost (This Session)" icon={<Zap size={16} />} delay={200}>
+            <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
+          </SectionCard>
+        )}
       </div>
     )
   }
