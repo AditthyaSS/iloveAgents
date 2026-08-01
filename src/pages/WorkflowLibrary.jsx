@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Plus,
@@ -127,6 +127,7 @@ function WorkflowCard({ workflow, onRun, onView, onFork }) {
 export default function WorkflowLibrary() {
   const navigate = useNavigate()
   useDocumentTitle('Workflow Library')
+  const { agents } = useAgents()
   const [workflows, setWorkflows] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -160,11 +161,20 @@ export default function WorkflowLibrary() {
     return () => supabase.removeChannel(channel)
   }, [])
 
-  const filtered = searchQuery.trim()
-    ? workflows.filter((w) =>
-        w.title.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : workflows
+  const filtered = useMemo(() => {
+      const query = searchQuery.trim().toLowerCase()
+      if (!query) return workflows
+
+      return workflows.filter((w) => {
+        const titleMatch = w.title?.toLowerCase().includes(query)
+        const descriptionMatch = w.description?.toLowerCase().includes(query)
+        const categoryMatch = (w.agents ?? []).some((agentId) => {
+          const agent = agents.find((a) => a.id === agentId)
+          return agent?.category?.toLowerCase().includes(query)
+        })
+        return titleMatch || descriptionMatch || categoryMatch
+      })
+    }, [workflows, searchQuery, agents])
 
   const handleRun = (workflow) => {
     navigate(`/workflows/${workflow.id}/run`, { state: { workflow } })
