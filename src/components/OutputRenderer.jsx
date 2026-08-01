@@ -134,6 +134,20 @@ ${stringContent}
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
+  // Downloads just the raw output (no system prompt / inputs), as .md if
+  // the output is markdown, otherwise .txt — matches the "Download Output"
+  // request in issue #429.
+  const handleDownloadOutput = () => {
+    const extension = outputType === 'markdown' ? 'md' : 'txt';
+    const blob = new Blob([stringContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'}_output.${extension}`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Toolbar */}
@@ -150,6 +164,16 @@ ${stringContent}
           <CopyButton text={stringContent} label="Copy output" />
           <CopyButton text={stripMarkdown(stringContent)} label="Copy as Plain Text" icon={FileText} />
           <CopyButton text={shareText} label="Share" />
+          <button
+            onClick={handleDownloadOutput}
+            title="Download raw output only"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+              dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+              bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+          >
+            <Download size={12} />
+            Export Output
+          </button>
           <button
             onClick={handleDownloadTxt}
             title="Download full run log as Text"
