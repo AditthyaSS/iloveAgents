@@ -339,6 +339,10 @@ export default function AgentRunner({ agent }) {
         } else {
           setError({ type: "generic", message: err.message });
         }
+        // Clear streaming state on genuine failure so the UI doesn't get
+        // stuck showing "Streaming..." with stale partial output.
+        setIsStreaming(false);
+        setStreamingOutput("");
       }
     } finally {
       setLoading(false);
@@ -661,9 +665,14 @@ export default function AgentRunner({ agent }) {
                   <div className="relative">
                     <textarea
                       value={inputs[input.id] || ""}
-                      onChange={(e) => updateInput(input.id, e.target.value)}
+                      onChange={(e) => {
+                        if (e.target.value.length <= 5000) {
+                          updateInput(input.id, e.target.value);
+                        }
+                      }}
                       placeholder={input.placeholder}
                       rows={8}
+                      maxLength={5000}
                       className="w-full pl-3 pr-10 py-2 rounded-md text-xs font-mono transition-colors resize-y leading-relaxed
                     dark:bg-[#0d1117] dark:border-border dark:text-green-300 dark:placeholder:text-text-muted
                     bg-gray-900 border border-gray-700 text-green-400 placeholder:text-gray-500
@@ -672,7 +681,9 @@ export default function AgentRunner({ agent }) {
                     />
                     <VoiceInput
                       value={inputs[input.id] || ""}
-                      onChange={(v) => updateInput(input.id, v)}
+                      onChange={(v) => {
+                        if (v.length <= 5000) updateInput(input.id, v);
+                      }}
                       className="top-2 right-2"
                     />
                     <div className="flex items-center gap-3 mt-1">
@@ -816,8 +827,13 @@ export default function AgentRunner({ agent }) {
                 <div className="relative">
                   <textarea
                     value={customPrompt}
-                    onChange={(e) => setCustomPrompt(e.target.value)}
+                    onChange={(e) => {
+                      if (e.target.value.length <= 5000) {
+                        setCustomPrompt(e.target.value);
+                      }
+                    }}
                     rows={10}
+                    maxLength={5000}
                     spellCheck={false}
                     className="w-full pl-3 pr-10 py-2.5 rounded-lg text-xs font-mono leading-relaxed transition-colors resize-y
                   dark:bg-[#0d1117] dark:border-border dark:text-text-secondary text-gray-600 dark:placeholder:text-text-muted
@@ -827,7 +843,9 @@ export default function AgentRunner({ agent }) {
                   />
                   <VoiceInput
                     value={customPrompt}
-                    onChange={(v) => setCustomPrompt(v)}
+                    onChange={(v) => {
+                      if (v.length <= 5000) setCustomPrompt(v);
+                    }}
                     className="top-2 right-2"
                   />
                 </div>
@@ -1179,13 +1197,12 @@ export default function AgentRunner({ agent }) {
               agentName: agent.name,
               agentDefinition: agent,
               inputs: { ...inputs },
+              systemPrompt: customPrompt,
               ...scheduleData,
             });
           }}
           onClose={() => setScheduleModalOpen(false)}
         />
-      )}
-      </>
       )}
     </div>
   );
