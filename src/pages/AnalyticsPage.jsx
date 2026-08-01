@@ -6,6 +6,7 @@ import {
   Calendar, Clock, Target, Download, Filter,
 } from 'lucide-react'
 import { useAnalytics } from '../lib/useAnalytics'
+import { useSessionSpend } from '../lib/useSessionSpend'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 // ── Provider colors ─────────────────────────────────────────────────────────
@@ -67,6 +68,11 @@ export default function AnalyticsPage() {
   const navigate = useNavigate()
   const [timeRange, setTimeRange] = useState('all')
   const { stats, clearAnalytics } = useAnalytics(timeRange)
+  const { runs: spendRuns, totalSpend } = useSessionSpend()
+  const totalTokens = useMemo(
+    () => spendRuns.reduce((sum, r) => sum + (r.inputTokens || 0) + (r.outputTokens || 0), 0),
+    [spendRuns]
+  )
 
   // ── Empty state ───────────────────────────────────────────────────────────
   if (stats.totalRuns === 0 && timeRange === 'all') {
@@ -229,8 +235,15 @@ export default function AnalyticsPage() {
         <RecentTimeline runs={stats.recentRuns} navigate={navigate} />
       </SectionCard>
 
-      {/* ── Export Bar ── */}
-      <ExportBar stats={stats} />
+      {/* ── Token Usage & Cost (current session) ── */}
+        {spendRuns.length > 0 && (
+          <SectionCard title="Token Usage & Cost (This Session)" icon={<Zap size={16} />} delay={760}>
+            <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
+          </SectionCard>
+        )}
+
+        {/* ── Export Bar ── */}
+        <ExportBar stats={stats} />
     </div>
   )
 }
@@ -694,6 +707,66 @@ function RecentTimeline({ runs, navigate }) {
           </div>
         )
       })}
+    </div>
+  )
+}
+
+// ── Token Usage & Cost Section ──────────────────────────────────────────────
+
+function formatSpend(cost) {
+  if (cost == null || isNaN(cost)) return '—'
+  if (cost < 0.01) return `$${cost.toFixed(4)}`
+  return `$${cost.toFixed(2)}`
+}
+
+function TokenUsageSection({ runs, totalTokens, totalSpend }) {
+  const recentRuns = runs.slice(0, 10)
+
+  return (
+    <div>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="p-3 rounded-lg dark:bg-surface-input bg-gray-50 border dark:border-border border-gray-200">
+          <div className="text-lg font-bold dark:text-text-primary text-gray-900 tabular-nums">
+            {totalTokens.toLocaleString()}
+          </div>
+          <div className="text-[10px] dark:text-text-muted text-gray-400 font-medium">
+            Total tokens (session)
+          </div>
+        </div>
+        <div className="p-3 rounded-lg dark:bg-surface-input bg-gray-50 border dark:border-border border-gray-200">
+          <div className="text-lg font-bold dark:text-text-primary text-gray-900 tabular-nums">
+            {formatSpend(totalSpend)}
+          </div>
+          <div className="text-[10px] dark:text-text-muted text-gray-400 font-medium">
+            Estimated cost (session)
+          </div>
+        </div>
+      </div>
+
+      <div className="text-[11px] font-medium dark:text-text-muted text-gray-400 mb-2">
+        Recent runs
+      </div>
+      <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
+        {recentRuns.map((run, i) => (
+          <div
+            key={`${run.timestamp}-${i}`}
+            className="flex items-center justify-between px-3 py-2 rounded-lg
+              dark:bg-surface-input bg-gray-50 border dark:border-border border-gray-200"
+          >
+            <div className="min-w-0">
+              <div className="text-xs font-medium dark:text-text-primary text-gray-800 truncate max-w-[160px]">
+                {run.model || 'Unknown model'}
+              </div>
+              <div className="text-[10px] dark:text-text-muted text-gray-400">
+                {(run.inputTokens || 0).toLocaleString()} in · {(run.outputTokens || 0).toLocaleString()} out
+              </div>
+            </div>
+            <div className="text-xs font-semibold dark:text-text-primary text-gray-900 tabular-nums shrink-0">
+              {formatSpend(run.totalCost)}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
