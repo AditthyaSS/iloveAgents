@@ -730,7 +730,7 @@ function RecentTimeline({ runs, navigate }) {
 // ── Token Usage & Cost Section ──────────────────────────────────────────────
 
 function formatSpend(cost) {
-  if (cost == null || isNaN(cost)) return '—'
+  if (cost == null || Number.isNaN(cost)) return '—'
   if (cost < 0.01) return `$${cost.toFixed(4)}`
   return `$${cost.toFixed(2)}`
 }
