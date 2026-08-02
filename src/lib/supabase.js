@@ -17,24 +17,4 @@ function createNoopQuery(result = { data: [], error: null }) {
     order: () => query,
     single: () => createNoopQuery({ data: null, error: null }),
     then: (resolve) => Promise.resolve(result).then(resolve),
-  }
-
-  return query
-}
-
-const noopChannel = {
-  on: () => noopChannel,
-  subscribe: () => noopChannel,
-}
-
-const noopSupabase = {
-  from: () => createNoopQuery(),
-  rpc: () => Promise.resolve({ data: null, error: null }),
-  channel: () => noopChannel,
-  removeChannel: () => Promise.resolve(),
-}
-
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : noopSupabase
-
+    .catch(err => console.error(err))
