@@ -27,7 +27,8 @@ index 8c1a2b3..d4e5f6a 100644
 +  const res = await fetch(\`\${API_BASE}/users/\${id}\`, {
 +    headers: { Authorization: \`Bearer \${API_KEY}\` },
 +  })
-+  const data = await res.json()
++  if (!res.ok) throw new Error("Request failed");
+const data = await res.json()
 +  return data.user.name
  }`,
     focus: ["Bugs & Regressions", "Security", "Error Handling & Edge Cases"],

@@ -2,13 +2,13 @@ import { useTokenCounter } from '../lib/useTokenCounter'
 import { getPricing, getContextWindow } from '../lib/modelPricing'
 
 function formatCost(cost) {
-  if (cost == null || isNaN(cost)) return '—'
+  if (cost == null || Number.isNaN(cost)) return '—'
   if (cost < 0.0001) return '< $0.0001'
   return `$${cost.toFixed(4)}`
 }
 
 function formatCostShort(cost) {
-  if (cost == null || isNaN(cost)) return '—'
+  if (cost == null || Number.isNaN(cost)) return '—'
   if (cost < 0.0001) return '<$0.0001'
   if (cost < 0.01) return `$${cost.toFixed(4)}`
   return `$${cost.toFixed(2)}`
