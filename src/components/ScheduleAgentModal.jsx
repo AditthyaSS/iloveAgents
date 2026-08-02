@@ -32,7 +32,7 @@ export default function ScheduleAgentModal({
     if (!input.required) return false
     const value = inputs[input.id]
     if (Array.isArray(value)) return value.length === 0
-    return !value || String(value).trim() === ''
+    return !value || String(value).trim().length === 0
   })
 
   const handleConfirm = () => {
