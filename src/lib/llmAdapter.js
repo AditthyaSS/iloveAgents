@@ -244,7 +244,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
     throw new Error(`Unsupported provider: ${provider}`)
   }
 
-  if (!apiKey || apiKey.trim() === '') {
+  if (!apiKey || apiKey.trim().length === 0) {
     throw new Error('Please provide an API key to run this agent.')
   }
 
@@ -310,7 +310,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     throw new Error(`Unsupported provider: ${provider}`)
   }
 
-  if (!apiKey || apiKey.trim() === '') {
+  if (!apiKey || apiKey.trim().length === 0) {
     throw new Error('Please provide an API key to run this agent.')
   }
 
