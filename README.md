@@ -22,6 +22,7 @@
 - [What is iloveAgents?](#what-is-iloveagents)
 - [Why iloveAgents?](#why-iloveagents)
 - [Available Agents](#available-agents)
+- [Agent Categories](#agent-categories)
 - [Supported Providers](#supported-providers)
 - [Battle Mode](#battle-mode)
 - [AI Workflow Builder (New)](#-ai-workflow-builder-new)
@@ -66,6 +67,27 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 ## Available Agents
 
 The complete list of agents has been moved to [AGENTS.md](./AGENTS.md) for better organization and scalability.
+
+---
+
+## Agent Categories
+
+The repository contains AI agents for a wide variety of real-world use cases. The table below highlights the major categories available, helping new users quickly discover the project's capabilities.
+
+| Category | Description |
+|----------|-------------|
+| 🛠️ Engineering | Code generation, debugging, API documentation, testing, DevOps, and software architecture |
+| 📚 Education | Study planning, quizzes, flashcards, DSA explanations, and learning resources |
+| 📈 Productivity | Meeting notes, email writing, planning, workflows, and personal productivity |
+| 📢 Marketing | SEO, blog writing, LinkedIn posts, social media, and content creation |
+| 💼 Sales & Business | Lead qualification, proposals, competitive analysis, outreach, and business planning |
+| 🎨 Design | UI/UX support, color palettes, typography, image prompts, and creative assets |
+| 🏥 Healthcare | Wellness planning, medical summaries, patient documentation, and healthcare assistance |
+| 🔬 Research & Data | Research, data science, dataset analysis, and machine learning support |
+| 🔐 Security | Cybersecurity analysis, phishing detection, password reviews, and threat intelligence |
+| 🌐 Specialized Domains | HR, Finance, Legal, Real Estate, Gaming, Product, Web3, and many more |
+
+> **Note:** The repository currently contains **130+ AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
 
 ---
 
