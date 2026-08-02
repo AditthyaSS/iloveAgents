@@ -20,6 +20,7 @@ import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
 import { useApiKey } from '../lib/useApiKey'
+import { recordAnalyticsRun } from '../lib/useAnalytics'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
@@ -259,6 +260,14 @@ export default function WorkflowRunner() {
         })
         execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
         syncSteps()
+        recordAnalyticsRun({
+          agentId: step.agent.id,
+          agentName: step.agent.name,
+          category: step.agent.category,
+          provider: actualProvider,
+          model,
+          duration: result.duration,
+        })
         currentInput = result.content // pass output to next step
 
         // Expose this step's output to later condition templates. Branch
