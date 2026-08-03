@@ -1,3 +1,4 @@
+import { HeartPulse } from 'lucide-react';
 const pcosLifestylePlanner = {
   id: 'pcos-lifestyle-planner',
   name: 'PCOS Lifestyle Planner',
@@ -98,12 +99,24 @@ Return the answer in Markdown using the following structure:
 - Hydration goal
 
 ## Week 2
+- Nutrition goals
+- Exercise plan
+- Sleep target
+- Hydration goal
 - Progressive improvements
 
 ## Week 3
+- Nutrition goals
+- Exercise plan
+- Sleep target
+- Hydration goal
 - Healthy habit reinforcement
 
 ## Week 4
+- Nutrition goals
+- Exercise plan
+- Sleep target
+- Hydration goal
 - Long-term maintenance strategy
 
 ## Foods to Include
