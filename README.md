@@ -23,6 +23,7 @@
 - [What is iloveAgents?](#what-is-iloveagents)
 - [Why iloveAgents?](#why-iloveagents)
 - [Available Agents](#available-agents)
+- [Agent Categories](#agent-categories)
 - [Supported Providers](#supported-providers)
 - [Battle Mode](#battle-mode)
 - [AI Workflow Builder (New)](#-ai-workflow-builder-new)
@@ -37,6 +38,7 @@
   - [Troubleshooting](#troubleshooting)
   - [Deploy Your Own](#deploy-your-own)
 - [How It Works](#how-it-works)
+- [Project Structure Overview](#project-structure-overview)
 - [Contributing](#contributing)
   - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
   - [Other Ways to Help](#other-ways-to-help)
@@ -81,6 +83,27 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 ## Available Agents
 
 The complete list of agents has been moved to [AGENTS.md](./AGENTS.md) for better organization and scalability.
+
+---
+
+## Agent Categories
+
+The repository contains AI agents for a wide variety of real-world use cases. The table below highlights the major categories available, helping new users quickly discover the project's capabilities.
+
+| Category | Description |
+|----------|-------------|
+| 🛠️ Engineering | Code generation, debugging, API documentation, testing, DevOps, and software architecture |
+| 📚 Education | Study planning, quizzes, flashcards, DSA explanations, and learning resources |
+| 📈 Productivity | Meeting notes, email writing, planning, workflows, and personal productivity |
+| 📢 Marketing | SEO, blog writing, LinkedIn posts, social media, and content creation |
+| 💼 Sales & Business | Lead qualification, proposals, competitive analysis, outreach, and business planning |
+| 🎨 Design | UI/UX support, color palettes, typography, image prompts, and creative assets |
+| 🏥 Healthcare | Wellness planning, medical summaries, patient documentation, and healthcare assistance |
+| 🔬 Research & Data | Research, data science, dataset analysis, and machine learning support |
+| 🔐 Security | Cybersecurity analysis, phishing detection, password reviews, and threat intelligence |
+| 🌐 Specialized Domains | HR, Finance, Legal, Real Estate, Gaming, Product, Web3, and many more |
+
+> **Note:** The repository currently contains **130+ AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
 
 ---
 
@@ -307,7 +330,19 @@ src/
 6. **No backend** — Every API call goes directly from your browser to the provider. Nothing passes through our servers because there are no servers.
 
 ---
+## Project Structure Overview
 
+| Directory | Purpose |
+|-----------|---------|
+| `src/agents/` | AI agent definitions and registry |
+| `src/components/` | Reusable React components |
+| `src/pages/` | Application pages |
+| `src/hooks/` | Custom React hooks |
+| `src/lib/` | Shared utilities and API adapters |
+| `src/assets/` | Images, icons, and other bundled assets |
+| `public/` | Static files served directly by the app |
+
+---
 ## Contributing
 
 iloveAgents is built by the community. Every contribution matters — whether it is a new agent, a bug fix, a UI improvement, or just fixing a typo.

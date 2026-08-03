@@ -15,7 +15,6 @@ export const MODELS = {
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
     { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro' },
     { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash (Exp)' },
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
   ],
   openrouter: [
     { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },

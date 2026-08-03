@@ -11,6 +11,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.110.7",
     "diff": "^9.0.0",
+    "@supabase/supabase-js": "^2.110.8",
     "framer-motion": "^12.42.0",
     "lucide-react": "^0.577.0",
     "react": "^18.3.1",
@@ -25,7 +26,7 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.5.4",
-    "postcss": "^8.5.20",
+    "postcss": "^8.5.23",
     "tailwindcss": "^3.4.15",
     "vite": "^6.4.3"
   }
