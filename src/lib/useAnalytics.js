@@ -206,7 +206,7 @@ function computeStats(events, timeRange = 'all') {
   }
 
   // Longest streak ever
-  const sortedDays = [...allDayKeys].sort()
+  const sortedDays = [...allDayKeys].sort((a, b) => a - b)
   let longestStreak = 0
   let tempStreak = 1
   for (let i = 1; i < sortedDays.length; i++) {
