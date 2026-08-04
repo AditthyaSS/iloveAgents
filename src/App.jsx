@@ -26,6 +26,7 @@ const SchedulerPage = lazy(() => import('./pages/SchedulerPage'))
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 function PageLoader() {
   return (
@@ -63,6 +64,7 @@ export default function App() {
           <Routes>
             <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
               <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/agent/:id" element={<AgentPage />} />

@@ -14,6 +14,7 @@ import {
   DollarSign,
   RotateCcw,
   Settings,
+  Info,
 } from 'lucide-react'
 
 import Logo from './Logo'
@@ -61,6 +62,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen }) {
     { label: 'Suites', to: '/suites', icon: LibraryBig },
     { label: 'Workflows', to: '/workflows', icon: Workflow },
     { label: 'Battle', to: '/battle', icon: PanelsTopLeft },
+    { label: 'About', to: '/about', icon: Info },
   ]
 
   const navLinkClass = ({ isActive }) =>
