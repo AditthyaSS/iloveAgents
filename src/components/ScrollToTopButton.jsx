@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-export default function ScrollToTop() {
+export default function ScrollToTopButton() {
   const [visible, setVisible] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
 
@@ -34,7 +34,7 @@ export default function ScrollToTop() {
   return (
     <button
       type="button"
-      aria-label="Scroll back to top"
+      aria-label="Scroll to top"
       aria-hidden={!visible}
       onClick={handleClick}
       tabIndex={visible ? 0 : -1}

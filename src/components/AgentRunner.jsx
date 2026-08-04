@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import CustomSelect from "./CustomSelect";
@@ -16,6 +17,7 @@ import {
   Trash2,
   CalendarClock,
   Layers,
+  History,
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
@@ -30,6 +32,8 @@ import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
 import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
+import PromptHistoryPanel from "./PromptHistoryPanel";
+import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
@@ -86,6 +90,8 @@ export default function AgentRunner({ agent }) {
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
+  const [lastRunSystemPrompt, setLastRunSystemPrompt] = useState("");
+  const [lastRunUserMessage, setLastRunUserMessage] = useState("");
   const [msgIndex, setMsgIndex] = useState(0);
   const [analyserOpen, setAnalyserOpen] = useState(false);
   const [modelRecommendation, setModelRecommendation] = useState(null);
@@ -93,11 +99,15 @@ export default function AgentRunner({ agent }) {
   const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
-  const { addJob } = useScheduler();
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
+  const { savePrompt } = usePromptHistory();
+  const { addJob } = useScheduler({ autoRun: false });
   const { addRun } = useSessionSpend();
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
+  const textareaRefs = useRef({});
+  
 
   useKeyboardShortcuts({
   'Control+Enter': () => {
@@ -158,6 +168,30 @@ export default function AgentRunner({ agent }) {
 
   const updateInput = (id, value) => {
     setInputs((prev) => ({ ...prev, [id]: value }));
+  };
+
+  // Finds the first free-text style input (textarea/text/code) with content,
+  // used as the "prompt" for saving to / reusing from Prompt History.
+  const getPrimaryPromptInput = () => {
+    return agent.inputs.find(
+      (i) => ["textarea", "text", "code"].includes(i.type) && (inputs[i.id] || "").trim()
+    );
+  };
+
+  const handleSavePrompt = () => {
+    const primary = getPrimaryPromptInput();
+    if (!primary) return;
+    savePrompt({
+      text: inputs[primary.id],
+      agentId: agent.id,
+      agentName: agent.name,
+    });
+  };
+
+  const handleUsePrompt = (text) => {
+    const primary = agent.inputs.find((i) => ["textarea", "text", "code"].includes(i.type));
+    if (!primary) return;
+    updateInput(primary.id, text);
   };
 
   const getWordCount = (text) => {
@@ -257,6 +291,9 @@ const handleRun = async () => {
       ...prevHistory,
     ]);
 
+    setLastRunSystemPrompt(customPrompt);
+    setLastRunUserMessage(buildUserMessage());
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
     try {
@@ -299,6 +336,15 @@ const handleRun = async () => {
         inputs: { ...inputs },
         output: result.content,
         provider: actualProvider,
+      });
+
+      recordAnalyticsRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        category: agent.category,
+        provider: actualProvider,
+        model,
+        duration: result.duration,
       });
    } catch (err) {
   if (err.name !== "AbortError") {
@@ -371,7 +417,7 @@ const handleRun = async () => {
   const handleSendToWorkflow = () => {
     navigate("/workflows/build", {
       state: {
-        preSelectedAgent: agent,
+        preselectedAgents: [agent.id],
         preFilledOutput: output,
       },
     });
@@ -463,6 +509,13 @@ const handleRun = async () => {
           </p>
         </div>
         <button
+          onClick={() => setHistoryPanelOpen(true)}
+          title="Prompt History & Favorites"
+          className="p-2 rounded-lg dark:text-text-muted text-gray-500 hover:text-accent hover:bg-accent/10 transition-colors"
+        >
+          <History size={18} />
+        </button>
+        <button
           onClick={handleClear}
           disabled={!hasInputContent()}
           title="Clear Chat"
@@ -472,6 +525,34 @@ const handleRun = async () => {
         </button>
       </div>
 
+      {/* Code / Preview Toggle */}
+      <div className="flex items-center gap-1 mb-4 p-1 rounded-lg w-fit dark:bg-surface-input bg-gray-100 border dark:border-border border-gray-200">
+        <button
+          onClick={() => setViewMode("code")}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            viewMode === "code"
+              ? "bg-accent text-white shadow-sm"
+              : "dark:text-text-secondary text-gray-500 hover:dark:text-text-primary hover:text-gray-900"
+          }`}
+        >
+          Code
+        </button>
+        <button
+          onClick={() => setViewMode("preview")}
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+            viewMode === "preview"
+              ? "bg-accent text-white shadow-sm"
+              : "dark:text-text-secondary text-gray-500 hover:dark:text-text-primary hover:text-gray-900"
+          }`}
+        >
+          Preview
+        </button>
+      </div>
+
+      {viewMode === "preview" ? (
+        <AgentPreviewPanel agent={agent} />
+      ) : (
+        <>
       {/* API Key Bar */}
       <ApiKeyBar
         provider={provider}
@@ -548,16 +629,21 @@ const handleRun = async () => {
             {input.type === "textarea" && (
               <div className="relative flex flex-col gap-1">
                 <textarea
+  ref={(el) => {
+    textareaRefs.current[input.id] = el;
+  }}
                   value={inputs[input.id] || ""}
                   onChange={(e) => {
-                    // 4000 chars se bada text type hone se rokein
-                    if (e.target.value.length <= MAX_CHAR_LIMIT) {
-                      updateInput(input.id, e.target.value);
-                    }
-                  }}
+  if (e.target.value.length <= MAX_CHAR_LIMIT) {
+    updateInput(input.id, e.target.value);
+
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }
+}}
                   placeholder={input.placeholder}
                   rows={4}
-                  className="w-full pl-3 pr-10 py-2 rounded-md text-sm transition-colors resize-y
+                  className="w-full pl-3 pr-10 py-2 rounded-md text-sm transition-colors resize-none overflow-hidden
                     dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
                     focus:ring-1 focus:ring-accent focus:border-accent outline-none"
@@ -576,8 +662,8 @@ const handleRun = async () => {
                     <span>📝 Words: {getWordCount(inputs[input.id])}</span>
                     <span>🪙 Est. Tokens: {getTokenCount(inputs[input.id])}</span>
                   </div>
-                  <span className={inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}>
-                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} Chars
+                  <span className={`self-end ${inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}`}>
+                    {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} characters
                   </span>
                 </div>
 
@@ -658,7 +744,7 @@ const handleRun = async () => {
       {/* Suggested workflow chain pills */}
       <SuggestedChainPills agent={agent} />
 
-<div className="mb-4">
+<div className="mb-4 flex items-center gap-2 flex-wrap">
   <button
     onClick={handleFillExample}
     className="
@@ -676,6 +762,26 @@ const handleRun = async () => {
     "
   >
     ✨ Try an example
+  </button>
+  <button
+    onClick={handleSavePrompt}
+    disabled={!getPrimaryPromptInput()}
+    title="Save this prompt to your Prompt History"
+    className="
+      inline-flex items-center gap-2
+      px-3 py-1.5
+      rounded-full
+      dark:bg-surface-input bg-gray-100
+      dark:text-text-secondary text-gray-600
+      font-semibold
+      border dark:border-border border-gray-200
+      hover:border-accent/30 hover:text-accent
+      disabled:opacity-40 disabled:cursor-not-allowed
+      transition-all duration-200
+    "
+  >
+    <History size={14} />
+    Save Prompt
   </button>
 </div>
 
@@ -944,7 +1050,7 @@ const handleRun = async () => {
               className="underline text-accent"
               onClick={() => window.location.reload()}
             >
-              Retry
+              Reloads page after an invalid API key error
             </button>
             {error.detail && (
               <>
@@ -983,7 +1089,7 @@ const handleRun = async () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
-              Streaming...
+              Streaming....
             </span>
           </div>
           <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
@@ -1004,7 +1110,8 @@ const handleRun = async () => {
               content={output}
               outputType={agent.outputType}
               agentName={agent.name}
-              systemPrompt={customPrompt}
+              systemPrompt={lastRunSystemPrompt}
+              userMessage={lastRunUserMessage}
             />
             <div className="flex items-center gap-2 mt-3">
   <button
@@ -1052,8 +1159,8 @@ const handleRun = async () => {
   </div>
 )}
           </ErrorBoundary>
-          <RunRating />
-          <div className="flex justify-end">
+          <div className="mt-4">
+            <RunRating agentId={agent.id} />
             <button
               onClick={handleSendToWorkflow}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
@@ -1068,6 +1175,13 @@ const handleRun = async () => {
 
       </>
       )}
+
+      {/* Prompt History Panel */}
+      <PromptHistoryPanel
+        open={historyPanelOpen}
+        onClose={() => setHistoryPanelOpen(false)}
+        onUsePrompt={handleUsePrompt}
+      />
 
       {/* Schedule Agent Modal */}
       {scheduleModalOpen && (
@@ -1087,6 +1201,8 @@ const handleRun = async () => {
           }}
           onClose={() => setScheduleModalOpen(false)}
         />
+      )}
+      </>
       )}
     </div>
   );

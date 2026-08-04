@@ -19,9 +19,11 @@
 ---
 ## Table of Contents
 
+- [Repository Highlights](#repository-highlights)
 - [What is iloveAgents?](#what-is-iloveagents)
 - [Why iloveAgents?](#why-iloveagents)
 - [Available Agents](#available-agents)
+- [Agent Categories](#agent-categories)
 - [Supported Providers](#supported-providers)
 - [Battle Mode](#battle-mode)
 - [AI Workflow Builder (New)](#-ai-workflow-builder-new)
@@ -29,19 +31,35 @@
 - [What you can do](#what-you-can-do)
   - [How sequential execution works](#how-sequential-execution-works)
   - [Navigation](#navigation)
+- [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Run Locally](#run-locally)
+  - [Troubleshooting](#troubleshooting)
   - [Deploy Your Own](#deploy-your-own)
 - [How It Works](#how-it-works)
+- [Project Structure Overview](#project-structure-overview)
 - [Contributing](#contributing)
   - [Add a New Agent in 3 Steps](#add-a-new-agent-in-3-steps)
   - [Other Ways to Help](#other-ways-to-help)
 - [Tech Stack](#tech-stack)
+- [Frequently Asked Questions](#-frequently-asked-questions)
 - [Community](#community)
 - [License](#license)
 
 ---
+## Repository Highlights
+
+- **Open-source and community-driven** — built and run entirely by contributors
+- **Supports multiple AI providers** — OpenAI, Anthropic, and Google Gemini
+- **Battle Mode** — compare model responses side by side
+- **Workflow Builder** — chain multiple agents into a single automated run
+- **Browser-based** — run AI agents directly in your browser
+- **Extensible architecture** — add new agents easily
+- **Contributor-friendly** — active community, easy to get started
+
+---
+
 
 ## What is iloveAgents?
 
@@ -65,6 +83,27 @@ Each agent is a focused tool that does one thing really well — summarize meeti
 ## Available Agents
 
 The complete list of agents has been moved to [AGENTS.md](./AGENTS.md) for better organization and scalability.
+
+---
+
+## Agent Categories
+
+The repository contains AI agents for a wide variety of real-world use cases. The table below highlights the major categories available, helping new users quickly discover the project's capabilities.
+
+| Category | Description |
+|----------|-------------|
+| 🛠️ Engineering | Code generation, debugging, API documentation, testing, DevOps, and software architecture |
+| 📚 Education | Study planning, quizzes, flashcards, DSA explanations, and learning resources |
+| 📈 Productivity | Meeting notes, email writing, planning, workflows, and personal productivity |
+| 📢 Marketing | SEO, blog writing, LinkedIn posts, social media, and content creation |
+| 💼 Sales & Business | Lead qualification, proposals, competitive analysis, outreach, and business planning |
+| 🎨 Design | UI/UX support, color palettes, typography, image prompts, and creative assets |
+| 🏥 Healthcare | Wellness planning, medical summaries, patient documentation, and healthcare assistance |
+| 🔬 Research & Data | Research, data science, dataset analysis, and machine learning support |
+| 🔐 Security | Cybersecurity analysis, phishing detection, password reviews, and threat intelligence |
+| 🌐 Specialized Domains | HR, Finance, Legal, Real Estate, Gaming, Product, Web3, and many more |
+
+> **Note:** The repository currently contains **130+ AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
 
 ---
 
@@ -145,6 +184,21 @@ If any step fails, the workflow stops at that step and shows you exactly what we
 
 ---
 
+## Quick Start
+
+Get the project running quickly with the following commands:
+
+```bash
+git clone https://github.com/AditthyaSS/iloveAgents.git
+cd iloveAgents
+npm install
+npm run dev
+```
+
+For complete setup instructions, environment variables, and troubleshooting, see the **Getting Started** section below.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -183,6 +237,39 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 Note: AI provider API keys are still entered at runtime 
 and are never stored anywhere.
 
+## Troubleshooting
+
+### Missing or Invalid `VITE_SUPABASE_URL`
+
+If you encounter connection errors, verify that the `VITE_SUPABASE_URL` in your `.env.local` file matches your Supabase project URL.
+
+### Missing or Invalid `VITE_SUPABASE_ANON_KEY`
+
+Make sure the `VITE_SUPABASE_ANON_KEY` is copied correctly from your Supabase project's API settings.
+
+### Supabase Connection Failures
+
+- Verify that your Supabase project is active.
+- Confirm that both environment variables are present and correct.
+- Ensure there are no extra spaces or quotation marks in `.env.local`.
+
+### Environment Variables Not Loading
+
+If you recently created or updated `.env.local`, restart the development server:
+
+Stop the development server and start it again:
+
+```bash
+npm run dev
+```
+
+### Still Having Problems?
+
+Before opening an issue, verify that:
+
+- `.env.local` is in the project root.
+- Variable names start with `VITE_`.
+- The values are copied correctly from your Supabase dashboard.
 
 ### Deploy Your Own
 
@@ -243,7 +330,19 @@ src/
 6. **No backend** — Every API call goes directly from your browser to the provider. Nothing passes through our servers because there are no servers.
 
 ---
+## Project Structure Overview
 
+| Directory | Purpose |
+|-----------|---------|
+| `src/agents/` | AI agent definitions and registry |
+| `src/components/` | Reusable React components |
+| `src/pages/` | Application pages |
+| `src/hooks/` | Custom React hooks |
+| `src/lib/` | Shared utilities and API adapters |
+| `src/assets/` | Images, icons, and other bundled assets |
+| `public/` | Static files served directly by the app |
+
+---
 ## Contributing
 
 iloveAgents is built by the community. Every contribution matters — whether it is a new agent, a bug fix, a UI improvement, or just fixing a typo.
@@ -305,6 +404,42 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 | [Lucide React](https://lucide.dev) | Icons |
 | [react-markdown](https://github.com/remarkjs/react-markdown) | Markdown rendering |
 | [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) | Code highlighting |
+
+---
+
+## ❓ Frequently Asked Questions
+
+### Do I need a backend to run the project?
+
+No. Most features run entirely in the browser without a backend. However, Workflow-related features require Supabase, which is configured using a `.env.local` file.
+
+### Where can I obtain API keys for OpenAI, Anthropic, or Google Gemini?
+
+You can create API keys from the official provider dashboards. Enter the keys directly in the application at runtime—they are never stored by the project.
+
+### Why isn't my `.env.local` file being detected?
+
+Make sure `.env.local` is placed in the project root, uses the correct `VITE_` variable names, and restart the development server after making changes.
+
+### Is Supabase required for all features?
+
+No. Supabase is only required for Workflow-related functionality. Basic agent execution works without it.
+
+### What is the difference between Battle Mode and Workflow Builder?
+
+Battle Mode compares responses from multiple AI providers using the same prompt, while Workflow Builder lets you chain multiple AI agents together into a sequential workflow.
+
+### How do I add a new AI agent?
+
+Create a new agent definition inside `src/agents/definitions/`, test it locally with `npm run dev`, and submit a pull request following the contribution guidelines.
+
+### Which Node.js version is recommended?
+
+Use **Node.js v18 or later**, as listed in the project prerequisites.
+
+### Where can I find the contribution guidelines?
+
+See the `CONTRIBUTING.md` file for coding standards, pull request instructions, and contribution workflow.
 
 ---
 

@@ -1,11 +1,16 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { FolderPlus, Plus, X } from 'lucide-react'
-import { MAX_COLLECTIONS, useCollections } from '../lib/useCollections'
+import { DEFAULT_COLLECTION_ID, MAX_COLLECTIONS, useCollections } from '../lib/useCollections'
 
 export default function CollectionPicker({ agentId, onClose }) {
   const { collections, createCollection, addAgentToCollection, isAgentInCollection } = useCollections()
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
+
+  const visibleCollections = useMemo(
+    () => collections.filter((collection) => collection.id !== DEFAULT_COLLECTION_ID),
+    [collections]
+  )
 
   const handleCreate = () => {
     const result = createCollection(name)
@@ -29,17 +34,17 @@ export default function CollectionPicker({ agentId, onClose }) {
         </div>
         <div className="space-y-4 p-5">
           <div className="space-y-2">
-            {collections.length === 0 ? <p className="text-sm text-gray-500 dark:text-text-secondary">No collections yet.</p> : collections.map((collection) => {
+            {visibleCollections.length === 0 ? <p className="text-sm text-gray-500 dark:text-text-secondary">No collections yet.</p> : visibleCollections.map((collection) => {
               const alreadyAdded = isAgentInCollection(collection.id, agentId)
               return <button key={collection.id} type="button" onClick={() => handleAdd(collection)} disabled={alreadyAdded} className="flex w-full items-center justify-between rounded-lg border border-gray-200 px-3 py-2 text-left text-sm transition hover:border-accent/50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-border dark:hover:border-accent/50"><span className="font-medium text-gray-800 dark:text-text-primary">{collection.name}</span><span className="text-xs text-gray-500 dark:text-text-muted">{alreadyAdded ? 'Already added' : `${collection.agentIds.length} agents`}</span></button>
             })}
           </div>
           <div className="flex gap-2 border-t border-gray-100 pt-4 dark:border-border">
-            <input value={name} onChange={(event) => setName(event.target.value)} disabled={collections.length >= MAX_COLLECTIONS} className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60 dark:border-border dark:bg-surface-input dark:text-text-primary" placeholder="New collection name" />
-            <button type="button" onClick={handleCreate} disabled={collections.length >= MAX_COLLECTIONS} className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"><Plus size={15} />Create</button>
+            <input value={name} onChange={(event) => setName(event.target.value)} disabled={visibleCollections.length >= MAX_COLLECTIONS} className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60 dark:border-border dark:bg-surface-input dark:text-text-primary" placeholder="New collection name" />
+            <button type="button" onClick={handleCreate} disabled={visibleCollections.length >= MAX_COLLECTIONS} className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"><Plus size={15} />Create</button>
           </div>
           {message && <p className="rounded-lg border border-accent/20 bg-accent/10 px-3 py-2 text-sm text-accent">{message}</p>}
-          {collections.length >= MAX_COLLECTIONS && <p className="text-xs text-gray-500 dark:text-text-muted">You can create up to {MAX_COLLECTIONS} collections.</p>}
+          {visibleCollections.length >= MAX_COLLECTIONS && <p className="text-xs text-gray-500 dark:text-text-muted">You can create up to {MAX_COLLECTIONS} collections.</p>}
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
 import { useApiKey } from '../lib/useApiKey'
+import { recordAnalyticsRun } from '../lib/useAnalytics'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
 import { fetchWorkflowById, incrementUsage } from '../hooks/useWorkflows'
@@ -183,7 +184,7 @@ export default function WorkflowRunner() {
       const step = execSteps[i]
 
       if (step.kind === 'conditional') {
-        const problems = validateConditionalStep(step.stepDef)
+        const problems = validateConditionalStep(step.stepDef, workflow.agents)
         const { conditionValue, branchLabel, branchAgents } = evaluateConditionalStep(step.stepDef, context)
 
         if (!branchLabel) {
@@ -237,18 +238,36 @@ export default function WorkflowRunner() {
           ? provider
           : step.agent.provider
 
+      const keyToUse = actualProvider === provider
+        ? apiKey
+        : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
+
+      if (!keyToUse) {
+        setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
+        failed = true
+        break
+      }
+
       const model = resolveAgentModel(step.agent, actualProvider)
 
       try {
         const result = await runAgent({
           provider: actualProvider,
           model,
-          apiKey,
+          apiKey: keyToUse,
           systemPrompt: step.agent.systemPrompt,
           userMessage: currentInput,
         })
         execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
         syncSteps()
+        recordAnalyticsRun({
+          agentId: step.agent.id,
+          agentName: step.agent.name,
+          category: step.agent.category,
+          provider: actualProvider,
+          model,
+          duration: result.duration,
+        })
         currentInput = result.content // pass output to next step
 
         // Expose this step's output to later condition templates. Branch
@@ -397,7 +416,12 @@ export default function WorkflowRunner() {
                 <Loader2 size={15} className="animate-spin" />
                 Running...
               </>
-            ) : hasRun && (allDone || hasFailed) ? (
+            ) : hasRun && hasFailed ? (
+              <>
+                <RotateCcw size={15} />
+                Retry
+              </>
+            ) : hasRun && allDone ? (
               <>
                 <RotateCcw size={15} />
                 Run Again
@@ -538,7 +562,8 @@ export default function WorkflowRunner() {
                       outputType={step.agent?.outputType ?? 'text'}
                       agentName={step.agentName}
                     />
-                    <RunRating />
+                    <RunRating agentId={step.agent?.id} /> 
+
                   </div>
                 )}
 

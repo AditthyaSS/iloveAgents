@@ -8,6 +8,7 @@ import ApiKeyInfo from './ApiKeyInfo'
 import openaiLogo from "../assets/openai.svg";
 import anthropicLogo from "../assets/anthropic.svg";
 import geminiLogo from "../assets/gemini.svg";
+import openrouterLogo from "../assets/openrouter.svg";
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getGlobalKeys, getAvailableProviders } from '../lib/globalKeys'
 
@@ -22,7 +23,9 @@ const providerLogos = {
   openai: openaiLogo,
   anthropic: anthropicLogo,
   gemini: geminiLogo,
+  openrouter: openrouterLogo,
 }
+
 
 const providerUrls = {
   openai: 'https://platform.openai.com/account/api-keys',
@@ -198,12 +201,16 @@ export default function ApiKeyBar({
         </div>
 
         {/* Save checkbox */}
-        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+        <label className="flex items-center gap-1.5 select-none ${!apiKey?.trim() ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`">
           <input
             type="checkbox"
             checked={saveForSession}
-            onChange={(e) => setSaveForSession(e.target.checked)}
-            className="w-3.5 h-3.5 rounded accent-accent cursor-pointer"
+            disabled={!apiKey?.trim()}
+            onChange={(e) => {
+              if (!apiKey?.trim()) return;
+              setSaveForSession(e.target.checked);
+            }}
+            className="w-3.5 h-3.5 rounded accent-accent cursor-pointer disabled:cursor-not-allowed"
           />
           <span className="text-[11px] dark:text-text-secondary text-gray-500 whitespace-nowrap">
             Save for session

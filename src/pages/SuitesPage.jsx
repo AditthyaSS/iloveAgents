@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Sparkles, ArrowRight, Code2, BarChart3, TrendingUp, DollarSign, Palette, PenLine, GraduationCap, Briefcase, HeartPulse, ShieldCheck, Gamepad2, Wand2, Loader2 } from 'lucide-react'
+import { Sparkles, ArrowRight, Code2, BarChart3, TrendingUp, DollarSign, Palette, PenLine, GraduationCap, Briefcase, HeartPulse, ShieldCheck, Gamepad2, Wand2, Loader2, GitBranch } from 'lucide-react'
 import { suites } from '../suites/suitesData'
 import SuiteWizard from '../components/SuiteWizard'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -54,6 +54,15 @@ export default function SuitesPage() {
     } finally {
       setGenerating(false)
     }
+  }
+
+  const handleCreateWorkflow = () => {
+    navigate('/workflows/build', {
+      state: {
+        preselectedAgents: customSuite.agents.map((a) => a.id),
+        workflowTitle: customSuite.title,
+      }
+    })
   }
 
   // ── QUIZ state
@@ -115,14 +124,14 @@ export default function SuitesPage() {
           />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleGenerateSuite()}
             placeholder="e.g. I want to prepare for a Goldman Sachs interview..."
-            className="flex-1 h-9 pl-3 pr-3 rounded-md text-sm transition-colors
+            className="flex-1 min-w-0 h-9 pl-3 pr-3 rounded-md text-sm transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
               bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
               focus:ring-1 focus:ring-accent focus:border-accent outline-none"
@@ -130,9 +139,9 @@ export default function SuitesPage() {
           <button
             onClick={handleGenerateSuite}
             disabled={!goal.trim() || !apiKey || generating}
-            className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold text-white
+            className="flex items-center justify-center gap-2 px-4 py-2 rounded-md text-xs font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
-              transition-all duration-200 active:scale-[0.98]"
+              transition-all duration-200 active:scale-[0.98] shrink-0 w-full sm:w-auto"
           >
             {generating ? (
               <Loader2 size={13} className="animate-spin" />
@@ -187,12 +196,24 @@ export default function SuitesPage() {
                 </div>
               ))}
             </div>
-            <button
-              onClick={() => { setCustomSuite(null); setGoal('') }}
-              className="mt-3 text-[11px] text-accent hover:underline"
-            >
-              ↺ Try a different goal
-            </button>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-3 mt-4">
+              <button
+                onClick={handleCreateWorkflow}
+                className="flex items-center gap-2 px-4 py-2 rounded-md text-xs font-semibold text-white
+                  bg-accent hover:bg-accent-hover transition-all duration-200 active:scale-[0.98]"
+              >
+                <GitBranch size={13} />
+                Create Workflow from this Suite →
+              </button>
+              <button
+                onClick={() => { setCustomSuite(null); setGoal('') }}
+                className="text-[11px] text-accent hover:underline"
+              >
+                ↺ Try a different goal
+              </button>
+            </div>
           </div>
         )}
       </div>

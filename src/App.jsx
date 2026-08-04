@@ -4,9 +4,11 @@ import { Loader2 } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
-import ScrollToTop from './components/ScrollToTop'
+import ScrollToTopButton from './components/ScrollToTopButton'
 import ScrollToBottom from './components/ScrollToBottom'
 import ErrorBoundary from './components/ErrorBoundary'
+import OnboardingTour from './components/OnboardingTour'
+import { useOnboarding } from './lib/useOnboarding'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const AgentPage = lazy(() => import('./pages/AgentPage'))
@@ -25,6 +27,7 @@ const CollectionDetailPage = lazy(() => import('./pages/CollectionDetailPage'))
 const SchedulerPage = lazy(() => import('./pages/SchedulerPage'))
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const Privacy = lazy(() => import('./pages/Privacy'))
+const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 
@@ -37,10 +40,10 @@ function PageLoader() {
   )
 }
 
-function MainLayout({ sidebarOpen, setSidebarOpen }) {
+function MainLayout({ sidebarOpen, setSidebarOpen, onStartTour, isTourActive, onTourEnd }) {
   return (
     <>
-      <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onStartTour={onStartTour} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <CustomCursor />
       <main className="pt-28 lg:pl-60">
@@ -48,21 +51,35 @@ function MainLayout({ sidebarOpen, setSidebarOpen }) {
           <Outlet />
         </div>
       </main>
+      <OnboardingTour
+        isActive={isTourActive}
+        onEnd={onTourEnd}
+        setSidebarOpen={setSidebarOpen}
+      />
     </>
   )
 }
 
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { isTourActive, startTour, endTour } = useOnboarding()
 
   return (
     <div className="min-h-screen transition-theme dark:bg-surface bg-gray-50">
-      <ScrollToTop />
+      <ScrollToTopButton />
       <ScrollToBottom />
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route element={<MainLayout sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />}>
+            <Route element={
+              <MainLayout
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                onStartTour={startTour}
+                isTourActive={isTourActive}
+                onTourEnd={endTour}
+              />
+            }>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/privacy" element={<Privacy />} />
@@ -73,6 +90,7 @@ export default function App() {
               <Route path="/collections/:id" element={<CollectionDetailPage />} />
               <Route path="/scheduler" element={<SchedulerPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
+              <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/workflows" element={<WorkflowLibrary />} />
               <Route path="/workflows/build" element={<WorkflowBuilder />} />
               <Route path="/workflows/:id" element={<WorkflowDetail />} />

@@ -15,6 +15,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle'
 import openaiLogo   from '../assets/openai.svg'
 import anthropicLogo from '../assets/anthropic.svg'
 import geminiLogo    from '../assets/gemini.svg'
+import openrouterLogo from '../assets/openrouter.svg'
 
 const PROVIDERS = [
   {
@@ -44,16 +45,25 @@ const PROVIDERS = [
     keyLabel:    'Get free key →',
     placeholder: 'AIza...',
   },
+  {
+    id:          'openrouter',
+    label:       'OpenRouter',
+    logo:        openrouterLogo,
+    description: 'Access 200+ models through one API',
+    keyUrl:      'https://openrouter.ai/keys',
+    keyLabel:    'Get your key →',
+    placeholder: 'sk-or-...',
+  },
 ]
 
 export default function SettingsPage() {
   useDocumentTitle('Settings')
 
   // ── Form state
-  const [keys, setKeys] = useState({ openai: '', anthropic: '', gemini: '' })
+  const [keys, setKeys] = useState({ openai: '', anthropic: '', gemini: '', openrouter: '' })
   const [defaultProvider, setDefaultProvider] = useState('')
-  const [showKey, setShowKey] = useState({ openai: false, anthropic: false, gemini: false })
-  const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false })
+  const [showKey, setShowKey] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
+  const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [saveMessage, setSaveMessage] = useState('')
   const [confirmClearAll, setConfirmClearAll] = useState(false)
 
@@ -61,15 +71,17 @@ export default function SettingsPage() {
   useEffect(() => {
     const stored = getGlobalKeys()
     setKeys({
-      openai:    stored.openai    || '',
-      anthropic: stored.anthropic || '',
-      gemini:    stored.gemini    || '',
+      openai:     stored.openai     || '',
+      anthropic:  stored.anthropic  || '',
+      gemini:     stored.gemini     || '',
+      openrouter: stored.openrouter || '',
     })
     setDefaultProvider(stored.defaultProvider || '')
     setSavedStatus({
-      openai:    !!stored.openai,
-      anthropic: !!stored.anthropic,
-      gemini:    !!stored.gemini,
+      openai:     !!stored.openai,
+      anthropic:  !!stored.anthropic,
+      gemini:     !!stored.gemini,
+      openrouter: !!stored.openrouter,
     })
   }, [])
 
@@ -80,9 +92,10 @@ export default function SettingsPage() {
     // Refresh saved status
     const stored = getGlobalKeys()
     setSavedStatus({
-      openai:    !!stored.openai,
-      anthropic: !!stored.anthropic,
-      gemini:    !!stored.gemini,
+      openai:     !!stored.openai,
+      anthropic:  !!stored.anthropic,
+      gemini:     !!stored.gemini,
+      openrouter: !!stored.openrouter,
     })
     setSaveMessage('Keys saved successfully ✅')
     setTimeout(() => setSaveMessage(''), 3000)
@@ -101,9 +114,9 @@ export default function SettingsPage() {
 
   const handleClearAll = () => {
     clearAllGlobalKeys()
-    setKeys({ openai: '', anthropic: '', gemini: '' })
+    setKeys({ openai: '', anthropic: '', gemini: '', openrouter: '' })
     setDefaultProvider('')
-    setSavedStatus({ openai: false, anthropic: false, gemini: false })
+    setSavedStatus({ openai: false, anthropic: false, gemini: false, openrouter: false })
     setConfirmClearAll(false)
     setSaveMessage('All keys cleared.')
     setTimeout(() => setSaveMessage(''), 3000)
