@@ -20,6 +20,7 @@
 ## Table of Contents
 
 - [Repository Highlights](#repository-highlights)
+- [Feature Comparison](#feature-comparison)
 - [What is iloveAgents?](#what-is-iloveagents)
 - [Why iloveAgents?](#why-iloveagents)
 - [Available Agents](#available-agents)
@@ -57,6 +58,18 @@
 - **Browser-based** — run AI agents directly in your browser
 - **Extensible architecture** — add new agents easily
 - **Contributor-friendly** — active community, easy to get started
+
+---
+
+## Feature Comparison
+
+A quick side-by-side look at the platform's core features:
+
+| Feature | Purpose | Requires API Key | Requires Supabase | Supports Multiple Providers |
+|---|---|:---:|:---:|:---:|
+| Individual Agents | Run a single AI agent | ✅ | ❌ | ✅ |
+| Battle Mode | Compare responses from multiple AI providers | ✅ | ❌ | ✅ |
+| Workflow Builder | Chain multiple AI agents together | ✅ | ✅ | ✅ |
 
 ---
 
