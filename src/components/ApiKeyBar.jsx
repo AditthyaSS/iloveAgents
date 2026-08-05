@@ -201,7 +201,7 @@ export default function ApiKeyBar({
         </div>
 
         {/* Save checkbox */}
-        <label className="flex items-center gap-1.5 select-none ${!apiKey?.trim() ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`">
+        <label className={`flex items-center gap-1.5 select-none ${!apiKey?.trim() ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}>
           <input
             type="checkbox"
             checked={saveForSession}

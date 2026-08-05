@@ -137,5 +137,6 @@
 
 | 130 | DSA Progress Analyzer | Analyzes your DSA practice log to find weak topics and suggest what to practice next. | Education |
 | 131 | Terms and Conditions Simplifier | Paste any website's URL — including its homepage — and get its Terms & Conditions explained in plain English, and checked for red flags like hidden fees, auto-renewals, and data-sharing clauses. | Legal |
+| 132 | PCOS Lifestyle Planner | Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits. | Healthcare |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
