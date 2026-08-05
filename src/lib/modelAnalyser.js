@@ -56,7 +56,7 @@ Be specific and practical. Consider context window, speed, cost and output quali
 
   const MODEL_DEFAULTS = {
     gemini: "gemini-2.5-flash",
-    anthropic: "claude-3.5-Haiku",
+    anthropic: "claude-3-5-haiku-20241022",
     openai: "gpt-4o-mini",
 
   };
