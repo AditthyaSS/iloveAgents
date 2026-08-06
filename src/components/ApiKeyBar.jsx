@@ -91,9 +91,11 @@ export default function ApiKeyBar({
     hasAppliedDefaultProvider.current = true
 
     const globalKeys = getGlobalKeys()
+    const isValidProvider = PROVIDERS.some((p) => p.value === globalKeys.defaultProvider)
+
     if (
       agentProvider === 'any' &&
-      globalKeys.defaultProvider &&
+      isValidProvider &&
       provider !== globalKeys.defaultProvider
     ) {
       setProvider(globalKeys.defaultProvider)
