@@ -11,6 +11,7 @@ import {
   Copy,
   Check,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
@@ -128,13 +129,13 @@ export default function BattleModeArena() {
     }
   }, [agent, inputs, apiKeys, navigate]);
 
-  // Fire all three API calls simultaneously
-  useEffect(() => {
-    if (!agent || !inputs || !apiKeys) return;
+  // Runs (or re-runs) a single provider's request. Shared by the initial
+  // fire-all-three effect and by the per-panel retry button, so a retry
+  // only touches the one panel and leaves the other two untouched.
+  const runProvider = useCallback(
+    (prov) => {
+      const userMessage = buildUserMessage(agent, inputs);
 
-    const userMessage = buildUserMessage(agent, inputs);
-
-    PROVIDERS.forEach((prov) => {
       setPrompts((prev) => ({
         ...prev,
         [prov.id]: {
@@ -199,7 +200,15 @@ export default function BattleModeArena() {
             },
           }));
         });
-    });
+    },
+    [agent, inputs, apiKeys],
+  );
+
+  // Fire all three API calls simultaneously
+  useEffect(() => {
+    if (!agent || !inputs || !apiKeys) return;
+
+    PROVIDERS.forEach((prov) => runProvider(prov));
 
     // Cleanup: abort all pending requests when component unmounts
     return () => {
@@ -208,6 +217,20 @@ export default function BattleModeArena() {
       });
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Retry just one provider's panel: clears only that panel's output/error
+  // state and re-fires runAgent for that provider alone.
+  const handleRetryProvider = (providerId) => {
+    const prov = PROVIDERS.find((p) => p.id === providerId);
+    if (!prov) return;
+
+    setResults((prev) => ({
+      ...prev,
+      [providerId]: { loading: true, content: null, error: null, duration: null },
+    }));
+
+    runProvider(prov);
+  };
 
   const handlePickWinner = (providerId) => {
     const prov = PROVIDERS.find((p) => p.id === providerId);
@@ -517,10 +540,22 @@ export default function BattleModeArena() {
                       </span>
                     )}
 
-                    {r.duration && (
-                      <span className="ml-auto text-[11px] dark:text-text-muted text-gray-700 font-medium">
-                        {(r.duration / 1000).toFixed(1)}s
-                      </span>
+                    {(r.duration || r.error) && !r.loading && (
+                      <div className="ml-auto flex items-center gap-2">
+                        {r.duration && (
+                          <span className="text-[11px] dark:text-text-muted text-gray-700 font-medium">
+                            {(r.duration / 1000).toFixed(1)}s
+                          </span>
+                        )}
+                        <button
+                          onClick={() => handleRetryProvider(prov.id)}
+                          className={`p-1 rounded-md ${prov.textColor} hover:bg-white/10 transition-colors`}
+                          aria-label={`Retry ${prov.label}`}
+                          title={`Retry ${prov.label}`}
+                        >
+                          <RefreshCw size={14} />
+                        </button>
+                      </div>
                     )}
                   </div>
 
