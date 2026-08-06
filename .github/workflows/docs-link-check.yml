@@ -1,0 +1,63 @@
+name: Docs Link Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly on Sunday
+
+permissions:
+  contents: read
+
+jobs:
+  link-checker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Links with Lychee
+        id: lychee
+        uses: lycheeverse/lychee-action@v2
+        with:
+          # Check all markdown files, retry failures, and ignore common local/example domains
+          args: >-
+            --cache
+            --max-retries 3
+            --exclude "localhost"
+            --exclude "127.0.0.1"
+            --exclude "example.com"
+            --exclude "example.org"
+            --format markdown
+            --output lychee-report.md
+            "**/*.md"
+        # We handle failures manually below to ensure reports are uploaded and summary is added
+        continue-on-error: true
+
+      - name: Add summary to job
+        if: always()
+        run: |
+          echo "### Docs Link Check Summary 🔗" >> $GITHUB_STEP_SUMMARY
+          if [ -s lychee-report.md ]; then
+            cat lychee-report.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "All links are valid! 🎉" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Link Check Report
+        if: steps.lychee.outputs.exit_code != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-check-report
+          path: lychee-report.md
+          retention-days: 7
+          
+      - name: Fail workflow if broken links exist
+        if: steps.lychee.outputs.exit_code != '0'
+        run: |
+          echo "Broken links were found. Please check the summary or the uploaded artifact."
+          exit 1
