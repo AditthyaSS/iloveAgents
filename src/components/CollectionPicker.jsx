@@ -26,8 +26,8 @@ export default function CollectionPicker({ agentId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
-      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-border dark:bg-surface-card">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto p-4 pt-8 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
+      <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-border dark:bg-surface-card">
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-5 dark:border-border">
           <div className="flex items-start gap-3"><div className="rounded-lg bg-accent/10 p-2 text-accent"><FolderPlus size={18} /></div><div><h2 className="text-base font-semibold text-gray-900 dark:text-text-primary">Add to Collection</h2><p className="mt-1 text-sm text-gray-500 dark:text-text-secondary">Choose a collection or create a new one.</p></div></div>
           <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-white/10 dark:hover:text-text-primary" aria-label="Close dialog"><X size={18} /></button>
