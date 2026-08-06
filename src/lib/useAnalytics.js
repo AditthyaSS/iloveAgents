@@ -294,9 +294,13 @@ export function useAnalytics(timeRange = 'all') {
   const stats = useMemo(() => computeStats(events, timeRange), [events, timeRange])
 
   const clearAnalytics = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY)
-    setEvents([])
-  }, [])
+  if (!events.length) {
+  alert("No analytics data to clear.")
+  return
+}
+  localStorage.removeItem(STORAGE_KEY)
+  setEvents([])
+}, [events])
 
   return { events, stats, clearAnalytics }
 }

@@ -41,12 +41,6 @@ export const MODEL_PRICING = {
     outputCostPer1M: 75.00,
     contextWindow: 200000,
   },
-  'gemini-2.5-flash': {
-    provider: 'gemini',
-    inputCostPer1M: 0.075,
-    outputCostPer1M: 0.30,
-    contextWindow: 1000000,
-  },
   'gemini-1.5-pro': {
     provider: 'gemini',
     inputCostPer1M: 1.25,
@@ -61,8 +55,8 @@ export const MODEL_PRICING = {
   },
   'gemini-2.5-flash': {
     provider: 'gemini',
-    inputCostPer1M: 0.15,
-    outputCostPer1M: 0.60,
+    inputCostPer1M: 0.30,
+    outputCostPer1M: 2.50,
     contextWindow: 1000000,
   },
   'openai/gpt-4o-mini': {
