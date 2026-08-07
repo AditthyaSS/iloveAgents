@@ -1,5 +1,5 @@
 import { fetchGeminiModels } from '../lib/llmAdapter'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import CustomSelect from './CustomSelect'
@@ -79,14 +79,28 @@ export default function ApiKeyBar({
     if (savedKey && !apiKey) {
       setApiKey(savedKey)
     }
-    // Also set default provider if none selected and a default exists
-    if (globalKeys.defaultProvider && provider !== globalKeys.defaultProvider) {
-      // Only set if the agent allows any provider
-      if (agentProvider === 'any') {
-        // Don't override the user's current selection — only on initial mount
-      }
-    }
   }, [provider])
+
+  // ── Apply saved default provider once on mount, only if the agent
+  // doesn't require a specific provider. We only want this on initial
+  // mount — not every time `provider` changes — otherwise it would
+  // fight the user's own manual selection.
+  const hasAppliedDefaultProvider = useRef(false)
+  useEffect(() => {
+    if (hasAppliedDefaultProvider.current) return
+    hasAppliedDefaultProvider.current = true
+
+    const globalKeys = getGlobalKeys()
+    const isValidProvider = PROVIDERS.some((p) => p.value === globalKeys.defaultProvider)
+
+    if (
+      agentProvider === 'any' &&
+      isValidProvider &&
+      provider !== globalKeys.defaultProvider
+    ) {
+      setProvider(globalKeys.defaultProvider)
+    }
+  }, [])
 
   useEffect(() => {
     if (provider !== 'gemini' || !apiKey?.trim()) {
