@@ -29,6 +29,7 @@ const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
 const Privacy = lazy(() => import('./pages/Privacy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
 
 function PageLoader() {

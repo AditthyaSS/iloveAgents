@@ -32,6 +32,7 @@ import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
 import BatchModeRunner from "./BatchModeRunner";
 import ErrorBoundary from "./ErrorBoundary";
+import AgentPreviewPanel from "./AgentPreviewPanel";
 import PromptHistoryPanel from "./PromptHistoryPanel";
 import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
@@ -100,6 +101,7 @@ export default function AgentRunner({ agent }) {
   const [batchMode, setBatchMode] = useState(false);
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("code");
   const { savePrompt } = usePromptHistory();
   const { addJob } = useScheduler({ autoRun: false });
   const { addRun } = useSessionSpend();
