@@ -1,0 +1,5 @@
+# Docs Link Check config
+# Some links (AI provider dashboards) return 401/403/429 to headless
+# bots like lychee even though they work fine in a real browser.
+# Accept those status codes instead of treating them as broken links.
+accept = [200, 401, 403, 429]
