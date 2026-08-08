@@ -66,7 +66,7 @@ function TraceStep({ step, index, defaultOpen }) {
 }
 
 function TracePayload({ label, value }) {
-  if (value == null || value === '') return null
+  if (value === null || value === '') return null
   return (
     <div>
       <p className="text-[11px] font-semibold uppercase tracking-wide mb-1 dark:text-text-muted text-gray-400">
