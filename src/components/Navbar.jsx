@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Settings,
   Info,
+  Compass,
 } from 'lucide-react'
 
 import Logo from './Logo'
