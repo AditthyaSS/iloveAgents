@@ -424,7 +424,7 @@ export default function HomePage() {
 
       {/* Search & Category Filter Section */}
       <div
-        className={`premium-section space-y-4 relative z-30 ${isOpen ? "mb-80" : "mb-6"}`}
+        className="premium-section space-y-6 relative z-30 mb-6"
         style={{ animationDelay: "180ms" }}
       >
         {/* Search Bar */}
@@ -464,118 +464,40 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Category Filter Dropdown */}
-        <div className="flex justify-center" onKeyDown={handleKeyDown}>
-          <div ref={dropdownRef} className="relative w-72 z-50">
-            {!selectedCategory ? (
+        {/* Category Filter Pills */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {dropdownOptions.map((option) => {
+            const isSelected = option.value === selectedCategory;
+            const meta = option.value ? (categoryMeta[option.value] || defaultMeta) : null;
+            return (
               <button
-                id="category-select-trigger"
+                key={option.value || 'all-categories'}
                 type="button"
-                ref={triggerRef}
-                onClick={() => setIsOpen(!isOpen)}
-                aria-haspopup="listbox"
-                aria-expanded={isOpen}
-                aria-controls="category-select-menu"
-                className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border text-sm transition-all duration-200
-                  dark:bg-surface-card dark:border-border dark:text-text-primary bg-white border-gray-200 text-gray-900
-                  hover:border-accent/30 dark:hover:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent"
+                onClick={() => setSelectedCategory(option.value)}
+                aria-pressed={isSelected}
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors
+                  ${isSelected
+                    ? option.value 
+                      ? `border-transparent bg-gradient-to-r ${meta.color} text-white shadow-sm ring-2 ${meta.ring}`
+                      : 'border-accent bg-accent text-white shadow-sm'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-accent/40 hover:text-gray-900 dark:border-border dark:bg-surface-card dark:text-text-secondary dark:hover:border-accent/40 dark:hover:text-text-primary'
+                  }`}
               >
-                <span className="flex items-center gap-2 truncate">
-                  <SlidersHorizontal size={14} className="dark:text-text-muted text-gray-400" />
-                  <span className="font-medium">All Categories</span>
+                {option.value && (
+                  <span className={`w-2 h-2 rounded-full bg-gradient-to-r ${meta.color} flex-shrink-0 ${isSelected ? 'opacity-90 border border-white/20' : ''}`} />
+                )}
+                {!option.value && (
+                  <SlidersHorizontal size={12} className={isSelected ? 'text-white' : 'text-gray-400 dark:text-text-muted'} />
+                )}
+                <span>{option.label}</span>
+                <span className={`rounded-full px-1.5 py-0.5 text-[10px] leading-none
+                  ${isSelected ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500 dark:bg-surface-input dark:text-text-muted'}`}
+                >
+                  {option.count}
                 </span>
-                <ChevronDown
-                  size={16}
-                  className={`text-gray-400 dark:text-text-muted transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}
-                />
               </button>
-            ) : (
-              (() => {
-                const meta = categoryMeta[selectedCategory] || defaultMeta
-                return (
-                  <div className={`flex items-center justify-between w-full rounded-xl text-sm transition-all duration-200 bg-gradient-to-r ${meta.color} text-white border-transparent shadow-md ring-2 ${meta.ring}`}>
-                    <button
-                      id="category-select-trigger"
-                      type="button"
-                      ref={triggerRef}
-                      onClick={() => setIsOpen(!isOpen)}
-                      aria-haspopup="listbox"
-                      aria-expanded={isOpen}
-                      aria-controls="category-select-menu"
-                      className="flex-1 text-left px-4 py-2.5 font-semibold focus:outline-none focus:ring-0 truncate"
-                    >
-                      {selectedCategory}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setSelectedCategory(null)
-                        setIsOpen(false)
-                        setTimeout(() => triggerRef.current?.focus(), 0)
-                      }}
-                      aria-label={`Clear filter for ${selectedCategory}`}
-                      className="flex-shrink-0 p-2 mr-1.5 hover:bg-white/20 rounded-lg transition-colors duration-150 focus:outline-none focus:ring-1 focus:ring-white/50"
-                    >
-                      <X size={16} className="text-white" />
-                    </button>
-                  </div>
-                )
-              })()
-            )}
-
-            {isOpen && (
-              <div
-                id="category-select-menu"
-                role="listbox"
-                aria-label="Agent categories"
-                aria-activedescendant={focusedIndex >= 0 ? `option-${focusedIndex}` : undefined}
-                className="absolute left-0 right-0 mt-2 z-50 rounded-xl border shadow-2xl max-h-[70vh] overflow-y-auto p-1.5 space-y-1 bg-white dark:bg-surface-card"
-              >
-                {dropdownOptions.map((opt, idx) => {
-                  const isSelected = opt.value === selectedCategory
-                  const meta = opt.value ? (categoryMeta[opt.value] || defaultMeta) : null
-                  return (
-                    <button
-                      key={opt.value || 'all'}
-                      id={`option-${idx}`}
-                      role="option"
-                      aria-selected={isSelected}
-                      ref={(el) => (optionRefs.current[idx] = el)}
-                      type="button"
-                      onClick={() => {
-                        setSelectedCategory(opt.value)
-                        setIsOpen(false)
-                        setFocusedIndex(-1)
-                        setTimeout(() => triggerRef.current?.focus(), 0)
-                      }}
-                      className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg border transition-all duration-150 text-left
-                        ${isSelected
-                          ? opt.value
-                            ? `bg-gradient-to-r ${meta.color} text-white border-transparent font-semibold shadow-sm`
-                            : 'bg-accent text-white border-accent font-semibold shadow-sm'
-                          : 'dark:bg-surface-input dark:border-border dark:text-text-secondary dark:hover:border-accent/40 dark:hover:text-text-primary hover:border-accent/30 bg-white border-gray-200 text-gray-700 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent'
-                        }`}
-                    >
-                      <span className="flex items-center gap-2 truncate">
-                        {opt.value ? (
-                          <span className={`w-2 h-2 rounded-full bg-gradient-to-r ${meta.color} flex-shrink-0`} />
-                        ) : (
-                          <SlidersHorizontal size={14} className="dark:text-text-muted text-gray-400 flex-shrink-0" />
-                        )}
-                        <span className="truncate">{opt.label}</span>
-                      </span>
-                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full
-                        ${isSelected ? 'bg-white/20 text-white' : 'dark:bg-surface-card dark:text-text-muted bg-gray-100 text-gray-500'}`}
-                      >
-                        {opt.count}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+            )
+          })}
         </div>
 
         {/* Provider Filter Pills */}
