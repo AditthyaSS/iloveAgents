@@ -75,15 +75,14 @@ export function useAgentRunMetrics(rangeDays = 30) {
   const avgDurationMs = totalRuns
     ? runs.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / totalRuns
     : 0;
-    return { runs, loading, totalRuns, successRate, totalTokens, totalCostUSD, unknownCostRuns, avgDurationMs, refetch: fetchRuns }
-
-  return {
+    return {
     runs,
     loading,
     totalRuns,
     successRate,
     totalTokens,
     totalCostUSD,
+    unknownCostRuns,
     avgDurationMs,
     refetch: fetchRuns,
   };
