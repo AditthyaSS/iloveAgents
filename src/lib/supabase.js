@@ -14,7 +14,9 @@ function createNoopQuery(result = { data: [], error: null }) {
     insert: () => query,
     update: () => query,
     eq: () => query,
+    gte: () => query,
     order: () => query,
+    range: () => query,
     single: () => createNoopQuery({ data: null, error: null }),
     then: (resolve) => Promise.resolve(result).then(resolve),
   }
