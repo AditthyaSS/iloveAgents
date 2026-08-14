@@ -67,13 +67,15 @@ export function useAgentRunMetrics(rangeDays = 30) {
     (sum, r) => sum + (r.input_tokens || 0) + (r.output_tokens || 0),
     0,
   );
-  const totalCostUSD = runs.reduce(
-    (sum, r) => sum + (r.estimated_cost_usd || 0),
-    0,
-  );
+ const totalCostUSD = runs.reduce(
+    (sum, r) => (r.estimated_cost_usd == null ? sum : sum + r.estimated_cost_usd),
+    0
+  )
+  const unknownCostRuns = runs.filter((r) => r.estimated_cost_usd == null).length
   const avgDurationMs = totalRuns
     ? runs.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / totalRuns
     : 0;
+    return { runs, loading, totalRuns, successRate, totalTokens, totalCostUSD, unknownCostRuns, avgDurationMs, refetch: fetchRuns }
 
   return {
     runs,
