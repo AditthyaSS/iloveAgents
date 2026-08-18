@@ -7,6 +7,7 @@ import {
   Mail,
   Calendar,
   RefreshCw,
+  ArrowLeft,
 } from "lucide-react";
 
 const sections = [
@@ -61,6 +62,11 @@ const sections = [
 ];
 
 export default function Privacy() {
+   const handleBack = () => {
+    if (typeof window !== "undefined") {
+      window.history.back();
+    }
+  };
   return (
     <div className="min-h-screen bg-[#06070A] text-white overflow-hidden">
       {/* Background */}
@@ -70,7 +76,16 @@ export default function Privacy() {
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-20">
+      <div className="max-w-6xl mx-auto px-6 py-20 relative">
+      <div className="absolute top-6 left-6 md:top-10 md:left-6">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 text-slate-300 backdrop-blur-md transition duration-300 hover:text-cyan-400 hover:border-cyan-400/30 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-fuchsia-500/10"
+          >
+            <ArrowLeft size={16} />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        </div>
         <div className="text-center">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 to-fuchsia-500/20 border border-cyan-400/20 mb-6">
             <ShieldCheck className="h-5 w-5 text-cyan-400" />
