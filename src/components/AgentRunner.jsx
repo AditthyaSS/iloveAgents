@@ -37,7 +37,7 @@ import PromptHistoryPanel from "./PromptHistoryPanel";
 import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
-import { useApiKey } from "../lib/useApiKey";
+import { useApiKeys } from "../contexts/ApiKeyContext";
 import { streamAgent } from "../lib/llmAdapter";
 import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
@@ -73,7 +73,7 @@ export default function AgentRunner({ agent }) {
     setApiKey,
     saveForSession,
     setSaveForSession,
-  } = useApiKey();
+  } = useApiKeys();
 
   const { saveRun } = useHistory();
   const navigate = useNavigate();
