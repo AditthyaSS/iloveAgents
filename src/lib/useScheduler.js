@@ -141,6 +141,14 @@ export function useScheduler({ autoRun = true } = {}) {
     removeStoredJobKey(jobId)
     setJobs(prev => prev.filter(j => j.id !== jobId))
   }, [])
+  // Re-supply an API key for a job whose key was lost (e.g. tab closed
+  // and sessionStorage was cleared).
+  const updateJobKey = useCallback((jobId, apiKey) => {
+    setStoredJobKey(jobId, apiKey)
+    setJobs(prev => prev.map(j =>
+      j.id === jobId ? { ...j, apiKey } : j
+    ))
+  }, [])
 
   // ── Delete a result
   const deleteResult = useCallback((resultId) => {
@@ -277,6 +285,7 @@ export function useScheduler({ autoRun = true } = {}) {
     addJob,
     toggleJob,
     deleteJob,
+    updateJobKey,
     deleteResult,
     clearResultsForJob,
     runJob,
