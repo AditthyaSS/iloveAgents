@@ -37,6 +37,7 @@ import PromptHistoryPanel from "./PromptHistoryPanel";
 import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
+import ThoughtProcessPanel from "./ThoughtProcessPanel";
 import { useApiKeys } from "../contexts/ApiKeyContext";
 import { streamAgent } from "../lib/llmAdapter";
 import { analyseModels } from "../lib/modelAnalyser";
@@ -1065,6 +1066,12 @@ const handleRun = async () => {
       ) : (
         error && <ErrorCard message={error.message || error} />
       )}
+
+      <ThoughtProcessPanel
+        isActive={loading}
+        isDone={!loading && !!output}
+        agentCategory={agent.category}
+      />
 
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
