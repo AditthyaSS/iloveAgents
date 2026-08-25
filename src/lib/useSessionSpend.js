@@ -40,7 +40,7 @@ export function useSessionSpend() {
     let inputC = inputCost
     let outputC = outputCost
 
-    if (inputC == null && inputTokens != null && model) {
+    if (inputC === null && inputTokens != null && model) {
       inputC = estimateInputCost(model, inputTokens) || 0
     }
     if (outputC == null && outputTokens != null && model) {

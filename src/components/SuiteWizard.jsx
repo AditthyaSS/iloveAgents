@@ -60,7 +60,7 @@ if (isInteractive && !isSelectedOptionButton) {
 }
     }
 
-    if (answers[step] == null) return
+    if (answers[step] === null) return
 
     event.preventDefault()
     handleNext()
