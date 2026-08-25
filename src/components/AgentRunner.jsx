@@ -37,7 +37,8 @@ import PromptHistoryPanel from "./PromptHistoryPanel";
 import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
-import { useApiKey } from "../lib/useApiKey";
+import ThoughtProcessPanel from "./ThoughtProcessPanel";
+import { useApiKeys } from "../contexts/ApiKeyContext";
 import { streamAgent } from "../lib/llmAdapter";
 import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
@@ -73,7 +74,7 @@ export default function AgentRunner({ agent }) {
     setApiKey,
     saveForSession,
     setSaveForSession,
-  } = useApiKey();
+  } = useApiKeys();
 
   const { saveRun } = useHistory();
   const navigate = useNavigate();
@@ -1065,6 +1066,12 @@ const handleRun = async () => {
       ) : (
         error && <ErrorCard message={error.message || error} />
       )}
+
+      <ThoughtProcessPanel
+        isActive={loading}
+        isDone={!loading && !!output}
+        agentCategory={agent.category}
+      />
 
       {loading && !isStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">

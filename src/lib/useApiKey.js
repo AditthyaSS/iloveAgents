@@ -8,7 +8,7 @@ const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours
  * Keys are wrapped with expiry timestamps to prevent indefinite persistence
  * even if storage backend is changed to localStorage.
  */
-function getSafeApiKey(provider) {
+export function getSafeApiKey(provider) {
   const raw = sessionStorage.getItem(STORAGE_PREFIX + provider)
   if (!raw) return null
   try {
@@ -27,7 +27,7 @@ function getSafeApiKey(provider) {
 /**
  * Store an API key with an expiry timestamp.
  */
-function setSafeApiKey(provider, key) {
+export function setSafeApiKey(provider, key) {
   if (key) {
     sessionStorage.setItem(STORAGE_PREFIX + provider, JSON.stringify({
       key,
