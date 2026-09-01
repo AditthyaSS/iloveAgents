@@ -27,11 +27,8 @@
 - [Agent Categories](#agent-categories)
 - [Supported Providers](#supported-providers)
 - [Battle Mode](#battle-mode)
-- [AI Workflow Builder (New)](#-ai-workflow-builder-new)
-  <!-- Fix: Corrected broken anchor link - replaced space with hyphen in 'what-you-can-do' -->
-- [What you can do](#what-you-can-do)
-  - [How sequential execution works](#how-sequential-execution-works)
-  - [Navigation](#navigation)
+- [AI Workflow Builder](#-ai-workflow-builder)
+- [Scheduled Automations](#-scheduled-automations)
 - [Quick Start](#quick-start)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -52,10 +49,11 @@
 ## Repository Highlights
 
 - **Open-source and community-driven** — built and run entirely by contributors
-- **Supports multiple AI providers** — OpenAI, Anthropic, and Google Gemini
+- **Supports multiple AI providers** — OpenAI, Anthropic, Google Gemini, and OpenRouter
 - **Battle Mode** — compare model responses side by side
 - **Workflow Builder** — chain multiple agents into a single automated run
-- **Browser-based** — run AI agents directly in your browser
+- **Scheduled Automations** — run agents on recurring schedules (hourly/daily/weekly) with encrypted key storage & email alerts
+- **Browser-based & Privacy-focused** — BYOK model with direct browser calls or opt-in server-side encryption
 - **Extensible architecture** — add new agents easily
 - **Contributor-friendly** — active community, easy to get started
 
@@ -70,6 +68,7 @@ A quick side-by-side look at the platform's core features:
 | Individual Agents | Run a single AI agent | ✅ | ❌ | ✅ |
 | Battle Mode | Compare responses from multiple AI providers | ✅ | ❌ | ✅ |
 | Workflow Builder | Chain multiple AI agents together | ✅ | ✅ | ✅ |
+| Scheduled Automations | Run agents on recurring schedules with email alerts | ✅ | ✅ | ✅ |
 
 ---
 
@@ -194,6 +193,60 @@ If any step fails, the workflow stops at that step and shows you exactly what we
 | `/workflows/build` | Create and save a new workflow |
 | `/workflows/:id` | View full details of a workflow |
 | `/workflows/:id/run` | Run a workflow step-by-step |
+
+---
+
+## ⏰ Scheduled Automations
+
+> **Set your favorite AI agents on autopilot with recurring schedules, execution history, and email notifications.**
+
+Scheduled Automations allow you to schedule any agent in the registry to run automatically on a recurring interval. Results are captured in your run history and can optionally be emailed to you.
+
+### Key Capabilities
+
+- **Automated Scheduling** — Select any agent, configure inputs once, and set a recurring schedule (`hourly`, `daily`, or `weekly`).
+- **Encrypted Key Storage (`pgsodium`)** — Your provider API key is stored encrypted using Supabase's `pgsodium` encryption with explicit user opt-in consent.
+- **Run History & Logs** — Track execution status (`success`, `running`, `failed`), review complete agent outputs, execution timestamps, and error diagnostics.
+- **Email Notifications** — Receive formatted execution reports and output results in your inbox via Resend.
+- **Pause, Resume, & Manage** — Toggle automations on/off or delete them at any time.
+
+### How It Works
+
+```
+┌────────────────────────────────┐
+│      User Creates Schedule     │  (Agent + Inputs + Schedule + Provider Key)
+└───────────────┬────────────────┘
+                │ Key encrypted via pgsodium
+                ▼
+┌────────────────────────────────┐
+│        Supabase Database       │  (automations, automation_runs, user_secrets)
+└───────────────▲────────────────┘
+                │
+                │ Triggered periodically
+┌───────────────┴────────────────┐
+│   Vercel Cron (/api/cron/tick) │
+└───────────────┬────────────────┘
+                │
+        ┌───────┴────────┐
+        ▼                ▼
+┌───────────────┐ ┌───────────────┐
+│ LLM Execution │ │ Resend Email  │
+│  (runAgent)   │ │  Notification │
+└───────────────┘ └───────────────┘
+```
+
+### Security & Privacy Guarantee
+
+- **Explicit Opt-in Consent** — Keys are only stored server-side when you explicitly opt-in for automated background runs. Standard interactive agent runs continue to keep keys entirely in your browser.
+- **Zero Plaintext Leakage** — Keys are encrypted at rest with `pgsodium` and are never exposed over the client bundle or logged.
+- **Row-Level Security (RLS)** — Supabase RLS ensures only the authenticated owner can access their automations and logs.
+
+### Navigation
+
+| Route | What it does |
+|---|---|
+| `/automations` | List active automations and schedule a new agent run |
+| `/automations/:id` | View execution history, status logs, and outputs for an automation |
 
 ---
 
@@ -417,6 +470,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 | [Lucide React](https://lucide.dev) | Icons |
 | [react-markdown](https://github.com/remarkjs/react-markdown) | Markdown rendering |
 | [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) | Code highlighting |
+| [Supabase](https://supabase.com) | Database, Auth & Realtime for Workflows and Automations |
+| [pgsodium](https://github.com/michelp/pgsodium) | Secure cryptographic encryption for automation keys |
+| [Resend](https://resend.com) | Email delivery for scheduled automation reports |
+| [Vercel Cron & Functions](https://vercel.com/docs/cron-jobs) | Scheduled background execution & serverless endpoints |
 
 ---
 
@@ -424,11 +481,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 
 ### Do I need a backend to run the project?
 
-No. Most features run entirely in the browser without a backend. However, Workflow-related features require Supabase, which is configured using a `.env.local` file.
+No. Core agent execution, Battle Mode, and prompt tools run entirely in the browser without a backend. Backend services (Supabase & Vercel Functions) are only utilized for optional collaborative features (Workflows) and recurring jobs (Scheduled Automations).
 
 ### Where can I obtain API keys for OpenAI, Anthropic, or Google Gemini?
 
-You can create API keys from the official provider dashboards. Enter the keys directly in the application at runtime—they are never stored by the project.
+You can create API keys from the official provider dashboards. Enter the keys directly in the application at runtime—they are never stored by the project for standard interactive runs.
+
+### How does key security work with Scheduled Automations?
+
+For normal browser runs, keys never leave your device. When scheduling background automations, you are prompted with explicit consent to encrypt your key via Supabase `pgsodium`. Keys are encrypted at rest, never returned in plaintext in API responses, and only decrypted during scheduled cron executions.
 
 ### Why isn't my `.env.local` file being detected?
 
@@ -436,11 +497,13 @@ Make sure `.env.local` is placed in the project root, uses the correct `VITE_` v
 
 ### Is Supabase required for all features?
 
-No. Supabase is only required for Workflow-related functionality. Basic agent execution works without it.
+No. Supabase is only required for Workflow-related functionality and Scheduled Automations. Basic agent execution works completely without it.
 
-### What is the difference between Battle Mode and Workflow Builder?
+### What is the difference between Battle Mode, Workflow Builder, and Scheduled Automations?
 
-Battle Mode compares responses from multiple AI providers using the same prompt, while Workflow Builder lets you chain multiple AI agents together into a sequential workflow.
+- **Battle Mode**: Compares responses from multiple AI providers side by side using the same prompt.
+- **Workflow Builder**: Chains multiple AI agents together into a sequential pipeline where output passes to the next agent.
+- **Scheduled Automations**: Runs any agent on a recurring schedule (hourly, daily, weekly) and logs results with optional email alerts.
 
 ### How do I add a new AI agent?
 
