@@ -33,8 +33,8 @@ jobs:
             --exclude "example.com"
             --exclude "example.org"
             --format markdown
-            --output lychee-report.md
             "**/*.md"
+          output: lychee-report.md
         # We handle failures manually below to ensure reports are uploaded and summary is added
         continue-on-error: true
 
