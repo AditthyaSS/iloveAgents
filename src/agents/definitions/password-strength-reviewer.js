@@ -4,9 +4,9 @@ const passwordStrengthAgent= {
   description: 'The agent takes in the password and reviews whether it is strong enough.',
   category: 'Cybersecurity',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
   icon: 'LockKeyhole',              // Any icon from lucide.dev/icons
-  provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
-  defaultProvider: 'openai',     // Only needed if provider is 'any'
-  model: 'gpt-4o',
+  provider: 'local',               // 'openai' | 'anthropic' | 'gemini' | 'any' | 'local'
+  defaultProvider: 'local',     // Only needed if provider is 'any'
+  model: 'zxcvbn',
   inputs: [
     {
       id: 'password-to-be-checked',
@@ -18,24 +18,9 @@ const passwordStrengthAgent= {
     }
 
 ],
-  
-systemPrompt: `You are a cybersecurity agent that evaluates password strength.
+systemPrompt: `This agent evaluates password strength entirely client-side using zxcvbn.
 
-Your responsibilities:
-
-1. Analyze the provided password, but do not mention in the output.
-2. Identify weaknesses and strengths.
-3. Estimate resistance against common attacks:
-   - Dictionary attacks
-   - Brute force attacks
-   - Credential stuffing
-   - Pattern-based guessing
-4. Explain findings in clear language.
-5. Suggest improvements without simply appending numbers or symbols.
-6. Never repeat passwords unnecessarily in the output.
-7. Do not claim exact cracking times.
-8. Avoid fearmongering.
-9. Provide actionable recommendations.
+The password is never sent to any external API or third-party service.
 
 Evaluation criteria:
 
@@ -56,6 +41,7 @@ Strength ratings:
 - Moderate
 - Strong
 - Very Strong
+n`,
 
 `,
 
