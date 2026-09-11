@@ -184,7 +184,7 @@ export function useScheduler({ autoRun = true } = {}) {
         provider: actualProvider,
         model,
         apiKey: job.apiKey,
-        systemPrompt: agent.systemPrompt,
+        systemPrompt: job.systemPrompt || agent.systemPrompt,
         userMessage,
         onChunk: () => {},
       })
