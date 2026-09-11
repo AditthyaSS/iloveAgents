@@ -1,0 +1,76 @@
+name: Dockerfile Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Hadolint
+        run: |
+          wget -qO /usr/local/bin/hadolint https://github.com/hadolint/hadolint/releases/download/v2.12.0/hadolint-Linux-x86_64
+          chmod +x /usr/local/bin/hadolint
+
+      - name: Run Hadolint
+        id: lint
+        run: |
+          echo "Searching for Dockerfiles..."
+          # Find all Dockerfile or *.Dockerfile files, ignoring hidden directories like .git
+          dockerfiles=$(find . -not -path '*/\.*' \( -type f -name "Dockerfile" -o -name "*.Dockerfile" \))
+          
+          if [ -z "$dockerfiles" ]; then
+            echo "No Dockerfiles found in the repository."
+            echo "### Dockerfile Lint Summary 🐳" >> $GITHUB_STEP_SUMMARY
+            echo "0 Dockerfiles checked. No Dockerfiles found." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          
+          count=$(echo "$dockerfiles" | wc -w)
+          echo "Found $count Dockerfiles to lint."
+          
+          echo "### Dockerfile Lint Summary 🐳" >> $GITHUB_STEP_SUMMARY
+          echo "**$count** Dockerfiles checked." >> $GITHUB_STEP_SUMMARY
+          
+          exit_code=0
+          # We use a temporary file to collect all lint errors
+          touch hadolint-report.txt
+          
+          for file in $dockerfiles; do
+            echo "Linting $file ..."
+            # Run hadolint; append output to report; capture exit code
+            if ! hadolint "$file" >> hadolint-report.txt 2>&1; then
+              exit_code=1
+            fi
+          done
+          
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          if [ $exit_code -eq 0 ]; then
+            echo "All Dockerfiles passed successfully! 🎉" >> $GITHUB_STEP_SUMMARY
+            echo "All checks passed."
+          else
+            cat hadolint-report.txt >> $GITHUB_STEP_SUMMARY
+            cat hadolint-report.txt
+          fi
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+          exit $exit_code
+
+      - name: Upload lint report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hadolint-report
+          path: hadolint-report.txt
+          retention-days: 7
