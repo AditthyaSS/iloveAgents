@@ -41,11 +41,21 @@ export default function SchedulerPage() {
     jobs, results, running,
     toggleJob, deleteJob, runJob,
     deleteResult, clearResultsForJob,
+    updateJobKey,
   } = useScheduler()
 
   const [expandedJob, setExpandedJob] = useState(null)
   const [expandedResult, setExpandedResult] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [keyInputJobId, setKeyInputJobId] = useState(null)
+  const [keyInputValue, setKeyInputValue] = useState('')
+
+  const handleSaveKey = (jobId) => {
+    if (!keyInputValue.trim()) return
+    updateJobKey(jobId, keyInputValue.trim())
+    setKeyInputJobId(null)
+    setKeyInputValue('')
+  }
 
   const handleRequestNotification = () => {
     if (!('Notification' in window)) return
@@ -89,6 +99,16 @@ export default function SchedulerPage() {
         )}
       </div>
 
+      {/* Background execution notice */}
+      <div className="flex items-start gap-2 mb-6 px-3 py-2.5 rounded-lg text-xs
+        dark:bg-surface-hover dark:text-text-secondary bg-gray-50 text-gray-500 border dark:border-border border-gray-200">
+        <AlertCircle size={14} className="flex-shrink-0 mt-0.5" />
+        <span>
+          Scheduled jobs currently run only while this app is open in a browser tab, and their API key
+          is cleared when that tab closes. If a job stops running, check for an "API key required" notice below.
+        </span>
+      </div>
+
       {/* Empty state */}
       {jobs.length === 0 && (
         <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
@@ -112,6 +132,8 @@ export default function SchedulerPage() {
             const isRunning = running[job.id]
             const scheduleLabel = SCHEDULE_OPTIONS.find(s => s.value === job.schedule)?.label ?? job.schedule
             const isExpanded = expandedJob === job.id
+            const needsKey = job.enabled && !job.apiKey
+            const isEnteringKey = keyInputJobId === job.id
 
             return (
               <div
@@ -144,6 +166,13 @@ export default function SchedulerPage() {
                           Paused
                         </span>
                       )}
+                      {needsKey && (
+                        <span className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full
+                          bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                          <AlertCircle size={10} />
+                          API key required
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-[11px] dark:text-text-muted text-gray-400">
@@ -152,12 +181,48 @@ export default function SchedulerPage() {
                       <span className="text-[11px] dark:text-text-muted text-gray-400">
                         Last run: {formatDate(job.lastRunAt)}
                       </span>
-                      {job.enabled && (
+                      {job.enabled && !needsKey && (
                         <span className="text-[11px] text-accent">
                           Next: {formatNextRun(job.nextRunAt)}
                         </span>
                       )}
+                      {needsKey && !isEnteringKey && (
+                        <button
+                          onClick={() => { setKeyInputJobId(job.id); setKeyInputValue('') }}
+                          className="text-[11px] text-amber-500 hover:underline font-medium"
+                        >
+                          This job can't run - add an API key
+                        </button>
+                      )}
                     </div>
+
+                    {isEnteringKey && (
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <input
+                          type="password"
+                          autoFocus
+                          value={keyInputValue}
+                          onChange={(e) => setKeyInputValue(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveKey(job.id) }}
+                          placeholder={`API key for ${job.provider || 'this provider'}`}
+                          className="flex-1 text-xs px-2 py-1 rounded-md border
+                            dark:bg-surface-input dark:border-border dark:text-text-primary
+                            bg-white border-gray-200 text-gray-900"
+                        />
+                        <button
+                          onClick={() => handleSaveKey(job.id)}
+                          className="text-[11px] font-medium text-white bg-accent hover:opacity-90 px-2.5 py-1 rounded-md transition-opacity"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setKeyInputJobId(null)}
+                          className="p-1 rounded-md dark:text-text-muted text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
