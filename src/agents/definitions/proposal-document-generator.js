@@ -1,130 +1,73 @@
 export default {
   id: "proposal-document-generator",
-  createdAt: "2026-05-15",
-
+  createdAt: "2026-06-27",
   name: "Proposal Document Generator",
-
   description:
-    "Generate professional client proposal documents with project overview, pricing, timeline, deliverables, and next steps.",
-
-  category: "Sales",
-
+    "Generate professional proposal documents for projects,free lancing, businesses,research and grants",
+  category: "Engineering",
   icon: "FileText",
-
   provider: "any",
-  defaultProvider: "openai",
-  model: "gpt-4o",
-
+  defaultProvider: "anthropic",
+  model: "claude-sonnet-4-6",
   exampleInputs: {
-    clientName: "BrightPath Healthcare",
-
-    projectType:
-      "AI-powered CRM implementation for patient engagement",
-
-    clientProblem:
-      "The client struggles with missed patient follow-ups and manual scheduling workflows.",
-
-    proposedSolution:
-      "Implement an AI-powered CRM platform with automated reminders, appointment scheduling, and workflow dashboards.",
-
-    pricing:
-      "$12,000 implementation + $500/month subscription",
-
-    timeline:
-      "6 weeks",
+    clientName: "TEC Retail",
+    clientProblem: "The company needs a modern e-commerce website to increase online sales.",
+    proposedSolution: "Develop a responsive e-commerce platform with payment integration and inventory management.",
+    pricing: "$20000",
+    timeline: "3 months",
   },
-
   inputs: [
     {
       id: "clientName",
-      label: "Client name",
+      label: "Client Name",
       type: "text",
-      placeholder: "e.g. Acme Corp",
+      placeholder: "Enter the client's name or company name",
       required: true,
     },
-
-    {
-      id: "projectType",
-      label: "Project type",
-      type: "text",
-      placeholder: "Describe the project type...",
-      required: true,
-    },
-
     {
       id: "clientProblem",
-      label: "Client problem or challenge",
+      label: "Client Problem",
       type: "textarea",
       placeholder:
-        "Describe the client's current pain points...",
-      required: true,
+        "Describe the client's problem or requirements.",
+        required: true,
     },
-
     {
       id: "proposedSolution",
-      label: "Proposed solution",
+      label: "Proposed Solution",
       type: "textarea",
-      placeholder:
-        "Describe your proposed solution...",
+      placeholder: "Describe your proposed solution",
       required: true,
     },
-
     {
       id: "pricing",
       label: "Pricing",
       type: "text",
-      placeholder: "e.g. $5000 fixed project",
+      placeholder: "Enter the proposed pricing or budget",
       required: true,
     },
-
     {
       id: "timeline",
-      label: "Project timeline",
+      label: "Timeline",
       type: "text",
-      placeholder: "e.g. 4 weeks",
+      placeholder: "Enter the estimated project timeline",
       required: true,
     },
   ],
+  systemPrompt: `You are an expert sales proposal writer.
+  Given the client information,generate a professional proposal document.
 
-  systemPrompt: `You are an expert business consultant and proposal writer.
+  Include:
+  Executive Summary
+  Problem Statement
+  Proposed Solution
+  Scope of Work
+  Pricing details
+  Timeline
+  Expected Outcomes
+  Next Steps
 
-Generate a professional proposal document.
-
-The output should include:
-
-# Proposal Document
-
-## Executive Summary
-Summarize the client's problem and the proposed solution.
-
-## Client Challenges
-Clearly explain the business pain points.
-
-## Proposed Solution
-Explain how the solution solves the problem.
-
-## Deliverables
-Provide a structured list of deliverables.
-
-## Timeline
-Provide a realistic implementation timeline.
-
-## Pricing
-Present pricing clearly and professionally.
-
-## Expected Outcomes
-Explain measurable business benefits.
-
-## Next Steps
-Explain what should happen after proposal approval.
-
-Rules:
-- Use professional business language
-- Keep the proposal concise but detailed
-- Use markdown formatting
-- Make the proposal client-friendly
-- Focus on clarity and business value
-- Avoid generic filler text`,
-
-  outputType: "markdown",
+  Keep the proposal professional,convincing and concise.`,
+  outputType:"markdown",
 };
+
