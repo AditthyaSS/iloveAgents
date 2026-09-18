@@ -195,6 +195,24 @@ const ERROR_MESSAGES = {
   503: 'The API service is temporarily unavailable. Try again in a minute.',
 };
 
+// Minimum time (ms) between successive requests to the same provider.
+// Prevents bursts that exhaust API quotas or run up costs.
+const MIN_REQUEST_INTERVAL_MS = 1000
+const lastRequestAt = {}
+
+/**
+ * Client-side request throttle. Queues the caller until enough time has
+ * passed since the last call made to the same provider.
+ */
+async function throttleProviderRequest(provider) {
+  const previous = lastRequestAt[provider] || 0
+  const wait = MIN_REQUEST_INTERVAL_MS - (Date.now() - previous)
+  lastRequestAt[provider] = Math.max(Date.now(), previous + MIN_REQUEST_INTERVAL_MS)
+  if (wait > 0) {
+    await new Promise((resolve) => setTimeout(resolve, wait))
+  }
+}
+
 /**
  * Handle non-OK HTTP responses consistently.
  */
@@ -259,6 +277,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
   const startTime = performance.now()
 
   try {
+    await throttleProviderRequest(provider)
     const response = await fetch(url, {
       method: 'POST',
       headers,
@@ -329,6 +348,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
   let fullContent = ''
 
   try {
+    await throttleProviderRequest(provider)
     const response = await fetch(url, {
       method: 'POST',
       headers,
