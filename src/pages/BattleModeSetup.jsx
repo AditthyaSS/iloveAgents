@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { loadAllAgents } from "../agents/registry";
+import { useApiKeys } from "../contexts/ApiKeyContext";
 
 // Input validation constants - prevent LLM calls with excessively long inputs
 const INPUT_LIMITS = {
@@ -215,11 +216,15 @@ export default function BattleModeSetup() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [inputs, setInputs] = useState({});
-  const [apiKeys, setApiKeys] = useState({
-    openai: "",
-    anthropic: "",
-    gemini: "",
-  });
+  // API keys live in global context so they persist across Battle Mode and agent pages
+  const { allKeys, setProviderKey } = useApiKeys();
+  const apiKeys = allKeys;
+  const setApiKeys = (updater) => {
+    const next = typeof updater === "function" ? updater(allKeys) : updater;
+    Object.entries(next).forEach(([provider, key]) => {
+      if (key !== allKeys[provider]) setProviderKey(provider, key);
+    });
+  };
   const [showKeys, setShowKeys] = useState({
     openai: false,
     anthropic: false,
