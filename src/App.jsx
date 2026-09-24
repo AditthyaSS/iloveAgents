@@ -12,7 +12,6 @@ import { useOnboarding } from './lib/useOnboarding'
 
 const HomePage = lazy(() => import('./pages/HomePage'))
 const AgentPage = lazy(() => import('./pages/AgentPage'))
-const FavoritesPage = lazy(() => import('./pages/FavoritesPage'))
 const BattleModeLanding = lazy(() => import('./pages/BattleModeLanding'))
 const BattleModeSetup = lazy(() => import('./pages/BattleModeSetup'))
 const BattleModeArena = lazy(() => import('./pages/BattleModeArena'))
@@ -44,34 +43,17 @@ function PageLoader() {
   )
 }
 
-function MainLayout({
-  sidebarOpen,
-  setSidebarOpen,
-  onStartTour,
-  isTourActive,
-  onTourEnd,
-}) {
+function MainLayout({ sidebarOpen, setSidebarOpen, onStartTour, isTourActive, onTourEnd }) {
   return (
     <>
-      <Navbar
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        onStartTour={onStartTour}
-      />
-
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-
+      <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onStartTour={onStartTour} />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <CustomCursor />
-
       <main className="pt-28 lg:pl-60">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>
       </main>
-
       <OnboardingTour
         isActive={isTourActive}
         onEnd={onTourEnd}
@@ -89,77 +71,39 @@ export default function App() {
     <div className="min-h-screen transition-theme dark:bg-surface bg-gray-50">
       <ScrollToTopButton />
       <ScrollToBottom />
-
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route
-              element={
-                <MainLayout
-                  sidebarOpen={sidebarOpen}
-                  setSidebarOpen={setSidebarOpen}
-                  onStartTour={startTour}
-                  isTourActive={isTourActive}
-                  onTourEnd={endTour}
-                />
-              }
-            >
+            <Route element={
+              <MainLayout
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                onStartTour={startTour}
+                isTourActive={isTourActive}
+                onTourEnd={endTour}
+              />
+            }>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/settings" element={<SettingsPage />} />
-
               <Route path="/agent/:id" element={<AgentPage />} />
-
               <Route path="/suites" element={<SuitesPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
-
-              {/* Favorites */}
-              <Route path="/favorites" element={<FavoritesPage />} />
-
-              <Route
-                path="/collections/:id"
-                element={<CollectionDetailPage />}
-              />
-
+              <Route path="/collections/:id" element={<CollectionDetailPage />} />
               <Route path="/scheduler" element={<AutomationsPage />} />
               <Route path="/automations" element={<AutomationsPage />} />
-              <Route
-                path="/automations/:id"
-                element={<AutomationDetailPage />}
-              />
-
+              <Route path="/automations/:id" element={<AutomationDetailPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
-
               <Route path="/workflows" element={<WorkflowLibrary />} />
-              <Route
-                path="/workflows/build"
-                element={<WorkflowBuilder />}
-              />
-              <Route
-                path="/workflows/:id"
-                element={<WorkflowDetail />}
-              />
-              <Route
-                path="/workflows/:id/run"
-                element={<WorkflowRunner />}
-              />
-
+              <Route path="/workflows/build" element={<WorkflowBuilder />} />
+              <Route path="/workflows/:id" element={<WorkflowDetail />} />
+              <Route path="/workflows/:id/run" element={<WorkflowRunner />} />
               <Route path="/battle" element={<BattleModeLanding />} />
-              <Route
-                path="/battle/setup"
-                element={<BattleModeSetup />}
-              />
-              <Route
-                path="/battle/arena"
-                element={<BattleModeArena />}
-              />
-              <Route
-                path="/battle/winner"
-                element={<BattleModeWinner />}
-              />
-
+              <Route path="/battle/setup" element={<BattleModeSetup />} />
+              <Route path="/battle/arena" element={<BattleModeArena />} />
+              <Route path="/battle/winner" element={<BattleModeWinner />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
           </Routes>
@@ -167,5 +111,4 @@ export default function App() {
       </ErrorBoundary>
     </div>
   )
-}
 }
