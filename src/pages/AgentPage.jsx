@@ -1,20 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import AgentRunner from '../components/AgentRunner'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function AgentPage() {
   const { id } = useParams()
-  const [agents, setAgents] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    loadAllAgents().then((loaded) => {
-      setAgents(loaded)
-      setIsLoading(false)
-    })
-  }, [])
+  const { agents, loading: isLoading } = useAgents()
 
   const agent = agents.find((a) => a.id === id)
   useDocumentTitle(agent?.name ?? 'Agent')

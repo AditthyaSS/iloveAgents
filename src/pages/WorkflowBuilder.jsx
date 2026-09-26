@@ -12,7 +12,7 @@ import {
   GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { saveWorkflow } from '../hooks/useWorkflows'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -25,7 +25,7 @@ export default function WorkflowBuilder() {
   const workflowTitle = location.state?.workflowTitle
   useDocumentTitle('Build a Workflow')
 
-  const [agents, setAgents] = useState([])
+  const { agents } = useAgents()
   const [title, setTitle] = useState(workflowTitle || '')
   const [description, setDescription] = useState('')
   const descriptionRef = useRef(null)
@@ -35,10 +35,6 @@ export default function WorkflowBuilder() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
-
-  useEffect(() => {
-    loadAllAgents().then(setAgents)
-  }, [])
 
   // Resolve pre-populated chain once agents load
   useEffect(() => {
