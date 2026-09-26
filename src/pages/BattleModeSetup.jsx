@@ -11,7 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import { loadAllAgents } from "../agents/registry";
+import { useAgents } from "../lib/useAgents";
 
 // Input validation constants - prevent LLM calls with excessively long inputs
 const INPUT_LIMITS = {
@@ -210,8 +210,7 @@ export default function BattleModeSetup() {
   const navigate = useNavigate();
   useDocumentTitle("Battle Setup");
 
-  const [agents, setAgents] = useState([]);
-  const [agentsLoading, setAgentsLoading] = useState(true);
+  const { agents, loading: agentsLoading } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [inputs, setInputs] = useState({});
@@ -226,12 +225,6 @@ export default function BattleModeSetup() {
     gemini: false,
   });
   const [step, setStep] = useState(1); // 1 = pick agent, 2 = fill inputs + keys
-
-  useEffect(() => {
-    loadAllAgents()
-      .then(setAgents)
-      .finally(() => setAgentsLoading(false));
-  }, []);
 
   const filteredAgents = agents.filter((a) => {
     const q = searchQuery.toLowerCase();

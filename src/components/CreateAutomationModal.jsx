@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation, updateAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { useApiKey } from '../lib/useApiKey'
 
 export default function CreateAutomationModal({
@@ -16,7 +16,7 @@ export default function CreateAutomationModal({
   initialData = null, // for editing
 }) {
   const { apiKey: globalKey } = useApiKey()
-  const [agents, setAgents] = useState([])
+  const { agents } = useAgents()
   const [selectedAgentId, setSelectedAgentId] = useState(
     initialData?.agentId || preselectedAgent?.id || ''
   )
@@ -33,15 +33,11 @@ export default function CreateAutomationModal({
   const [error, setError] = useState('')
   const [searchAgent, setSearchAgent] = useState('')
 
-  // Load all agents from registry
   useEffect(() => {
-    loadAllAgents().then(list => {
-      setAgents(list)
-      if (!selectedAgentId && list.length > 0 && !preselectedAgent) {
-        setSelectedAgentId(list[0].id)
-      }
-    })
-  }, [])
+    if (!selectedAgentId && agents.length > 0 && !preselectedAgent) {
+      setSelectedAgentId(agents[0].id)
+    }
+  }, [agents])
 
   const selectedAgent = agents.find(a => a.id === selectedAgentId) || preselectedAgent
 
