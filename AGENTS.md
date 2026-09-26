@@ -140,4 +140,5 @@
 | 132 | PCOS Lifestyle Planner | Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits. | Healthcare |
 | 133 | SLO/SLA Designer | Describe a service and its criticality to get practical SLIs, SLO targets, error budgets, and starter alerting rules. | Engineering |
 | 134 | SQL Query Explainer | Explains a SQL query in plain English, clause by clause, for beginners. | Engineering |
+| 135 | Java DSA Interview Prep | Generates Java DSA problems, provides hints, reviews attempts, and simulates coding interviews. | Education |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
