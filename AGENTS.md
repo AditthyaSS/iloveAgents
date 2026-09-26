@@ -139,5 +139,5 @@
 | 131 | Terms and Conditions Simplifier | Paste any website's URL — including its homepage — and get its Terms & Conditions explained in plain English, and checked for red flags like hidden fees, auto-renewals, and data-sharing clauses. | Legal |
 | 132 | PCOS Lifestyle Planner | Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits. | Healthcare |
 | 133 | SLO/SLA Designer | Describe a service and its criticality to get practical SLIs, SLO targets, error budgets, and starter alerting rules. | Engineering |
-
+| 134 | SQL Query Explainer | Explains a SQL query in plain English, clause by clause, for beginners. | Engineering |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
