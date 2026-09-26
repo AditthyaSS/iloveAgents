@@ -1,7 +1,7 @@
 name: New Agent Proposal
 description: Suggest a new agent to add to iloveAgents
 title: "[Agent]: "
-labels: ["new agent", "needs triage"]
+labels: ["OSIC'26"]
 body:
   - type: markdown
     attributes:

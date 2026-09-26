@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
 import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
+import { useAgents } from '../lib/useAgents'
 
 const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
 
@@ -20,19 +20,10 @@ export default function Sidebar({ open, onClose }) {
     }
   })
   const [searchExpandedCategories, setSearchExpandedCategories] = useState({})
-  const [agents, setAgents] = useState([])
   const [feedback, setFeedback] = useState('')
   const { collections, moveAgentToCollection } = useCollections()
+  const { agents } = useAgents()
   const location = useLocation()
-
-  useEffect(() => {
-    const fetchAgents = async () => {
-      const allAgents = await loadAllAgents()
-      setAgents(allAgents)
-    }
-
-    fetchAgents()
-  }, [])
 
   useEffect(() => {
     try {

@@ -1,7 +1,7 @@
 name: Feature Request
 description: Suggest something new or an improvement to the platform
 title: "[Feature]: "
-labels: ["enhancement", "needs triage"]
+labels: ["OSIC'26"]
 body:
   - type: markdown
     attributes:

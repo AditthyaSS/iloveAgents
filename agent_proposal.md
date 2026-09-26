@@ -9,9 +9,8 @@
 
 1. **You propose** — Copy this template into a new GitHub Issue and fill it out.
 2. **We review** — Maintainers will evaluate your proposal for feasibility, uniqueness, and usefulness.
-3. **We assign** — Once approved, the issue will be assigned to you (or another contributor) for implementation.
-4. **You build** — Implement the agent by adding a config object to `src/agents/registry.js` (see [CONTRIBUTING.md](CONTRIBUTING.md)).
-5. **You PR** — Open a pull request, and we'll review and merge!
+3. **You build** — Implement the agent by adding a config object to `src/agents/definitions/` (see [CONTRIBUTING.md](CONTRIBUTING.md)).
+4. **You PR** — Open a pull request, and we'll review and merge!
 
 ---
 
@@ -84,4 +83,4 @@ Copy everything below this line into your GitHub Issue:
 
 > 💡 **Tip:** The more detailed your proposal, the faster we can review and approve it!
 >
-> 📖 Once assigned, follow the [CONTRIBUTING.md](CONTRIBUTING.md) guide to implement your agent.
+> 📖 Once approved, follow the [CONTRIBUTING.md](CONTRIBUTING.md) guide to implement your agent.

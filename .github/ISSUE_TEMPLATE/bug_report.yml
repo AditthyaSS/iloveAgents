@@ -1,7 +1,7 @@
 name: Bug Report
 description: Something is broken or not working right
 title: "[Bug]: "
-labels: ["bug", "needs triage"]
+labels: ["OSIC'26"]
 body:
   - type: markdown
     attributes:
