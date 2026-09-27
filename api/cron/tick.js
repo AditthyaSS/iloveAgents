@@ -117,7 +117,7 @@ export default async function handler(req, res) {
           .eq('automation_id', auto.id)
           .single()
 
-        const apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
+        const apiKey = secretData?.encrypted_key ? decryptAutomationSecret(secretData.encrypted_key) : null
 
         if (!apiKey) {
           throw new Error('API key not found in encrypted secret vault.')
