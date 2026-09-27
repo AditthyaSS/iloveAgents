@@ -53,9 +53,9 @@ const javaDsaInterviewPrep = {
     },
     {
       id: 'problem_or_attempt',
-      label: 'Problem or Attempt (Optional)',
+      label: 'Problem, Attempt, or Previous Context (Optional)',
       type: 'textarea',
-      placeholder: 'Paste the current problem or your attempted Java solution here...',
+      placeholder: 'Paste the generated problem, your attempted Java solution, or previous interview context here for follow-ups...',
       required: false,
     }
   ],
@@ -102,7 +102,12 @@ GENERAL JAVA REQUIREMENTS:
 - Keep generated solutions interview-friendly and readable.
 - Avoid unnecessary external dependencies.
 
-Format your responses cleanly using Markdown, with appropriate headings and java code blocks.`,
+Format your responses cleanly using Markdown, with appropriate headings and java code blocks.
+
+FALLBACK FOR MISSING CONTEXT:
+- If the user selects "Request Hint", "Review Attempt", or "Request Solution" but leaves the text area empty (providing no problem or context), DO NOT attempt to guess the problem.
+- Instead, politely ask the user to paste the problem or their attempt in the text area so you can assist them.
+- If they are in "Interview Mode" without a problem, generate one to start the interview.`,
   outputType: 'markdown',
 };
 
