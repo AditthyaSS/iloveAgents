@@ -6,6 +6,49 @@
  * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
  */
 
+import { createDecipheriv, pbkdf2Sync } from 'crypto'
+
+// Must match the PBKDF2 + AES-256-GCM parameters used client-side in
+// src/lib/automationsService.js (encryptSecret/decryptSecret). The client
+// stores base64(iv[12] + AES-GCM ciphertext), where WebCrypto appends the
+// 16-byte GCM auth tag to the end of the ciphertext it returns.
+const ENCRYPTION_SALT = 'ila-pgsodium-salt-2026'
+const PBKDF2_SALT = 'salt-val-pgsodium'
+const PBKDF2_ITERATIONS = 100000
+
+function decryptAutomationSecret(encryptedBase64) {
+  if (!encryptedBase64) return null
+
+  try {
+    const combined = Buffer.from(encryptedBase64, 'base64')
+
+    // Legacy/fallback values written before AES-GCM encryption was in use
+    // (or when WebCrypto was unavailable) are plain base64 with no
+    // iv+tag framing - too short to contain both.
+    if (combined.length <= 12 + 16) {
+      return combined.toString('utf-8')
+    }
+
+    const iv = combined.subarray(0, 12)
+    const authTag = combined.subarray(combined.length - 16)
+    const ciphertext = combined.subarray(12, combined.length - 16)
+
+    const derivedKey = pbkdf2Sync(
+      Buffer.from(ENCRYPTION_SALT, 'utf-8'),
+      Buffer.from(PBKDF2_SALT, 'utf-8'),
+      PBKDF2_ITERATIONS,
+      32,
+      'sha256'
+    )
+
+    const decipher = createDecipheriv('aes-256-gcm', derivedKey, iv)
+    decipher.setAuthTag(authTag)
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf-8')
+  } catch (err) {
+    return null
+  }
+}
+
 export default async function handler(req, res) {
   // Verify Cron Secret if configured
   const authHeader = req.headers.authorization || req.headers['authorization']
