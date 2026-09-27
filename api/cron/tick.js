@@ -109,7 +109,8 @@ export default async function handler(req, res) {
       let error = null
 
       try {
-        // Fetch encrypted key from user_secrets (decrypted via pgsodium RPC or server key)
+        // Fetch and decrypt the API key stored by storeAutomationKey()
+        // (src/lib/automationsService.js) - see decryptAutomationSecret above.
         const { data: secretData } = await supabase
           .from('user_secrets')
           .select('encrypted_key')
