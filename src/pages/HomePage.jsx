@@ -354,7 +354,7 @@ export default function HomePage() {
             <Users size={20} className="text-accent" />
           </div>
           <div className="text-xl font-bold dark:text-text-primary text-gray-900">
-            3
+            4
           </div>
           <div className="text-[11px] dark:text-text-muted text-gray-400 font-medium">
             Providers
