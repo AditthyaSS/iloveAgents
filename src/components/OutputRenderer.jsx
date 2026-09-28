@@ -39,45 +39,79 @@ function stripMarkdown(text) {
 }
 
 function CopyButton({ text, label, icon: Icon = Copy }) {
-  const [copied, setCopied] = useState(false)
+  const [copyState, setCopyState] = useState('idle')
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        throw new Error('Clipboard API is unavailable')
+      }
+      setCopyState('copied')
+      setTimeout(() => setCopyState('idle'), 2000)
     } catch {
-      const ta = document.createElement('textarea')
-      ta.value = text
-      document.body.appendChild(ta)
-      ta.select()
-      document.execCommand('copy')
-      document.body.removeChild(ta)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      let ta
+      try {
+        ta = document.createElement('textarea')
+        ta.value = text
+        ta.setAttribute('readonly', '')
+        ta.style.position = 'fixed'
+        ta.style.opacity = '0'
+        document.body.appendChild(ta)
+        ta.select()
+        const copied = document.execCommand('copy')
+
+        if (copied) {
+          setCopyState('copied')
+          setTimeout(() => setCopyState('idle'), 2000)
+          return
+        }
+      } catch {
+        // Report the failed fallback below.
+      } finally {
+        if (ta?.isConnected) {
+          document.body.removeChild(ta)
+        }
+      }
+
+      setCopyState('failed')
     }
   }
 
   return (
-    <button
-      onClick={handleCopy}
-      title="Copy to clipboard"
-      className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
-        dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
-        bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
-    >
-      {copied ? (
-        <>
-          <Check size={12} className="text-success" />
-          Copied!
-        </>
-      ) : (
-        <>
-          <Icon size={12} />
-          {label || 'Copy'}
-        </>
+    <div className="flex flex-col items-end gap-1">
+      <button
+        onClick={handleCopy}
+        title="Copy to clipboard"
+        aria-label={copyState === 'failed' ? `${label || 'Copy'} failed` : label || 'Copy'}
+        className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+          dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+          bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+      >
+        {copyState === 'copied' ? (
+          <>
+            <Check size={12} className="text-success" />
+            Copied!
+          </>
+        ) : (
+          <>
+            <Icon size={12} />
+            {label || 'Copy'}
+          </>
+        )}
+      </button>
+      {copyState === 'failed' && (
+        <span className="text-[10px] text-red-500" role="status" aria-live="polite">
+          Copy failed. Select the output and press Ctrl+C.
+        </span>
       )}
-    </button>
+      {copyState === 'copied' && (
+        <span className="sr-only" role="status" aria-live="polite">
+          {label || 'Output'} copied to clipboard.
+        </span>
+      )}
+    </div>
   )
 }
 
