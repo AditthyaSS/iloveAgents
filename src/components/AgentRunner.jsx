@@ -279,11 +279,6 @@ const handleRun = async () => {
     setDuration(null);
     setMsgIndex(0);
 
-      const newVersion = {
-      versionNumber: versionHistory.length + 1,
-      timestamp: new Date().toLocaleTimeString(),
-      configSnapshot: { ...inputs }
-    };
     setVersionHistory((prevHistory) => [
       {
         versionNumber: prevHistory.length + 1,
