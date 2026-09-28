@@ -98,7 +98,7 @@ const yourAgentName = {
   id: 'your-agent-id',           // lowercase, kebab-case, URL safe
   name: 'Your Agent Name',
   description: 'One line description of what this agent does.',
-  category: 'Category',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
+  category: 'Category',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal | Healthcare | DevOps | Data Science | Cybersecurity | Gaming | Web3 | Finance | Real Estate | Sales | Developer Tools
   icon: 'IconName',              // Any icon from lucide.dev/icons
   provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'openai',     // Only needed if provider is 'any'
