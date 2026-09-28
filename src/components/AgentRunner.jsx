@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import CustomSelect from "./CustomSelect";
 import {
@@ -433,8 +433,8 @@ const handleRun = async () => {
  return (
     <div className="max-w-3xl mx-auto animate-fade-in">
       {/* Breadcrumb */}
-      <a
-        href="/"
+      <Link
+        to="/"
         className="inline-flex items-center gap-2 mb-5
           px-3 py-2 rounded-lg
           bg-indigo-50 dark:bg-indigo-500/10
@@ -445,7 +445,7 @@ const handleRun = async () => {
           transition-all duration-200"
       >
         ← All Agents
-      </a>
+      </Link>
 
       <div className="mt-2 mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-zinc-900 dark:border-zinc-800 text-gray-900 dark:text-gray-100">
         <h3 className="
