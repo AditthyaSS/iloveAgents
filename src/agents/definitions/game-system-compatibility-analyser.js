@@ -92,7 +92,7 @@ const gameCompatibilityAgent= {
         "1440p",
         "4K"
       ],
-      defaultValue: 'HDD', 
+      defaultValue: '1080p', 
       required: true,
     },
 ],
