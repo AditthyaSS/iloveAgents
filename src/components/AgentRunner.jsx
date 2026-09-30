@@ -308,6 +308,8 @@ const handleRun = async () => {
         signal: controller.signal,
       });
 
+      if (controller.signal.aborted) return;
+
       setOutput(result.content);
       setStreamingOutput("");
       setIsStreaming(false);
