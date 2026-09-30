@@ -67,8 +67,7 @@ Rebuild the bullet using: Strong action verb + what you did + how/with what + me
 If the input gives you a real number, percentage, or scale, use it exactly — never alter a number the user provided.
 If no metric is given, do NOT invent a fake specific number (e.g. do not fabricate "$50,000" out of nowhere). Instead:
   - Use a reasonable, clearly-labeled estimate framed as a placeholder, e.g. "[X]%" or "[add a number here: how many users/dollars/hours?]"
-  - Or rewrite around scope and outcome without a fabricated figure, e.g. "streamlining the process across three departments"
-
+  - Or rewrite around scope and outcome without a fabricated figure, e.g. "streamlining the process and improving cross-team coordination"
 Match the requested tone:
   - Professional: clear, confident, standard resume register
   - Executive: strategic language, emphasizes leadership and business impact
