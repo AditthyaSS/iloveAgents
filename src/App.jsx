@@ -92,7 +92,7 @@ export default function App() {
               <Route path="/suites" element={<SuitesPage />} />
               <Route path="/collections" element={<CollectionsPage />} />
               <Route path="/collections/:id" element={<CollectionDetailPage />} />
-              <Route path="/scheduler" element={<AutomationsPage />} />
+              <Route path="/scheduler" element={<SchedulerPage />} />
               <Route path="/automations" element={<AutomationsPage />} />
               <Route path="/automations/:id" element={<AutomationDetailPage />} />
               <Route path="/marketplace" element={<MarketplacePage />} />
