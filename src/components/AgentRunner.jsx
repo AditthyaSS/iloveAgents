@@ -43,6 +43,8 @@ import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import ExecutionStatusBar from "./ExecutionStatusBar";
+import { usePersistentExecution } from "../hooks/usePersistentExecution";
 
 const providerLabels = {
   openai: "OpenAI",
@@ -105,6 +107,50 @@ export default function AgentRunner({ agent }) {
   const { savePrompt } = usePromptHistory();
   const { addJob } = useScheduler({ autoRun: false });
   const { addRun } = useSessionSpend();
+
+  const {
+    execution,
+    isRunning: isExecRunning,
+    isInterrupted,
+    isFailed: isExecFailed,
+    isCompleted: isExecCompleted,
+    isRetrying,
+    retryCountdown,
+    retryPolicy,
+    setRetryPolicy,
+    streamingOutput: execStreamingOutput,
+    isStreaming: isExecStreaming,
+    startExecution,
+    resumeExecution,
+    retryExecution,
+    cancelExecution,
+    clearExecution,
+  } = usePersistentExecution({
+    agent,
+    onComplete: (content, dur) => {
+      const finalContent =
+        typeof content === 'object' && content?.content ? content.content : content;
+      setOutput(finalContent);
+      if (dur) setDuration(dur);
+      setLoading(false);
+    },
+    onSaveRun: saveRun,
+    onAddSpend: addRun,
+  });
+
+  useEffect(() => {
+    if (execution?.inputs && Object.keys(execution.inputs).length > 0) {
+      setInputs((prev) => ({ ...prev, ...execution.inputs }));
+    }
+    if (execution?.status === 'completed' && execution.finalOutput && !output) {
+      const content =
+        typeof execution.finalOutput === 'object' && execution.finalOutput.content
+          ? execution.finalOutput.content
+          : execution.finalOutput;
+      setOutput(content);
+      if (execution.durationMs) setDuration(execution.durationMs);
+    }
+  }, [execution]);
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
@@ -289,86 +335,98 @@ const handleRun = async () => {
     ]);
 
     setLastRunSystemPrompt(customPrompt);
-    setLastRunUserMessage(buildUserMessage());
+    const userMsg = buildUserMessage();
+    setLastRunUserMessage(userMsg);
 
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
-      const model = resolveAgentModel(agent, actualProvider, selectedModel);
 
-      const result = await streamAgent({
+      await startExecution({
+        agentDef: agent,
+        inputs,
         provider: actualProvider,
-        model,
+        selectedModel,
         apiKey,
-        systemPrompt: customPrompt,
-        userMessage: buildUserMessage(),
-        onChunk: handleChunk,
-        signal: controller.signal,
+        customPrompt,
+        buildUserMessageFn: () => userMsg,
       });
-
-      setOutput(result.content);
-      setStreamingOutput("");
-      setIsStreaming(false);
-      setDuration(result.duration);
-
-      const inputTokenEstimate = Math.max(
-        1,
-        Math.round((customPrompt.length + buildUserMessage().length) / 4),
-      );
-      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
-
-      addRun({
-        model,
-        inputTokens: inputTokenEstimate,
-        outputTokens: outputTokenEstimate,
-        inputCost: null,
-        outputCost: null,
-      });
-
-      saveRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        inputs: { ...inputs },
-        output: result.content,
-        provider: actualProvider,
-      });
-
-      recordAnalyticsRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        category: agent.category,
-        provider: actualProvider,
-        model,
-        duration: result.duration,
-      });
-   } catch (err) {
-  if (err.name !== "AbortError") {
-    if (err && err.type === "invalid_api_key") {
-      setError(err);
-    } else {
-      setError({ type: "generic", message: err.message });
-    }
-  }
-} finally {
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        if (err && err.type === "invalid_api_key") {
+          setError(err);
+        } else {
+          setError({ type: "generic", message: err.message || String(err) });
+        }
+      }
+    } finally {
       setLoading(false);
-      abortControllerRef.current = null;
+    }
+  };
+
+  const handleResume = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const actualProvider =
+        agent.provider === "any" ? provider : agent.provider;
+      await resumeExecution({
+        agentDef: agent,
+        inputs,
+        provider: actualProvider,
+        selectedModel,
+        apiKey,
+        customPrompt,
+        buildUserMessageFn: () => buildUserMessage(),
+      });
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        setError({ type: "generic", message: err.message || String(err) });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRetryFailed = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const actualProvider =
+        agent.provider === "any" ? provider : agent.provider;
+      await retryExecution({
+        agentDef: agent,
+        inputs,
+        provider: actualProvider,
+        selectedModel,
+        apiKey,
+        customPrompt,
+        buildUserMessageFn: () => buildUserMessage(),
+      });
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        setError({ type: "generic", message: err.message || String(err) });
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleStop = () => {
+    cancelExecution();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    setOutput(streamingOutput);
+    setOutput(streamingOutput || execStreamingOutput);
     setStreamingOutput("");
     setIsStreaming(false);
     setLoading(false);
   };
 
   const handleClear = () => {
+    cancelExecution();
+    clearExecution();
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
@@ -424,6 +482,10 @@ const handleRun = async () => {
   const supportsBatchMode = agent.inputs.some((i) =>
     ["text", "textarea", "code"].includes(i.type)
   );
+
+  const isDisplayStreaming = isStreaming || isExecStreaming;
+  const displayStreaming = execStreamingOutput || streamingOutput;
+  const isDisplayLoading = (loading || isExecRunning) && !isRetrying;
 
  return (
     <div className="max-w-3xl mx-auto animate-fade-in">
@@ -956,7 +1018,7 @@ const handleRun = async () => {
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 mb-6">
-        {loading ? (
+        {isDisplayLoading ? (
           <button
             onClick={handleStop}
             className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold
@@ -965,6 +1027,17 @@ const handleRun = async () => {
           >
             <StopCircle size={16} />
             Stop
+          </button>
+        ) : isInterrupted ? (
+          <button
+            onClick={handleResume}
+            disabled={!apiKey}
+            className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white
+              bg-orange-600 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed
+              transition-all duration-200 active:scale-[0.98]"
+          >
+            <RotateCcw size={16} />
+            Resume Run
           </button>
         ) : (
           <button
@@ -1017,6 +1090,25 @@ const handleRun = async () => {
         )}
       </div>
 
+      {/* Persistent Execution Status Bar */}
+      {execution && (
+        <ExecutionStatusBar
+          execution={execution}
+          isRetrying={isRetrying}
+          retryCountdown={retryCountdown}
+          onRetry={handleRetryFailed}
+          onResume={handleResume}
+          onCancel={handleStop}
+          onClear={() => {
+            clearExecution();
+            setOutput(null);
+            setDuration(null);
+          }}
+          retryPolicy={retryPolicy}
+          onUpdateRetryPolicy={setRetryPolicy}
+        />
+      )}
+
       <div className="mb-4">
         <CostEstimator
           inputText={buildUserMessage()}
@@ -1061,7 +1153,7 @@ const handleRun = async () => {
         error && <ErrorCard message={error.message || error} />
       )}
 
-      {loading && !isStreaming && (
+      {isDisplayLoading && !isDisplayStreaming && (
         <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Loader2 size={16} className="animate-spin text-accent" />
@@ -1075,7 +1167,7 @@ const handleRun = async () => {
         </div>
       )}
 
-      {isStreaming && streamingOutput && (
+      {isDisplayStreaming && displayStreaming && (
         <div className="animate-fade-in">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
@@ -1092,7 +1184,7 @@ const handleRun = async () => {
           <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
             <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
               <pre className="whitespace-pre-wrap font-sans leading-relaxed">
-                {streamingOutput}
+                {displayStreaming}
                 <span className="inline-block w-[2px] h-[1em] bg-accent animate-blink ml-0.5 align-middle" />
               </pre>
             </div>
@@ -1100,7 +1192,7 @@ const handleRun = async () => {
         </div>
       )}
 
-      {output && !isStreaming && (
+      {output && !isDisplayStreaming && (
         <div className="space-y-4">
           <ErrorBoundary>
             <OutputRenderer
