@@ -194,7 +194,14 @@ export default function ApiKeyBar({
           <input
             type={showKey ? 'text' : 'password'}
             value={apiKey}
-            onChange={(e) => setApiKey(e.target.value)}
+            onChange={(e) => {
+              const newKey = e.target.value;
+              setApiKey(newKey);
+              // Auto-clear session storage if user clears the input
+              if (!newKey.trim() && saveForSession) {
+                setSaveForSession(false);
+                }
+            }}
             placeholder={`Enter your ${provider} API key...`}
             className="w-full h-8 px-3 pr-10 rounded-md text-xs font-mono transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
