@@ -103,6 +103,7 @@ export default function BattleModeArena() {
   });
 
   const [copiedProvider, setCopiedProvider] = useState(null);
+  const [copyAnnouncement, setCopyAnnouncement] = useState("");
 
   // Store AbortControllers for each provider so we can cancel requests if needed
   const abortControllersRef = useRef({
@@ -244,13 +245,26 @@ export default function BattleModeArena() {
     });
   };
 
-  const handleCopyPrompt = (providerId, promptData) => {
+  const handleCopyPrompt = async (providerId, providerLabel, promptData) => {
     const copyText = `System Prompt: ${promptData?.systemPrompt || "Not available"}\n\nUser Prompt: ${promptData?.userMessage || "Not available"}`;
-    navigator.clipboard.writeText(copyText).catch(console.error);
-    setCopiedProvider(providerId);
-    setTimeout(() => {
+
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard API is unavailable");
+      }
+
+      await navigator.clipboard.writeText(copyText);
+      setCopiedProvider(providerId);
+      setCopyAnnouncement(`${providerLabel} prompt copied to clipboard.`);
+      setTimeout(() => {
+        setCopiedProvider(null);
+      }, 2000);
+    } catch {
       setCopiedProvider(null);
-    }, 2000);
+      setCopyAnnouncement(
+        `Unable to copy the ${providerLabel} prompt. Please try again.`,
+      );
+    }
   };
 
   if (!agent) return null;
@@ -334,6 +348,9 @@ export default function BattleModeArena() {
 
         {/* Prompt Comparison Viewer */}
         <div className="max-w-7xl mx-auto mb-6">
+          <div className="sr-only" role="status" aria-live="polite">
+            {copyAnnouncement}
+          </div>
           <button
             onClick={() => setPromptViewerOpen(!promptViewerOpen)}
             className="w-full flex items-center justify-between px-5 py-3 rounded-lg
@@ -355,16 +372,19 @@ export default function BattleModeArena() {
 
           {promptViewerOpen && (
             <div className="mt-4 battle-fade-in">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* OpenAI Column */}
-                <div className="rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                <div className="min-w-0 rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
                   <div className="dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
                     <span className="text-base font-bold text-yellow-400">
                       OpenAI
                     </span>
                     <button
-                      onClick={() => handleCopyPrompt("openai", prompts.openai)}
+                      onClick={() =>
+                        handleCopyPrompt("openai", "OpenAI", prompts.openai)
+                      }
                       className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
+                      aria-label="Copy OpenAI prompt"
                     >
                       {copiedProvider === "openai" ? (
                         <>
@@ -384,7 +404,7 @@ export default function BattleModeArena() {
                       <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         System Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.openai?.systemPrompt ||
                           "Prompt not available yet."}
                       </pre>
@@ -393,7 +413,7 @@ export default function BattleModeArena() {
                       <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         User Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.openai?.userMessage ||
                           "Prompt not available yet."}
                       </pre>
@@ -402,16 +422,21 @@ export default function BattleModeArena() {
                 </div>
 
                 {/* Claude Column */}
-                <div className="rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                <div className="min-w-0 rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
                   <div className="dark:bg-surface-card bg-white border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
                     <span className="text-base font-bold text-violet-400">
                       Claude
                     </span>
                     <button
                       onClick={() =>
-                        handleCopyPrompt("anthropic", prompts.anthropic)
+                        handleCopyPrompt(
+                          "anthropic",
+                          "Claude",
+                          prompts.anthropic,
+                        )
                       }
                       className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
+                      aria-label="Copy Claude prompt"
                     >
                       {copiedProvider === "anthropic" ? (
                         <>
@@ -431,7 +456,7 @@ export default function BattleModeArena() {
                       <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         System Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.anthropic?.systemPrompt ||
                           "Prompt not available yet."}
                       </pre>
@@ -440,7 +465,7 @@ export default function BattleModeArena() {
                       <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         User Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.anthropic?.userMessage ||
                           "Prompt not available yet."}
                       </pre>
@@ -449,14 +474,17 @@ export default function BattleModeArena() {
                 </div>
 
                 {/* Gemini Column */}
-                <div className="rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                <div className="min-w-0 rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
                   <div className="dark:bg-surface-card bg-white border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
                     <span className="text-base font-bold text-blue-400">
                       Gemini
                     </span>
                     <button
-                      onClick={() => handleCopyPrompt("gemini", prompts.gemini)}
+                      onClick={() =>
+                        handleCopyPrompt("gemini", "Gemini", prompts.gemini)
+                      }
                       className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
+                      aria-label="Copy Gemini prompt"
                     >
                       {copiedProvider === "gemini" ? (
                         <>
@@ -476,7 +504,7 @@ export default function BattleModeArena() {
                       <span className="text-base font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         System Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-base dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-base dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.gemini?.systemPrompt ||
                           "Prompt not available yet."}
                       </pre>
@@ -485,7 +513,7 @@ export default function BattleModeArena() {
                       <span className="text-base font-semibold dark:text-text-secondary dark:text-text-muted dark:text-text-muted text-gray-700 uppercase tracking-wide">
                         User Prompt
                       </span>
-                      <pre className="whitespace-pre-wrap mt-2 text-base dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-base dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
                         {prompts.gemini?.userMessage ||
                           "Prompt not available yet."}
                       </pre>
@@ -498,7 +526,7 @@ export default function BattleModeArena() {
         </div>
 
         {/* Three Columns */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {PROVIDERS.map((prov, idx) => {
             const r = results[prov.id];
             const isFirstFinisher = firstFinisher === prov.id;
@@ -508,7 +536,7 @@ export default function BattleModeArena() {
             return (
               <div
                 key={prov.id}
-                className={`rounded-xl border ${prov.borderClass}
+                className={`min-w-0 rounded-xl border ${prov.borderClass}
                     dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md
                     backdrop-blur-sm shadow-lg flex flex-col battle-fade-in
                     transition-all duration-300 overflow-hidden`}
@@ -595,7 +623,7 @@ export default function BattleModeArena() {
                     )}
 
                     {r.content && (
-                      <div className="markdown-output text-base dark:text-text-primary text-gray-900 leading-relaxed">
+                      <div className="markdown-output min-w-0 overflow-x-auto text-base dark:text-text-primary text-gray-900 leading-relaxed">
                         {agent.outputType === "markdown" ? (
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {r.content}
