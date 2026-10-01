@@ -9,7 +9,7 @@ export default{
   defaultProvider:  "gemini", 
   model: "gemini-3.1-flash",
  exampleInputs: {
-  problem_description: "Give me a playlist of hit Taylor Swift Songs that are upbeat and lighthearted.",
+  playlist_description: "Give me a playlist of hit Taylor Swift Songs that are upbeat and lighthearted.",
 },
   inputs: [
     {

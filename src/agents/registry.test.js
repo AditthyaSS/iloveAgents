@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import * as LucideIcons from 'lucide-react'
 import { loadAllAgents } from './registry'
 import { CATEGORIES } from './categories'
 
@@ -42,6 +43,36 @@ describe('loadAllAgents', () => {
     const agents = await loadAllAgents()
     agents.forEach((agent) => {
       expect(CATEGORIES).toContain(agent.category)
+    })
+  })
+
+  it('every agent icon should exist in lucide-react', async () => {
+    const agents = await loadAllAgents()
+    agents.forEach((agent) => {
+      expect(LucideIcons[agent.icon], `Icon "${agent.icon}" on agent "${agent.id}" not found in lucide-react`).toBeDefined()
+    })
+  })
+
+  it('every select input should have defaultValue in its options', async () => {
+    const agents = await loadAllAgents()
+    agents.forEach((agent) => {
+      agent.inputs.forEach((input) => {
+        if (input.type === 'select' && input.defaultValue && input.options) {
+          expect(input.options, `defaultValue "${input.defaultValue}" not in options for input "${input.id}" in agent "${agent.id}"`).toContain(input.defaultValue)
+        }
+      })
+    })
+  })
+
+  it('every exampleInputs key should match an input id', async () => {
+    const agents = await loadAllAgents()
+    agents.forEach((agent) => {
+      if (agent.exampleInputs) {
+        const inputIds = agent.inputs.map((i) => i.id)
+        Object.keys(agent.exampleInputs).forEach((key) => {
+          expect(inputIds, `exampleInput key "${key}" not found in inputs for agent "${agent.id}"`).toContain(key)
+        })
+      }
     })
   })
 
