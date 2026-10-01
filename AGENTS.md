@@ -156,4 +156,5 @@
 | 148 | Prompt Engineering Coach | Reviews user prompts and provides actionable suggestions to improve clarity, specificity, structure, context, and overall effectiveness. | Productivity |
 | 149 | Regex Decoder | Decodes an existing regex pattern into a plain-English, token-by-token breakdown with examples and edge cases. | Productivity |
 | 150 | Web Scraping Agent | Describe a page's content or paste raw HTML and get clean, structured data extracted from it. | Developer Tools |
+| 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
