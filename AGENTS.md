@@ -160,3 +160,4 @@
 | 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
+| 151 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
