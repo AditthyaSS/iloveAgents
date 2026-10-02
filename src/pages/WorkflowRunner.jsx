@@ -15,7 +15,7 @@ import {
   GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
@@ -119,10 +119,7 @@ export default function WorkflowRunner() {
     })
   }, [id])
 
-  const [agents, setAgents] = useState([])
-  useEffect(() => {
-    loadAllAgents().then(setAgents)
-  }, [])
+  const { agents } = useAgents()
 
   // Build the initial (pre-run) step list. Conditional entries render as a
   // single branch node; their selected branch expands at run time.

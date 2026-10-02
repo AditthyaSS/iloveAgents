@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Tag,
 } from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import {
   MARKETPLACE_CATEGORIES,
@@ -253,8 +253,8 @@ function ListingCard({ listing, onImport, onRate, imported }) {
 export default function MarketplacePage() {
   useDocumentTitle('Agent Marketplace')
 
+  const { agents } = useAgents()
   const [listings, setListings] = useState([])
-  const [agents, setAgents] = useState([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
   const [showPublish, setShowPublish] = useState(false)
@@ -263,7 +263,6 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     setListings(loadListings())
-    loadAllAgents().then(setAgents)
   }, [])
 
   const visible = useMemo(
