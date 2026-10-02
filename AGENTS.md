@@ -157,3 +157,4 @@
 | 149 | Regex Decoder | Decodes an existing regex pattern into a plain-English, token-by-token breakdown with examples and edge cases. | Productivity |
 | 150 | Web Scraping Agent | Describe a page's content or paste raw HTML and get clean, structured data extracted from it. | Developer Tools |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
+| 151 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
