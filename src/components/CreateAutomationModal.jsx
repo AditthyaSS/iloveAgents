@@ -33,11 +33,12 @@ export default function CreateAutomationModal({
   const [error, setError] = useState('')
   const [searchAgent, setSearchAgent] = useState('')
 
+  // Default to the first agent once the shared list has loaded
   useEffect(() => {
     if (!selectedAgentId && agents.length > 0 && !preselectedAgent) {
       setSelectedAgentId(agents[0].id)
     }
-  }, [agents])
+  }, [agents, selectedAgentId, preselectedAgent])
 
   const selectedAgent = agents.find(a => a.id === selectedAgentId) || preselectedAgent
 

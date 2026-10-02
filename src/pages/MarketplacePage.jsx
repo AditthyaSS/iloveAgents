@@ -253,8 +253,8 @@ function ListingCard({ listing, onImport, onRate, imported }) {
 export default function MarketplacePage() {
   useDocumentTitle('Agent Marketplace')
 
-  const [listings, setListings] = useState([])
   const { agents } = useAgents()
+  const [listings, setListings] = useState([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
   const [showPublish, setShowPublish] = useState(false)

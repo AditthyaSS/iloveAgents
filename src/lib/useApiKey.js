@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-
+import { getGlobalKeys } from './globalKeys'
 const STORAGE_PREFIX = 'ila_apikey_'
 const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours
 
@@ -46,24 +46,37 @@ export function useApiKey() {
   const [apiKey, setApiKey] = useState('')
   const [saveForSession, setSaveForSession] = useState(false)
 
-  // Load saved key on mount and provider change
-  useEffect(() => {
-    const saved = getSafeApiKey(provider)
-    if (saved) {
-      setApiKey(saved)
-      setSaveForSession(true)
+ 
+// Load saved key on mount and provider change
+useEffect(() => {
+  // 1. First check if a session key exists
+  const sessionKey = getSafeApiKey(provider)
+  
+  if (sessionKey) {
+    setApiKey(sessionKey)
+    setSaveForSession(true)
+  } else {
+    // 2. Fall back to global keys only if no session key exists
+    const globalKeys = getGlobalKeys()
+    const savedGlobalKey = globalKeys[provider]
+    
+    if (savedGlobalKey) {
+      setApiKey(savedGlobalKey)
+      setSaveForSession(false) // Do NOT auto-check session box for global keys
     } else {
       setApiKey('')
       setSaveForSession(false)
     }
-  }, [provider])
-
+  }
+}, [provider])
   // Persist or clear from sessionStorage when saveForSession changes
-  const updateApiKey = useCallback(
+ const updateApiKey = useCallback(
     (key) => {
       setApiKey(key)
-      if (saveForSession) {
+      if (saveForSession && key) {
         setSafeApiKey(provider, key)
+      } else if (!key) {
+        setSafeApiKey(provider, null) // Ensures purging when input is cleared
       }
     },
     [provider, saveForSession]

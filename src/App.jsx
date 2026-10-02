@@ -24,7 +24,6 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const SuitesPage = lazy(() => import('./pages/SuitesPage'))
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
 const CollectionDetailPage = lazy(() => import('./pages/CollectionDetailPage'))
-const SchedulerPage = lazy(() => import('./pages/SchedulerPage'))
 const AutomationsPage = lazy(() => import('./pages/AutomationsPage'))
 const AutomationDetailPage = lazy(() => import('./pages/AutomationDetailPage'))
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
@@ -86,6 +85,7 @@ export default function App() {
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/agent/:id" element={<AgentPage />} />
               <Route path="/suites" element={<SuitesPage />} />

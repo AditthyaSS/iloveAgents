@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
-import { useAgents } from '../lib/useAgents'
 import AgentRunner from '../components/AgentRunner'
+import { useAgents } from '../lib/useAgents'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 export default function AgentPage() {
