@@ -1,7 +1,7 @@
 # 🤖 Available Agents
 
 
-150 agents and growing — built by the community. 🚀
+151 agents and growing — built by the community. 🚀
 
 | # | Name | Description | Category |
 |---|---|---|---|
@@ -157,4 +157,6 @@
 | 149 | Regex Decoder | Decodes an existing regex pattern into a plain-English, token-by-token breakdown with examples and edge cases. | Productivity |
 | 150 | Web Scraping Agent | Describe a page's content or paste raw HTML and get clean, structured data extracted from it. | Developer Tools |
 | 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
+| 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
+
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
