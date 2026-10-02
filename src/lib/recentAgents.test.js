@@ -40,6 +40,16 @@ describe('loadRecentAgentIds', () => {
     expect(loadRecentAgentIds()).toEqual(['code-reviewer'])
   })
 
+  it('keeps only the first occurrence of a repeated id', () => {
+    localStorage.setItem(KEY, JSON.stringify(['a', 'b', 'a', 'c', 'a']))
+    expect(loadRecentAgentIds()).toEqual(['a', 'b', 'c'])
+  })
+
+  it('caps a stored list that is longer than the rail renders', () => {
+    localStorage.setItem(KEY, JSON.stringify(['a', 'b', 'c', 'd', 'e', 'f', 'g']))
+    expect(loadRecentAgentIds()).toEqual(['a', 'b', 'c', 'd', 'e'])
+  })
+
   it('does not throw when storage access itself is denied', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new DOMException('Access is denied for this document.', 'SecurityError')
@@ -77,6 +87,12 @@ describe('rememberRecentAgent', () => {
     localStorage.setItem(KEY, '{invalid-json')
     expect(rememberRecentAgent('code-reviewer')).toEqual(['code-reviewer'])
     expect(JSON.parse(localStorage.getItem(KEY))).toEqual(['code-reviewer'])
+  })
+
+  it('removes duplicates of the other ids when writing', () => {
+    localStorage.setItem(KEY, JSON.stringify(['a', 'b', 'a', 'c']))
+    expect(rememberRecentAgent('z')).toEqual(['z', 'a', 'b', 'c'])
+    expect(JSON.parse(localStorage.getItem(KEY))).toEqual(['z', 'a', 'b', 'c'])
   })
 
   it('reports the previous list and keeps the old value when the write is rejected', () => {

@@ -15,15 +15,29 @@ const MAX_RECENT = 5
 /**
  * Read the recently used agent ids.
  *
- * @returns {string[]} agent ids, newest first. Empty when the stored value is
- *   absent, unparseable, or not an array of ids. Ids are compared against
- *   `agent.id` (always a string), so anything else is dropped as well.
+ * A stored array can be valid JSON and still not be a valid list: it may hold
+ * the same id twice, or more entries than we render. Normalising on read keeps
+ * the rail from showing duplicate cards and keeps the cap in one place.
+ *
+ * @returns {string[]} agent ids, newest first, deduplicated and capped at
+ *   MAX_RECENT. Empty when the stored value is absent, unparseable, or not an
+ *   array of ids. Ids are compared against `agent.id` (always a string), so
+ *   anything else is dropped as well.
  */
 export function loadRecentAgentIds() {
   try {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
     if (!Array.isArray(stored)) return []
-    return stored.filter((id) => typeof id === 'string' && id.length > 0)
+
+    const ids = []
+    const seen = new Set()
+    for (const id of stored) {
+      if (typeof id !== 'string' || id.length === 0 || seen.has(id)) continue
+      seen.add(id)
+      ids.push(id)
+      if (ids.length === MAX_RECENT) break
+    }
+    return ids
   } catch {
     // SyntaxError from JSON.parse, or SecurityError when the browser blocks
     // storage access entirely (private mode, third-party cookie settings).
