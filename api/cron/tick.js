@@ -1,57 +1,332 @@
-```js
-/**
- * Vercel Cron Handler: /api/cron/tick
- *
- * Runs automatically on schedule configured in vercel.json.
- * Authenticates using CRON_SECRET, processes due automations,
- * executes the configured provider, records run history,
- * and optionally sends email notifications through Resend.
- */
+import { webcrypto } from "node:crypto";
+
+const { subtle } = webcrypto;
+
+const ENCRYPTION_SALT = "ila-pgsodium-salt-2026";
+const PBKDF2_SALT = "salt-val-pgsodium";
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function deriveKey() {
+  const encoder = new TextEncoder();
+
+  const keyMaterial = await subtle.importKey(
+    "raw",
+    encoder.encode(ENCRYPTION_SALT),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  return subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: encoder.encode(PBKDF2_SALT),
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    {
+      name: "AES-GCM",
+      length: 256,
+    },
+    false,
+    ["decrypt"]
+  );
+}
+
+async function decryptSecret(encryptedBase64) {
+  if (!encryptedBase64) {
+    return "";
+  }
+
+  try {
+    const binary = Buffer.from(encryptedBase64, "base64");
+
+    // The encrypted format is:
+    // [12-byte IV][AES-GCM ciphertext + authentication tag]
+    if (binary.length <= 12) {
+      return Buffer.from(encryptedBase64, "base64").toString("utf8");
+    }
+
+    const iv = new Uint8Array(binary.subarray(0, 12));
+    const ciphertext = new Uint8Array(binary.subarray(12));
+
+    const key = await deriveKey();
+
+    const decrypted = await subtle.decrypt(
+      {
+        name: "AES-GCM",
+        iv,
+      },
+      key,
+      ciphertext
+    );
+
+    return new TextDecoder().decode(decrypted);
+  } catch (error) {
+    // Preserve compatibility with the old base64 fallback.
+    try {
+      return Buffer.from(encryptedBase64, "base64").toString("utf8");
+    } catch {
+      return "";
+    }
+  }
+}
+
+function getNextRun(schedule, currentDate) {
+  const next = new Date(currentDate);
+
+  switch (schedule) {
+    case "hourly":
+      next.setHours(next.getHours() + 1, 0, 0, 0);
+      return next;
+
+    case "weekly":
+      next.setDate(next.getDate() + 7);
+      next.setHours(9, 0, 0, 0);
+      return next;
+
+    case "daily":
+    default:
+      next.setDate(next.getDate() + 1);
+      next.setHours(9, 0, 0, 0);
+      return next;
+  }
+}
+
+function buildUserMessage(inputs) {
+  if (!inputs || typeof inputs !== "object") {
+    return "Execute scheduled agent run.";
+  }
+
+  const parts = [];
+
+  Object.entries(inputs).forEach(([key, value]) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === "" ||
+      (Array.isArray(value) && value.length === 0)
+    ) {
+      return;
+    }
+
+    const formattedValue = Array.isArray(value)
+      ? value.join(", ")
+      : String(value);
+
+    parts.push(`${key}: ${formattedValue}`);
+  });
+
+  return parts.length
+    ? parts.join("\n\n")
+    : "Execute scheduled agent run.";
+}
+
+async function runOpenAI({
+  apiKey,
+  model,
+  systemPrompt,
+  userMessage,
+}) {
+  const response = await fetch(
+    "https://api.openai.com/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: model || "gpt-4o-mini",
+        messages: [
+          {
+            role: "system",
+            content:
+              systemPrompt ||
+              "You are an intelligent AI agent executing a scheduled task.",
+          },
+          {
+            role: "user",
+            content: userMessage,
+          },
+        ],
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error?.message ||
+        `OpenAI request failed with status ${response.status}`
+    );
+  }
+
+  const content =
+    data?.choices?.[0]?.message?.content ||
+    "No output generated.";
+
+  const tokens =
+    data?.usage?.total_tokens ||
+    Math.round((content.length + userMessage.length) / 4);
+
+  return {
+    content,
+    tokens,
+  };
+}
+
+async function sendEmailNotification({
+  to,
+  automationName,
+  agentName,
+  output,
+  status,
+  duration,
+  error,
+}) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+
+  if (!resendApiKey || !to) {
+    return false;
+  }
+
+  const safeAutomationName = escapeHtml(automationName);
+  const safeAgentName = escapeHtml(agentName);
+  const safeOutput = escapeHtml(output || error || "No output generated.");
+
+  const subject = `[Open Agents Hub] ${
+    status === "failed" ? "❌ Failed" : "✅ Completed"
+  }: ${automationName}`;
+
+  const emailResponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${resendApiKey}`,
+    },
+    body: JSON.stringify({
+      from:
+        process.env.RESEND_FROM_EMAIL ||
+        "Open Agents Hub <automations@openagentshub.dev>",
+      to: [to],
+      subject,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b;">
+          <div style="border-bottom: 2px solid #6366f1; padding-bottom: 12px; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #4338ca;">
+              Open Agents Hub Autopilot Report
+            </h2>
+
+            <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">
+              Automation:
+              <strong>${safeAutomationName}</strong>
+              (${safeAgentName})
+            </p>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+            <p style="margin: 0 0 8px 0; font-size: 13px;">
+              <strong>Status:</strong> ${escapeHtml(status.toUpperCase())}
+            </p>
+
+            <p style="margin: 0 0 8px 0; font-size: 13px;">
+              <strong>Execution Time:</strong>
+              ${new Date().toLocaleString()}
+            </p>
+
+            <p style="margin: 0; font-size: 13px;">
+              <strong>Duration:</strong>
+              ${(duration / 1000).toFixed(2)}s
+            </p>
+          </div>
+
+          <div style="margin-bottom: 20px;">
+            <h3 style="margin: 0 0 10px 0; font-size: 16px;">
+              Agent Output
+            </h3>
+
+            <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">
+              ${safeOutput}
+            </div>
+          </div>
+
+          <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 30px;">
+            Sent automatically by Open Agents Hub Scheduled Automations.
+          </p>
+        </div>
+      `,
+    }),
+  });
+
+  if (!emailResponse.ok) {
+    const data = await emailResponse.json().catch(() => null);
+
+    throw new Error(
+      data?.message ||
+        data?.error ||
+        `Resend request failed with status ${emailResponse.status}`
+    );
+  }
+
+  return true;
+}
 
 export default async function handler(req, res) {
   const startTime = Date.now();
   const results = [];
 
-  // Only allow GET requests from Vercel Cron.
   if (req.method !== "GET") {
     return res.status(405).json({
-      error: "Method Not Allowed",
+      error: "Method not allowed",
     });
   }
 
-  // Verify Cron Secret when configured.
+  // Protect the cron endpoint when CRON_SECRET is configured.
   const cronSecret = process.env.CRON_SECRET;
-  const authHeader =
-    typeof req.headers.authorization === "string"
-      ? req.headers.authorization
-      : "";
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({
-      error: "Unauthorized: Invalid Cron Secret",
+  if (cronSecret) {
+    const authHeader =
+      typeof req.headers.authorization === "string"
+        ? req.headers.authorization
+        : "";
+
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return res.status(401).json({
+        error: "Unauthorized",
+      });
+    }
+  }
+
+  const supabaseUrl =
+    process.env.SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL;
+
+  const supabaseServiceKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return res.status(200).json({
+      success: true,
+      simulated: true,
+      message:
+        "Supabase is not configured. No scheduled automations were executed.",
+      duration: Date.now() - startTime,
+      results: [],
     });
   }
 
   try {
-    // Supabase configuration.
-    const supabaseUrl =
-      process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-
-    // Service role key should be used for server-side cron jobs.
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return res.status(200).json({
-        success: true,
-        message:
-          "Open Agents Hub Cron Tick executed in simulated mode because Supabase is not configured.",
-        processedCount: 0,
-        timestamp: new Date().toISOString(),
-        duration: Date.now() - startTime,
-      });
-    }
-
-    // Dynamically import Supabase.
     const { createClient } = await import("@supabase/supabase-js");
 
     const supabase = createClient(
@@ -59,334 +334,249 @@ export default async function handler(req, res) {
       supabaseServiceKey,
       {
         auth: {
-          persistSession: false,
           autoRefreshToken: false,
+          persistSession: false,
         },
-      },
+      }
     );
 
     const now = new Date();
-    const nowIso = now.toISOString();
 
-    // Fetch automations that are due.
-    const { data: dueAutomations, error: fetchError } = await supabase
+    const {
+      data: automations,
+      error: automationError,
+    } = await supabase
       .from("automations")
       .select("*")
       .eq("enabled", true)
-      .lte("next_run_at", nowIso)
-      .order("next_run_at", { ascending: true })
+      .lte("next_run_at", now.toISOString())
+      .order("next_run_at", {
+        ascending: true,
+      })
       .limit(10);
 
-    if (fetchError) {
-      throw new Error(
-        `Failed to fetch automations: ${fetchError.message}`,
-      );
+    if (automationError) {
+      throw automationError;
     }
 
-    if (!dueAutomations || dueAutomations.length === 0) {
+    if (!automations || automations.length === 0) {
       return res.status(200).json({
         success: true,
-        message: "No automations currently due",
-        processedCount: 0,
+        message: "No automations are due.",
         duration: Date.now() - startTime,
+        results: [],
       });
     }
 
-    for (const automation of dueAutomations) {
+    for (const automation of automations) {
       const runId = `run_${Date.now()}_${Math.random()
         .toString(36)
-        .slice(2, 8)}`;
+        .slice(2, 7)}`;
 
-      const automationStart = Date.now();
+      const runStartedAt = Date.now();
 
       let status = "success";
       let output = "";
       let errorMessage = null;
+      let tokens = 0;
+      let emailSent = false;
 
       try {
-        /*
-         * Fetch the encrypted API key.
-         *
-         * IMPORTANT:
-         * The value should normally be decrypted through your
-         * server-side secret/pgsodium mechanism. Do not expose
-         * the service role key or decrypted API key to clients.
-         */
-        const { data: secretData, error: secretError } = await supabase
+        const {
+          data: secretData,
+          error: secretError,
+        } = await supabase
           .from("user_secrets")
           .select("encrypted_key")
           .eq("automation_id", automation.id)
           .single();
 
         if (secretError && secretError.code !== "PGRST116") {
-          throw new Error(
-            `Failed to fetch API key: ${secretError.message}`,
-          );
+          throw secretError;
         }
 
         const encryptedKey = secretData?.encrypted_key;
 
         if (!encryptedKey) {
           throw new Error(
-            "API key not found in encrypted secret vault.",
+            "Encrypted API key is missing for this automation."
           );
         }
 
-        /*
-         * Preserve the existing project behaviour.
-         *
-         * If encrypted_key is actually encrypted with pgsodium,
-         * replace this decoding step with your server-side
-         * decryption RPC/function.
-         */
-        let apiKey;
-
-        try {
-          apiKey = Buffer.from(
-            encryptedKey,
-            "base64",
-          ).toString("utf-8");
-        } catch {
-          throw new Error("Unable to decode stored API key.");
-        }
+        // IMPORTANT:
+        // user_secrets stores base64(12-byte IV + AES-GCM ciphertext).
+        // Decode and decrypt it using the same PBKDF2/AES-GCM
+        // parameters used by encryptSecret() in automationsService.js.
+        const apiKey = await decryptSecret(encryptedKey);
 
         if (!apiKey) {
-          throw new Error("Decoded API key is empty.");
-        }
-
-        // Build user input.
-        const parts = [];
-
-        if (
-          automation.inputs &&
-          typeof automation.inputs === "object"
-        ) {
-          Object.entries(automation.inputs).forEach(([key, value]) => {
-            if (
-              value !== null &&
-              value !== undefined &&
-              value !== ""
-            ) {
-              const formattedValue = Array.isArray(value)
-                ? value.join(", ")
-                : String(value);
-
-              parts.push(`${key}: ${formattedValue}`);
-            }
-          });
-        }
-
-        const userMessage =
-          parts.length > 0 ? parts.join("\n\n") : "Scheduled run";
-
-        // Execute provider.
-        if (
-          automation.provider === "openai" ||
-          !automation.provider
-        ) {
-          const response = await fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey}`,
-              },
-              body: JSON.stringify({
-                model: automation.model || "gpt-4o-mini",
-                messages: [
-                  {
-                    role: "system",
-                    content:
-                      automation.system_prompt ||
-                      "You are an AI assistant.",
-                  },
-                  {
-                    role: "user",
-                    content: userMessage,
-                  },
-                ],
-              }),
-            },
+          throw new Error(
+            "Unable to decrypt the stored API key."
           );
-
-          const json = await response.json();
-
-          if (!response.ok) {
-            throw new Error(
-              json?.error?.message ||
-                `OpenAI request failed with status ${response.status}`,
-            );
-          }
-
-          output =
-            json?.choices?.[0]?.message?.content ||
-            "No output generated";
-        } else {
-          // Placeholder for other providers.
-          output = `Executed ${
-            automation.agent_name || automation.name || "automation"
-          } via ${automation.provider} successfully.`;
         }
 
-        // Send email notification through Resend.
-        if (
-          automation.email_notification &&
-          automation.notification_email &&
-          process.env.RESEND_API_KEY
-        ) {
-          const safeName = escapeHtml(
-            automation.name || "Automation",
-          );
-
-          const safeOutput = escapeHtml(output);
-
-          const emailResponse = await fetch(
-            "https://api.resend.com/emails",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-              },
-              body: JSON.stringify({
-                from:
-                  "Open Agents Hub <automations@openagentshub.dev>",
-                to: [automation.notification_email],
-                subject: `[Open Agents Hub] Completed: ${
-                  automation.name || "Automation"
-                }`,
-                html: `
-                  <h2>${safeName} Run Output</h2>
-                  <pre>${safeOutput}</pre>
-                `,
-              }),
-            },
-          );
-
-          if (!emailResponse.ok) {
-            const emailError = await emailResponse.text();
-
-            throw new Error(
-              `Resend request failed with status ${emailResponse.status}: ${emailError}`,
-            );
-          }
-        }
-      } catch (err) {
-        status = "failed";
-
-        errorMessage =
-          err instanceof Error
-            ? err.message
-            : String(err);
-
-        console.error(
-          `Automation ${automation.id} failed:`,
-          err,
+        const userMessage = buildUserMessage(
+          automation.inputs
         );
+
+        const systemPrompt =
+          automation.system_prompt ||
+          automation.systemPrompt ||
+          "You are an intelligent AI agent executing a scheduled task.";
+
+        const provider =
+          automation.provider || "openai";
+
+        if (provider !== "openai") {
+          throw new Error(
+            `Provider "${provider}" is not currently supported by this cron handler.`
+          );
+        }
+
+        const result = await runOpenAI({
+          apiKey,
+          model:
+            automation.model || "gpt-4o-mini",
+          systemPrompt,
+          userMessage,
+        });
+
+        output = result.content;
+        tokens = result.tokens || 0;
+      } catch (error) {
+        status = "failed";
+        errorMessage =
+          error?.message ||
+          (typeof error === "string"
+            ? error
+            : "Automation execution failed.");
       }
 
-      const automationDuration =
-        Date.now() - automationStart;
+      const completedAt = Date.now();
+      const duration = completedAt - runStartedAt;
 
-      const completedAt = new Date().toISOString();
+      const emailNotification =
+        automation.email_notification ??
+        automation.emailNotification ??
+        false;
 
-      // Record run history.
-      const { error: runInsertError } = await supabase
+      const notificationEmail =
+        automation.notification_email ||
+        automation.notificationEmail ||
+        "";
+
+      if (
+        emailNotification &&
+        notificationEmail
+      ) {
+        try {
+          emailSent = await sendEmailNotification({
+            to: notificationEmail,
+            automationName:
+              automation.name || "Scheduled Automation",
+            agentName:
+              automation.agent_name ||
+              automation.agentName ||
+              "AI Agent",
+            output,
+            status,
+            duration,
+            error: errorMessage,
+          });
+        } catch (emailError) {
+          console.error(
+            `Email notification failed for ${automation.id}:`,
+            emailError
+          );
+        }
+      }
+
+      const {
+        error: runInsertError,
+      } = await supabase
         .from("automation_runs")
         .insert({
           id: runId,
           automation_id: automation.id,
-          automation_name: automation.name,
-          agent_name: automation.agent_name,
+          automation_name:
+            automation.name || "Scheduled Automation",
+          agent_name:
+            automation.agent_name ||
+            automation.agentName ||
+            "AI Agent",
           status,
-          duration: automationDuration,
+          started_at: new Date(
+            runStartedAt
+          ).toISOString(),
+          completed_at: new Date(
+            completedAt
+          ).toISOString(),
+          duration,
+          tokens,
           output,
           error: errorMessage,
-          started_at: new Date(
-            automationStart,
-          ).toISOString(),
-          completed_at: completedAt,
+          email_sent: emailSent,
         });
 
       if (runInsertError) {
         console.error(
-          `Failed to record automation run ${runId}:`,
-          runInsertError,
+          `Failed to record run ${runId}:`,
+          runInsertError
         );
       }
 
-      // Calculate next execution time.
-      const intervalMs =
-        automation.schedule === "hourly"
-          ? 60 * 60 * 1000
-          : automation.schedule === "weekly"
-            ? 7 * 24 * 60 * 60 * 1000
-            : 24 * 60 * 60 * 1000;
+      const nextRunAt = getNextRun(
+        automation.schedule,
+        now
+      );
 
-      const nextRunAt = new Date(
-        Date.now() + intervalMs,
-      ).toISOString();
-
-      // Update automation schedule.
-      const { error: updateError } = await supabase
+      const {
+        error: updateError,
+      } = await supabase
         .from("automations")
         .update({
-          last_run_at: completedAt,
-          next_run_at: nextRunAt,
+          last_run_at: new Date(
+            completedAt
+          ).toISOString(),
+          next_run_at: nextRunAt.toISOString(),
         })
         .eq("id", automation.id);
 
       if (updateError) {
         console.error(
           `Failed to update automation ${automation.id}:`,
-          updateError,
+          updateError
         );
       }
 
       results.push({
-        id: automation.id,
-        name: automation.name,
+        automationId: automation.id,
+        automationName: automation.name,
+        runId,
         status,
-        duration: automationDuration,
+        duration,
+        tokens,
+        emailSent,
+        error: errorMessage,
       });
     }
 
     return res.status(200).json({
       success: true,
-      processedCount: results.length,
-      results,
+      processed: results.length,
       duration: Date.now() - startTime,
+      results,
     });
-  } catch (err) {
-    console.error("Cron error:", err);
-
-    const message =
-      err instanceof Error
-        ? err.message
-        : "Cron execution failed";
+  } catch (error) {
+    console.error("Cron execution error:", error);
 
     return res.status(500).json({
       success: false,
-      error: message,
+      error:
+        error?.message ||
+        "Cron execution failed.",
       duration: Date.now() - startTime,
+      results,
     });
   }
 }
-
-/**
- * Escape dynamic content before inserting it into email HTML.
- */
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-```
-
-**Short PR description:**
-
-Improved the Vercel cron handler with secure authentication, error handling, Supabase integration, provider execution, run logging, and email notifications.
