@@ -35,6 +35,7 @@ export default function WorkflowBuilder() {
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
+  const [announce, setAnnounce] = useState('')
 
   // Resolve pre-populated chain once agents load
   useEffect(() => {
@@ -77,10 +78,37 @@ export default function WorkflowBuilder() {
     setSelectedAgents((prev) => [...prev, agent])
     setDropdownOpen(false)
     setSearchQuery('')
+    setAnnounce(`Added ${agent.name} as step ${selectedAgents.length + 1}.`)
   }
 
   const removeAgent = (index) => {
+    const removed = selectedAgents[index]
     setSelectedAgents((prev) => prev.filter((_, i) => i !== index))
+    if (removed) {
+      setAnnounce(`Removed ${removed.name}. ${selectedAgents.length - 1} agents in workflow.`)
+    }
+  }
+
+  const moveAgent = (index, dir) => {
+    const next = index + dir
+    if (next < 0 || next >= selectedAgents.length) return
+    setSelectedAgents((prev) => {
+      const copy = [...prev]
+      const [item] = copy.splice(index, 1)
+      copy.splice(next, 0, item)
+      return copy
+    })
+    const moved = selectedAgents[index]
+    if (moved) {
+      setAnnounce(`Moved ${moved.name} to position ${next + 1} of ${selectedAgents.length}.`)
+    }
+  }
+
+  const handleStepKeyDown = (e, index) => {
+    if (e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault()
+      moveAgent(index, e.key === 'ArrowUp' ? -1 : 1)
+    }
   }
 
   const canSave = title.trim() && selectedAgents.length >= 1
@@ -225,14 +253,23 @@ export default function WorkflowBuilder() {
         </div>
 
         {/* Chain Preview */}
+        <div aria-live="polite" role="status" className="sr-only">
+          {announce}
+        </div>
         {selectedAgents.length > 0 && (
-          <div className="mb-4 space-y-2">
+          <div className="mb-4 space-y-2" role="list" aria-label="Workflow steps">
             {selectedAgents.map((agent, index) => {
               const IconComponent = Icons[agent.icon] || Icons.Bot
               return (
                 <div key={`${agent.id}-${index}`} className="animate-fade-in">
-                  <div className="flex items-center gap-3 p-3 rounded-lg border
-                    dark:bg-surface-card dark:border-border bg-white border-gray-200">
+                  <div
+                    role="listitem"
+                    tabIndex={0}
+                    aria-label={`Step ${index + 1} of ${selectedAgents.length}: ${agent.name}. Press Alt plus Arrow Up or Down to reorder.`}
+                    onKeyDown={(e) => handleStepKeyDown(e, index)}
+                    className="flex items-center gap-3 p-3 rounded-lg border
+                    dark:bg-surface-card dark:border-border bg-white border-gray-200
+                    focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent">
                     <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center
                       text-[11px] font-bold text-accent flex-shrink-0">
                       {index + 1}
@@ -248,15 +285,44 @@ export default function WorkflowBuilder() {
                         {agent.category}
                       </div>
                     </div>
-                    <button
-                      onClick={() => removeAgent(index)}
-                      className="p-1 rounded-md transition-colors flex-shrink-0
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => moveAgent(index, -1)}
+                        disabled={index === 0}
+                        className="p-1 rounded-md transition-colors
+                          dark:hover:bg-surface-hover dark:text-text-muted
+                          hover:bg-gray-100 text-gray-400
+                          disabled:opacity-30 disabled:cursor-not-allowed
+                          focus:outline-none focus:ring-2 focus:ring-accent/40"
+                        aria-label={`Move ${agent.name} up`}
+                      >
+                        <span aria-hidden="true">↑</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveAgent(index, 1)}
+                        disabled={index === selectedAgents.length - 1}
+                        className="p-1 rounded-md transition-colors
+                          dark:hover:bg-surface-hover dark:text-text-muted
+                          hover:bg-gray-100 text-gray-400
+                          disabled:opacity-30 disabled:cursor-not-allowed
+                          focus:outline-none focus:ring-2 focus:ring-accent/40"
+                        aria-label={`Move ${agent.name} down`}
+                      >
+                        <span aria-hidden="true">↓</span>
+                      </button>
+                      <button
+                        onClick={() => removeAgent(index)}
+                        className="p-1 rounded-md transition-colors flex-shrink-0
                         dark:hover:bg-surface-hover dark:text-text-muted hover:text-red-400
-                        hover:bg-red-50 text-gray-400"
-                      aria-label={`Remove ${agent.name}`}
-                    >
-                      <X size={14} />
-                    </button>
+                        hover:bg-red-50 text-gray-400
+                        focus:outline-none focus:ring-2 focus:ring-accent/40"
+                        aria-label={`Remove ${agent.name}`}
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   {index < selectedAgents.length - 1 && (
@@ -282,6 +348,8 @@ export default function WorkflowBuilder() {
             <button
               id="add-agent-btn"
               onClick={() => setDropdownOpen((o) => !o)}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="listbox"
               className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg border
                 text-sm font-semibold transition-all duration-200
                 dark:bg-surface-card dark:border-border dark:text-text-secondary
@@ -300,7 +368,10 @@ export default function WorkflowBuilder() {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
+              <div
+                role="listbox"
+                aria-label="Available agents"
+                className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
                 dark:bg-surface-card dark:border-border bg-white border-gray-200
                 max-h-64 overflow-y-auto animate-fade-in p-1.5 space-y-1">
                 <div className="p-1.5 sticky top-0 bg-white dark:bg-surface-card border-b border-gray-100 dark:border-border/60 z-10 mb-1">
@@ -309,6 +380,7 @@ export default function WorkflowBuilder() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search agents by name or category..."
+                    aria-label="Search agents by name or category"
                     className="w-full px-3 py-2 rounded-md border text-xs transition-all duration-200
                       dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
                       bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
