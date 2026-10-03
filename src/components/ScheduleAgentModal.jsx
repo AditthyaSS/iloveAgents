@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Clock, Zap, AlertCircle, ShieldCheck, Mail, Lock } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 /**
  * ScheduleAgentModal
@@ -23,6 +24,7 @@ export default function ScheduleAgentModal({
   const [optInConsent, setOptInConsent] = useState(true)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const trapRef = useFocusTrap(true)
 
   const missingRequiredInputs = agent.inputs?.filter((input) => {
     if (!input.required) return false
@@ -84,7 +86,7 @@ export default function ScheduleAgentModal({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Schedule agent autopilot">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Schedule agent autopilot" ref={trapRef}>
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"

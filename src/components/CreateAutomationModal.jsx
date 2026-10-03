@@ -7,6 +7,7 @@ import { SCHEDULE_PRESETS, createAutomation, updateAutomation } from '../lib/aut
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
 import { useAgents } from '../lib/useAgents'
 import { useApiKey } from '../lib/useApiKey'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 export default function CreateAutomationModal({
   isOpen,
@@ -32,6 +33,7 @@ export default function CreateAutomationModal({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [searchAgent, setSearchAgent] = useState('')
+  const trapRef = useFocusTrap(isOpen)
 
   // Default to the first agent once the shared list has loaded
   useEffect(() => {
@@ -156,7 +158,7 @@ export default function CreateAutomationModal({
   const modelsForProvider = MODELS[provider] || MODELS.openai
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Create scheduled automation">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Create scheduled automation" ref={trapRef}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
