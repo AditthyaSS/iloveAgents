@@ -380,7 +380,11 @@ export default function HomePage() {
 
       {/* Favorites Section */}
       {favoriteAgents.length > 0 && !showingFiltered && (
-        <div className="premium-section mb-8 animate-fade-in" style={{ animationDelay: '140ms' }}>
+        <div
+  id="favorites"
+  className="premium-section mb-8 animate-fade-in"
+  style={{ animationDelay: '140ms' }}
+>
           <div className="flex items-center gap-2 mb-4">
             <Star size={14} className="text-yellow-400 fill-yellow-400" />
             <h2 className="text-sm font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
