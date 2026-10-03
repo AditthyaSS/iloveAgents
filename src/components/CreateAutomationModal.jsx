@@ -159,7 +159,7 @@ export default function CreateAutomationModal({
   const modelsForProvider = MODELS[provider] || MODELS.openai
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Create scheduled automation" ref={trapRef}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto" role="dialog" aria-modal="true" aria-label={initialData ? 'Edit scheduled automation' : 'Create scheduled automation'} ref={trapRef}>
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
