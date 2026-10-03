@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Clock, Zap, AlertCircle, ShieldCheck, Mail, Lock } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
+import { useFocusTrap } from '../hooks/useFocusTrap'
 
 /**
- * ScheduleAgentModal
+ * Modal dialog for scheduling an agent to run on a recurring autopilot basis.
  */
 export default function ScheduleAgentModal({
   agent,
@@ -14,6 +15,13 @@ export default function ScheduleAgentModal({
   onSchedule,
   onClose,
 }) {
+  const trapRef = useFocusTrap(true)
+
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [onClose])
   const [label, setLabel] = useState(`${agent.name} Autopilot`)
   const [schedule, setSchedule] = useState('daily')
   const [selectedModel, setSelectedModel] = useState(MODEL_MAP[provider] || MODEL_MAP.openai)
@@ -76,7 +84,7 @@ export default function ScheduleAgentModal({
   const modelsForProvider = MODELS[provider] || MODELS.openai
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div ref={trapRef} role="dialog" aria-modal="true" aria-label="Schedule agent autopilot" className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
