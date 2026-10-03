@@ -134,7 +134,6 @@
 | 127 | Web3 Whitepaper Writer | Generate a structured, professional blockchain project whitepaper draft from your project details, tokenomics, and team background. | Web3 |
 | 128 | Win/Loss Analysis Report Generator | Enter details about a closed deal to get a structured win/loss analysis with key factors, alternative approaches, and actionable lessons for your sales team. | Sales |
 | 129 | YouTube Script Writer | Turn any topic into a ready-to-record YouTube script with intro hook, sections, and outro. | Marketing |
-
 | 130 | DSA Progress Analyzer | Analyzes your DSA practice log to find weak topics and suggest what to practice next. | Education |
 | 131 | Terms and Conditions Simplifier | Paste any website's URL — including its homepage — and get its Terms & Conditions explained in plain English, and checked for red flags like hidden fees, auto-renewals, and data-sharing clauses. | Legal |
 | 132 | PCOS Lifestyle Planner | Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits. | Healthcare |
@@ -158,6 +157,5 @@
 | 150 | Web Scraping Agent | Describe a page's content or paste raw HTML and get clean, structured data extracted from it. | Developer Tools |
 | 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
 | 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
-
+| 153 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
-| 151 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
