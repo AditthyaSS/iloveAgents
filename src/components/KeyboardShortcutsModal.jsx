@@ -1,6 +1,16 @@
+import { useEffect } from 'react'
 import { X, Command, CornerDownLeft, Search, Type, HelpCircle } from 'lucide-react';
 
 export default function KeyboardShortcutsModal({ isOpen, onClose }) {
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null;
 
   const shortcuts = [
@@ -12,7 +22,7 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="w-full max-w-md bg-white dark:bg-surface-card border border-gray-200 dark:border-border rounded-xl shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-border">
           <h2 className="text-lg font-bold text-gray-900 dark:text-text-primary flex items-center gap-2">
@@ -21,6 +31,7 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }) {
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close keyboard shortcuts dialog"
             className="p-1.5 rounded-lg text-gray-400 hover:text-gray-900 dark:hover:text-text-primary hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
           >
             <X size={20} />

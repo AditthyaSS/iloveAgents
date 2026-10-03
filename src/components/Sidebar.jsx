@@ -111,6 +111,15 @@ export default function Sidebar({ open, onClose }) {
   )
   const allAgentsCount = agents.length
 
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
   return (
     <>
       {open && (
@@ -121,6 +130,9 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Agents navigation"
         className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
           dark:border-border border-gray-200
           ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
