@@ -32,6 +32,7 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const FeedbackPage = lazy(() => import('./pages/FeedbackPage'))
 
 function PageLoader() {
   return (
@@ -84,6 +85,7 @@ export default function App() {
             }>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/settings" element={<SettingsPage />} />
