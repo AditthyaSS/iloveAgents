@@ -6,6 +6,83 @@
  * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
  */
 
+export function buildCronRequest(provider, apiKey, model, systemPrompt, userMessage) {
+  const sys = systemPrompt || 'You are an AI assistant.'
+  const msg = userMessage || 'Scheduled run'
+
+  if (provider === 'anthropic') {
+    return {
+      url: 'https://api.anthropic.com/v1/messages',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: {
+        model: model || 'claude-3-5-sonnet-20241022',
+        max_tokens: 4096,
+        system: sys,
+        messages: [{ role: 'user', content: msg }],
+      },
+    }
+  }
+
+  if (provider === 'gemini') {
+    const m = model || 'gemini-2.5-flash'
+    return {
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${apiKey}`,
+      headers: { 'Content-Type': 'application/json' },
+      body: {
+        contents: [{ parts: [{ text: sys + '\n\n' + msg }] }],
+      },
+    }
+  }
+
+  if (provider === 'openrouter') {
+    return {
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://iloveagents.ai',
+        'X-Title': 'ILoveAgents',
+      },
+      body: {
+        model: model || 'openai/gpt-4o-mini',
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: msg },
+        ],
+      },
+    }
+  }
+
+  return {
+    url: 'https://api.openai.com/v1/chat/completions',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: {
+      model: model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: msg },
+      ],
+    },
+  }
+}
+
+export function parseCronResponse(provider, json) {
+  if (provider === 'anthropic') {
+    return json.content?.[0]?.text || 'No output generated'
+  }
+  if (provider === 'gemini') {
+    return json.candidates?.[0]?.content?.parts?.[0]?.text || 'No output generated'
+  }
+  return json.choices?.[0]?.message?.content || 'No output generated'
+}
+
 export default async function handler(req, res) {
   // Verify Cron Secret if configured
   const authHeader = req.headers.authorization || req.headers['authorization']
@@ -88,27 +165,22 @@ export default async function handler(req, res) {
         }
         const userMessage = parts.join('\n\n') || 'Scheduled run'
 
-        // Call OpenAI / Provider endpoint
-        if (auto.provider === 'openai' || !auto.provider) {
-          const resp = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${apiKey}`,
-            },
-            body: JSON.stringify({
-              model: auto.model || 'gpt-4o-mini',
-              messages: [
-                { role: 'system', content: auto.system_prompt || 'You are an AI assistant.' },
-                { role: 'user', content: userMessage },
-              ],
-            }),
-          })
-          const json = await resp.json()
-          output = json.choices?.[0]?.message?.content || 'No output generated'
-        } else {
-          output = `Executed ${auto.agent_name} via ${auto.provider} successfully.`
-        }
+        // Call provider endpoint (openai, anthropic, gemini, openrouter)
+        const provider = auto.provider || 'openai'
+        const cronReq = buildCronRequest(
+          provider,
+          apiKey,
+          auto.model,
+          auto.system_prompt,
+          userMessage
+        )
+        const resp = await fetch(cronReq.url, {
+          method: 'POST',
+          headers: cronReq.headers,
+          body: JSON.stringify(cronReq.body),
+        })
+        const json = await resp.json()
+        output = parseCronResponse(provider, json)
 
         // Email Notification via Resend
         if (auto.email_notification && auto.notification_email && process.env.RESEND_API_KEY) {
