@@ -2,6 +2,11 @@ import { useEffect, useRef } from 'react'
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
 
+/**
+ * Traps keyboard focus within a container while active, and restores focus on deactivation.
+ * @param {boolean} active - Whether the focus trap is currently active.
+ * @returns {import('react').RefObject<HTMLElement>} Ref to attach to the container element.
+ */
 export function useFocusTrap(active) {
   const containerRef = useRef(null)
   const previousFocusRef = useRef(null)

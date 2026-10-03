@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { X, Command, CornerDownLeft, Search, Type, HelpCircle } from 'lucide-react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
+/** Accessible modal displaying available keyboard shortcuts. */
 export default function KeyboardShortcutsModal({ isOpen, onClose }) {
   const trapRef = useFocusTrap(isOpen);
 

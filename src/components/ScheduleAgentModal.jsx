@@ -4,9 +4,7 @@ import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 
-/**
- * ScheduleAgentModal
- */
+/** Modal for configuring and activating a scheduled agent automation. */
 export default function ScheduleAgentModal({
   agent,
   inputs,

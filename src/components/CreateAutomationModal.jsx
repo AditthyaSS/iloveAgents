@@ -9,6 +9,7 @@ import { useAgents } from '../lib/useAgents'
 import { useApiKey } from '../lib/useApiKey'
 import { useFocusTrap } from '../hooks/useFocusTrap'
 
+/** Modal for creating or editing a scheduled automation with agent, inputs, and provider config. */
 export default function CreateAutomationModal({
   isOpen,
   onClose,
