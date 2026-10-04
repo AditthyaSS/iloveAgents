@@ -48,7 +48,11 @@ function loadJobs() {
 }
 
 function saveJobs(jobs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map(stripJobSecret)))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map(stripJobSecret)))
+  } catch (error) {
+    console.error('Error saving scheduled jobs to localStorage:', error)
+  }
 }
 
 function loadResults() {
@@ -57,7 +61,11 @@ function loadResults() {
 }
 
 function saveResults(results) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(results))
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(results))
+  } catch (error) {
+    console.error('Error saving scheduler results to localStorage:', error)
+  }
 }
 
 // ── Browser notification helper
