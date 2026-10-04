@@ -53,7 +53,7 @@ export function useFavorites() {
     const saved = saveFavorites(next)
     if (!saved) return
     setFavorites(next)
-    notify()
+    if (saved) notify()
   }, [])
 
   return { favorites, isFavorite, toggleFavorite }
