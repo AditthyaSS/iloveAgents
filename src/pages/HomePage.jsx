@@ -4,6 +4,7 @@ import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, St
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
+import { paginateItems, pageNumbers, DEFAULT_PAGE_SIZE } from '../lib/paginate'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -49,6 +50,7 @@ export default function HomePage() {
   const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedProvider, setSelectedProvider] = useState(null)
+  const [page, setPage] = useState(1)
   const [searchParams, setSearchParams] = useSearchParams()
   const { collections, getAgentCollectionId } = useCollections()
 
@@ -259,6 +261,16 @@ export default function HomePage() {
 
   const showingFiltered =
     searchQuery.trim() || selectedCategory || selectedProvider || activeCollectionId !== DEFAULT_COLLECTION_ID
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchQuery, selectedCategory, selectedProvider, activeCollectionId])
+
+  const pagedAgents = useMemo(() => {
+    return paginateItems(filteredAgents, page, DEFAULT_PAGE_SIZE)
+  }, [filteredAgents, page])
+
+  const pages = pageNumbers(pagedAgents.page, pagedAgents.pageCount)
 
   return (
     <div className="animate-fade-in">
@@ -561,13 +573,54 @@ export default function HomePage() {
               ))}
             </div>
           ) : filteredAgents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filteredAgents.map((agent, idx) => (
-                <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
-                  <AgentCard agent={agent} />
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                {pagedAgents.items.map((agent, idx) => (
+                  <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
+                    <AgentCard agent={agent} />
+                  </div>
+                ))}
+              </div>
+              {pagedAgents.pageCount > 1 && (
+                <nav aria-label="Agent pages" className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={pagedAgents.page <= 1}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium border
+                      dark:border-border dark:text-text-secondary bg-white border-gray-200 text-gray-600
+                      disabled:opacity-40 disabled:cursor-not-allowed hover:border-accent/40"
+                  >
+                    Previous
+                  </button>
+                  {pages.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setPage(n)}
+                      aria-current={n === pagedAgents.page ? 'page' : undefined}
+                      className={`min-w-8 px-2.5 py-1.5 rounded-md text-xs font-semibold border transition-colors
+                        ${n === pagedAgents.page
+                          ? 'bg-accent text-white border-accent'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-accent/40 dark:bg-surface-card dark:border-border dark:text-text-secondary'
+                        }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setPage((p) => Math.min(pagedAgents.pageCount, p + 1))}
+                    disabled={pagedAgents.page >= pagedAgents.pageCount}
+                    className="px-3 py-1.5 rounded-md text-xs font-medium border
+                      dark:border-border dark:text-text-secondary bg-white border-gray-200 text-gray-600
+                      disabled:opacity-40 disabled:cursor-not-allowed hover:border-accent/40"
+                  >
+                    Next
+                  </button>
+                </nav>
+              )}
+            </>
           ) : (
             <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
               <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
