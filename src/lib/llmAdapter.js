@@ -340,6 +340,12 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       await handleErrorResponse(response, provider)
     }
 
+    if (!response.body || typeof response.body.getReader !== 'function') {
+      throw new Error(
+        'Streaming is not supported by this response. Please try again.'
+      )
+    }
+
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''

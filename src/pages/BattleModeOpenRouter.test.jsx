@@ -51,4 +51,30 @@ describe('BattleMode openrouter column', () => {
       expect(screen.getByText(`${label} is generating...`)).toBeInTheDocument()
     }
   })
+
+  it('skips providers without keys with a key missing message', () => {
+    render(
+      <MemoryRouter
+        initialEntries={[
+          {
+            pathname: '/battle/arena',
+            state: {
+              agent,
+              inputs: {},
+              apiKeys: { openai: 'a', anthropic: '', gemini: '', openrouter: '' },
+            },
+          },
+        ]}
+      >
+        <BattleModeArena />
+      </MemoryRouter>
+    )
+    expect(screen.getByText('GPT-4o is generating...')).toBeInTheDocument()
+    expect(
+      screen.getByText(/API key for Claude Sonnet is not configured/)
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/API key for OpenRouter is not configured/)
+    ).toBeInTheDocument()
+  })
 })
