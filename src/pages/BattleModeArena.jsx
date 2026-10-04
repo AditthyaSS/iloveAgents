@@ -18,6 +18,7 @@ import { recordAnalyticsRun } from "../lib/useAnalytics";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
+import BattleStats from "../components/BattleStats";
 
 // Timeout configuration for LLM requests (in milliseconds)
 // Prevents runaway API calls from indefinitely blocking the UI
@@ -633,6 +634,7 @@ export default function BattleModeArena() {
                             {r.content}
                           </pre>
                         )}
+                        <BattleStats content={r.content} durationMs={r.duration} model={prov.model} />
                       </div>
                     )}
                   </div>
