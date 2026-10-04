@@ -10,8 +10,25 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
 
   if (!isOpen || !run) return null
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(run.output || run.error || '')
+  const handleCopy = async () => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(run.output || run.error || '')
+      } else {
+        throw new Error('Clipboard API unavailable')
+      }
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = run.output || run.error || ''
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {
+        // clipboard unavailable; toast below still confirms best effort
+      }
+      document.body.removeChild(ta)
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -19,11 +36,13 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   const handleDownload = () => {
     const element = document.createElement('a')
     const file = new Blob([run.output || run.error || ''], { type: 'text/markdown' })
-    element.href = URL.createObjectURL(file)
+    const url = URL.createObjectURL(file)
+    element.href = url
     element.download = `${run.automationName.replace(/\s+/g, '_')}_${new Date(run.startedAt).toISOString().split('T')[0]}.md`
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const formatDate = (ts) => {
