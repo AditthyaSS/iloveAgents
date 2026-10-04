@@ -67,7 +67,7 @@ export const suites = [
       'data-dictionary-generator',
       'dataset-description-generator',
       'etl-pipeline-troubleshooter',
-      'featureEngineeringAdvisor',
+      'feature-engineering-advisor',
       'ml-experiment-autopsy',
       'ml-experiment-report-generator',
       'cloud-cost-estimator',
@@ -127,8 +127,8 @@ export const suites = [
     description: 'Close more deals with better outreach, scripts, and analysis',
     color: '#10b981',
     agents: [
-      'salesDiscoveryCallGenerator',
-      'sales_objection_handler',
+      'sales-discovery-call-generator',
+      'sales-objection-handler',
       'linkedin-outreach-message-writer',
       'win-loss-analysis-report-generator',
       'salary-negotiation-script',
@@ -156,10 +156,10 @@ export const suites = [
     color: '#ec4899',
     agents: [
       'color-palette-generator',
-      'font-pair-generator',
+      'font-pairing-agent',
       'typography-pairer',
       'accessibility-audit-generator',
-      'game_world_lore_generator',
+      'game-world-lore-generator',
       'npc-dialogue-lore-generator',
     ],
     quiz: {
@@ -214,7 +214,7 @@ export const suites = [
     description: 'Learn faster, grow your career, and land your dream job',
     color: '#f97316',
     agents: [
-      'aiStudyPlanner',
+      'ai-study-planner',
       'flashcard-generator',
       'eli5-explainer',
       'mnemonic-generator',
@@ -246,7 +246,7 @@ export const suites = [
     color: '#64748b',
     agents: [
       'employee-onboarding-planner',
-      'customerSuccessCheckin',
+      'customer-success-checkin',
       'invoice-description-generator',
       'privacy-policy-generator',
       'contract-explainer',
@@ -330,8 +330,8 @@ export const suites = [
     description: 'Build game worlds, check compatibility, and explore your future',
     color: '#a855f7',
     agents: [
-      'game-system-compatibility-analyser',
-      'game_world_lore_generator',
+      'game-system-compatibility-agent',
+      'game-world-lore-generator',
       'npc-dialogue-lore-generator',
       'future-self-letter-agent',
     ],
