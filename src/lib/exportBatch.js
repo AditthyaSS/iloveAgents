@@ -22,8 +22,11 @@ function downloadBlob(content, mimeType, filename) {
   URL.revokeObjectURL(url)
 }
 
-function csvEscape(value) {
-  const str = String(value ?? '')
+export function csvEscape(value) {
+  let str = String(value ?? '')
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`
+  }
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`
   }
