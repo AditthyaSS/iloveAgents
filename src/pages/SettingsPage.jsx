@@ -16,6 +16,7 @@ import openaiLogo   from '../assets/openai.svg'
 import anthropicLogo from '../assets/anthropic.svg'
 import geminiLogo    from '../assets/gemini.svg'
 import openrouterLogo from '../assets/openrouter.svg'
+import groqLogo from '../assets/groq.svg'
 
 const PROVIDERS = [
   {
@@ -57,11 +58,11 @@ const PROVIDERS = [
   {
     id:          'groq',
     label:       'Groq',
-    logo:        'https://upload.wikimedia.org/wikipedia/commons/7/9a/Groq_logo.png',
+    logo:        groqLogo,
     description: 'Powers Groq models such as Mixtral 8×7B',
     keyUrl:      'https://console.groq.com/keys',
     keyLabel:    'Get free key →',
-    placeholder: 'sk-',
+    placeholder: 'gsk-',
   },
 ]
 
