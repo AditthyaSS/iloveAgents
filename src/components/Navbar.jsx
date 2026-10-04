@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
   Sun,
@@ -30,6 +30,21 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showSpendPopup, setShowSpendPopup] = useState(false)
   const { totalSpend, runs, clearSession } = useSessionSpend()
+  const menuToggleRef = useRef(null)
+
+  // Dismiss the mobile menu on Escape and return focus to the toggle,
+  // matching the dropdown dismissal pattern used elsewhere.
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false)
+        menuToggleRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [mobileMenuOpen])
 
   useKeyboardShortcuts({
     '?': () => setShowShortcuts(true),
@@ -299,6 +314,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
 
           <button
             onClick={() => setMobileMenuOpen((open) => !open)}
+            ref={menuToggleRef}
             className="
               md:hidden p-2.5 rounded-full
               text-gray-600 dark:text-text-secondary
