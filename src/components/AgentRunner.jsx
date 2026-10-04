@@ -49,6 +49,7 @@ const providerLabels = {
   anthropic: "Anthropic",
   gemini: "Gemini",
   openrouter: "OpenRouter",
+  groq: "Groq",
   any: "Any",
 };
 
@@ -1167,6 +1168,7 @@ const handleRun = async () => {
         { value: "anthropic", label: "Anthropic" },
         { value: "gemini", label: "Gemini" },
         { value: "openrouter", label: "OpenRouter" },
+        { value: "groq", label: "Groq" },
       ]}
     />
 

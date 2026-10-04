@@ -22,7 +22,10 @@ export const MODELS = {
     { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
   ],
   groq: [
+    { value: 'llama-3.3-70b-versatile', label: 'Llama 3.3 70B' },
+    { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B' },
     { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B' },
+    { value: 'gemma2-9b-it', label: 'Gemma 2 9B' },
   ],
 }
 

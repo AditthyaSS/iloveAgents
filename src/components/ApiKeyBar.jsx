@@ -11,12 +11,14 @@ import geminiLogo from "../assets/gemini.svg";
 import openrouterLogo from "../assets/openrouter.svg";
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getGlobalKeys, getAvailableProviders } from '../lib/globalKeys'
+import groqLogo from "../assets/groq.svg";
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'gemini', label: 'Gemini' },
   { value: 'openrouter', label: 'OpenRouter' },
+  { value: 'groq', label: 'Groq' },
 ]
 
 const providerLogos = {
@@ -24,14 +26,15 @@ const providerLogos = {
   anthropic: anthropicLogo,
   gemini: geminiLogo,
   openrouter: openrouterLogo,
+  groq: groqLogo,
 }
-
 
 const providerUrls = {
   openai: 'https://platform.openai.com/account/api-keys',
   anthropic: 'https://console.anthropic.com/keys',
   gemini: 'https://console.cloud.google.com/apis/credentials',
   openrouter: 'https://openrouter.ai/keys',
+  groq: 'https://console.groq.com/keys',
 }
 
 function ProviderIcon({ provider, label }) {
@@ -162,6 +165,10 @@ export default function ApiKeyBar({
     'Alt+4': () => {
       const p = availableProviders.find(p => p.value === 'openrouter');
       if (p) setProvider('openrouter');
+    },
+    'Alt+5': () => {
+      const p = availableProviders.find(p => p.value === 'groq');
+      if (p) setProvider('groq');
     },
   });
 
