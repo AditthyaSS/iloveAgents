@@ -79,9 +79,13 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     setItems(dataRows.map((r) => r[columnIndex]).filter(Boolean))
   }
 
+  const [uploadError, setUploadError] = useState(null)
+
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+    e.target.value = ''
+    setUploadError(null)
 
     const reader = new FileReader()
     reader.onload = (evt) => {
@@ -96,6 +100,9 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         setCsvRawRows(null)
         setItems(parsePastedLines(text))
       }
+    }
+    reader.onerror = () => {
+      setUploadError(`Could not read ${file.name}. Please try again.`)
     }
     reader.readAsText(file)
   }
@@ -319,6 +326,11 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
           {items.length > 0 && (
             <span className="text-[11px] dark:text-text-muted text-gray-400">
               {items.length} item{items.length !== 1 ? 's' : ''} detected
+            </span>
+          )}
+          {uploadError && (
+            <span role="alert" className="text-[11px] font-medium text-red-400">
+              {uploadError}
             </span>
           )}
         </div>
