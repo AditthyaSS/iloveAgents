@@ -4,6 +4,7 @@ import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, St
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
+import { loadRecentIds } from '../lib/recentAgents'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -189,9 +190,7 @@ export default function HomePage() {
   )
 
   const recentAgents = useMemo(() => {
-    const recentIds = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
+    const recentIds = loadRecentIds()
 
     return recentIds
       .map((id) => agents.find((a) => a.id === id))
