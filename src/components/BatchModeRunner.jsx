@@ -15,6 +15,7 @@ import { runBatch, parsePastedLines, parseCSV } from '../lib/batchRunner'
 import { exportBatchAsCSV, exportBatchAsMarkdown } from '../lib/exportBatch'
 
 const MAX_BATCH_SIZE = 25
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 const STATUS_COLORS = {
   waiting: 'dark:text-text-muted text-gray-400',
@@ -86,6 +87,10 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     if (!file) return
     e.target.value = ''
     setUploadError(null)
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setUploadError(`${file.name} is larger than the 5 MB upload limit.`)
+      return
+    }
 
     const reader = new FileReader()
     reader.onload = (evt) => {

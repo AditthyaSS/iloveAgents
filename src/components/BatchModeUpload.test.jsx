@@ -56,4 +56,12 @@ describe('BatchModeRunner file upload', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not read broken.txt')
     vi.unstubAllGlobals()
   })
+
+  it('rejects files over 5 MB before reading', async () => {
+    const big = new File(['x'.repeat(1024)], 'huge.txt', { type: 'text/plain' })
+    Object.defineProperty(big, 'size', { value: 6 * 1024 * 1024 })
+    const input = setup()
+    fireEvent.change(input, { target: { files: [big] } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('larger than the 5 MB upload limit')
+  })
 })
