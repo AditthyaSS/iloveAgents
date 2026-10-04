@@ -1,0 +1,923 @@
+{
+  "count": 153,
+  "agents": [
+    {
+      "number": "1",
+      "name": "Accessibility Audit Generator",
+      "description": "Paste your HTML or component code and get a detailed WCAG accessibility audit with issues, severity ratings, and corrected code snippets.",
+      "category": "Engineering"
+    },
+    {
+      "number": "2",
+      "name": "AI Project Architecture Agent",
+      "description": "Analyzes software or AI project ideas and recommends the most suitable frontend, backend, database, AI tools, and deployment stack.",
+      "category": "Engineering"
+    },
+    {
+      "number": "3",
+      "name": "AI Quiz Generator",
+      "description": "Generate customized quizzes from any topic, text, or subject area. Choose question type, difficulty, and number of questions. Includes answer key and score guidelines.",
+      "category": "Education"
+    },
+    {
+      "number": "4",
+      "name": "AI Study Planner",
+      "description": "Creates personalized study schedules, revision plans, and smart learning recommendations based on exams, subjects, and study goals.",
+      "category": "Productivity"
+    },
+    {
+      "number": "5",
+      "name": "API Doc Generator",
+      "description": "Paste your code and get clean, professional API documentation with examples and type signatures.",
+      "category": "Engineering"
+    },
+    {
+      "number": "6",
+      "name": "API Error Message Writer",
+      "description": "Transforms technical, raw, or cryptic backend error codes and system logs into tailored, user-friendly notifications and precise diagnostic debugging steps.",
+      "category": "Engineering"
+    },
+    {
+      "number": "7",
+      "name": "API Rate Limiter Designer",
+      "description": "Takes an API description and produces a complete rate limiting strategy- choosing the right algorithm, limits, and headers.",
+      "category": "Engineering"
+    },
+    {
+      "number": "8",
+      "name": "Architecture Decision Record Generator",
+      "description": "Turn a rough technical decision into a structured ADR document that captures what was decided, why, and what alternatives were considered.",
+      "category": "Engineering"
+    },
+    {
+      "number": "9",
+      "name": "B2B Lead Qualification Agent",
+      "description": "Analyzes company and lead information to qualify B2B prospects, detect agencies, identify buying signals, and generate personalized outreach messages.",
+      "category": "Sales"
+    },
+    {
+      "number": "10",
+      "name": "Blog Post SEO Optimizer",
+      "description": "Paste a blog draft and target keywords to get an optimized version with better titles, meta description, header structure, keyword placement, and internal linking suggestions.",
+      "category": "Marketing"
+    },
+    {
+      "number": "11",
+      "name": "Bug Report Generator",
+      "description": "Describe a bug in plain English and get a complete, structured bug report ready to paste into GitHub Issues, Jira, Linear, or Notion.",
+      "category": "Engineering"
+    },
+    {
+      "number": "12",
+      "name": "Case Study Writer",
+      "description": "Turn raw notes about a client project or business win into a polished case study for a website, proposal, or sales deck.",
+      "category": "Marketing"
+    },
+    {
+      "number": "13",
+      "name": "Changelog Generator",
+      "description": "Paste your git commits or PR titles and get a clean, user-facing changelog in Keep a Changelog format.",
+      "category": "Engineering"
+    },
+    {
+      "number": "14",
+      "name": "CI/CD Pipeline Generator",
+      "description": "Describe your stack and deployment target to get a ready-to-use CI/CD pipeline YAML with step-by-step comments.",
+      "category": "DevOps"
+    },
+    {
+      "number": "15",
+      "name": "Cloud Cost Estimator",
+      "description": "Describe your cloud infrastructure and get a realistic monthly cost estimate with line-by-line breakdown, hidden cost warnings, tier comparisons, and actionable optimization tips.",
+      "category": "DevOps"
+    },
+    {
+      "number": "16",
+      "name": "Code Complexity Analyzer",
+      "description": "Analyzes functions or classes for cyclomatic complexity, maintainability issues, and refactoring opportunities.",
+      "category": "Engineering"
+    },
+    {
+      "number": "17",
+      "name": "Code Migration Guide Generator",
+      "description": "Generate a step-by-step checklist, identify common pitfalls, and highlight breaking changes for tech stack migrations.",
+      "category": "Engineering"
+    },
+    {
+      "number": "18",
+      "name": "Code Reviewer",
+      "description": "Get a senior-level code review with actionable feedback.",
+      "category": "Engineering"
+    },
+    {
+      "number": "19",
+      "name": "Codebase Entry Guide Agent",
+      "description": "Understand a new codebase quickly with key files, entry points, and architecture overview.",
+      "category": "Engineering"
+    },
+    {
+      "number": "20",
+      "name": "Cold Email Writer",
+      "description": "Generate highly personalized B2B cold emails that convert.",
+      "category": "Marketing"
+    },
+    {
+      "number": "21",
+      "name": "Color Palette Generator",
+      "description": "Describe a mood, brand, or use case and get a complete color palette with hex codes, CSS variables, and accessibility contrast ratios.",
+      "category": "Design"
+    },
+    {
+      "number": "22",
+      "name": "Competitive Analysis Generator",
+      "description": "Name your product and competitors to get a structured competitive analysis with feature comparisons, positioning, and strategic recommendations.",
+      "category": "Business"
+    },
+    {
+      "number": "23",
+      "name": "Cover Letter Writer",
+      "description": "Paste a job description and your background. Get a tailored cover letter that doesn't sound like every other cover letter.",
+      "category": "HR"
+    },
+    {
+      "number": "24",
+      "name": "Crammo: Cheatsheet Generator",
+      "description": "Paste study material and get revision friendly cheatsheets for on the go study.",
+      "category": "Education"
+    },
+    {
+      "number": "25",
+      "name": "Crammo: Mindmap Generator",
+      "description": "Paste study material and get mindmaps to remember difficult concepts.",
+      "category": "Education"
+    },
+    {
+      "number": "26",
+      "name": "Crammo: Mnemonic Generator",
+      "description": "Paste study material and get revision friendly mnemonics.",
+      "category": "Education"
+    },
+    {
+      "number": "27",
+      "name": "Cron Expression Builder",
+      "description": "Describe when you want a job to run in plain English and get a correct cron expression with a human-readable explanation.",
+      "category": "Engineering"
+    },
+    {
+      "number": "28",
+      "name": "Customer Success Check-in Generator",
+      "description": "Generates professional customer success follow-up emails based on customer activity and milestones.",
+      "category": "Marketing"
+    },
+    {
+      "number": "29",
+      "name": "Data Cleaning Plan Generator",
+      "description": "Describe your dataset and its known problems to get a step-by-step cleaning plan with specific techniques for handling nulls, outliers, duplicates, and inconsistent formats.",
+      "category": "Data Science"
+    },
+    {
+      "number": "30",
+      "name": "Data Dictionary Generator",
+      "description": "Paste your database schema, CSV headers, or table descriptions and get a complete data dictionary with field definitions, types, relationships, and usage notes.",
+      "category": "Engineering"
+    },
+    {
+      "number": "31",
+      "name": "Database Migration Script Generator",
+      "description": "Writing safe database migration scripts is tedious and error-prone. This agent takes a schema change description and generates a production-safe migration script with rollback.",
+      "category": "Engineering"
+    },
+    {
+      "number": "32",
+      "name": "Database Query Optimizer",
+      "description": "This agent takes a SQL query and optional schema context as input and returns an optimized version with an explanation of what changed, what indexes to add, and why the original was slow.",
+      "category": "Engineering"
+    },
+    {
+      "number": "33",
+      "name": "Dataset Description Generator",
+      "description": "Paste column names, data types, and sample values to generate complete dataset documentation with field definitions, value ranges, null handling notes, and suggested use cases.",
+      "category": "Data Science"
+    },
+    {
+      "number": "34",
+      "name": "Disaster Recovery Plan Generator",
+      "description": "Generate a complete disaster recovery plan with RTO/RPO targets, backup strategies, failover procedures, recovery workflows, and testing schedules.",
+      "category": "DevOps"
+    },
+    {
+      "number": "35",
+      "name": "Docker Compose Generator",
+      "description": "Describe your multi-service application stack and get a production-ready docker-compose.yml with volumes, networks, and health checks.",
+      "category": "Engineering"
+    },
+    {
+      "number": "36",
+      "name": "Docker Container Security & Optimization Audit",
+      "description": "Analyze Dockerfiles or Docker Compose configurations to discover security vulnerabilities, size bloat, and optimization opportunities.",
+      "category": "DevOps"
+    },
+    {
+      "number": "37",
+      "name": "DSA Problem Explainer",
+      "description": "Explains DSA problems with intuition, optimized approaches, dry runs, interview insights, and complexity analysis.",
+      "category": "Education"
+    },
+    {
+      "number": "38",
+      "name": "ELI5 Explainer",
+      "description": "Explains complex topics in plain language at your chosen difficulty level — from 5-year-old to expert.",
+      "category": "Education"
+    },
+    {
+      "number": "39",
+      "name": "Email Reply Writer",
+      "description": "Paste any email you received and describe how you want to respond. Get a polished reply in seconds.",
+      "category": "Productivity"
+    },
+    {
+      "number": "40",
+      "name": "Employee Onboarding Planner",
+      "description": "Generate structured onboarding plans and checklists for new hires based on role, department, seniority, and start date.",
+      "category": "HR"
+    },
+    {
+      "number": "41",
+      "name": "Env Doc Generator",
+      "description": "Generate clean markdown documentation tables from .env.example files with descriptions, defaults, and usage examples.",
+      "category": "Engineering"
+    },
+    {
+      "number": "42",
+      "name": "Error Message Writer",
+      "description": "Paste a raw stack trace or error log and get a plain English explanation plus actionable fix suggestions.",
+      "category": "Engineering"
+    },
+    {
+      "number": "43",
+      "name": "ETL Pipeline Troubleshooter",
+      "description": "Paste your ETL error message and get instant root cause analysis, step-by-step fix, and prevention tips.",
+      "category": "Engineering"
+    },
+    {
+      "number": "44",
+      "name": "Feature Engineering Advisor",
+      "description": "Analyzes datasets and machine learning objectives to recommend feature engineering strategies, transformations, encodings, and feature selection techniques.",
+      "category": "Engineering"
+    },
+    {
+      "number": "45",
+      "name": "Flashcard Generator",
+      "description": "Paste any study material, notes, or topic and get ready-to-use flashcards in Q&A format. Export for Anki or Quizlet.",
+      "category": "Education"
+    },
+    {
+      "number": "46",
+      "name": "Follow-Up Email Sequence Writer",
+      "description": "Generate a strategic 5-email follow-up sequence spaced over 2 weeks with varied psychological angles based on your product and prospect context.",
+      "category": "Sales"
+    },
+    {
+      "number": "47",
+      "name": "Font Pairing Agent",
+      "description": "The agent takes in mood and industry as input and generates 3 font pairings for design.",
+      "category": "Design"
+    },
+    {
+      "number": "48",
+      "name": "Future Self Letter Agent",
+      "description": "Based on your current habits and goals, writes a brutally honest letter from your future self.",
+      "category": "Productivity"
+    },
+    {
+      "number": "49",
+      "name": "Game Design Document Generator",
+      "description": "Generates a comprehensive Game Design Document (GDD) based on your game concept.",
+      "category": "Design"
+    },
+    {
+      "number": "50",
+      "name": "Game System Compatibility Analyser",
+      "description": "The agent takes in the game you would like to install along with specifications of your system and provides a verdict with explanation regarding whether the game can be run or not.",
+      "category": "Gaming"
+    },
+    {
+      "number": "51",
+      "name": "Game World Lore Generator",
+      "description": "Turn a world name, genre, and core conflict into a consistent lore document for game writing and quest design.",
+      "category": "Gaming"
+    },
+    {
+      "number": "52",
+      "name": "Git Branch Naming Generator",
+      "description": "Generate 3-5 clean, consistent branch name options from a ticket number, title, and branch type following common conventions like feature/ILA-123-add-login-page.",
+      "category": "Engineering"
+    },
+    {
+      "number": "53",
+      "name": "Git Commit & Conventional Commits Formatter Agent",
+      "description": "Parses messy developer notes or raw git diffs and outputs perfectly formatted Conventional Commits messages and a PR summary.",
+      "category": "Productivity"
+    },
+    {
+      "number": "54",
+      "name": "Git Error Decoder",
+      "description": "Translates confusing Git/terminal errors into plain English and provides safe fix commands.",
+      "category": "Engineering"
+    },
+    {
+      "number": "55",
+      "name": "Github Issue Claim Comment Generator",
+      "description": "Paste the github issue description and your approach to solve it and any additional notes and get the issue claim comment generated in seconds!",
+      "category": "Productivity"
+    },
+    {
+      "number": "56",
+      "name": "Grant Proposal Writer",
+      "description": "Describe your project or research and get a structured grant proposal with problem statement, objectives, methodology, and impact.",
+      "category": "Education"
+    },
+    {
+      "number": "57",
+      "name": "Health & Wellness Plan Generator",
+      "description": "Generates a personalized 4-week wellness plan with diet, exercise, and sleep guidance based on your goals.",
+      "category": "Healthcare"
+    },
+    {
+      "number": "58",
+      "name": "Home Buying Checklist Generator",
+      "description": "Generates a complete property viewing checklist based on property type, building age, and location.",
+      "category": "Business"
+    },
+    {
+      "number": "59",
+      "name": "Incident Post-Mortem Writer",
+      "description": "Turn rough incident notes into a blameless post-mortem with timeline, root cause analysis, and action items.",
+      "category": "Engineering"
+    },
+    {
+      "number": "60",
+      "name": "Incident Runbook Generator",
+      "description": "Enter a service name, common failure modes, and infrastructure details to generate a production-grade incident runbook with detection, diagnosis, resolution steps, escalation paths, and communication templates.",
+      "category": "Engineering"
+    },
+    {
+      "number": "61",
+      "name": "InterviewAI",
+      "description": "Simulates real software engineering interviews and provides comprehensive performance feedback.",
+      "category": "Engineering"
+    },
+    {
+      "number": "62",
+      "name": "Invoice Description Generator",
+      "description": "Turn rough notes about work you did into polished invoice line items and a professional project summary.",
+      "category": "Business"
+    },
+    {
+      "number": "63",
+      "name": "Kubernetes Manifest Generator",
+      "description": "Generates a complete Kubernetes Deployment, Service, and ConfigMap manifest from a few app inputs.",
+      "category": "DevOps"
+    },
+    {
+      "number": "64",
+      "name": "Kubernetes Manifest Security Audit & Optimizer Agent",
+      "description": "Audit Kubernetes YAML configurations for security vulnerabilities, container misconfigurations, and performance bottlenecks, and generate optimized manifests.",
+      "category": "DevOps"
+    },
+    {
+      "number": "65",
+      "name": "LinkedIn Outreach Message Writer",
+      "description": "Paste a prospect's profile summary and your product details to generate personalized connection requests and follow-up messages that feel genuine, not spammy.",
+      "category": "Sales"
+    },
+    {
+      "number": "66",
+      "name": "LinkedIn Post Writer",
+      "description": "Generate ready-to-post LinkedIn content with a strong hook and hashtags.",
+      "category": "Marketing"
+    },
+    {
+      "number": "67",
+      "name": "Load Testing Plan Generator",
+      "description": "Describe your app or API and get a complete load testing plan with ready-to-run scripts for k6, JMeter, Locust, or Artillery.",
+      "category": "Engineering"
+    },
+    {
+      "number": "68",
+      "name": "Log Analysis Summarizer",
+      "description": "Paste raw log output and get a structured summary of errors, warnings, patterns, timeline of events, and likely root cause — so you find the 5 lines that matter in 500 lines of noise.",
+      "category": "DevOps"
+    },
+    {
+      "number": "69",
+      "name": "Master Image Prompt Generator",
+      "description": "Turn a basic idea into a highly detailed, professional prompt for Midjourney, DALL-E 3 or other AI image generation tools.",
+      "category": "Design"
+    },
+    {
+      "number": "70",
+      "name": "Meal Planner Agent",
+      "description": "Creates personalized meal plans based on dietary preferences, health goals, budget, available ingredients, and nutritional requirements.",
+      "category": "Productivity"
+    },
+    {
+      "number": "71",
+      "name": "Medical Research Summarizer",
+      "description": "Summarizes medical research papers and abstracts into plain English with key findings, methodology, limitations, and clinical implications.",
+      "category": "Research"
+    },
+    {
+      "number": "72",
+      "name": "Medication Interaction Explainer",
+      "description": "Understand possible medication interactions, side effects, and safety concerns in plain English.",
+      "category": "Healthcare"
+    },
+    {
+      "number": "73",
+      "name": "Meeting Agenda Builder",
+      "description": "Generates a structured, time-boxed meeting agenda based on meeting type, attendees, goals, and time available.",
+      "category": "Productivity"
+    },
+    {
+      "number": "74",
+      "name": "Meeting Notes Summarizer",
+      "description": "Turns raw meeting notes or transcripts into a clean summary with decisions, action items, and owners.",
+      "category": "Productivity"
+    },
+    {
+      "number": "75",
+      "name": "Memory Card Builder",
+      "description": "Transforms study notes into active recall cards with prompts, hints, answers, and self-test questions for better memory retention.",
+      "category": "Education"
+    },
+    {
+      "number": "76",
+      "name": "ML Experiment Report Generator",
+      "description": "Enter your model type, hyperparameters, training metrics, and evaluation results to get a structured experiment report ready to share with your team or include in a paper.",
+      "category": "Engineering"
+    },
+    {
+      "number": "77",
+      "name": "Mock Data Generator",
+      "description": "Describe a data schema and get realistic mock data in JSON format instantly — names, emails, addresses, dates, and more.",
+      "category": "Engineering"
+    },
+    {
+      "number": "78",
+      "name": "Model Meltdown Detective",
+      "description": "Diagnose failed or underperforming ML experiments using model details, dataset context, metrics, hyperparameters, and code snippets.",
+      "category": "Engineering"
+    },
+    {
+      "number": "79",
+      "name": "NFT Project Description Writer",
+      "description": "Writes engaging and compelling descriptions for NFT collections.",
+      "category": "Marketing"
+    },
+    {
+      "number": "80",
+      "name": "NPC Dialogue & Lore Generator",
+      "description": "Describe a game character and scenario to get fully voiced NPC dialogue trees, personality-consistent responses, ambient lore snippets, and journal entries — ready to drop into any game engine.",
+      "category": "Gaming"
+    },
+    {
+      "number": "81",
+      "name": "OpenAPI Spec Generator",
+      "description": "Describe your API in plain English and get a complete, valid OpenAPI 3.0 YAML specification with paths, parameters, and schemas.",
+      "category": "Engineering"
+    },
+    {
+      "number": "82",
+      "name": "Password Strength Reviewer",
+      "description": "Reviews whether a password is strong enough with detailed analysis and suggestions.",
+      "category": "Cybersecurity"
+    },
+    {
+      "number": "83",
+      "name": "PathPilot",
+      "description": "Predicts possible outcomes, risks, and emotional impact for different life or career choices.",
+      "category": "Education"
+    },
+    {
+      "number": "84",
+      "name": "Patient Discharge Summary Writer",
+      "description": "Turn diagnosis, treatment, medications, and follow-up instructions into a clear patient-friendly discharge summary.",
+      "category": "Healthcare"
+    },
+    {
+      "number": "85",
+      "name": "Patient Pre-Consultation Note",
+      "description": "Turn symptom descriptions into a structured pre-consultation summary patients can share with doctors. Includes symptom timeline, relevant history prompts, and helpful questions for the doctor. This tool does not provide medical diagnoses.",
+      "category": "Healthcare"
+    },
+    {
+      "number": "86",
+      "name": "PDF Summarizer",
+      "description": "Upload a PDF and get a structured summary with key points.",
+      "category": "Productivity"
+    },
+    {
+      "number": "87",
+      "name": "Performance Review Writer",
+      "description": "Turn bullet notes about an employee into a structured, fair, and specific performance review.",
+      "category": "HR"
+    },
+    {
+      "number": "88",
+      "name": "Persona Generator",
+      "description": "Describe your product or service and get detailed, realistic user personas with demographics, goals, frustrations, and behavioral patterns.",
+      "category": "Product"
+    },
+    {
+      "number": "89",
+      "name": "Personal Budget Analyzer",
+      "description": "Analyze your monthly income and expenses to get a clear breakdown, savings rate, and actionable financial recommendations.",
+      "category": "Finance"
+    },
+    {
+      "number": "90",
+      "name": "Phishing Email Detector",
+      "description": "Analyze emails for phishing indicators, risk scoring, and safety recommendations.",
+      "category": "Cybersecurity"
+    },
+    {
+      "number": "91",
+      "name": "Playlist Curator",
+      "description": "Describe your vibe and get a personalised playlist with YouTube links, curated across genres, eras, and moods.",
+      "category": "Design"
+    },
+    {
+      "number": "92",
+      "name": "PR Diff Reviewer",
+      "description": "Review a raw git/PR diff and get structured feedback on the changed lines only.",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "93",
+      "name": "PRD Generator",
+      "description": "Generates detailed Product Requirements Documents.",
+      "category": "Product"
+    },
+    {
+      "number": "94",
+      "name": "Privacy Policy Generator",
+      "description": "Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights.",
+      "category": "Legal"
+    },
+    {
+      "number": "95",
+      "name": "Project Architecture Planner",
+      "description": "Analyzes a project idea and recommends a practical technology stack, architecture, authentication strategy, AI components, deployment approach, and development roadmap.",
+      "category": "Engineering"
+    },
+    {
+      "number": "96",
+      "name": "Property Description Writer",
+      "description": "Enter your property specs and get a compelling, SEO-optimized listing description, a social media caption, and a set of headline options — tailored to your target buyer and tone.",
+      "category": "Real Estate"
+    },
+    {
+      "number": "97",
+      "name": "Proposal Document Generator",
+      "description": "Generate professional client proposal documents with project overview, pricing, timeline, deliverables, and next steps.",
+      "category": "Sales"
+    },
+    {
+      "number": "98",
+      "name": "Pull Request Description Generator",
+      "description": "Turn a diff summary or bullet points of changes into a full, structured PR description with summary, changes list, testing instructions, and a screenshots section.",
+      "category": "Engineering"
+    },
+    {
+      "number": "99",
+      "name": "PYQ Paper Analyser",
+      "description": "Analyzes previous year question papers, identifies recurring concepts, ranks topic importance, and generates a model question paper.",
+      "category": "Education"
+    },
+    {
+      "number": "100",
+      "name": "Python Method Finder",
+      "description": "Master Python methods and improve your coding skills with method discovery and explanations.",
+      "category": "Engineering"
+    },
+    {
+      "number": "101",
+      "name": "README Generator",
+      "description": "Paste your repo details and get a clean, developer-friendly README.md covering setup, usage, tech stack, and more.",
+      "category": "Engineering"
+    },
+    {
+      "number": "102",
+      "name": "Real Estate Listing Generator",
+      "description": "Generates compelling real estate listing descriptions for property portals and marketplaces.",
+      "category": "Real Estate"
+    },
+    {
+      "number": "103",
+      "name": "Regex Generator",
+      "description": "Describe what you want to match in plain English and get a tested regex pattern with explanation.",
+      "category": "Engineering"
+    },
+    {
+      "number": "104",
+      "name": "Research Agent",
+      "description": "Get comprehensive research on any topic with configurable depth.",
+      "category": "Research"
+    },
+    {
+      "number": "105",
+      "name": "Resume Screener",
+      "description": "Evaluate candidates against job descriptions with scoring.",
+      "category": "HR"
+    },
+    {
+      "number": "106",
+      "name": "Salary Negotiation Script Generator",
+      "description": "Generate personalized salary negotiation scripts with opening statements, pushback responses, and professional closing strategies.",
+      "category": "Finance"
+    },
+    {
+      "number": "107",
+      "name": "Sales Discovery Call Script Generator",
+      "description": "Create professional sales discovery call scripts with qualification questions, pain-point exploration, objection handling, and actionable next steps.",
+      "category": "Sales"
+    },
+    {
+      "number": "108",
+      "name": "Sales Objection Handler",
+      "description": "Generates empathetic, direct, and data-driven responses to customer objections.",
+      "category": "Sales"
+    },
+    {
+      "number": "109",
+      "name": "SEO Keyword Strategy Planner",
+      "description": "Helps marketers generate a comprehensive SEO keyword strategy by identifying high-value keywords and content opportunities.",
+      "category": "Marketing"
+    },
+    {
+      "number": "110",
+      "name": "Skill Gap Roadmap Agent",
+      "description": "Paste the job description for your future role and your current background. Get a week-by-week learning roadmap, project ideas, and milestone checks.",
+      "category": "Education"
+    },
+    {
+      "number": "111",
+      "name": "Smart Contract Auditor",
+      "description": "Paste your smart contract code and get a structured security audit with vulnerability detection, severity ratings, gas optimization tips, and fix recommendations.",
+      "category": "Web3"
+    },
+    {
+      "number": "112",
+      "name": "Smart Contract Explainer",
+      "description": "Paste a smart contract and get a plain-English explanation of what it does, what each function does, what permissions and roles exist, and any potential red flags.",
+      "category": "Web3"
+    },
+    {
+      "number": "113",
+      "name": "Social Media Thread Writer",
+      "description": "Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action.",
+      "category": "Marketing"
+    },
+    {
+      "number": "114",
+      "name": "Solidity Code Reviewer",
+      "description": "Review Solidity smart contract code for security, gas efficiency, and best practices.",
+      "category": "Web3"
+    },
+    {
+      "number": "115",
+      "name": "SQL Query Generator",
+      "description": "Converts plain English questions into clean SQL queries. Paste your schema and describe what you want.",
+      "category": "Engineering"
+    },
+    {
+      "number": "116",
+      "name": "SQL Query Optimizer",
+      "description": "Analyzes SQL queries and suggests performance optimizations, indexing strategies, and cleaner alternatives.",
+      "category": "Engineering"
+    },
+    {
+      "number": "117",
+      "name": "Startup Idea Validator",
+      "description": "Describe a startup idea and get a structured analysis with market potential, risks, competition, and a viability score.",
+      "category": "Business"
+    },
+    {
+      "number": "118",
+      "name": "Syllabus-to-Project Planner",
+      "description": "Turns academic syllabus topics into practical, resume-worthy coding project ideas.",
+      "category": "Education"
+    },
+    {
+      "number": "119",
+      "name": "Technical Debt Report Generator",
+      "description": "Generate structured technical debt reports with business impact, estimated effort to fix, risk if ignored and prioritized recommendations.",
+      "category": "Engineering"
+    },
+    {
+      "number": "120",
+      "name": "Terraform Config Generator Agent",
+      "description": "Turns a plain-English infrastructure description into ready-to-use Terraform configuration for your chosen cloud provider.",
+      "category": "Engineering"
+    },
+    {
+      "number": "121",
+      "name": "Test Case Generator",
+      "description": "Turn a feature description into QA-ready manual test cases with steps, expected results, priorities, and edge cases.",
+      "category": "Engineering"
+    },
+    {
+      "number": "122",
+      "name": "Threat Intelligence Summariser",
+      "description": "Converts threat intelligence reports, CVEs, and security advisories into concise, structured summaries.",
+      "category": "Cybersecurity"
+    },
+    {
+      "number": "123",
+      "name": "Tone Rewriter",
+      "description": "Paste any text and select a target tone. Get your message rewritten to match — from formal to casual, harsh to diplomatic, or verbose to concise.",
+      "category": "Productivity"
+    },
+    {
+      "number": "124",
+      "name": "Typography Pairer",
+      "description": "Describe your project mood, brand, or use case and get 3-5 font pairings with heading, body, and accent fonts, live CSS snippets, and Tailwind config.",
+      "category": "Design"
+    },
+    {
+      "number": "125",
+      "name": "Unit Test Generator",
+      "description": "Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios.",
+      "category": "Engineering"
+    },
+    {
+      "number": "126",
+      "name": "User Story Writer",
+      "description": "Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes.",
+      "category": "Product"
+    },
+    {
+      "number": "127",
+      "name": "Web3 Whitepaper Writer",
+      "description": "Generate a structured, professional blockchain project whitepaper draft from your project details, tokenomics, and team background.",
+      "category": "Web3"
+    },
+    {
+      "number": "128",
+      "name": "Win/Loss Analysis Report Generator",
+      "description": "Enter details about a closed deal to get a structured win/loss analysis with key factors, alternative approaches, and actionable lessons for your sales team.",
+      "category": "Sales"
+    },
+    {
+      "number": "129",
+      "name": "YouTube Script Writer",
+      "description": "Turn any topic into a ready-to-record YouTube script with intro hook, sections, and outro.",
+      "category": "Marketing"
+    },
+    {
+      "number": "130",
+      "name": "DSA Progress Analyzer",
+      "description": "Analyzes your DSA practice log to find weak topics and suggest what to practice next.",
+      "category": "Education"
+    },
+    {
+      "number": "131",
+      "name": "Terms and Conditions Simplifier",
+      "description": "Paste any website's URL — including its homepage — and get its Terms & Conditions explained in plain English, and checked for red flags like hidden fees, auto-renewals, and data-sharing clauses.",
+      "category": "Legal"
+    },
+    {
+      "number": "132",
+      "name": "PCOS Lifestyle Planner",
+      "description": "Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits.",
+      "category": "Healthcare"
+    },
+    {
+      "number": "133",
+      "name": "SLO/SLA Designer",
+      "description": "Describe a service and its criticality to get practical SLIs, SLO targets, error budgets, and starter alerting rules.",
+      "category": "Engineering"
+    },
+    {
+      "number": "134",
+      "name": "SQL Query Explainer",
+      "description": "Explains a SQL query in plain English, clause by clause, for beginners.",
+      "category": "Engineering"
+    },
+    {
+      "number": "135",
+      "name": "Agent Evaluation & Benchmark Assistant",
+      "description": "Evaluate an AI agent's response against its prompt for accuracy, completeness, hallucination risk, and clarity, then get concrete suggestions and an improved response.",
+      "category": "Productivity"
+    },
+    {
+      "number": "136",
+      "name": "Coding Assistant",
+      "description": "Paste a coding problem or existing code and get an implementation, explanation, or fix.",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "137",
+      "name": "cURL Command Builder",
+      "description": "Describe an API request in plain English (or paste an endpoint spec) and get a ready-to-run curl command, with each flag explained.",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "138",
+      "name": "Data Analysis Agent",
+      "description": "Paste tabular data or a dataset description and get a structured analysis with key patterns and caveats.",
+      "category": "Data Science"
+    },
+    {
+      "number": "139",
+      "name": "Docstring Generator",
+      "description": "Paste a function, class, or module and get idiomatic docstrings/comments added in your language's convention (Google, NumPy, JSDoc, TSDoc, and more) — logic untouched.",
+      "category": "Engineering"
+    },
+    {
+      "number": "140",
+      "name": "Excel/Sheets Formula Generator",
+      "description": "Describe what you want to calculate or extract in plain English and get a correct, ready-to-paste Excel or Google Sheets formula with a plain-English explanation of how it works.",
+      "category": "Engineering"
+    },
+    {
+      "number": "141",
+      "name": "Feature Flag Rollout Planner",
+      "description": "Describe a feature and its risk tolerance to get a staged rollout plan with percentage ramps, guardrail metrics, kill-switch criteria, rollback steps, and flag-cleanup reminders.",
+      "category": "Engineering"
+    },
+    {
+      "number": "142",
+      "name": ".gitignore Generator",
+      "description": "Pick your languages, frameworks, OS, and editors and get a tailored, well-organized .gitignore.",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "143",
+      "name": "GraphQL Schema Generator",
+      "description": "Describe your application's domain model and generate a production-ready GraphQL schema with object types, queries, mutations, subscriptions, enums, scalars, and input types.",
+      "category": "Engineering"
+    },
+    {
+      "number": "144",
+      "name": "Interview Preparation Planner Agent",
+      "description": "Creates a personalized interview preparation plan based on your target role, experience level, and available time — with a topic-wise study schedule, daily practice tasks, and a mock interview plan.",
+      "category": "Education"
+    },
+    {
+      "number": "145",
+      "name": "Jarvis PA",
+      "description": "Your personal AI assistant for planning, task breakdown, scheduling, prioritization, and daily productivity support.",
+      "category": "Productivity"
+    },
+    {
+      "number": "146",
+      "name": "JSON Schema Generator",
+      "description": "Paste a JSON sample (or describe the shape) and get a valid JSON Schema you can use for validation and API contracts.",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "147",
+      "name": "Postman Collection & Code Snippet Generator",
+      "description": "Parse endpoint descriptions or JSON specs into a copyable Postman Collection (v2.1.0 JSON) with client integration snippets (Fetch, Axios, Python Requests, Go HTTP).",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "148",
+      "name": "Prompt Engineering Coach",
+      "description": "Reviews user prompts and provides actionable suggestions to improve clarity, specificity, structure, context, and overall effectiveness.",
+      "category": "Productivity"
+    },
+    {
+      "number": "149",
+      "name": "Regex Decoder",
+      "description": "Decodes an existing regex pattern into a plain-English, token-by-token breakdown with examples and edge cases.",
+      "category": "Productivity"
+    },
+    {
+      "number": "150",
+      "name": "Web Scraping Agent",
+      "description": "Describe a page's content or paste raw HTML and get clean, structured data extracted from it.",
+      "category": "Developer Tools"
+    },
+    {
+      "number": "151",
+      "name": "Emergency Fund Planner",
+      "description": "Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period.",
+      "category": "Finance"
+    },
+    {
+      "number": "152",
+      "name": "n8n Workflow Planner",
+      "description": "Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid.",
+      "category": "Engineering"
+    },
+    {
+      "number": "153",
+      "name": "Resume Bullet Point Improver",
+      "description": "Polishes a rough resume bullet into one concise line while keeping your original facts.",
+      "category": "HR"
+    }
+  ]
+}
