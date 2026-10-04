@@ -38,8 +38,7 @@ describe('WorkflowBuilder keyboard access', () => {
     expect(add).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('steps become focusable with move controls and live announcements', () => {
-    setup()
+  it('steps become focusable with move controls and live announcements', () => {    setup()
     fireEvent.click(screen.getByRole('button', { name: /Add first agent/i }))
     fireEvent.click(screen.getByRole('button', { name: /Code Reviewer/i }))
     fireEvent.click(screen.getByRole('button', { name: /Add next agent/i }))
@@ -57,5 +56,24 @@ describe('WorkflowBuilder keyboard access', () => {
     const moved = screen.getByRole('listitem', { name: /Step 2 of 2: Code Reviewer/i })
     fireEvent.keyDown(moved, { key: 'ArrowUp', altKey: true })
     expect(screen.getByRole('status')).toHaveTextContent(/Moved Code Reviewer to position 1 of 2/i)
+  })
+
+  it('closes the picker on outside clicks', () => {
+    setup()
+    const add = screen.getByRole('button', { name: /Add first agent/i })
+    fireEvent.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.mouseDown(document.body)
+    expect(add).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('closes the picker on Escape and refocuses the toggle', () => {
+    setup()
+    const add = screen.getByRole('button', { name: /Add first agent/i })
+    fireEvent.click(add)
+    expect(add).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.keyDown(document, { key: 'Escape' })
+    expect(add).toHaveAttribute('aria-expanded', 'false')
+    expect(document.activeElement).toBe(add)
   })
 })

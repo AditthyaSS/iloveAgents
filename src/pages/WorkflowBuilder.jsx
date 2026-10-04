@@ -31,11 +31,36 @@ export default function WorkflowBuilder() {
   const descriptionRef = useRef(null)
   const [selectedAgents, setSelectedAgents] = useState([])
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+  const dropdownToggleRef = useRef(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
   const [announce, setAnnounce] = useState('')
+
+  // Dismiss the agent picker on outside clicks and Escape, matching
+  // the shared select behavior, and return focus to the toggle.
+  useEffect(() => {
+    if (!dropdownOpen) return undefined
+    const onPointerDown = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false)
+      }
+    }
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false)
+        dropdownToggleRef.current?.focus()
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [dropdownOpen])
 
   // Resolve pre-populated chain once agents load
   useEffect(() => {
@@ -344,9 +369,10 @@ export default function WorkflowBuilder() {
 
         {/* Add Agent Dropdown */}
         {selectedAgents.length < MAX_AGENTS && (
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <button
               id="add-agent-btn"
+              ref={dropdownToggleRef}
               onClick={() => setDropdownOpen((o) => !o)}
               aria-expanded={dropdownOpen}
               aria-haspopup="listbox"
