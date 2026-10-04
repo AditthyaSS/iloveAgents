@@ -4,6 +4,7 @@ import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, St
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
+import { sortAgents } from '../lib/agentSort'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -49,6 +50,7 @@ export default function HomePage() {
   const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedProvider, setSelectedProvider] = useState(null)
+  const [sortBy, setSortBy] = useState('relevance')
   const [searchParams, setSearchParams] = useSearchParams()
   const { collections, getAgentCollectionId } = useCollections()
 
@@ -209,7 +211,7 @@ export default function HomePage() {
   const filteredAgents = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
 
-    return agents.filter((agent) => {
+    const matches = agents.filter((agent) => {
       const matchesCategory = !selectedCategory || agent.category === selectedCategory
       if (!matchesCategory) return false
 
@@ -241,7 +243,8 @@ export default function HomePage() {
 
       return searchableText.includes(q)
     })
-  }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider])
+    return sortAgents(matches, sortBy)
+  }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider, sortBy])
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
@@ -549,9 +552,28 @@ export default function HomePage() {
                 )}
               </span>
             </div>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-              {filteredAgents.length}{" "}{filteredAgents.length === 1 ? "agent" : "agents"}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                {filteredAgents.length}{" "}{filteredAgents.length === 1 ? "agent" : "agents"}
+              </span>
+              <label className="text-[11px] dark:text-text-muted text-gray-500" htmlFor="agent-sort">
+                Sort by
+              </label>
+              <select
+                id="agent-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="h-7 px-2 rounded-md text-xs border
+                  dark:bg-surface-input dark:border-border dark:text-text-primary
+                  bg-white border-gray-200 text-gray-700
+                  focus:outline-none focus:ring-1 focus:ring-accent/40"
+              >
+                <option value="relevance">Relevance</option>
+                <option value="az">Name A to Z</option>
+                <option value="za">Name Z to A</option>
+                <option value="newest">Newest first</option>
+              </select>
+            </div>
           </div>
 
           {agentsLoading ? (
