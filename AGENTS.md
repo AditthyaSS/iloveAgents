@@ -158,4 +158,5 @@
 | 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
 | 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
 | 153 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
+| 154 | Research Gap Finder | Paste paper summaries and get unexplored areas, shared limits, and future research directions. | Research |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
