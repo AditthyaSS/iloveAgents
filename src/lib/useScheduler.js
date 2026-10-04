@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { streamAgent } from './llmAdapter'
 import { resolveAgentModel } from './resolveAgentModel'
 import { recordAnalyticsRun } from './useAnalytics'
@@ -16,6 +16,22 @@ export const SCHEDULE_OPTIONS = [
   { value: 'daily',     label: 'Every day',     ms: 24 * 60 * 60 * 1000 },
   { value: 'weekly',    label: 'Every week',    ms: 7 * 24 * 60 * 60 * 1000 },
 ]
+
+/**
+ * Classify a job by whether it can actually run.
+ *
+ * The job record lives in localStorage but its API key is kept in
+ * sessionStorage, which the browser clears when the tab closes. That leaves a
+ * job listed as enabled with a live "next run" time while the scheduler skips
+ * it on every tick, so callers need a way to tell the two apart.
+ *
+ * @param {Object} job
+ * @returns {'ready' | 'paused' | 'missing-key'}
+ */
+export function getJobReadiness(job) {
+  if (!job?.enabled) return 'paused'
+  return job.apiKey ? 'ready' : 'missing-key'
+}
 
 // ── Read / write helpers
 function getStoredJobKey(jobId) {
@@ -136,6 +152,15 @@ export function useScheduler({ autoRun = true } = {}) {
     ))
   }, [])
 
+  // ── Re-attach a key to an existing job. Needed after the browser session that
+  // created the job ended, which clears the job's sessionStorage entry.
+  const updateJobApiKey = useCallback((jobId, apiKey) => {
+    setStoredJobKey(jobId, apiKey)
+    setJobs(prev => prev.map(j =>
+      j.id === jobId ? { ...j, apiKey } : j
+    ))
+  }, [])
+
   // ── Delete a job
   const deleteJob = useCallback((jobId) => {
     removeStoredJobKey(jobId)
@@ -155,6 +180,9 @@ export function useScheduler({ autoRun = true } = {}) {
   // ── Manually run a job right now
   const runJob = useCallback(async (job) => {
     if (activeJobIds.has(job.id)) return null
+    // A job can outlive the session that held its key. Bail out instead of
+    // sending an unauthenticated request and storing a pointless error result.
+    if (!job.apiKey) return null
     activeJobIds.add(job.id)
     setRunning(prev => ({ ...prev, [job.id]: true }))
 
@@ -253,8 +281,8 @@ export function useScheduler({ autoRun = true } = {}) {
       const currentJobs = loadJobs()
       const now = Date.now()
       currentJobs.forEach(job => {
-        if (!job.enabled) return
-        if (!job.apiKey) return
+        // getJobReadiness also covers the disabled case; both mean "do not run".
+        if (getJobReadiness(job) !== 'ready') return
         if (activeJobIds.has(job.id)) return
         if (now >= job.nextRunAt) {
           runJob(job)
@@ -270,11 +298,21 @@ export function useScheduler({ autoRun = true } = {}) {
     return () => clearInterval(interval)
   }, [runJob, autoRun])
 
+  // ── Enabled jobs whose key did not survive the browser session. The UI has to
+  // say so, otherwise these jobs look active while the scheduler keeps skipping
+  // them.
+  const jobsNeedingKey = useMemo(
+    () => jobs.filter(job => getJobReadiness(job) === 'missing-key'),
+    [jobs]
+  )
+
   return {
     jobs,
     results,
     running,
+    jobsNeedingKey,
     addJob,
+    updateJobApiKey,
     toggleJob,
     deleteJob,
     deleteResult,
