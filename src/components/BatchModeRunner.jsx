@@ -321,6 +321,12 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
               {items.length} item{items.length !== 1 ? 's' : ''} detected
             </span>
           )}
+          {items.length > MAX_BATCH_SIZE && (
+            <span role="alert" className="text-[11px] font-medium text-red-400">
+              Batch runs support up to {MAX_BATCH_SIZE} items. Remove{' '}
+              {items.length - MAX_BATCH_SIZE} to continue.
+            </span>
+          )}
         </div>
 
         {/* Header confirmation (always shown for CSVs) + column picker (multi-column only) */}
