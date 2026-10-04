@@ -89,6 +89,7 @@ export default function AgentRunner({ agent }) {
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
   );
+  const [customModelId, setCustomModelId] = useState("");
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
@@ -318,7 +319,13 @@ const handleRun = async () => {
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
-      const model = resolveAgentModel(agent, actualProvider, selectedModel);
+
+      let model;
+      if (selectedModel === 'custom') {
+        model = customModelId.trim() || resolveAgentModel(agent, actualProvider, 'custom');
+      } else {
+        model = resolveAgentModel(agent, actualProvider, selectedModel);
+      }
 
       const result = await streamAgent({
         provider: actualProvider,
@@ -595,6 +602,8 @@ const handleRun = async () => {
         agentProvider={agent.provider}
         model={selectedModel}
         setModel={setSelectedModel}
+        customModelId={customModelId}
+        setCustomModelId={setCustomModelId}
       />
 
       {supportsBatchMode && (
@@ -700,7 +709,7 @@ const handleRun = async () => {
 
                 <TokenCounter
                   value={inputs[input.id] || ""}
-                  modelId={selectedModel}
+                  modelId={selectedModel === 'custom' ? customModelId : selectedModel}
                 />
               </div>
             )}
@@ -730,7 +739,7 @@ const handleRun = async () => {
                   />
                   <TokenCounter
                     value={inputs[input.id] || ""}
-                    modelId={selectedModel}
+                    modelId={selectedModel === 'custom' ? customModelId : selectedModel}
                   />
                 </div>
               </div>
@@ -866,7 +875,7 @@ const handleRun = async () => {
               <div className="flex items-center gap-2">
                 <TokenCounter
                   value={customPrompt}
-                  modelId={selectedModel}
+                  modelId={selectedModel === 'custom' ? customModelId : selectedModel}
                 />
                 <CharCounter
                   value={customPrompt}
@@ -1055,7 +1064,7 @@ const handleRun = async () => {
         <CostEstimator
           inputText={buildUserMessage()}
           systemPrompt={customPrompt}
-          modelId={selectedModel}
+          modelId={selectedModel === 'custom' ? customModelId : selectedModel}
         />
       </div>
 
@@ -1174,8 +1183,14 @@ const handleRun = async () => {
 
     <CustomSelect
       value={selectedModel}
-      onChange={setSelectedModel}
-      options={MODELS[provider] || []}
+      onChange={(val) => {
+        setSelectedModel(val);
+        if (val !== 'custom') setCustomModelId("");
+      }}
+      options={[
+        ...(MODELS[provider] || []),
+        { value: 'custom', label: 'Custom Model ID...' }
+      ]}
     />
 
     <button

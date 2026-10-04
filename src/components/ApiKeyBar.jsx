@@ -69,6 +69,8 @@ export default function ApiKeyBar({
   agentProvider,
   model,
   setModel,
+  customModelId,
+  setCustomModelId,
 }) {
   const [showKey, setShowKey] = useState(false)
   const [geminiModels, setGeminiModels] = useState([])
@@ -147,7 +149,9 @@ export default function ApiKeyBar({
   }))
 
   const availableModels =
-    provider === 'gemini' ? geminiModels : MODELS[provider] || []
+    provider === 'gemini'
+      ? [...geminiModels, { value: 'custom', label: 'Custom Model ID...' }]
+      : [...(MODELS[provider] || []), { value: 'custom', label: 'Custom Model ID...' }]
 
   useKeyboardShortcuts({
     'Alt+1': () => {
@@ -186,15 +190,29 @@ export default function ApiKeyBar({
         />
 
         {/* Model Select */}
-        <CustomSelect
-          value={model}
-          onChange={setModel}
-          options={availableModels.map(m => ({ value: m.value, label: m.label }))}
-          disabled={geminiLoading}
-          placeholder={geminiLoading ? 'Loading models...' : 'Select Model'}
-          className="w-auto min-w-[150px]"
-          triggerClassName="h-8 py-0 px-2.5 font-semibold text-xs border dark:bg-surface-input dark:border-border hover:border-accent/30 dark:hover:border-accent/40 bg-white border-gray-200"
-        />
+        <div className="flex items-center gap-2">
+          <CustomSelect
+            value={model}
+            onChange={setModel}
+            options={availableModels.map(m => ({ value: m.value, label: m.label }))}
+            disabled={geminiLoading}
+            placeholder={geminiLoading ? 'Loading models...' : 'Select Model'}
+            className="w-auto min-w-[150px]"
+            triggerClassName="h-8 py-0 px-2.5 font-semibold text-xs border dark:bg-surface-input dark:border-border hover:border-accent/30 dark:hover:border-accent/40 bg-white border-gray-200"
+          />
+          {model === 'custom' && (
+            <input
+              type="text"
+              value={customModelId}
+              onChange={(e) => setCustomModelId(e.target.value)}
+              placeholder="Model ID (e.g. gpt-4-turbo)"
+              className="h-8 px-3 rounded-md text-xs font-mono transition-colors
+                dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
+                bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
+                focus:ring-1 focus:ring-accent focus:border-accent outline-none w-40"
+            />
+          )}
+        </div>
 
         {/* API Key Input */}
         <div className="flex-1 min-w-[180px] relative">

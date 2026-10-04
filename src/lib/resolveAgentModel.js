@@ -38,6 +38,11 @@ export const MODEL_MAP = {
 }
 
 export function resolveAgentModel(agent, actualProvider, selectedModel) {
+  // Handle custom model sentinel
+  if (selectedModel === 'custom') {
+    return MODEL_MAP[actualProvider] || MODEL_MAP.openai
+  }
+
   // Check if selectedModel is valid for the current actualProvider
   if (selectedModel && MODELS[actualProvider]?.some(m => m.value === selectedModel)) {
     return selectedModel
