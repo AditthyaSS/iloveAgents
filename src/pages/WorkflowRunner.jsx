@@ -99,6 +99,15 @@ export default function WorkflowRunner() {
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
   const [hasRun, setHasRun] = useState(false)
+  const [modelsByProvider, setModelsByProvider] = useState({})
+
+  const workflowModel = modelsByProvider[provider] || MODEL_MAP[provider] || MODEL_MAP.openai
+  const setWorkflowModel = (eOrValue) => {
+    const value = eOrValue && typeof eOrValue === 'object' && 'target' in eOrValue
+      ? eOrValue.target.value
+      : eOrValue
+    setModelsByProvider((prev) => ({ ...prev, [provider]: value }))
+  }
   useDocumentTitle(workflow?.title ? `Run ${workflow.title}` : 'Run Workflow')
 
   // Fetch workflow if not passed via state
@@ -245,7 +254,7 @@ export default function WorkflowRunner() {
         break
       }
 
-      const model = resolveAgentModel(step.agent, actualProvider)
+      const model = resolveAgentModel(step.agent, actualProvider, modelsByProvider[actualProvider])
 
       try {
         const result = await runAgent({
@@ -370,8 +379,8 @@ export default function WorkflowRunner() {
         saveForSession={saveForSession}
         setSaveForSession={setSaveForSession}
         agentProvider="any"
-        model={MODEL_MAP[provider] || MODEL_MAP.openai}
-        setModel={() => {}}
+        model={workflowModel}
+        setModel={setWorkflowModel}
       />
 
       {/* Input */}
