@@ -4,6 +4,7 @@ import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, St
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
+import { openExternal } from '../lib/externalLink'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -752,7 +753,7 @@ ${description}
 -Requested via iloveagents.vercel.app`
     )
     const url = `https://github.com/AditthyaSS/iloveAgents/issues/new?title=${title}&body=${body}&labels=agent-request`
-    window.open(url, '_blank')
+    openExternal(url)
     setSubmitted(true)
     setTimeout(() => setSubmitted(false), 3000)
   }
