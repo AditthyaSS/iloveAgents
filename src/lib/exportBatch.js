@@ -19,7 +19,7 @@ function downloadBlob(content, mimeType, filename) {
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 export function csvEscape(value) {
