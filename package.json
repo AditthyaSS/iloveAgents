@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "agents:export": "node scripts/export-agents-json.js",
+    "prebuild": "node scripts/export-agents-json.js",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
