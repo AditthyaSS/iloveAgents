@@ -1,0 +1,28 @@
+name: Mark stale issues and pull requests
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-issue-stale: 30
+          days-before-issue-close: 7
+          days-before-pr-stale: 30
+          days-before-pr-close: 7
+          exempt-issue-labels: pinned,security,enhancement,work-in-progress
+          exempt-pr-labels: pinned,security,enhancement,work-in-progress
+          stale-issue-message: This issue has been quiet for 30 days. Please share an update or it will close in 7 days.
+          close-issue-message: Closing this issue for inactivity. Reopen with a fresh update if it still matters.
+          stale-pr-message: This pull request has been quiet for 30 days. Please push an update or it will close in 7 days.
+          close-pr-message: Closing this pull request for inactivity. Reopen when ready to continue.
+          operations-per-run: 100
