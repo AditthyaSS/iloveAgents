@@ -215,9 +215,9 @@ function ListingCard({ listing, onImport, onRate, imported }) {
 
       <p className="text-xs dark:text-text-secondary text-gray-600 line-clamp-2">{listing.description}</p>
 
-      {listing.tags.length > 0 && (
+      {(listing.tags || []).length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {listing.tags.map((tag) => (
+          {(listing.tags || []).map((tag) => (
             <span
               key={tag}
               className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px]
