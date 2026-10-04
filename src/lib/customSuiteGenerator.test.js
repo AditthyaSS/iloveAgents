@@ -14,7 +14,7 @@ vi.mock('../suites/suitesData', () => ({
   suites: [],
 }))
 
-const payload = { title: 'T', description: 'D', agents: [] }
+const payload = { title: 'T', description: 'D', agents: [{ id: 'a1', reason: 'helps' }] }
 
 describe('extractSuiteJson', () => {
   it('parses clean json', () => {
@@ -33,6 +33,19 @@ describe('extractSuiteJson', () => {
   it('throws a readable error when nothing parses', () => {
     expect(() => extractSuiteJson('no json here')).toThrow(/did not contain valid suite JSON/)
     expect(() => extractSuiteJson('')).toThrow(/empty response/)
+  })
+
+  it('rejects valid json with the wrong shape', () => {
+    expect(() => extractSuiteJson(JSON.stringify({ title: 'T' }))).toThrow(/not a suite/)
+    expect(() => extractSuiteJson(JSON.stringify({ title: 'T', agents: [] }))).toThrow(/not a suite/)
+    expect(() => extractSuiteJson(JSON.stringify({ title: 'T', agents: [{ noId: true }] }))).toThrow(
+      /not a suite/
+    )
+  })
+
+  it('prefers the valid candidate when chatter holds several objects', () => {
+    const text = `{"note": "thinking"} and then ${JSON.stringify(payload)}`
+    expect(extractSuiteJson(text)).toEqual(payload)
   })
 })
 

@@ -9,32 +9,71 @@ const MODEL_DEFAULTS = {
   openrouter: "openai/gpt-4o-mini",
 };
 
+function* braceObjects(text) {
+  for (let i = 0; i < text.length; i++) {
+    if (text[i] !== "{") continue;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let j = i; j < text.length; j++) {
+      const ch = text[j];
+      if (inString) {
+        if (escaped) escaped = false;
+        else if (ch === "\\") escaped = true;
+        else if (ch === '"') inString = false;
+      } else if (ch === '"') {
+        inString = true;
+      } else if (ch === "{") {
+        depth++;
+      } else if (ch === "}") {
+        depth--;
+        if (depth === 0) {
+          yield text.slice(i, j + 1);
+          break;
+        }
+      }
+    }
+  }
+}
+
 export function extractSuiteJson(content) {
   const text = String(content ?? "").trim();
   if (!text) throw new Error("The model returned an empty response.");
-  try {
-    return JSON.parse(text);
-  } catch {
-    // fall through to fenced and brace extraction below
-  }
-  const fence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-  if (fence && fence[1]) {
+  const seen = new Set();
+  const candidates = [];
+  const consider = (value) => {
     try {
-      return JSON.parse(fence[1].trim());
+      const parsed = JSON.parse(value);
+      const key = JSON.stringify(parsed);
+      if (!seen.has(key)) {
+        seen.add(key);
+        candidates.push(parsed);
+      }
     } catch {
-      // fall through to brace extraction below
+      // not parseable on its own; keep scanning
     }
+  };
+  consider(text);
+  for (const fence of text.matchAll(/```(?:json)?\s*([\s\S]*?)\s*```/gi)) {
+    consider(fence[1].trim());
   }
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start !== -1 && end !== -1 && end > start) {
-    try {
-      return JSON.parse(text.slice(start, end + 1));
-    } catch {
-      // fall through to the error below
-    }
+  for (const obj of braceObjects(text)) {
+    consider(obj);
+  }
+  const valid = candidates.find(isValidSuite);
+  if (valid) return valid;
+  if (candidates.length > 0) {
+    throw new Error("The model response was valid JSON but not a suite. Expected a title with a non-empty agents list.");
   }
   throw new Error("The model response did not contain valid suite JSON.");
+}
+
+function isValidSuite(payload) {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) return false;
+  if (!Array.isArray(payload.agents) || payload.agents.length === 0) return false;
+  return payload.agents.every(
+    (agent) => agent && typeof agent === "object" && typeof agent.id === "string" && agent.id.trim() !== ""
+  );
 }
 
 export async function generateCustomSuite(goal, apiKey, provider) {
