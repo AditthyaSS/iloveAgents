@@ -1075,7 +1075,8 @@ const handleRun = async () => {
               {error.provider === "openai" && "Your OpenAI API key is invalid or expired."}
               {error.provider === "anthropic" && "Your Anthropic API key is invalid or expired."}
               {error.provider === "gemini" && "Your Google Gemini API key is invalid or expired."}
-              {!["openai", "anthropic", "gemini"].includes(error.provider) && "Your API key is invalid or expired."}
+              {error.provider === "groq" && "Your Groq API key is invalid or expired."}
+              {!["openai", "anthropic", "gemini", "groq"].includes(error.provider) && "Your API key is invalid or expired."}
             </strong>
             <br />
             Please check and update your API key.<br />
