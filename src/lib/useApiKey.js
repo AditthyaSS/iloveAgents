@@ -9,17 +9,20 @@ const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours
  * even if storage backend is changed to localStorage.
  */
 function getSafeApiKey(provider) {
-  const raw = sessionStorage.getItem(STORAGE_PREFIX + provider)
+  const storageKey = STORAGE_PREFIX + provider
+  const raw = sessionStorage.getItem(storageKey)
   if (!raw) return null
   try {
     const { key, expiresAt } = JSON.parse(raw)
     if (Date.now() > expiresAt) {
-      sessionStorage.removeItem(STORAGE_PREFIX + provider)
+      sessionStorage.removeItem(storageKey)
       return null
     }
     return key
   } catch {
-    // Migrate legacy plaintext keys (no expiry)
+    // Migrate legacy plaintext keys (no expiry) into the wrapped form so
+    // they pick up the same lifetime as newly stored keys.
+    setSafeApiKey(provider, raw)
     return raw
   }
 }
