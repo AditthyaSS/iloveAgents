@@ -204,7 +204,7 @@ Scheduled Automations allow you to schedule any agent in the registry to run aut
 
 ### Key Capabilities
 
-- **Automated Scheduling** — Select any agent, configure inputs once, and set a recurring schedule (`hourly`, `daily`, or `weekly`).
+- **Automated Scheduling** — Select any agent, configure inputs once, and set a recurring schedule (`hourly`, `daily`, or `weekly`). The server cron ticks once daily, so `hourly` fidelity needs a browser tab left open on the in-browser heartbeat.
 - **Encrypted Key Storage (`pgsodium`)** — Your provider API key is stored encrypted using Supabase's `pgsodium` encryption with explicit user opt-in consent.
 - **Run History & Logs** — Track execution status (`success`, `running`, `failed`), review complete agent outputs, execution timestamps, and error diagnostics.
 - **Email Notifications** — Receive formatted execution reports and output results in your inbox via Resend.
