@@ -1,15 +1,42 @@
 import { useMemo } from 'react'
 
+export function parseScorecardText(text) {
+  if (typeof text !== 'string') return text
+  const trimmed = text.trim()
+  if (!trimmed) return null
+
+  try {
+    return JSON.parse(trimmed)
+  } catch {
+    // fall through to fence / brace handling below
+  }
+
+  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (fence && fence[1]) {
+    try {
+      return JSON.parse(fence[1].trim())
+    } catch {
+      // try brace fallback below
+    }
+  }
+
+  const start = trimmed.indexOf('{')
+  const end = trimmed.lastIndexOf('}')
+  if (start !== -1 && end !== -1 && end > start) {
+    try {
+      return JSON.parse(trimmed.slice(start, end + 1))
+    } catch {
+      return null
+    }
+  }
+
+  return null
+}
+
 export default function ScorecardOutput({ data }) {
   const parsed = useMemo(() => {
     if (typeof data === 'string') {
-      try {
-        // Try to extract JSON from the string (may have markdown code blocks around it)
-        const cleaned = data.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-        return JSON.parse(cleaned)
-      } catch {
-        return null
-      }
+      return parseScorecardText(data)
     }
     return data
   }, [data])

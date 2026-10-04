@@ -76,6 +76,15 @@ const API_KEY_FIELDS = [
     bg: "bg-blue-400/10",
     focusBorder: "focus:border-blue-400/60",
   },
+  {
+    id: "openrouter",
+    label: "OpenRouter API Key",
+    placeholder: "sk-or-...",
+    color: "text-teal-400",
+    border: "border-teal-400/30",
+    bg: "bg-teal-400/10",
+    focusBorder: "focus:border-teal-400/60",
+  },
 ];
 
 function InputField({ input, value, onChange }) {
@@ -218,11 +227,13 @@ export default function BattleModeSetup() {
     openai: "",
     anthropic: "",
     gemini: "",
+    openrouter: "",
   });
   const [showKeys, setShowKeys] = useState({
     openai: false,
     anthropic: false,
     gemini: false,
+    openrouter: false,
   });
   const [step, setStep] = useState(1); // 1 = pick agent, 2 = fill inputs + keys
 
@@ -257,6 +268,7 @@ export default function BattleModeSetup() {
     apiKeys.openai.trim() &&
     apiKeys.anthropic.trim() &&
     apiKeys.gemini.trim() &&
+    apiKeys.openrouter.trim() &&
     selectedAgent.inputs?.every((inp) => {
       const val = inputs[inp.id];
       if (!inp.required) {
