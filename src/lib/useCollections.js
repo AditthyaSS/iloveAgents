@@ -106,13 +106,19 @@ export function loadCollections() {
 }
 
 export function saveCollections(collections) {
-  if (typeof localStorage === 'undefined') return
+  if (typeof localStorage === 'undefined') return { ok: false, error: 'Storage is unavailable.' }
 
   const normalized = Array.isArray(collections)
     ? buildCollections(collections)
     : [createDefaultCollection()]
 
-  localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(normalized))
+  try {
+    localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(normalized))
+    return { ok: true }
+  } catch (error) {
+    console.error('Error saving collections to localStorage:', error)
+    return { ok: false, error: 'Storage is full. Changes apply for this session only.' }
+  }
 }
 
 function persist(updater) {
@@ -123,12 +129,14 @@ function persist(updater) {
     ? result.collections
     : current
 
-  saveCollections(next)
+  const saved = saveCollections(next)
   notify()
 
   return {
     ...result,
-    collections: loadCollections(),
+    collections: saved.ok ? loadCollections() : next,
+    persisted: saved.ok,
+    ...(saved.ok ? {} : { storageError: saved.error }),
   }
 }
 

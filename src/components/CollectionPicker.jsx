@@ -17,11 +17,13 @@ export default function CollectionPicker({ agentId, onClose }) {
     if (!result.ok) return setMessage(result.error)
     setName('')
     const addResult = addAgentToCollection(result.collection.id, agentId)
+    if (addResult.persisted === false) return setMessage(addResult.storageError)
     setMessage(addResult.ok ? `Added to ${result.collection.name}.` : addResult.error)
   }
 
   const handleAdd = (collection) => {
     const result = addAgentToCollection(collection.id, agentId)
+    if (result.persisted === false) return setMessage(result.storageError)
     setMessage(result.ok ? `Added to ${collection.name}.` : result.error)
   }
 
