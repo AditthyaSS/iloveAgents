@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import * as Icons from 'lucide-react'
 import { loadAllAgents } from './registry'
 import { CATEGORIES } from './categories'
 
@@ -43,6 +44,12 @@ describe('loadAllAgents', () => {
     agents.forEach((agent) => {
       expect(CATEGORIES).toContain(agent.category)
     })
+  })
+
+  it('every agent should reference a real lucide icon', async () => {
+    const agents = await loadAllAgents()
+    const missing = agents.filter((agent) => !Icons[agent.icon])
+    expect(missing.map((agent) => agent.id)).toEqual([])
   })
 
   it('should return the same cached result on subsequent calls', async () => {
