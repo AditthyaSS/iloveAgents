@@ -309,7 +309,7 @@ export default function BattleModeSetup() {
           </h1>
           <p className="text-sm dark:text-text-muted dark:text-text-muted text-gray-500">
             {step === 1
-              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, and Gemini Flash"
+              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, Gemini Flash and OpenRouter"
               : `Setting up ${selectedAgent?.name}`}
           </p>
         </div>

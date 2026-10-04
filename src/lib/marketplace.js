@@ -86,7 +86,20 @@ export function publishAgent(entry) {
  * @returns {Array<object>}
  */
 export function loadListings() {
-  return loadJson(LISTINGS_KEY, [])
+  const listings = loadJson(LISTINGS_KEY, [])
+  return Array.isArray(listings) ? listings.map(normalizeListing) : []
+}
+
+export function normalizeListing(listing) {
+  if (!listing || typeof listing !== 'object') return listing
+  return {
+    ...listing,
+    tags: Array.isArray(listing.tags)
+      ? listing.tags.filter((t) => typeof t === 'string')
+      : [],
+    sanitizedFields: Array.isArray(listing.sanitizedFields) ? listing.sanitizedFields : [],
+    importCount: typeof listing.importCount === 'number' ? listing.importCount : 0,
+  }
 }
 
 /**
@@ -191,9 +204,10 @@ export function filterListings(listings, { search = '', category = '' } = {}) {
   return listings.filter((l) => {
     if (category && l.category !== category) return false
     if (!q) return true
+    const tags = Array.isArray(l.tags) ? l.tags : []
     return (
-      l.name.toLowerCase().includes(q) ||
-      l.tags.some((t) => t.toLowerCase().includes(q))
+      String(l.name || '').toLowerCase().includes(q) ||
+      tags.some((t) => String(t).toLowerCase().includes(q))
     )
   })
 }
