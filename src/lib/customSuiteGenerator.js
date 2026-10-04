@@ -6,7 +6,36 @@ const MODEL_DEFAULTS = {
   gemini: "gemini-2.5-flash",
   anthropic: "claude-3-5-haiku-20241022",
   openai: "gpt-4o-mini",
+  openrouter: "openai/gpt-4o-mini",
 };
+
+export function extractSuiteJson(content) {
+  const text = String(content ?? "").trim();
+  if (!text) throw new Error("The model returned an empty response.");
+  try {
+    return JSON.parse(text);
+  } catch {
+    // fall through to fenced and brace extraction below
+  }
+  const fence = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (fence && fence[1]) {
+    try {
+      return JSON.parse(fence[1].trim());
+    } catch {
+      // fall through to brace extraction below
+    }
+  }
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) {
+    try {
+      return JSON.parse(text.slice(start, end + 1));
+    } catch {
+      // fall through to the error below
+    }
+  }
+  throw new Error("The model response did not contain valid suite JSON.");
+}
 
 export async function generateCustomSuite(goal, apiKey, provider) {
   // Building a flat list of all agents across all suites
@@ -65,6 +94,5 @@ Rules:
   });
 
   // Parse the JSON response
-  const clean = result.content.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  return extractSuiteJson(result.content);
 }
