@@ -19,7 +19,7 @@ const feedbackOptions = [
     title: 'General feedback',
     description: 'Share your thoughts, experience, or anything else you would like us to know.',
     icon: MessageSquare,
-    url: `${GITHUB_ISSUES_URL}?title=General%20Feedback&body=##%20General%20Feedback%0A%0AWhat%20would%20you%20like%20us%20to%20know%3F%0A%0A`,
+    url: `${GITHUB_ISSUES_URL}?template=general_feedback.yml`,
   },
 ]
 
