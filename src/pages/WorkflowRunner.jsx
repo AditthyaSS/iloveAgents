@@ -39,6 +39,7 @@ const STATUS_COLORS = {
   review: 'text-amber-400',
   done: 'text-emerald-400',
   failed: 'text-red-400',
+  cancelled: 'text-orange-400',
 }
 
 function StepStatusIcon({ status }) {
@@ -47,6 +48,7 @@ function StepStatusIcon({ status }) {
   if (status === 'review') return <Eye size={15} className={STATUS_COLORS.review} />
   if (status === 'done') return <CheckCircle2 size={15} className={STATUS_COLORS.done} />
   if (status === 'failed') return <XCircle size={15} className={STATUS_COLORS.failed} />
+  if (status === 'cancelled') return <XCircle size={15} className={STATUS_COLORS.cancelled} />
   return null
 }
 
@@ -102,6 +104,7 @@ export default function WorkflowRunner() {
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
   const [hasRun, setHasRun] = useState(false)
+  const [runCancelled, setRunCancelled] = useState(false)
   const [reviewBetweenSteps, setReviewBetweenSteps] = useState(true)
   const [review, setReview] = useState(null)
   const [reviewDraft, setReviewDraft] = useState('')
@@ -178,6 +181,9 @@ export default function WorkflowRunner() {
     setRunning(true)
     setAllDone(false)
     setHasRun(true)
+    setRunCancelled(false)
+    setReview(null)
+    setReviewDraft('')
 
     // Rebuild from the workflow definition so branch steps injected by a
     // previous run are dropped before this run starts.
@@ -332,7 +338,8 @@ export default function WorkflowRunner() {
             }
           } else if (decision.action === 'cancel') {
             failed = true
-            execSteps[i] = { ...execSteps[i], status: 'done', output: stepOutput }
+            setRunCancelled(true)
+            execSteps[i] = { ...execSteps[i], status: 'cancelled', output: stepOutput }
             syncSteps()
             settled = true
           } else {
@@ -377,6 +384,9 @@ export default function WorkflowRunner() {
   const handleRunAgain = () => {
     setAllDone(false)
     setHasRun(false)
+    setRunCancelled(false)
+    setReview(null)
+    setReviewDraft('')
     // Rebuild from the definition so previously injected branch steps are removed
     setSteps(buildInitialSteps(workflow, agents))
   }
@@ -476,10 +486,10 @@ export default function WorkflowRunner() {
 
       {/* Run Button */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
-        {!hasRun || allDone || hasFailed ? (
+        {!hasRun || allDone || hasFailed || runCancelled ? (
           <button
             id="run-workflow-btn"
-            onClick={hasRun && (allDone || hasFailed) ? handleRunAgain : handleRun}
+            onClick={hasRun && (allDone || hasFailed || runCancelled) ? handleRunAgain : handleRun}
             disabled={!userInput.trim() || !apiKey || running}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
@@ -490,7 +500,7 @@ export default function WorkflowRunner() {
                 <Loader2 size={15} className="animate-spin" />
                 Running...
               </>
-            ) : hasRun && hasFailed ? (
+            ) : hasRun && (hasFailed || runCancelled) ? (
               <>
                 <RotateCcw size={15} />
                 Retry
@@ -698,7 +708,7 @@ export default function WorkflowRunner() {
                   </div>
                 )}
 
-                {step.status === 'done' && step.output && (
+                {(step.status === 'done' || step.status === 'cancelled') && step.output && (
                   <div className="p-4">
                     <OutputRenderer
                       content={step.output}
