@@ -109,6 +109,7 @@ export default function AgentRunner({ agent }) {
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
+  const streamingRef = useRef("");
   // Identifies the current run. streamAgent() resolves (rather than rejects)
   // when aborted, so a cancelled run's continuation looks identical to a
   // finished one. Every run captures the id it started with and must discard
@@ -282,6 +283,7 @@ const getTokenCount = (text) => {
   };
 
   const handleChunk = useCallback((chunk) => {
+    streamingRef.current += chunk;
     setStreamingOutput((prev) => prev + chunk);
     setIsStreaming(true);
   }, []);
@@ -290,6 +292,7 @@ const handleRun = async () => {
     setLoading(true);
     setError(null);
     setOutput(null);
+    streamingRef.current = "";
     setStreamingOutput("");
     setIsStreaming(false);
     setDuration(null);
@@ -386,7 +389,7 @@ const handleRun = async () => {
    } catch (err) {
   if (!isCurrentRun()) return;
   if (timedOut) {
-    setOutput((prev) => prev ?? streamingOutput);
+    setOutput((prev) => prev ?? streamingRef.current);
     setStreamingOutput("");
     setIsStreaming(false);
     setError({ type: "timeout", message: timeoutMessage(timeoutMs) });
@@ -414,6 +417,7 @@ const handleRun = async () => {
       abortControllerRef.current = null;
     }
     setOutput(streamingOutput);
+    streamingRef.current = "";
     setStreamingOutput("");
     setIsStreaming(false);
     setLoading(false);
@@ -425,6 +429,7 @@ const handleRun = async () => {
     cancelActiveRun();
     setLoading(false);
     setOutput(null);
+    streamingRef.current = "";
     setStreamingOutput("");
     setIsStreaming(false);
     setError(null);
