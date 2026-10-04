@@ -11,6 +11,7 @@ import {
   clearAllGlobalKeys,
   getAvailableProviders,
 } from '../lib/globalKeys'
+import { collectBackup, validateBackup, restoreBackup } from '../lib/appBackup'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import openaiLogo   from '../assets/openai.svg'
 import anthropicLogo from '../assets/anthropic.svg'
@@ -66,6 +67,7 @@ export default function SettingsPage() {
   const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [saveMessage, setSaveMessage] = useState('')
   const [confirmClearAll, setConfirmClearAll] = useState(false)
+  const [backupMessage, setBackupMessage] = useState('')
 
   // ── Load from localStorage on mount
   useEffect(() => {
@@ -124,6 +126,45 @@ export default function SettingsPage() {
 
   const toggleShow = (provider) => {
     setShowKey((prev) => ({ ...prev, [provider]: !prev[provider] }))
+  }
+
+  const handleExportBackup = () => {
+    try {
+      const payload = collectBackup(localStorage)
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const date = new Date().toISOString().slice(0, 10)
+      a.href = url
+      a.download = `iloveagents-backup-${date}.json`
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setBackupMessage('Backup downloaded. Keep it somewhere safe.')
+    } catch {
+      setBackupMessage('Export failed. Please try again.')
+    }
+    setTimeout(() => setBackupMessage(''), 4000)
+  }
+
+  const handleImportBackup = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      const checked = validateBackup(parsed)
+      if (!checked.ok) {
+        setBackupMessage(checked.error)
+        return
+      }
+      const count = restoreBackup(checked.data, localStorage)
+      setBackupMessage(`Restored ${count} data sections. Refreshing.`)
+      setTimeout(() => window.location.reload(), 900)
+    } catch {
+      setBackupMessage('Could not read that file. Please use an exported backup.')
+    }
+    setTimeout(() => setBackupMessage(''), 5000)
   }
 
   return (
@@ -283,7 +324,44 @@ export default function SettingsPage() {
       </section>
 
       {/* ─────────────────────────────────────────── */}
-      {/* SECTION 3 — Privacy                         */}
+      {/* SECTION 3 — Backup and Restore              */}
+      {/* ─────────────────────────────────────────── */}
+      <section className="mb-8 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200 overflow-hidden">
+        <div className="px-5 py-4 border-b dark:border-border border-gray-100">
+          <h2 className="text-sm font-bold dark:text-text-primary text-gray-900">Backup and Restore</h2>
+          <p className="text-xs dark:text-text-secondary text-gray-500 mt-0.5">
+            Export collections, history and ratings to a JSON file, or restore from one. API keys are never included.
+          </p>
+        </div>
+
+        <div className="px-5 py-4 flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleExportBackup}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white
+              bg-accent hover:bg-accent-hover transition-all duration-150 active:scale-[0.97]"
+          >
+            Export Data
+          </button>
+          <label className="px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer
+            dark:bg-surface-input dark:border-border dark:text-text-primary
+            bg-gray-50 border border-gray-200 text-gray-700 hover:border-accent/40 transition-colors">
+            Import Data
+            <input
+              type="file"
+              accept="application/json,.json"
+              onChange={handleImportBackup}
+              className="hidden"
+              aria-label="Import backup JSON file"
+            />
+          </label>
+          {backupMessage && (
+            <span className="text-xs dark:text-text-secondary text-gray-600">{backupMessage}</span>
+          )}
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────── */}
+      {/* SECTION 4 — Privacy                         */}
       {/* ─────────────────────────────────────────── */}
       <section className="rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200 overflow-hidden">
         <div className="px-5 py-4 border-b dark:border-border border-gray-100">
