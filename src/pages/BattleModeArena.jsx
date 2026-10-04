@@ -42,7 +42,7 @@ export const PROVIDERS = [
   {
     id: "anthropic",
     label: "Claude Sonnet",
-    model: "claude-sonnet-4-6",
+    model: "claude-3-5-sonnet-20241022",
     color: "violet",
     borderClass: "border-violet-400/40 battle-card-violet",
     glowClass: "hover:shadow-violet-400/30",

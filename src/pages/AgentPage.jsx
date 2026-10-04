@@ -14,19 +14,23 @@ export default function AgentPage() {
   useEffect(() => {
     if (!agent) return
 
-    const existing = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
+    try {
+      const raw = localStorage.getItem('recentAgents')
+      const existing = raw ? JSON.parse(raw) : []
+      const list = Array.isArray(existing) ? existing : []
 
-    const updated = [
-      agent.id,
-      ...existing.filter((item) => item !== agent.id),
-    ].slice(0, 5)
+      const updated = [
+        agent.id,
+        ...list.filter((item) => item !== agent.id),
+      ].slice(0, 5)
 
-    localStorage.setItem(
-      'recentAgents',
-      JSON.stringify(updated)
-    )
+      localStorage.setItem(
+        'recentAgents',
+        JSON.stringify(updated)
+      )
+    } catch {
+      // storage unavailable, corrupt, or quota exceeded
+    }
   }, [agent])
 
   if (isLoading) {

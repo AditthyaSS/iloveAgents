@@ -277,7 +277,8 @@ export default function WorkflowRunner() {
           }
         }
       } catch (err) {
-        execSteps[i] = { ...execSteps[i], status: 'failed', error: err.message }
+        const errorMessage = err?.message || err?.detail || (err?.type === 'invalid_api_key' ? `Invalid API key for provider "${err?.provider || actualProvider}".` : 'Step execution failed.')
+        execSteps[i] = { ...execSteps[i], status: 'failed', error: errorMessage }
         syncSteps()
         failed = true
         break
