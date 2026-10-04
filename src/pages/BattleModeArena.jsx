@@ -24,7 +24,7 @@ import { useDocumentTitle } from "../lib/useDocumentTitle";
 const LLM_REQUEST_TIMEOUT_MS = 60000; // 60 seconds - reasonable for most LLM calls
 const TIMEOUT_ERROR_MESSAGE = "Request timed out - the LLM took too long to respond. Please try again.";
 
-const PROVIDERS = [
+export const PROVIDERS = [
   {
     id: "openai",
     label: "GPT-4o",
@@ -67,6 +67,20 @@ const PROVIDERS = [
     loaderColor: "text-blue-400",
     glowHex: "#60a5fa",
   },
+  {
+    id: "openrouter",
+    label: "OpenRouter",
+    model: "openai/gpt-4o-mini",
+    color: "teal",
+    borderClass: "border-teal-400/40 battle-card-teal",
+    glowClass: "hover:shadow-teal-400/30",
+    headerBg: "bg-teal-400/10 border-b border-teal-400/30",
+    textColor: "text-teal-400",
+    btnBg:
+      "bg-teal-400/10 hover:bg-teal-400/20 text-teal-400 border-teal-400/40 border-2 hover:border-teal-300/60 battle-btn-secondary",
+    loaderColor: "text-teal-400",
+    glowHex: "#2dd4bf",
+  },
 ];
 
 function buildUserMessage(agent, inputs) {
@@ -93,6 +107,7 @@ export default function BattleModeArena() {
     openai: { loading: true, content: null, error: null, duration: null },
     anthropic: { loading: true, content: null, error: null, duration: null },
     gemini: { loading: true, content: null, error: null, duration: null },
+    openrouter: { loading: true, content: null, error: null, duration: null },
   });
 
   const [promptViewerOpen, setPromptViewerOpen] = useState(false);
@@ -100,6 +115,7 @@ export default function BattleModeArena() {
     openai: null,
     anthropic: null,
     gemini: null,
+    openrouter: null,
   });
 
   const [copiedProvider, setCopiedProvider] = useState(null);
@@ -110,11 +126,12 @@ export default function BattleModeArena() {
     openai: new AbortController(),
     anthropic: new AbortController(),
     gemini: new AbortController(),
+    openrouter: new AbortController(),
   });
 
   // Tracks which provider finished (success or error) first
   const [firstFinisher, setFirstFinisher] = useState(null);
-  // Flips to true once all three are done, triggers the reveal animation
+  // Flips to true once all four are done, triggers the reveal animation
   const [revealTriggered, setRevealTriggered] = useState(false);
 
   const allDone = PROVIDERS.every((p) => !results[p.id].loading);
@@ -131,7 +148,7 @@ export default function BattleModeArena() {
   }, [agent, inputs, apiKeys, navigate]);
 
   // Runs (or re-runs) a single provider's request. Shared by the initial
-  // fire-all-three effect and by the per-panel retry button, so a retry
+  // fire-all-providers effect and by the per-panel retry button, so a retry
   // only touches the one panel and leaves the other two untouched.
   const runProvider = useCallback(
     (prov) => {
@@ -205,7 +222,7 @@ export default function BattleModeArena() {
     [agent, inputs, apiKeys],
   );
 
-  // Fire all three API calls simultaneously
+  // Fire all provider API calls simultaneously
   useEffect(() => {
     if (!agent || !inputs || !apiKeys) return;
 
@@ -342,7 +359,7 @@ export default function BattleModeArena() {
           <p className="text-base dark:text-text-primary text-gray-900">
             Running{" "}
             <span className="dark:text-text-primary text-gray-900 font-semibold">{agent.name}</span>{" "}
-            across three providers
+            across four providers
           </p>
         </div>
 
@@ -372,7 +389,7 @@ export default function BattleModeArena() {
 
           {promptViewerOpen && (
             <div className="mt-4 battle-fade-in">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 {/* OpenAI Column */}
                 <div className="min-w-0 rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
                   <div className="dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
@@ -520,13 +537,65 @@ export default function BattleModeArena() {
                     </div>
                   </div>
                 </div>
+
+                {/* OpenRouter Column */}
+                <div className="min-w-0 rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
+                  <div className="dark:bg-surface-card bg-white border-b dark:border-border border-gray-200 px-4 py-3 flex items-center justify-between">
+                    <span className="text-base font-bold text-teal-400">
+                      OpenRouter
+                    </span>
+                    <button
+                      onClick={() =>
+                        handleCopyPrompt(
+                          "openrouter",
+                          "OpenRouter",
+                          prompts.openrouter,
+                        )
+                      }
+                      className="flex items-center gap-1.5 px-2 py-1 rounded-md dark:hover:bg-surface hover:bg-gray-100 transition-all duration-200"
+                      aria-label="Copy OpenRouter prompt"
+                    >
+                      {copiedProvider === "openrouter" ? (
+                        <>
+                          <Check size={14} className="text-green-400" />
+                          <span className="text-xs text-green-400">Copied</span>
+                        </>
+                      ) : (
+                        <Copy
+                          size={14}
+                          className="dark:text-text-muted text-gray-700 hover:text-gray-800"
+                        />
+                      )}
+                    </button>
+                  </div>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
+                        System Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                        {prompts.openrouter?.systemPrompt ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold dark:text-text-muted text-gray-700 uppercase tracking-wide">
+                        User Prompt
+                      </span>
+                      <pre className="whitespace-pre-wrap break-words overflow-x-auto mt-2 text-xs dark:text-text-secondary text-gray-800 dark:bg-surface-card dark:bg-gray-900/60 bg-white/80 backdrop-blur-md p-3 rounded-lg border dark:border-border border-gray-200">
+                        {prompts.openrouter?.userMessage ||
+                          "Prompt not available yet."}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Three Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+        {/* Four Columns */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
           {PROVIDERS.map((prov, idx) => {
             const r = results[prov.id];
             const isFirstFinisher = firstFinisher === prov.id;
