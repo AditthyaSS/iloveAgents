@@ -71,4 +71,23 @@ describe('resolveAgentModel', () => {
     const result = resolveAgentModel(agent, 'unknown-provider', null)
     expect(result).toBe(MODEL_MAP.openai)
   })
+
+  it('should ignore agent.model if unsupported and fall back to MODEL_MAP default', () => {
+    const agent = {
+      provider: 'any',
+      defaultProvider: 'anthropic',
+      model: 'claude-sonnet-4-6',
+    }
+    const result = resolveAgentModel(agent, 'anthropic', null)
+    expect(result).toBe(MODEL_MAP.anthropic)
+  })
+
+  it('should ignore agent.models[provider] if unsupported and fall back to MODEL_MAP default', () => {
+    const agent = {
+      ...baseAgent,
+      models: { anthropic: 'unsupported-model-name' },
+    }
+    const result = resolveAgentModel(agent, 'anthropic', null)
+    expect(result).toBe(MODEL_MAP.anthropic)
+  })
 })

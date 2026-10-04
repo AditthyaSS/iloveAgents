@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { Trophy, Copy, Check, RotateCcw, ArrowLeft } from 'lucide-react'
 import BattleNavbar from '../components/BattleNavbar'
 import ReactMarkdown from 'react-markdown'
@@ -10,6 +10,7 @@ const colorMap = {
   yellow: { bg: 'bg-yellow-400/10', border: 'border-yellow-400/30', text: 'text-yellow-400', hoverBorder: 'hover:border-yellow-400/60', shadow: 'hover:shadow-yellow-400/30', lightBg: 'bg-yellow-400/5' },
   violet: { bg: 'bg-violet-400/10', border: 'border-violet-400/30', text: 'text-violet-400', hoverBorder: 'hover:border-violet-400/60', shadow: 'hover:shadow-violet-400/30', lightBg: 'bg-violet-400/5' },
   blue: { bg: 'bg-blue-400/10', border: 'border-blue-400/30', text: 'text-blue-400', hoverBorder: 'hover:border-blue-400/60', shadow: 'hover:shadow-blue-400/30', lightBg: 'bg-blue-400/5' },
+  teal: { bg: 'bg-teal-400/10', border: 'border-teal-400/30', text: 'text-teal-400', hoverBorder: 'hover:border-teal-400/60', shadow: 'hover:shadow-teal-400/30', lightBg: 'bg-teal-400/5' },
 }
 
 export default function BattleModeWinner() {
@@ -20,8 +21,7 @@ export default function BattleModeWinner() {
   useDocumentTitle(agentName ? `${agentName} Battle Winner` : 'Battle Winner')
 
   if (!provider || !content) {
-    navigate('/battle', { replace: true })
-    return null
+    return <Navigate to="/battle" replace />
   }
 
   const colors = colorMap[provider.color] || colorMap.yellow
