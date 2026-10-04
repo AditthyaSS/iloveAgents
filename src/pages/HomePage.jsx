@@ -4,6 +4,7 @@ import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, St
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
+import { copyText } from '../lib/clipboard'
 import { useHistory } from '../lib/useHistory'
 import RecentRuns from '../components/RecentRuns'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -254,7 +255,7 @@ export default function HomePage() {
   }
 
   const handleCopy = (text) => {
-    navigator.clipboard.writeText(text)
+    void copyText(text)
   }
 
   const showingFiltered =
