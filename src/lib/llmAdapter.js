@@ -12,21 +12,25 @@ const PROVIDER_CONFIGS = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     }),
-    buildBody: (model, systemPrompt, userMessage) => ({
+    buildBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
     }),
-    buildStreamBody: (model, systemPrompt, userMessage) => ({
+    buildStreamBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
       stream: true,
     }),
     parseResponse: (data) => ({
@@ -61,21 +65,25 @@ const PROVIDER_CONFIGS = {
       'HTTP-Referer': 'https://iloveagents.ai',
       'X-Title': 'ILoveAgents',
     }),
-    buildBody: (model, systemPrompt, userMessage) => ({
+    buildBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
     }),
-    buildStreamBody: (model, systemPrompt, userMessage) => ({
+    buildStreamBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
       stream: true,
     }),
     parseResponse: (data) => ({
@@ -104,21 +112,25 @@ const PROVIDER_CONFIGS = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     }),
-    buildBody: (model, systemPrompt, userMessage) => ({
+    buildBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
     }),
-    buildStreamBody: (model, systemPrompt, userMessage) => ({
+    buildStreamBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
       stream: true,
     }),
     parseResponse: (data) => ({
@@ -259,10 +271,15 @@ async function handleErrorResponse(response, provider = "unknown") {
     };
   }
 
-  const friendlyMessage =
+  let friendlyMessage =
     typeof ERROR_MESSAGES[response.status] === 'string'
       ? ERROR_MESSAGES[response.status]
       : `API returned status ${response.status}. Please check your configuration.`;
+
+  // Groq-specific 429 refinement
+  if (provider === 'groq' && response.status === 429) {
+    friendlyMessage = 'Groq rate limit exceeded. Please try a different model or check your usage limits in the Groq console.';
+  }
 
   throw new Error(
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
@@ -297,7 +314,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
       : config.url;
 
   const headers = config.buildHeaders(apiKey);
-  const body = config.buildBody(model, systemPrompt, userMessage);
+  const body = config.buildBody(model, systemPrompt, userMessage, options);
 
   const startTime = performance.now();
 
@@ -366,7 +383,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
   }
 
   const headers = config.buildHeaders(apiKey);
-  const body = config.buildStreamBody(model, systemPrompt, userMessage);
+  const body = config.buildStreamBody(model, systemPrompt, userMessage, options);
 
   const startTime = performance.now();
   let fullContent = '';

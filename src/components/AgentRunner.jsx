@@ -90,6 +90,8 @@ export default function AgentRunner({ agent }) {
     MODEL_MAP[provider] || MODEL_MAP.openai,
   );
   const [customModelId, setCustomModelId] = useState("");
+  const [temperature, setTemperature] = useState(0.7);
+  const [topP, setTopP] = useState(1.0);
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
@@ -337,6 +339,9 @@ const handleRun = async () => {
           if (isCurrentRun()) handleChunk(chunk);
         },
         signal: controller.signal,
+      }, {
+        temperature,
+        top_p: topP,
       });
 
       // Cleared / superseded / unmounted while streaming: discard everything.
@@ -868,7 +873,7 @@ const handleRun = async () => {
 
         {playgroundOpen && (
           <div className="px-4 pb-4 animate-fade-in">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <label className="text-[11px] font-medium dark:text-text-secondary text-gray-500">
                 System Prompt
               </label>
@@ -893,6 +898,42 @@ const handleRun = async () => {
                 )}
               </div>
             </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-medium dark:text-text-muted text-gray-400">
+                    Temperature: {temperature}
+                  </label>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-accent dark:bg-zinc-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-medium dark:text-text-muted text-gray-400">
+                    Top P: {topP}
+                  </label>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={topP}
+                  onChange={(e) => setTopP(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-accent dark:bg-zinc-700"
+                />
+              </div>
+            </div>
+
             <div className="relative">
               <textarea
                 value={customPrompt}
