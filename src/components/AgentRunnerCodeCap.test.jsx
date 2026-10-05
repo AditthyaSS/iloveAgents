@@ -13,7 +13,13 @@ vi.mock('./CostEstimator', () => ({ default: () => null }))
 vi.mock('./TokenCounter', () => ({ default: () => null }))
 vi.mock('./BatchModeRunner', () => ({ default: () => null }))
 vi.mock('./AgentPreviewPanel', () => ({ default: () => null }))
-vi.mock('./PromptHistoryPanel', () => ({ default: () => null }))
+vi.mock('./PromptHistoryPanel', () => ({
+  default: ({ onUsePrompt }) => (
+    <button data-testid="use-saved-prompt" onClick={() => onUsePrompt('z'.repeat(5000))}>
+      use saved
+    </button>
+  ),
+}))
 vi.mock('./ScheduleAgentModal', () => ({ default: () => null }))
 
 const agent = {
@@ -41,5 +47,15 @@ describe('AgentRunner code input cap', () => {
     fireEvent.change(box, { target: { value: 'y'.repeat(5000) } })
     expect(box.value).toHaveLength(100)
     expect(screen.getByText('100 / 4000 characters')).toBeInTheDocument()
+  })
+
+  it('caps restored saved prompts at the shared character limit', () => {
+    render(
+      <MemoryRouter>
+        <AgentRunner agent={agent} />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByTestId('use-saved-prompt'))
+    expect(screen.getByPlaceholderText('paste code here').value).toHaveLength(4000)
   })
 })

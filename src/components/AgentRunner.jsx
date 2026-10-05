@@ -184,7 +184,10 @@ export default function AgentRunner({ agent }) {
   }, [loading, isStreaming]);
 
   const updateInput = (id, value) => {
-    setInputs((prev) => ({ ...prev, [id]: value }));
+    const capped = typeof value === 'string' && value.length > MAX_CHAR_LIMIT
+      ? value.slice(0, MAX_CHAR_LIMIT)
+      : value
+    setInputs((prev) => ({ ...prev, [id]: capped }));
   };
 
   // Finds the first free-text style input (textarea/text/code) with content,
