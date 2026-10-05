@@ -6,7 +6,7 @@ import { useDocumentTitle } from '../lib/useDocumentTitle'
 const steps = [
   { icon: Crosshair, text: 'Pick any agent', number: '01' },
   { icon: PenLine,    text: 'Enter your input once', number: '02' },
-  { icon: Cpu,        text: 'GPT-4o vs Claude Sonnet vs Gemini Flash generate outputs', number: '03' },
+  { icon: Cpu,        text: 'GPT-4o vs Claude Sonnet vs Gemini Flash vs OpenRouter generate outputs', number: '03' },
   { icon: Trophy,     text: 'You pick the winner', number: '04' },
 ]
 
@@ -31,6 +31,13 @@ const providers = [
     color: 'text-blue-600 dark:text-blue-400',
     border: 'border-blue-300 dark:border-blue-400/30',
     bg: 'bg-blue-100 dark:bg-blue-400/10',
+  },
+  {
+    name: 'OpenRouter',
+    label: 'Multi-model',
+    color: 'text-teal-600 dark:text-teal-400',
+    border: 'border-teal-300 dark:border-teal-400/30',
+    bg: 'bg-teal-100 dark:bg-teal-400/10',
   },
 ]
 
@@ -68,12 +75,12 @@ export default function BattleModeLanding() {
             Battle Mode
           </h1>
           <p className="text-base dark:text-text-secondary text-gray-700 dark:text-text-secondary dark:text-text-secondary max-w-md mx-auto leading-relaxed font-medium">
-            Pit three AI providers against each other. Same prompt, three outputs, you decide who wins.
+            Pit four AI providers against each other. Same prompt, four outputs, you decide who wins.
           </p>
         </div>
 
         {/* Provider Cards */}
-        <div className="flex items-center justify-center gap-3 sm:gap-5 mb-14 w-full max-w-lg">
+        <div className="flex items-center justify-center gap-3 sm:gap-5 mb-14 w-full max-w-3xl flex-wrap">
           {/* GPT */}
           <div
             className={`flex-1 flex flex-col items-center gap-2 p-5 rounded-2xl border
@@ -123,6 +130,26 @@ export default function BattleModeLanding() {
             <Bot size={28} className={providers[2].color} />
             <span className={`text-sm font-bold ${providers[2].color}`}>{providers[2].name}</span>
             <span className="text-[10px] dark:text-text-muted text-gray-700 dark:text-text-secondary dark:text-text-secondary uppercase tracking-widest">{providers[2].label}</span>
+          </div>
+
+          {/* VS */}
+          <div
+            className="flex flex-col items-center gap-1 battle-slide-center"
+            style={{ animationDelay: '400ms' }}
+          >
+            <Swords size={22} className="text-amber-600 dark:text-yellow-400" />
+            <span className="text-xs font-extrabold text-amber-600 dark:text-yellow-400 tracking-widest">VS</span>
+          </div>
+
+          {/* OpenRouter */}
+          <div
+            className={`flex-1 flex flex-col items-center gap-2 p-5 rounded-2xl border
+              ${providers[3].border} ${providers[3].bg} battle-slide-right`}
+            style={{ animationDelay: '200ms' }}
+          >
+            <Bot size={28} className={providers[3].color} />
+            <span className={`text-sm font-bold ${providers[3].color}`}>{providers[3].name}</span>
+            <span className="text-[10px] dark:text-text-muted text-gray-700 dark:text-text-secondary dark:text-text-secondary uppercase tracking-widest">{providers[3].label}</span>
           </div>
         </div>
 
