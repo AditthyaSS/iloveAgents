@@ -85,6 +85,7 @@ export default function PromptHistoryPanel({ open, onClose, onUsePrompt }) {
     usePromptHistory();
   const [query, setQuery] = useState("");
   const [copiedId, setCopiedId] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   if (!open) return null;
 
@@ -187,12 +188,32 @@ export default function PromptHistoryPanel({ open, onClose, onUsePrompt }) {
                   History
                 </h3>
                 {!query && nonFavorites.length > 0 && (
-                  <button
-                    onClick={clearHistory}
-                    className="text-[10px] text-accent hover:underline"
-                  >
-                    Clear all
-                  </button>
+                  confirmClear ? (
+                    <span className="flex items-center gap-2">
+                      <span className="text-[10px] dark:text-text-muted text-gray-400">
+                        Clear {nonFavorites.length} prompts?
+                      </span>
+                      <button
+                        onClick={() => { clearHistory(); setConfirmClear(false) }}
+                        className="text-[10px] font-semibold text-red-500 hover:underline"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => setConfirmClear(false)}
+                        className="text-[10px] text-accent hover:underline"
+                      >
+                        Cancel
+                      </button>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmClear(true)}
+                      className="text-[10px] text-accent hover:underline"
+                    >
+                      Clear all
+                    </button>
+                  )
                 )}
               </div>
               <div className="space-y-2">
