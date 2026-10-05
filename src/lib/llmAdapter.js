@@ -486,3 +486,40 @@ export async function fetchGeminiModels(apiKey) {
       label: m.displayName || m.name.replace('models/', ''),
     }));
 }
+
+export async function fetchGroqModels(apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data.data || []).map(m => ({
+    value: m.id,
+    label: m.id,
+  }));
+}
+
+export async function fetchOpenAIModels(apiKey) {
+  const res = await fetch('https://api.openai.com/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data.data || []).map(m => ({
+    value: m.id,
+    label: m.id,
+  }));
+}
+
+export async function fetchOpenRouterModels(apiKey) {
+  const res = await fetch('https://openrouter.ai/api/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data.data || []).map(m => ({
+    value: m.id,
+    label: m.id,
+  }));
+}
+

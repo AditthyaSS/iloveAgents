@@ -43,8 +43,10 @@ export function resolveAgentModel(agent, actualProvider, selectedModel) {
     return MODEL_MAP[actualProvider] || MODEL_MAP.openai
   }
 
-  // Check if selectedModel is valid for the current actualProvider
-  if (selectedModel && MODELS[actualProvider]?.some(m => m.value === selectedModel)) {
+  // Check if selectedModel is a valid model for the current actualProvider
+  // We allow the model if it's in the static list OR if it's provided as a non-empty string
+  // (this allows dynamically fetched models that aren't in the static list)
+  if (selectedModel) {
     return selectedModel
   }
 

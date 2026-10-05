@@ -38,7 +38,7 @@ import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
-import { streamAgent } from "../lib/llmAdapter";
+import { streamAgent, fetchGeminiModels, fetchGroqModels, fetchOpenAIModels, fetchOpenRouterModels } from "../lib/llmAdapter";
 import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
@@ -92,6 +92,7 @@ export default function AgentRunner({ agent }) {
   const [customModelId, setCustomModelId] = useState("");
   const [temperature, setTemperature] = useState(0.7);
   const [topP, setTopP] = useState(1.0);
+  const [dynamicModels, setDynamicModels] = useState([]);
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
@@ -147,6 +148,38 @@ export default function AgentRunner({ agent }) {
   useEffect(() => {
     setSelectedModel(MODEL_MAP[provider] || MODEL_MAP.openai);
   }, [provider]);
+
+  useEffect(() => {
+    async function loadModels() {
+      if (!apiKey) {
+        setDynamicModels([]);
+        return;
+      }
+
+      try {
+        let models = [];
+        switch (provider) {
+          case 'gemini':
+            models = await fetchGeminiModels(apiKey);
+            break;
+          case 'groq':
+            models = await fetchGroqModels(apiKey);
+            break;
+          case 'openai':
+            models = await fetchOpenAIModels(apiKey);
+            break;
+          case 'openrouter':
+            models = await fetchOpenRouterModels(apiKey);
+            break;
+        }
+        setDynamicModels(models);
+      } catch (err) {
+        console.error("Failed to fetch dynamic models:", err);
+        setDynamicModels([]);
+      }
+    }
+    loadModels();
+  }, [provider, apiKey]);
 
   useEffect(() => {
     cancelActiveRun();
@@ -1231,6 +1264,7 @@ const handleRun = async () => {
       }}
       options={[
         ...(MODELS[provider] || []),
+        ...dynamicModels,
         { value: 'custom', label: 'Custom Model ID...' }
       ]}
     />
