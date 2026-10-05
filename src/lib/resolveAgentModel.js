@@ -49,7 +49,7 @@ export function resolveAgentModel(agent, actualProvider, selectedModel) {
   if (
     agent.model &&
     (actualProvider === agent.defaultProvider || actualProvider === agent.provider) &&
-    isKnownModel(agent.model)
+    MODELS[actualProvider]?.some((m) => m.value === agent.model)
   ) {
     return agent.model
   }

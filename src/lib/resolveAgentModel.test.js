@@ -83,4 +83,9 @@ describe('resolveAgentModel', () => {
     const agent = { provider: 'any', defaultProvider: 'openai', model: 'gpt-4o-mini' }
     expect(resolveAgentModel(agent, 'openai', null)).toBe('gpt-4o-mini')
   })
+
+  it('should not send another provider model to the current provider', () => {
+    const agent = { provider: 'openai', defaultProvider: 'openai', model: 'claude-3-opus-20240229' }
+    expect(resolveAgentModel(agent, 'openai', null)).toBe(MODEL_MAP.openai)
+  })
 })
