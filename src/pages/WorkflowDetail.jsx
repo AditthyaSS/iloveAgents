@@ -234,15 +234,23 @@ export default function WorkflowDetail() {
           Agent Sequence
         </h2>
         <div>
-          {(workflow.agents ?? []).map((agentId, index) => (
-            <AgentRow
-              key={agentId + index}
-              agentId={agentId}
-              index={index}
-              total={workflow.agents.length}
-              agents={agents}
-            />
-          ))}
+          {(workflow.agents ?? []).map((entry, index) => {
+            // entries can be plain agent id strings or conditional_branch objects
+            const isConditional = typeof entry === 'object' && entry !== null
+            const key = isConditional ? (entry.id ?? `branch-${index}`) : entry
+            const displayId = isConditional
+              ? `Conditional branch: ${entry.id ?? '(unnamed)'}`
+              : entry
+            return (
+              <AgentRow
+                key={key + index}
+                agentId={displayId}
+                index={index}
+                total={workflow.agents.length}
+                agents={agents}
+              />
+            )
+          })}
         </div>
         <p className="mt-4 text-[11px] dark:text-text-muted text-gray-400">
           Each agent's output becomes the input for the next agent in the chain.
