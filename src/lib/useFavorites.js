@@ -12,7 +12,13 @@ function loadFavorites() {
 }
 
 function saveFavorites(ids) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+  } catch {
+    // Storage unavailable (quota exceeded, SecurityError in strict browsers).
+    // The in-memory state in the hook remains authoritative — the star toggle
+    // still flips; it just won't persist until storage is available again.
+  }
 }
 
 // Global listeners so multiple components stay in sync
