@@ -176,6 +176,15 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
+    // Mark any rows still in 'running' state as stopped so the progress
+    // counts settle and the summary can render.
+    setResults((prev) =>
+      prev.map((r) =>
+        r.status === 'running'
+          ? { ...r, status: 'failed', error: 'Stopped by user.' }
+          : r
+      )
+    )
     setRunning(false)
   }
 
