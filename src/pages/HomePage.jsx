@@ -189,9 +189,14 @@ export default function HomePage() {
   )
 
   const recentAgents = useMemo(() => {
-    const recentIds = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
+    let recentIds = []
+    try {
+      const raw = localStorage.getItem('recentAgents') || '[]'
+      const parsed = JSON.parse(raw)
+      recentIds = Array.isArray(parsed) ? parsed : []
+    } catch {
+      // Malformed data — fall back to empty list
+    }
 
     return recentIds
       .map((id) => agents.find((a) => a.id === id))

@@ -14,19 +14,34 @@ export default function AgentPage() {
   useEffect(() => {
     if (!agent) return
 
-    const existing = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
+    try {
+      let existing = []
+      try {
+        const raw = localStorage.getItem('recentAgents') || '[]'
+        const parsed = JSON.parse(raw)
+        existing = Array.isArray(parsed) ? parsed : []
+      } catch {
+        // Malformed data — fall back to empty list
+      }
 
-    const updated = [
-      agent.id,
-      ...existing.filter((item) => item !== agent.id),
-    ].slice(0, 5)
+      const updated = [
+        agent.id,
+        ...existing.filter((item) => item !== agent.id),
+      ].slice(0, 5)
 
-    localStorage.setItem(
-      'recentAgents',
-      JSON.stringify(updated)
-    )
+      try {
+        localStorage.setItem('recentAgents', JSON.stringify(updated))
+      } catch {
+        // Quota exceeded — prune list and retry
+        try {
+          localStorage.setItem('recentAgents', JSON.stringify(updated.slice(0, Math.max(1, Math.ceil(updated.length / 2)))))
+        } catch {
+          // Both attempts failed — storage unavailable
+        }
+      }
+    } catch {
+      // Outer guard for any unforeseen error in the tracking effect
+    }
   }, [agent])
 
   if (isLoading) {
