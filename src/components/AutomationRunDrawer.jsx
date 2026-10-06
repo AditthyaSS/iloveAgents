@@ -10,8 +10,24 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
 
   if (!isOpen || !run) return null
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(run.output || run.error || '')
+  const handleCopy = async () => {
+    const text = run.output || run.error || ''
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      // Clipboard API unavailable — fall back to hidden textarea
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch {
+        // Both paths failed — silently ignore
+      }
+    }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -19,11 +35,14 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   const handleDownload = () => {
     const element = document.createElement('a')
     const file = new Blob([run.output || run.error || ''], { type: 'text/markdown' })
-    element.href = URL.createObjectURL(file)
+    const url = URL.createObjectURL(file)
+    element.href = url
     element.download = `${run.automationName.replace(/\s+/g, '_')}_${new Date(run.startedAt).toISOString().split('T')[0]}.md`
     document.body.appendChild(element)
     element.click()
     document.body.removeChild(element)
+    // Defer revocation so Firefox can complete the download stream
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   const formatDate = (ts) => {
