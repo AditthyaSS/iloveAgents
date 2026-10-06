@@ -17,7 +17,7 @@ export default function AboutOpenSource() {
     {
       step: '03',
       title: 'Add Agent / Code',
-      description: 'Add a new agent definition in src/agents/definitions/ in 5 minutes — registry picks it up automatically.',
+      description: 'Add a new agent definition in src/agents/definitions/. The registry automatically discovers and loads new agent definitions.',
       command: 'src/agents/definitions/my-new-agent.js',
     },
     {

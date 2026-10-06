@@ -253,8 +253,23 @@ export default function HomePage() {
     navigate(`/agent/${run.agentId}`, { state: { prefill: run.inputs } })
   }
 
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text)
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      // Clipboard API unavailable — fall back to hidden textarea
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch {
+        // Both paths failed — silently ignore
+      }
+    }
   }
 
   const showingFiltered =
