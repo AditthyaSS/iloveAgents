@@ -12,8 +12,18 @@ export default function KeyboardShortcutsModal({ isOpen, onClose }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-      <div className="w-full max-w-md bg-white dark:bg-surface-card border border-gray-200 dark:border-border rounded-xl shadow-2xl overflow-hidden">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Keyboard Shortcuts"
+        className="w-full max-w-md bg-white dark:bg-surface-card border border-gray-200 dark:border-border rounded-xl shadow-2xl overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-border">
           <h2 className="text-lg font-bold text-gray-900 dark:text-text-primary flex items-center gap-2">
             <Command size={20} className="text-accent" />
