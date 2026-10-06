@@ -5,17 +5,25 @@ export function exportWorkflowAsMarkdown(workflowTitle, steps) {
     year: 'numeric',
   })
 
-  const filename = workflowTitle
+  // Guard against null/undefined title; produce a safe slug fallback
+  const safeTitle = String(workflowTitle ?? '')
+  const slug = safeTitle
     .toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '') + '-output.md'
+    .replace(/[^a-z0-9-]/g, '')
+    || 'workflow'
 
-  const stepContent = steps
+  const filename = `${slug}-output.md`
+
+  // Guard against undefined/null steps
+  const safeSteps = Array.isArray(steps) ? steps : []
+
+  const stepContent = safeSteps
     .filter((s) => s.status === 'done' && s.output)
     .map((s, i) => `## Step ${i + 1} — ${s.agentName}\n\n${s.output}`)
     .join('\n\n---\n\n')
 
-  const content = `# ${workflowTitle} — Workflow Output\nGenerated on ${date}\n\n${stepContent}`
+  const content = `# ${safeTitle || 'Workflow'} — Workflow Output\nGenerated on ${date}\n\n${stepContent}`
 
   const blob = new Blob([content], { type: 'text/markdown' })
   const url = URL.createObjectURL(blob)
@@ -23,5 +31,6 @@ export function exportWorkflowAsMarkdown(workflowTitle, steps) {
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  // Defer revocation so Firefox can complete the download stream
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
