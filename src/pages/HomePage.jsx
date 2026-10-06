@@ -752,7 +752,7 @@ ${description}
 -Requested via iloveagents.vercel.app`
     )
     const url = `https://github.com/AditthyaSS/iloveAgents/issues/new?title=${title}&body=${body}&labels=agent-request`
-    window.open(url, '_blank')
+    window.open(url, '_blank', 'noopener,noreferrer')
     setSubmitted(true)
     setTimeout(() => setSubmitted(false), 3000)
   }
