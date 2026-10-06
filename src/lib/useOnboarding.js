@@ -15,7 +15,7 @@ import { useState, useCallback } from 'react'
 
 const STORAGE_KEY = 'ila_onboarding_complete'
 
-function hasCompleted() {
+export function hasCompleted() {
   try {
     return localStorage.getItem(STORAGE_KEY) === 'true'
   } catch {
