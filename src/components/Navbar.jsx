@@ -33,6 +33,9 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
 
   useKeyboardShortcuts({
     '?': () => setShowShortcuts(true),
+    'Escape': () => {
+      if (mobileMenuOpen) setMobileMenuOpen(false)
+    },
   })
 
   useEffect(() => {
