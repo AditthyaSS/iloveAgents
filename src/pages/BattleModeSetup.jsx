@@ -76,6 +76,15 @@ const API_KEY_FIELDS = [
     bg: "bg-blue-400/10",
     focusBorder: "focus:border-blue-400/60",
   },
+  {
+    id: "openrouter",
+    label: "OpenRouter API Key",
+    placeholder: "sk-or-...",
+    color: "text-teal-400",
+    border: "border-teal-400/30",
+    bg: "bg-teal-400/10",
+    focusBorder: "focus:border-teal-400/60",
+  },
 ];
 
 function InputField({ input, value, onChange }) {
@@ -218,11 +227,13 @@ export default function BattleModeSetup() {
     openai: "",
     anthropic: "",
     gemini: "",
+    openrouter: "",
   });
   const [showKeys, setShowKeys] = useState({
     openai: false,
     anthropic: false,
     gemini: false,
+    openrouter: false,
   });
   const [step, setStep] = useState(1); // 1 = pick agent, 2 = fill inputs + keys
 
@@ -254,9 +265,7 @@ export default function BattleModeSetup() {
 
   const canSubmit =
     selectedAgent &&
-    apiKeys.openai.trim() &&
-    apiKeys.anthropic.trim() &&
-    apiKeys.gemini.trim() &&
+    Object.values(apiKeys).some((k) => k.trim()) &&
     selectedAgent.inputs?.every((inp) => {
       const val = inputs[inp.id];
       if (!inp.required) {
@@ -300,7 +309,7 @@ export default function BattleModeSetup() {
           </h1>
           <p className="text-sm dark:text-text-muted dark:text-text-muted text-gray-500">
             {step === 1
-              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, and Gemini Flash"
+              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, Gemini Flash and OpenRouter"
               : `Setting up ${selectedAgent?.name}`}
           </p>
         </div>
@@ -424,7 +433,8 @@ export default function BattleModeSetup() {
               </div>
               <p className="text-xs dark:text-text-muted dark:text-text-muted text-gray-500 mb-5 leading-relaxed">
                 Your keys are used directly in the browser and never sent to our
-                servers.
+                servers. Add at least one key. Providers without a key are
+                skipped in the arena.
               </p>
               <div className="space-y-4">
                 {API_KEY_FIELDS.map((field) => (
