@@ -269,6 +269,17 @@ export default function AnalyticsPage() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
+  const [confirmingClear, setConfirmingClear] = useState(false)
+
+  const handleClearClick = () => {
+    if (!confirmingClear) {
+      setConfirmingClear(true)
+      return
+    }
+    setConfirmingClear(false)
+    onClear()
+  }
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-3">
@@ -298,14 +309,32 @@ function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
           ))}
         </div>
         {hasData && (
-          <button
-            onClick={onClear}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-              text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-          >
-            <Trash2 size={13} />
-            Clear Data
-          </button>
+          confirmingClear ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-red-500 font-medium">Erase all data?</span>
+              <button
+                onClick={handleClearClick}
+                className="px-2 py-1 rounded text-xs font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmingClear(false)}
+                className="px-2 py-1 rounded text-xs font-semibold dark:text-text-muted text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleClearClick}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 size={13} />
+              Clear Data
+            </button>
+          )
         )}
       </div>
     </div>
