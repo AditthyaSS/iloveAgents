@@ -29,12 +29,32 @@ export default function WorkflowBuilder() {
   const [title, setTitle] = useState(workflowTitle || '')
   const [description, setDescription] = useState('')
   const descriptionRef = useRef(null)
+  const pickerRef = useRef(null)
   const [selectedAgents, setSelectedAgents] = useState([])
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [hasResolvedPreselected, setHasResolvedPreselected] = useState(false)
+
+  // Close picker on outside click or Escape key
+  useEffect(() => {
+    if (!dropdownOpen) return
+    const handleClick = (e) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target)) {
+        setDropdownOpen(false)
+      }
+    }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setDropdownOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [dropdownOpen])
 
   // Resolve pre-populated chain once agents load
   useEffect(() => {
@@ -278,7 +298,7 @@ export default function WorkflowBuilder() {
 
         {/* Add Agent Dropdown */}
         {selectedAgents.length < MAX_AGENTS && (
-          <div className="relative">
+          <div className="relative" ref={pickerRef}>
             <button
               id="add-agent-btn"
               onClick={() => setDropdownOpen((o) => !o)}
