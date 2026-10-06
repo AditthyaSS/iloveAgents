@@ -24,10 +24,13 @@ function downloadBlob(content, mimeType, filename) {
 
 function csvEscape(value) {
   const str = String(value ?? '')
-  if (/[",\n]/.test(str)) {
-    return `"${str.replace(/"/g, '""')}"`
+  // Neutralize CSV formula injection: prefix cells that start with =, +, -, or @
+  // with a single quote so spreadsheet apps treat them as text, not formulas.
+  const neutralized = /^[=+\-@]/.test(str) ? `'${str}` : str
+  if (/[",\n]/.test(neutralized)) {
+    return `"${neutralized.replace(/"/g, '""')}"`
   }
-  return str
+  return neutralized
 }
 
 /**
