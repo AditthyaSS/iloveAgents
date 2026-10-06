@@ -70,7 +70,11 @@ export function useSessionSpend() {
   }, [])
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY)
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // Storage unavailable — the in-memory reset below still applies.
+    }
     setSessionData({ runs: [], totalSpend: 0 })
   }, [])
 
