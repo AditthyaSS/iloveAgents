@@ -88,26 +88,65 @@ export default async function handler(req, res) {
         }
         const userMessage = parts.join('\n\n') || 'Scheduled run'
 
-        // Call OpenAI / Provider endpoint
-        if (auto.provider === 'openai' || !auto.provider) {
-          const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        // Call the appropriate provider endpoint
+        const provider = auto.provider || 'openai'
+        const model = auto.model
+        const systemContent = auto.system_prompt || 'You are an AI assistant.'
+
+        if (provider === 'openai' || provider === 'openrouter') {
+          const baseUrl = provider === 'openrouter'
+            ? 'https://openrouter.ai/api/v1/chat/completions'
+            : 'https://api.openai.com/v1/chat/completions'
+          const resp = await fetch(baseUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              model: auto.model || 'gpt-4o-mini',
+              model: model || (provider === 'openrouter' ? 'openai/gpt-4o-mini' : 'gpt-4o-mini'),
               messages: [
-                { role: 'system', content: auto.system_prompt || 'You are an AI assistant.' },
+                { role: 'system', content: systemContent },
                 { role: 'user', content: userMessage },
               ],
             }),
           })
           const json = await resp.json()
           output = json.choices?.[0]?.message?.content || 'No output generated'
+        } else if (provider === 'anthropic') {
+          const resp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': apiKey,
+              'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify({
+              model: model || 'claude-3-5-haiku-20241022',
+              max_tokens: 1024,
+              system: systemContent,
+              messages: [{ role: 'user', content: userMessage }],
+            }),
+          })
+          const json = await resp.json()
+          output = json.content?.[0]?.text || 'No output generated'
+        } else if (provider === 'gemini') {
+          const geminiModel = model || 'gemini-2.5-flash'
+          const resp = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                system_instruction: { parts: [{ text: systemContent }] },
+                contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+              }),
+            }
+          )
+          const json = await resp.json()
+          output = json.candidates?.[0]?.content?.parts?.[0]?.text || 'No output generated'
         } else {
-          output = `Executed ${auto.agent_name} via ${auto.provider} successfully.`
+          output = `Executed ${auto.agent_name} via ${provider} successfully.`
         }
 
         // Email Notification via Resend
