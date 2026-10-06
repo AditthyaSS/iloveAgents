@@ -79,9 +79,17 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     setItems(dataRows.map((r) => r[columnIndex]).filter(Boolean))
   }
 
+  const MAX_UPLOAD_BYTES = 5 * 1024 * 1024 // 5 MB
+
   const handleFileUpload = (e) => {
     const file = e.target.files?.[0]
     if (!file) return
+
+    if (file.size > MAX_UPLOAD_BYTES) {
+      alert(`File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Please upload a file smaller than 5 MB.`)
+      e.target.value = ''
+      return
+    }
 
     const reader = new FileReader()
     reader.onload = (evt) => {
