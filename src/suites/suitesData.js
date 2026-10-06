@@ -67,7 +67,7 @@ export const suites = [
       'data-dictionary-generator',
       'dataset-description-generator',
       'etl-pipeline-troubleshooter',
-      'featureEngineeringAdvisor',
+      'feature-engineering-advisor',
       'ml-experiment-autopsy',
       'ml-experiment-report-generator',
       'cloud-cost-estimator',
@@ -80,7 +80,7 @@ export const suites = [
           id: 'task',
           question: 'What are you working on?',
           options: [
-            { label: 'Building ML models', tags: ['ml-experiment-autopsy', 'ml-experiment-report-generator', 'featureEngineeringAdvisor'] },
+            { label: 'Building ML models', tags: ['ml-experiment-autopsy', 'ml-experiment-report-generator', 'feature-engineering-advisor'] },
             { label: 'Data pipelines', tags: ['etl-pipeline-troubleshooter', 'data-cleaning-plan-generator', 'data-dictionary-generator'] },
             { label: 'SQL & databases', tags: ['sql-query-generator', 'sql-query-optimizer', 'database-query-optimizer'] },
             { label: 'Cloud & infrastructure', tags: ['cloud-cost-estimator', 'ai-project-architecture-agent'] },
@@ -127,8 +127,8 @@ export const suites = [
     description: 'Close more deals with better outreach, scripts, and analysis',
     color: '#10b981',
     agents: [
-      'salesDiscoveryCallGenerator',
-      'sales_objection_handler',
+      'sales-discovery-call-generator',
+      'sales-objection-handler',
       'linkedin-outreach-message-writer',
       'win-loss-analysis-report-generator',
       'salary-negotiation-script',
@@ -140,8 +140,8 @@ export const suites = [
           question: 'What do you need help with?',
           options: [
             { label: 'Reaching out to prospects', tags: ['linkedin-outreach-message-writer', 'cold-email-writer'] },
-            { label: 'Running discovery calls', tags: ['salesDiscoveryCallGenerator'] },
-            { label: 'Handling objections', tags: ['sales_objection_handler', 'win-loss-analysis-report-generator'] },
+            { label: 'Running discovery calls', tags: ['sales-discovery-call-generator'] },
+            { label: 'Handling objections', tags: ['sales-objection-handler', 'win-loss-analysis-report-generator'] },
             { label: 'Negotiating salary', tags: ['salary-negotiation-script'] },
           ],
         },
@@ -156,10 +156,10 @@ export const suites = [
     color: '#ec4899',
     agents: [
       'color-palette-generator',
-      'font-pair-generator',
+      'font-pairing-agent',
       'typography-pairer',
       'accessibility-audit-generator',
-      'game_world_lore_generator',
+      'game-world-lore-generator',
       'npc-dialogue-lore-generator',
     ],
     quiz: {
@@ -168,9 +168,9 @@ export const suites = [
           id: 'task',
           question: 'What are you creating?',
           options: [
-            { label: 'UI / Product design', tags: ['color-palette-generator', 'font-pair-generator', 'typography-pairer'] },
+            { label: 'UI / Product design', tags: ['color-palette-generator', 'font-pairing-agent', 'typography-pairer'] },
             { label: 'Accessible experiences', tags: ['accessibility-audit-generator'] },
-            { label: 'Game worlds & stories', tags: ['game_world_lore_generator', 'npc-dialogue-lore-generator'] },
+            { label: 'Game worlds & stories', tags: ['game-world-lore-generator', 'npc-dialogue-lore-generator'] },
           ],
         },
       ],
@@ -214,7 +214,7 @@ export const suites = [
     description: 'Learn faster, grow your career, and land your dream job',
     color: '#f97316',
     agents: [
-      'aiStudyPlanner',
+      'ai-study-planner',
       'flashcard-generator',
       'eli5-explainer',
       'mnemonic-generator',
@@ -230,7 +230,7 @@ export const suites = [
           id: 'goal',
           question: 'What is your goal?',
           options: [
-            { label: 'Learn something new', tags: ['aiStudyPlanner', 'flashcard-generator', 'eli5-explainer', 'mnemonic-generator'] },
+            { label: 'Learn something new', tags: ['ai-study-planner', 'flashcard-generator', 'eli5-explainer', 'mnemonic-generator'] },
             { label: 'Grow my career', tags: ['skill-gap-roadmap-agent', 'path-pilot', 'performance-review-writer'] },
             { label: 'Get a new job', tags: ['cover-letter-writer', 'resume-screener'] },
           ],
@@ -246,7 +246,7 @@ export const suites = [
     color: '#64748b',
     agents: [
       'employee-onboarding-planner',
-      'customerSuccessCheckin',
+      'customer-success-checkin',
       'invoice-description-generator',
       'privacy-policy-generator',
       'contract-explainer',
@@ -264,7 +264,7 @@ export const suites = [
           options: [
             { label: 'Legal & compliance', tags: ['privacy-policy-generator', 'contract-explainer'] },
             { label: 'Finance & budgeting', tags: ['personal-budget-analyzer', 'invoice-description-generator'] },
-            { label: 'Team & operations', tags: ['employee-onboarding-planner', 'customerSuccessCheckin'] },
+            { label: 'Team & operations', tags: ['employee-onboarding-planner', 'customer-success-checkin'] },
             { label: 'Real estate', tags: ['property-description-writer', 'real-estate-listing-generator', 'home-buying-checklist'] },
             { label: 'Validate my startup', tags: ['startup-idea-validator'] },
           ],
@@ -330,8 +330,8 @@ export const suites = [
     description: 'Build game worlds, check compatibility, and explore your future',
     color: '#a855f7',
     agents: [
-      'game-system-compatibility-analyser',
-      'game_world_lore_generator',
+      'game-system-compatibility-agent',
+      'game-world-lore-generator',
       'npc-dialogue-lore-generator',
       'future-self-letter-agent',
     ],
@@ -341,8 +341,8 @@ export const suites = [
           id: 'task',
           question: 'What sounds fun?',
           options: [
-            { label: 'Check if my PC can run a game', tags: ['game-system-compatibility-analyser'] },
-            { label: 'Build a game world', tags: ['game_world_lore_generator', 'npc-dialogue-lore-generator'] },
+            { label: 'Check if my PC can run a game', tags: ['game-system-compatibility-agent'] },
+            { label: 'Build a game world', tags: ['game-world-lore-generator', 'npc-dialogue-lore-generator'] },
             { label: 'Write a letter to my future self', tags: ['future-self-letter-agent'] },
           ],
         },
