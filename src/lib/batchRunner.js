@@ -11,6 +11,7 @@ import { recordAnalyticsRun } from './useAnalytics'
  * One non-empty line = one item.
  */
 export function parsePastedLines(raw) {
+  if (typeof raw !== 'string') return []
   return raw
     .split('\n')
     .map((line) => line.trim())
@@ -20,7 +21,7 @@ export function parsePastedLines(raw) {
 /**
  * Minimal CSV parser — no external dependency.
  * Handles quoted fields, escaped quotes (""), and commas inside quotes.
- * Returns { headers: string[]|null, rows: string[][] }
+ * Returns { rows: string[][] }
  */
 export function parseCSV(text) {
   const rows = []
