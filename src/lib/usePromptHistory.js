@@ -17,7 +17,18 @@ function savePrompts(prompts) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts))
   } catch (error) {
     if (error.name === 'QuotaExceededError') {
-      console.error('LocalStorage quota exceeded. Prompt history might be truncated.')
+      // Prune oldest non-favorited prompts and retry once, matching useHistory's behavior.
+      try {
+        const pruned = prompts
+          .filter((p) => p.favorite)
+          .concat(
+            prompts.filter((p) => !p.favorite).slice(0, Math.max(1, Math.floor(prompts.length / 2)))
+          )
+          .sort((a, b) => b.createdAt - a.createdAt)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(pruned))
+      } catch {
+        // Both attempts failed — storage is unavailable; in-memory state remains.
+      }
     } else {
       console.error('Error saving prompt history to localStorage:', error)
     }
