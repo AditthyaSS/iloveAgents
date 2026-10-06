@@ -64,7 +64,23 @@ Rules:
     duration: result.duration,
   });
 
-  // Parse the JSON response
+  // Parse and validate the JSON response
   const clean = result.content.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  const parsed = JSON.parse(clean);
+
+  // Validate the required shape so the UI never crashes on near-miss responses.
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    !Array.isArray(parsed.agents) ||
+    parsed.agents.length === 0 ||
+    !parsed.agents.every((a) => typeof a?.id === 'string' && a.id.trim() !== '')
+  ) {
+    throw new Error(
+      'The model returned a valid JSON response but with an unexpected shape. ' +
+      'Expected: { title, agents: [{ id, reason }, ...] }'
+    );
+  }
+
+  return parsed;
 }
