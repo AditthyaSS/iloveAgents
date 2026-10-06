@@ -102,7 +102,23 @@ export default function PromptHistoryPanel({ open, onClose, onUsePrompt }) {
       await navigator.clipboard.writeText(entry.text);
       setCopiedId(entry.id);
       setTimeout(() => setCopiedId(null), 1500);
-    } catch {}
+    } catch {
+      // Clipboard API unavailable (insecure context or denied permissions).
+      // Fall back to the hidden-textarea approach used elsewhere in the app.
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = entry.text;
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setCopiedId(entry.id);
+        setTimeout(() => setCopiedId(null), 1500);
+      } catch {
+        // Both paths failed — silently ignore as a last resort.
+      }
+    }
   };
 
   return (
