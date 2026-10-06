@@ -6,6 +6,7 @@ const MODEL_DEFAULTS = {
   gemini: "gemini-2.5-flash",
   anthropic: "claude-3-5-haiku-20241022",
   openai: "gpt-4o-mini",
+  openrouter: "openai/gpt-4o-mini",
 };
 
 export async function generateCustomSuite(goal, apiKey, provider) {
@@ -64,7 +65,40 @@ Rules:
     duration: result.duration,
   });
 
-  // Parse the JSON response
-  const clean = result.content.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  // Parse the JSON response — tolerate preamble/postscript chatter that models add.
+  const raw = result.content
+
+  // 1. Try the full content as-is (may already be clean JSON)
+  // 2. Try extracting a fenced JSON block
+  // 3. Try extracting the first {...} object
+  const candidates = [
+    raw.replace(/```json|```/g, '').trim(),
+    (raw.match(/```(?:json)?\s*([\s\S]*?)```/i) || [])[1]?.trim(),
+    (() => { const s = raw.indexOf('{'); const e = raw.lastIndexOf('}'); return s !== -1 && e > s ? raw.slice(s, e + 1) : null })(),
+  ].filter(Boolean)
+
+  let parsed = null
+  for (const candidate of candidates) {
+    try { parsed = JSON.parse(candidate); break } catch {}
+  }
+
+  if (!parsed) {
+    throw new Error('Could not extract valid JSON from the model response.')
+  }
+
+  // Validate shape
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    !Array.isArray(parsed.agents) ||
+    parsed.agents.length === 0 ||
+    !parsed.agents.every((a) => typeof a?.id === 'string' && a.id.trim() !== '')
+  ) {
+    throw new Error(
+      'The model returned a valid JSON response but with an unexpected shape. ' +
+      'Expected: { title, agents: [{ id, reason }, ...] }'
+    );
+  }
+
+  return parsed;
 }
