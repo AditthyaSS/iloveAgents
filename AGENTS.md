@@ -163,7 +163,7 @@
 | 156 | Debt Payoff Strategist | Compare debt repayment strategies, estimate payoff timelines, and build a realistic plan for becoming debt-free. | Finance |
 | 157 | Financial Planning Assistant | Create practical financial plans for savings goals, debt payoff, emergency funds, and major spending decisions. | Finance |
 | 158 | Java DSA Interview Prep | Generates Java DSA problems, provides hints, reviews attempts, and simulates coding interviews. | Education |
-| 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | Education |
+| 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | HR |
 | 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
 | 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
