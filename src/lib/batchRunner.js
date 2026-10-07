@@ -11,6 +11,7 @@ import { recordAnalyticsRun } from './useAnalytics'
  * One non-empty line = one item.
  */
 export function parsePastedLines(raw) {
+  if (typeof raw !== 'string' || !raw) return []
   return raw
     .split('\n')
     .map((line) => line.trim())
@@ -23,6 +24,7 @@ export function parsePastedLines(raw) {
  * Returns { headers: string[]|null, rows: string[][] }
  */
 export function parseCSV(text) {
+  if (typeof text !== 'string' || !text) return { headers: null, rows: [] }
   const rows = []
   let row = []
   let field = ''
@@ -96,8 +98,11 @@ export function parseCSV(text) {
  */
 export function buildBatchUserMessage(agent, fixedInputs, batchFieldId, itemValue) {
   const parts = []
-  agent.inputs.forEach((input) => {
-    const val = input.id === batchFieldId ? itemValue : fixedInputs[input.id]
+  const inputs = agent && Array.isArray(agent.inputs) ? agent.inputs : []
+  const fixed = fixedInputs && typeof fixedInputs === 'object' ? fixedInputs : {}
+  inputs.forEach((input) => {
+    if (!input || typeof input.id === 'undefined') return
+    const val = input.id === batchFieldId ? itemValue : fixed[input.id]
     if (!val || (Array.isArray(val) && val.length === 0)) return
 
     const sanitizedVal = typeof val === 'string' ? val.trim() : val
