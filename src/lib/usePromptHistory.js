@@ -82,8 +82,11 @@ export function usePromptHistory() {
     if (updated.length > MAX_PROMPTS) {
       // Drop the oldest non-favorited entries first to make room
       const favorites = updated.filter((p) => p.favorite)
-      const rest = updated.filter((p) => !p.favorite).slice(0, MAX_PROMPTS - favorites.length)
-      updated = [...favorites, ...rest].sort((a, b) => b.createdAt - a.createdAt)
+      const room = Math.max(0, MAX_PROMPTS - favorites.length)
+      const rest = updated.filter((p) => !p.favorite).slice(0, room)
+      updated = [...favorites, ...rest]
+        .sort((a, b) => b.createdAt - a.createdAt)
+        .slice(0, MAX_PROMPTS)
     }
 
     savePrompts(updated)
@@ -122,8 +125,8 @@ export function usePromptHistory() {
       const q = query.trim().toLowerCase()
       return prompts.filter(
         (p) =>
-          p.text.toLowerCase().includes(q) ||
-          (p.agentName && p.agentName.toLowerCase().includes(q))
+          (typeof p.text === 'string' && p.text.toLowerCase().includes(q)) ||
+          (typeof p.agentName === 'string' && p.agentName.toLowerCase().includes(q))
       )
     },
     [prompts]
