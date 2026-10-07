@@ -21,9 +21,9 @@ Gemini Models:
 
 export async function analyseModels(agent, apiKey, provider) {
   const agentContext = `
-    Agent name: ${agent.name}
-    Description: ${agent.description}
-    System prompt purpose: ${agent.systemPrompt.slice(0, 300)}
+    Agent name: ${agent?.name || 'Untitled agent'}
+    Description: ${agent?.description || ''}
+    System prompt purpose: ${(typeof agent?.systemPrompt === 'string' ? agent.systemPrompt : '').slice(0, 300)}
   `;
 
   const systemPrompt = `You are an AI model selection expert. 

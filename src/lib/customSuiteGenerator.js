@@ -65,6 +65,10 @@ Rules:
   });
 
   // Parse the JSON response
-  const clean = result.content.replace(/```json|```/g, "").trim();
-  return JSON.parse(clean);
+  const clean = (result.content || '').replace(/```json|```/g, '').trim();
+  try {
+    return JSON.parse(clean);
+  } catch {
+    throw new Error('Suite generator returned an unreadable reply. Please try again.');
+  }
 }
