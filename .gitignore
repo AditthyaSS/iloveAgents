@@ -11,8 +11,16 @@ node_modules
 # Build
 dist
 dist-ssr
+coverage
+*.tsbuildinfo
+*.tgz
+.vercel
+supabase/.branches
 *.local
+.env
 .env.local
+.env.development
+.env.production
 
 # Editor
 .vscode/*
