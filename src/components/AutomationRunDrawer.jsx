@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   X, CheckCircle2, AlertCircle, Clock, Zap, Copy, Check,
   Mail, Calendar, FileText, ChevronRight, Share2, Download
@@ -7,6 +7,15 @@ import OutputRenderer from './OutputRenderer'
 
 export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
 
   if (!isOpen || !run) return null
 
@@ -47,7 +56,7 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
       />
 
       {/* Drawer Panel */}
-      <div className="relative w-full max-w-2xl h-full bg-white dark:bg-[#12131a] text-gray-900 dark:text-gray-100 shadow-2xl border-l dark:border-border/80 border-gray-200 z-10 flex flex-col animate-fade-in">
+      <div role="dialog" aria-modal="true" aria-label="Run execution details" className="relative w-full max-w-2xl h-full bg-white dark:bg-[#12131a] text-gray-900 dark:text-gray-100 shadow-2xl border-l dark:border-border/80 border-gray-200 z-10 flex flex-col animate-fade-in">
         {/* Header */}
         <div className="p-6 border-b dark:border-border/60 border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -82,6 +91,7 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
+              aria-label="Copy output"
               className="p-2 rounded-xl text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
               title="Copy Output"
             >
@@ -89,6 +99,7 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
             </button>
             <button
               onClick={handleDownload}
+              aria-label="Download markdown"
               className="p-2 rounded-xl text-gray-500 hover:text-accent hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
               title="Download Markdown"
             >
@@ -96,6 +107,7 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
             </button>
             <button
               onClick={onClose}
+              aria-label="Close run details"
               className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
             >
               <X size={18} />
