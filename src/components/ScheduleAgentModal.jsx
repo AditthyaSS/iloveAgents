@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Clock, Zap, AlertCircle, ShieldCheck, Mail, Lock } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
@@ -23,6 +23,14 @@ export default function ScheduleAgentModal({
   const [optInConsent, setOptInConsent] = useState(true)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const missingRequiredInputs = agent.inputs?.filter((input) => {
     if (!input.required) return false
@@ -84,7 +92,7 @@ export default function ScheduleAgentModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-2xl shadow-2xl animate-fade-in
+      <div role="dialog" aria-modal="true" aria-label="Schedule agent autopilot" className="relative w-full max-w-md rounded-2xl shadow-2xl animate-fade-in
         dark:bg-[#12131a] dark:border dark:border-border bg-white border border-gray-200 overflow-hidden">
 
         {/* Header */}
@@ -97,6 +105,7 @@ export default function ScheduleAgentModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close schedule dialog"
             className="p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors
               dark:text-text-muted text-gray-400"
           >
@@ -147,6 +156,7 @@ export default function ScheduleAgentModal({
                   type="button"
                   key={opt.value}
                   onClick={() => setSchedule(opt.value)}
+                  aria-pressed={schedule === opt.value}
                   className={`py-2 rounded-lg text-xs font-medium border transition-all
                     ${schedule === opt.value
                       ? 'border-accent bg-accent/10 text-accent font-semibold'
