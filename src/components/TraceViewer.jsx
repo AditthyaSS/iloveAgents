@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { ChevronDown, CheckCircle2, XCircle, Timer } from 'lucide-react'
 import { formatDuration } from '../lib/executionTrace'
 
@@ -8,12 +8,13 @@ const BAR_COLORS = {
 }
 
 function StepStatusIcon({ status }) {
-  if (status === 'failed') return <XCircle size={14} className="text-red-400" />
-  return <CheckCircle2 size={14} className="text-emerald-400" />
+  if (status === 'failed') return <XCircle size={14} className="text-red-400" aria-hidden="true" />
+  return <CheckCircle2 size={14} className="text-emerald-400" aria-hidden="true" />
 }
 
 function TraceStep({ step, index, defaultOpen }) {
   const [open, setOpen] = useState(defaultOpen)
+  const panelId = useId()
 
   return (
     <div
@@ -23,6 +24,7 @@ function TraceStep({ step, index, defaultOpen }) {
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
+        aria-controls={panelId}
         className="w-full flex items-center gap-3 p-3 text-left transition-colors
           dark:hover:bg-surface-hover hover:bg-gray-50"
       >
@@ -45,12 +47,13 @@ function TraceStep({ step, index, defaultOpen }) {
         <StepStatusIcon status={step.status} />
         <ChevronDown
           size={14}
+          aria-hidden="true"
           className={`dark:text-text-muted text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
       {open && (
-        <div className="border-t dark:border-border border-gray-100 p-3 space-y-3">
+        <div id={panelId} role="region" className="border-t dark:border-border border-gray-100 p-3 space-y-3">
           {step.error && (
             <div className="p-2.5 rounded-md bg-red-500/10 border border-red-500/20">
               <p className="text-xs font-medium text-red-400 mb-0.5">Error</p>
@@ -110,11 +113,12 @@ export default function TraceViewer({ trace }) {
             Total {formatDuration(totalMs)}
           </span>
         </div>
-        <div className="flex h-2 rounded-full overflow-hidden gap-px dark:bg-surface-hover bg-gray-100">
+        <div className="flex h-2 rounded-full overflow-hidden gap-px dark:bg-surface-hover bg-gray-100" role="img" aria-label={`Step durations: ${trace.steps.map((s) => `${s.stepName} ${formatDuration(s.durationMs)}`).join(', ')}`}>
           {trace.steps.map((step, i) => (
             <div
               key={i}
               title={`${step.stepName}: ${formatDuration(step.durationMs)}`}
+              aria-hidden="true"
               className={`${BAR_COLORS[step.status] || 'bg-gray-300'} min-w-[4px]`}
               style={{ width: totalMs > 0 ? `${((step.durationMs || 0) / totalMs) * 100}%` : 'auto', flexGrow: totalMs > 0 ? 0 : 1 }}
             />
