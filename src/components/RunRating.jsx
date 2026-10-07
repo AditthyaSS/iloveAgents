@@ -15,7 +15,7 @@ export default function RunRating({ agentId }) {
 
   if (submitted) {
     return (
-      <div className="w-full py-3 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-center text-gray-600 dark:text-gray-300 transition-all">
+      <div role="status" className="w-full py-3 px-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-sm text-center text-gray-600 dark:text-gray-300 transition-all">
         Thank you for your feedback!
       </div>
     )
@@ -30,18 +30,20 @@ export default function RunRating({ agentId }) {
         <button
           type="button"
           onClick={() => handleRate('up')}
+          aria-label="Rate output good"
           className="flex items-center justify-center p-2 rounded-lg text-gray-500 hover:text-green-500 dark:text-gray-400 dark:hover:text-green-400 hover:bg-green-500/10 transition-colors"
           title="Good output"
         >
-          <ThumbsUp size={18} />
+          <ThumbsUp size={18} aria-hidden="true" />
         </button>
         <button
           type="button"
           onClick={() => handleRate('down')}
+          aria-label="Rate output bad"
           className="flex items-center justify-center p-2 rounded-lg text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400 hover:bg-red-500/10 transition-colors"
           title="Bad output"
         >
-          <ThumbsDown size={18} />
+          <ThumbsDown size={18} aria-hidden="true" />
         </button>
       </div>
     </div>
