@@ -166,3 +166,4 @@
 | 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | Education |
 | 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
+| 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
