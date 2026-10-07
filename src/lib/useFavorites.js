@@ -5,7 +5,9 @@ const STORAGE_KEY = 'ila_favorites'
 function loadFavorites() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    return Array.isArray(parsed) ? parsed : []
   } catch {
     return []
   }
@@ -47,9 +49,10 @@ export function useFavorites() {
 
   const toggleFavorite = useCallback((agentId) => {
     const current = loadFavorites()
-    const next = current.includes(agentId)
-      ? current.filter((id) => id !== agentId)
-      : [agentId, ...current] // newest favorites first
+    const list = Array.isArray(current) ? current : []
+    const next = list.includes(agentId)
+      ? list.filter((id) => id !== agentId)
+      : [agentId, ...list] // newest favorites first
     const saved = saveFavorites(next)
     if (!saved) return
     setFavorites(next)
