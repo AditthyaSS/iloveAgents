@@ -402,6 +402,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       }
     } finally {
       signal?.removeEventListener('abort', cancelReader)
+      if (streamDone) cancelReader()
       try {
         reader.releaseLock()
       } catch {}
