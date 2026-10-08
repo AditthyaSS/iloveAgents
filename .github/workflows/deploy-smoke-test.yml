@@ -1,0 +1,63 @@
+name: Deployment Smoke Test
+
+# Vercel deploys main to production through its GitHub integration and reports
+# the result back as a deployment status. This workflow runs after each
+# successful production deployment and checks that the live site actually serves
+# the app: the index page, a client-side route (vercel.json rewrite), and the
+# built JS/CSS assets the page references.
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      # Override with a repository variable if the production domain changes.
+      SITE_URL: ${{ vars.PRODUCTION_URL || 'https://iloveagents.vercel.app' }}
+    steps:
+      - name: Check the live site
+        run: |
+          set -euo pipefail
+          base="${SITE_URL%/}"
+
+          fetch() {
+            curl --silent --show-error --location --retry 3 --retry-delay 5 --retry-all-errors \
+              --max-time 20 --output "$2" --write-out '%{http_code}' "$1"
+          }
+
+          for path in / /about /agent/code-reviewer; do
+            code=$(fetch "$base$path" page.html)
+            if [ "$code" != "200" ]; then
+              echo "::error::$base$path returned HTTP $code"
+              exit 1
+            fi
+            if ! grep -q 'id="root"' page.html; then
+              echo "::error::$base$path did not return the app shell"
+              exit 1
+            fi
+            echo "OK  $path"
+          done
+
+          assets=$(grep -oE '(src|href)="/assets/[^"]+\.(js|css)"' page.html | sed -E 's/^(src|href)="//; s/"$//' | sort -u)
+          if [ -z "$assets" ]; then
+            echo "::error::No built assets referenced from the page"
+            exit 1
+          fi
+          for asset in $assets; do
+            code=$(fetch "$base$asset" /dev/null)
+            if [ "$code" != "200" ]; then
+              echo "::error::$base$asset returned HTTP $code"
+              exit 1
+            fi
+            echo "OK  $asset"
+          done
