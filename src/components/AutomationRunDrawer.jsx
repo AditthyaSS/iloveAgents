@@ -4,6 +4,7 @@ import {
   Mail, Calendar, FileText, ChevronRight, Share2, Download
 } from 'lucide-react'
 import OutputRenderer from './OutputRenderer'
+import { downloadBlob } from '../lib/downloadBlob'
 
 export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   const [copied, setCopied] = useState(false)
@@ -17,13 +18,9 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   }
 
   const handleDownload = () => {
-    const element = document.createElement('a')
-    const file = new Blob([run.output || run.error || ''], { type: 'text/markdown' })
-    element.href = URL.createObjectURL(file)
-    element.download = `${run.automationName.replace(/\s+/g, '_')}_${new Date(run.startedAt).toISOString().split('T')[0]}.md`
-    document.body.appendChild(element)
-    element.click()
-    document.body.removeChild(element)
+    const safeName = (run.automationName || 'automation').replace(/\s+/g, '_')
+    const date = run.startedAt ? new Date(run.startedAt).toISOString().split('T')[0] : 'undated'
+    downloadBlob(run.output || run.error || '', 'text/markdown', `${safeName}_${date}.md`)
   }
 
   const formatDate = (ts) => {

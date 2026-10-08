@@ -2,6 +2,7 @@
  * Export batch results as CSV or Markdown.
  * Mirrors the pattern in exportMarkdown.js.
  */
+import { downloadBlob } from './downloadBlob'
 
 function slugifyFilename(name) {
   return (
@@ -10,16 +11,6 @@ function slugifyFilename(name) {
       .replace(/\s+/g, '-')
       .replace(/[^a-z0-9-]/g, '') || 'batch'
   )
-}
-
-function downloadBlob(content, mimeType, filename) {
-  const blob = new Blob([content], { type: mimeType })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 function csvEscape(value) {
