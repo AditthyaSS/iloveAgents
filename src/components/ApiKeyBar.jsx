@@ -71,6 +71,7 @@ export default function ApiKeyBar({
   const [geminiModels, setGeminiModels] = useState([])
   const [geminiLoading, setGeminiLoading] = useState(false)
   const [geminiError, setGeminiError] = useState(null)
+  const geminiFetchIdRef = useRef(0)
 
   // ── Auto-fill from globally saved keys on mount and provider change
   useEffect(() => {
@@ -109,17 +110,23 @@ export default function ApiKeyBar({
       return
     }
     const timer = setTimeout(async () => {
+      const requestId = geminiFetchIdRef.current + 1
+      geminiFetchIdRef.current = requestId
       setGeminiLoading(true)
       setGeminiError(null)
       try {
         const models = await fetchGeminiModels(apiKey)
+        if (geminiFetchIdRef.current !== requestId) return
         setGeminiModels(models)
-        if (models.length > 0) setModel(models[0].value)
+        if (models.length > 0 && !models.some((m) => m.value === model)) {
+          setModel(models[0].value)
+        }
       } catch {
+        if (geminiFetchIdRef.current !== requestId) return
         setGeminiError('Could not load Gemini models. Check your API key.')
         setGeminiModels([])
       } finally {
-        setGeminiLoading(false)
+        if (geminiFetchIdRef.current === requestId) setGeminiLoading(false)
       }
     }, 400)
     return () => clearTimeout(timer)
