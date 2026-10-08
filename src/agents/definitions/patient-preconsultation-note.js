@@ -5,7 +5,7 @@ export default {
   name: "Patient Pre-Consultation Note",
 
   description:
-    "Turn symptom descriptions into a structured pre-consultation summary patients can share with doctors. Includes symptom timeline, relevant history prompts, and helpful questions for the doctor. This tool does not provide medical diagnoses.",
+    "Turn symptom descriptions into a structured pre-consultation summary to share with your doctor. Includes a symptom timeline and helpful questions. This tool does not provide medical diagnoses.",
 
   category: "Healthcare",
 
