@@ -15,8 +15,7 @@ import {
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import SafeMarkdown from "../components/SafeMarkdown";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 
 // Timeout configuration for LLM requests (in milliseconds)
@@ -709,9 +708,9 @@ export default function BattleModeArena() {
                     {r.content && (
                       <div className="markdown-output min-w-0 overflow-x-auto text-base dark:text-text-primary text-gray-900 leading-relaxed">
                         {agent.outputType === "markdown" ? (
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          <SafeMarkdown>
                             {r.content}
-                          </ReactMarkdown>
+                          </SafeMarkdown>
                         ) : (
                           <pre className="whitespace-pre-wrap font-sans">
                             {r.content}

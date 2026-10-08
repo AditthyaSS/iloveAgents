@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Trophy, Copy, Check, RotateCcw, ArrowLeft } from 'lucide-react'
 import BattleNavbar from '../components/BattleNavbar'
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
+import SafeMarkdown from '../components/SafeMarkdown'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 const colorMap = {
@@ -79,9 +78,9 @@ export default function BattleModeWinner() {
             </span>
           </div>
           <div className="markdown-output text-sm dark:text-text-primary text-gray-900 leading-relaxed">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <SafeMarkdown>
               {content}
-            </ReactMarkdown>
+            </SafeMarkdown>
           </div>
         </div>
 
