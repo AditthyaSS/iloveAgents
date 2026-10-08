@@ -2,7 +2,7 @@ export default {
   id: 'docker-container-audit-agent',
   createdAt: '2026-06-28',
   name: 'Docker Container Security & Optimization Audit',
-  description: 'Analyze your Dockerfiles or Docker Compose configurations to discover security vulnerabilities, size bloat, and run-time optimization opportunities, and generate a fully secure, optimized production-ready version.',
+  description: 'Audit Dockerfiles and Compose files for security issues, size bloat, and runtime wins, then get a hardened production-ready version.',
   category: 'DevOps',
   icon: 'Container',
   provider: 'any',
