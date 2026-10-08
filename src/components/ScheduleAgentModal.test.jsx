@@ -32,4 +32,31 @@ describe('ScheduleAgentModal dialog', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('moves focus in, traps Tab, and restores focus on close', () => {
+    const onClose = vi.fn()
+    const trigger = document.createElement('button')
+    trigger.textContent = 'schedule'
+    document.body.appendChild(trigger)
+    trigger.focus()
+    const { unmount } = render(
+      <ScheduleAgentModal
+        agent={agent}
+        inputs={{}}
+        provider="openai"
+        apiKey=""
+        onSchedule={vi.fn()}
+        onClose={onClose}
+      />
+    )
+    expect(screen.getByRole('dialog')).toHaveFocus()
+    const dialog = screen.getByRole('dialog')
+    const buttons = Array.from(dialog.querySelectorAll('button'))
+    buttons[buttons.length - 1].focus()
+    fireEvent.keyDown(window, { key: 'Tab' })
+    expect(buttons[0]).toHaveFocus()
+    unmount()
+    expect(trigger).toHaveFocus()
+    trigger.remove()
+  })
 })

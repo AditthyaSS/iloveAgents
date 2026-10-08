@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Clock, Zap, AlertCircle, ShieldCheck, Mail, Lock } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
@@ -23,13 +23,39 @@ export default function ScheduleAgentModal({
   const [optInConsent, setOptInConsent] = useState(true)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const panelRef = useRef(null)
+  const previousFocusRef = useRef(null)
 
   useEffect(() => {
+    previousFocusRef.current = document.activeElement
+    panelRef.current?.focus({ preventScroll: true })
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.()
+      if (e.key === 'Escape') {
+        onClose?.()
+        return
+      }
+      if (e.key !== 'Tab' || !panelRef.current) return
+      const focusable = [
+        ...panelRef.current.querySelectorAll(
+          'button:not([disabled]), a[href], textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        ),
+      ]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      previousFocusRef.current?.focus?.()
+    }
   }, [onClose])
 
   const missingRequiredInputs = agent.inputs?.filter((input) => {
@@ -92,7 +118,7 @@ export default function ScheduleAgentModal({
       />
 
       {/* Modal */}
-      <div role="dialog" aria-modal="true" aria-label="Schedule agent autopilot" className="relative w-full max-w-md rounded-2xl shadow-2xl animate-fade-in
+      <div ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Schedule agent autopilot" className="relative w-full max-w-md rounded-2xl shadow-2xl animate-fade-in outline-none
         dark:bg-[#12131a] dark:border dark:border-border bg-white border border-gray-200 overflow-hidden">
 
         {/* Header */}
