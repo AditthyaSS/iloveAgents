@@ -9,6 +9,7 @@ import { ArrowRight, FolderPlus, Star, Copy, Check } from "lucide-react";
 import { useFavorites } from "../lib/useFavorites";
 import { useState, useRef } from "react";
 import CollectionPicker from "./CollectionPicker";
+import { providerLabels } from "../lib/agentMeta";
 
 const providerColors = {
   openai: {
@@ -36,14 +37,6 @@ const providerColors = {
     text: "text-purple-400",
     border: "border-purple-500/20",
   },
-};
-
-const providerLabels = {
-  openai: "OpenAI",
-  anthropic: "Anthropic",
-  gemini: "Gemini",
-  openrouter: "OpenRouter",
-  any: "Any Provider",
 };
 
 function isWithinLast7Days(dateStr) {
