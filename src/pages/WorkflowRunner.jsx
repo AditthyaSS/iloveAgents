@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ArrowRight,
   GitBranch,
+  Square,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { useAgents } from '../lib/useAgents'
@@ -99,6 +100,9 @@ export default function WorkflowRunner() {
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
   const [hasRun, setHasRun] = useState(false)
+  const [cancelled, setCancelled] = useState(false)
+  const abortControllerRef = useRef(null)
+  const runGenerationRef = useRef(0)
   useDocumentTitle(workflow?.title ? `Run ${workflow.title}` : 'Run Workflow')
 
   // Fetch workflow if not passed via state
@@ -162,11 +166,17 @@ export default function WorkflowRunner() {
     setRunning(true)
     setAllDone(false)
     setHasRun(true)
+    setCancelled(false)
 
     // Rebuild from the workflow definition so branch steps injected by a
     // previous run are dropped before this run starts.
     const execSteps = buildInitialSteps(workflow, agents)
     setSteps(execSteps)
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    const generation = (runGenerationRef.current += 1)
+    const signal = controller.signal
 
     // Pipeline context available to condition templates:
     // { input, steps: { <stepId>: { output, branch? } } }
@@ -178,6 +188,11 @@ export default function WorkflowRunner() {
     const syncSteps = () => setSteps([...execSteps])
 
     while (i < execSteps.length) {
+      if (signal.aborted) {
+        execSteps[i] = { ...execSteps[i], status: 'cancelled' }
+        syncSteps()
+        break
+      }
       const step = execSteps[i]
 
       if (step.kind === 'conditional') {
@@ -254,7 +269,12 @@ export default function WorkflowRunner() {
           apiKey: keyToUse,
           systemPrompt: step.agent.systemPrompt,
           userMessage: currentInput,
-        })
+        }, { signal })
+        if (signal.aborted || runGenerationRef.current !== generation) {
+          execSteps[i] = { ...execSteps[i], status: 'cancelled' }
+          syncSteps()
+          break
+        }
         execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
         syncSteps()
         recordAnalyticsRun({
@@ -277,6 +297,11 @@ export default function WorkflowRunner() {
           }
         }
       } catch (err) {
+        if (signal.aborted || runGenerationRef.current !== generation) {
+          execSteps[i] = { ...execSteps[i], status: 'cancelled' }
+          syncSteps()
+          break
+        }
         execSteps[i] = { ...execSteps[i], status: 'failed', error: err.message }
         syncSteps()
         failed = true
@@ -286,7 +311,12 @@ export default function WorkflowRunner() {
       i += 1
     }
 
-    if (!failed) {
+    const wasCancelled = signal.aborted || runGenerationRef.current !== generation
+    if (wasCancelled) {
+      setCancelled(true)
+    }
+
+    if (!failed && !wasCancelled) {
       setAllDone(true)
       // Increment usage count if workflow is persisted
       if (workflow?.id) {
@@ -294,12 +324,29 @@ export default function WorkflowRunner() {
       }
     }
 
+    if (runGenerationRef.current === generation) {
+      abortControllerRef.current = null
+      setRunning(false)
+    }
+  }
+
+  const handleStop = () => {
+    runGenerationRef.current += 1
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
     setRunning(false)
+    setCancelled(true)
+    setSteps((prev) =>
+      prev.map((s) => (s.status === 'done' || s.status === 'failed' ? s : { ...s, status: 'cancelled' }))
+    )
   }
 
   const handleRunAgain = () => {
     setAllDone(false)
     setHasRun(false)
+    setCancelled(false)
     // Rebuild from the definition so previously injected branch steps are removed
     setSteps(buildInitialSteps(workflow, agents))
   }
@@ -330,6 +377,7 @@ export default function WorkflowRunner() {
   }
 
   const hasFailed = steps.some((s) => s.status === 'failed')
+  const hasCancelled = steps.some((s) => s.status === 'cancelled') || cancelled
 
   return (
     <div className="max-w-2xl mx-auto animate-fade-in">
@@ -399,10 +447,10 @@ export default function WorkflowRunner() {
 
       {/* Run Button */}
       <div className="flex items-center gap-3 mb-8">
-        {!hasRun || allDone || hasFailed ? (
+        {!hasRun || allDone || hasFailed || hasCancelled ? (
           <button
             id="run-workflow-btn"
-            onClick={hasRun && (allDone || hasFailed) ? handleRunAgain : handleRun}
+            onClick={hasRun && (allDone || hasFailed || hasCancelled) ? handleRunAgain : handleRun}
             disabled={!userInput.trim() || !apiKey || running}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
@@ -413,7 +461,7 @@ export default function WorkflowRunner() {
                 <Loader2 size={15} className="animate-spin" />
                 Running...
               </>
-            ) : hasRun && hasFailed ? (
+            ) : hasRun && (hasFailed || hasCancelled) ? (
               <>
                 <RotateCcw size={15} />
                 Retry
@@ -432,12 +480,13 @@ export default function WorkflowRunner() {
           </button>
         ) : (
           <button
-            disabled
+            onClick={handleStop}
+            aria-label="Stop workflow run"
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
-              bg-accent opacity-40 cursor-not-allowed"
+              bg-red-600 hover:bg-red-700 transition-all duration-200 active:scale-[0.98]"
           >
-            <Loader2 size={15} className="animate-spin" />
-            Running...
+            <Square size={15} />
+            Stop
           </button>
         )}
 
