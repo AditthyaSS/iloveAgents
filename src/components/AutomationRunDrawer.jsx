@@ -18,8 +18,10 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   }
 
   const handleDownload = () => {
-    const safeName = (run.automationName || 'automation').replace(/\s+/g, '_')
-    const date = run.startedAt ? new Date(run.startedAt).toISOString().split('T')[0] : 'undated'
+    const safeName = (run.automationName || 'automation').replace(/[^\w.-]+/g, '_')
+    const started = run.startedAt ? new Date(run.startedAt) : null
+    const date =
+      started && !Number.isNaN(started.getTime()) ? started.toISOString().split('T')[0] : 'undated'
     downloadBlob(run.output || run.error || '', 'text/markdown', `${safeName}_${date}.md`)
   }
 
