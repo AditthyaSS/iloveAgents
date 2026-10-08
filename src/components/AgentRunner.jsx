@@ -114,6 +114,9 @@ export default function AgentRunner({ agent }) {
   // its results if the id has since changed (cleared, superseded, unmounted).
   const runIdRef = useRef(0);
   const textareaRefs = useRef({});
+  // Stop (unlike Clear) keeps the visible partial output but must not bill,
+  // save history, or record analytics for a run the user cancelled.
+  const stoppedRef = useRef(false);
 
   // Abort the in-flight request AND invalidate the run that owns it.
   const cancelActiveRun = () => {
@@ -309,6 +312,7 @@ const handleRun = async () => {
     // Supersede any run still winding down (e.g. one that was just stopped)
     // and give this run an identity so stale completions can be recognised.
     cancelActiveRun();
+    stoppedRef.current = false;
     const runId = runIdRef.current;
     const isCurrentRun = () => runIdRef.current === runId;
 
@@ -332,14 +336,16 @@ const handleRun = async () => {
       });
 
       // Cleared / superseded / unmounted while streaming: discard everything.
-      // (Stop is different: it doesn't invalidate the run, so its partial
-      // output is committed below exactly as before.)
+      // Stopped runs keep their visible partial output (set by handleStop)
+      // but must not bill, save history, or record analytics.
       if (!isCurrentRun()) return;
 
       setOutput(result.content);
       setStreamingOutput("");
       setIsStreaming(false);
       setDuration(result.duration);
+
+      if (stoppedRef.current) return;
 
       const inputTokenEstimate = Math.max(
         1,
@@ -391,6 +397,7 @@ const handleRun = async () => {
   };
 
   const handleStop = () => {
+    stoppedRef.current = true;
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
