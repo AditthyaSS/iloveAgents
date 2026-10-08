@@ -13,7 +13,7 @@ export default {
 
   provider: "openai",
   defaultProvider: "openai",
-  model: "gpt-4.1-mini",
+  model: "gpt-4o-mini",
 
   exampleInputs: {
     symptoms:
