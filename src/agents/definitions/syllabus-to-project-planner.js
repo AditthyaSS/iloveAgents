@@ -5,6 +5,7 @@ const syllabusToProjectPlanner = {
     category: 'Education',
     icon: 'GraduationCap',
     provider: 'gemini',
+  model: 'gemini-2.5-flash',
     inputs: [
         {
             id: 'academic_subject',
