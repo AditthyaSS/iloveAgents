@@ -4,6 +4,7 @@ export default {
   category: 'Productivity',
   description: 'Reviews user prompts and provides actionable suggestions to improve clarity, specificity, structure, context, and overall effectiveness.',
   provider: 'openai',
+  model: 'gpt-4o',
   icon: 'Sparkles',
   inputs: [
     {
