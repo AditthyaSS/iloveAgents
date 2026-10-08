@@ -38,6 +38,16 @@ export default function SuiteWizard({ suite, onBack }) {
   const [tagCounts, setTagCounts] = useState({})
   const [answeredCount, setAnsweredCount] = useState(0)
   const [showResults, setShowResults] = useState(false)
+
+  // Fresh suite, fresh quiz: reset progress when the suite changes so stale
+  // steps, answers, and results never leak into the new questionnaire.
+  useEffect(() => {
+    setStep(0)
+    setAnswers(Array((suite.quiz?.questions ?? []).length).fill(null))
+    setTagCounts({})
+    setAnsweredCount(0)
+    setShowResults(false)
+  }, [suite])
   
   useEffect(() => {
   const handleKeyDown = (event) => {
