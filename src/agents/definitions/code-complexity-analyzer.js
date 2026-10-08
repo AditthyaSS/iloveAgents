@@ -14,7 +14,7 @@ export default {
 
   defaultProvider: 'gemini',
 
-  model: 'gemini-2.0-flash',
+  model: 'gemini-2.0-flash-exp',
 
   inputs: [
     {
