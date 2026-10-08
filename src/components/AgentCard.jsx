@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import { ArrowRight, FolderPlus, Star, Copy, Check } from "lucide-react";
 import { useFavorites } from "../lib/useFavorites";
-import { useState, useRef } from "react";
+import { useState, useRef, memo } from "react";
 import CollectionPicker from "./CollectionPicker";
 
 const providerColors = {
@@ -56,7 +56,7 @@ function isWithinLast7Days(dateStr) {
   return diffMs >= 0 && diffMs <= sevenDaysMs;
 }
 
-export default function AgentCard({ agent }) {
+export default memo(function AgentCard({ agent }) {
   const IconComponent = Icons[agent?.icon] || Icons.Bot;
 const prov = providerColors[agent?.provider] || providerColors.any;
 const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Provider";
@@ -209,4 +209,4 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
     )}
     </>
   );
-}
+})
