@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAgents } from '../lib/useAgents'
 import { Sparkles, ArrowRight, Code2, BarChart3, TrendingUp, DollarSign, Palette, PenLine, GraduationCap, Briefcase, HeartPulse, ShieldCheck, Gamepad2, Wand2, Loader2, GitBranch } from 'lucide-react'
 import { suites } from '../suites/suitesData'
 import SuiteWizard from '../components/SuiteWizard'
@@ -23,6 +24,13 @@ const SUITE_ICONS = {
 export default function SuitesPage() {
   useDocumentTitle('Suites')
   const navigate = useNavigate()
+  const { agents: allAgents } = useAgents()
+  const agentNameById = Object.fromEntries((allAgents || []).map((a) => [a.id, a.name]))
+
+  const openSuiteAgent = (agentId) => {
+    if (!agentNameById[agentId]) return
+    navigate(`/agent/${agentId}`)
+  }
   const {
     provider,
     setProvider,
@@ -180,14 +188,14 @@ export default function SuitesPage() {
                   </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold dark:text-text-primary text-gray-900 truncate">
-                      {agent.id}
+                      {agentNameById[agent.id] || agent.id}
                     </p>
                     <p className="text-[11px] dark:text-text-muted text-gray-400">
                       {agent.reason}
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate(`/agent/${agent.id}`)}
+                    onClick={() => openSuiteAgent(agent.id)}
                     className="flex items-center gap-1 text-[11px] font-semibold text-accent hover:opacity-80 transition-opacity flex-shrink-0"
                   >
                     Open
