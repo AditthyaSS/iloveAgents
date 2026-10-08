@@ -335,7 +335,7 @@ export default function MarketplacePage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or tag..."
+            placeholder="Search listings by name, description, author, or tag..."
             aria-label="Search marketplace"
             className={`${inputClass} w-full pl-9`}
           />
