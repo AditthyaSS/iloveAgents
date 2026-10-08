@@ -28,6 +28,7 @@ function StatusIcon({ status }) {
   if (status === 'running') return <Loader2 size={13} className="text-accent animate-spin" />
   if (status === 'done') return <CheckCircle2 size={13} className={STATUS_COLORS.done} />
   if (status === 'failed') return <XCircle size={13} className={STATUS_COLORS.failed} />
+  if (status === 'cancelled') return <XCircle size={13} className={STATUS_COLORS.waiting} />
   return null
 }
 
@@ -52,6 +53,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
   const [hasRun, setHasRun] = useState(false)
   const fileInputRef = useRef(null)
   const abortControllerRef = useRef(null)
+  const runGenerationRef = useRef(0)
 
   const otherFields = agent.inputs.filter((i) => i.id !== batchFieldId)
 
@@ -140,8 +142,11 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
 
     const controller = new AbortController()
     abortControllerRef.current = controller
+    const generation = (runGenerationRef.current += 1)
+    const isCurrentGeneration = () => runGenerationRef.current === generation
 
     const onItemUpdate = (index, patch) => {
+      if (!isCurrentGeneration()) return
       setResults((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)))
     }
 
@@ -166,20 +171,26 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         signal: controller.signal,
       })
     } finally {
-      setRunning(false)
-      abortControllerRef.current = null
+      if (isCurrentGeneration()) {
+        setRunning(false)
+        abortControllerRef.current = null
+      }
     }
   }
 
   const handleStop = () => {
+    runGenerationRef.current += 1
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
     setRunning(false)
+    setResults((prev) =>
+      prev.map((r) => (r.status === 'done' || r.status === 'failed' ? r : { ...r, status: 'cancelled' }))
+    )
   }
 
-  const completedCount = results.filter((r) => r.status === 'done' || r.status === 'failed').length
+  const completedCount = results.filter((r) => r.status === 'done' || r.status === 'failed' || r.status === 'cancelled').length
   const allDone = hasRun && !running && completedCount === results.length && results.length > 0
 
   return (
