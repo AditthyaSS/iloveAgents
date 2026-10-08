@@ -23,4 +23,22 @@ describe('AutomationRunDrawer dialog', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
+
+  it('moves focus in, traps Tab, and restores focus on close', () => {
+    const onClose = vi.fn()
+    const trigger = document.createElement('button')
+    trigger.textContent = 'open drawer'
+    document.body.appendChild(trigger)
+    trigger.focus()
+    const { unmount } = render(<AutomationRunDrawer run={run} isOpen onClose={onClose} />)
+    expect(screen.getByRole('dialog')).toHaveFocus()
+    const dialog = screen.getByRole('dialog')
+    const buttons = Array.from(dialog.querySelectorAll('button'))
+    buttons[buttons.length - 1].focus()
+    fireEvent.keyDown(window, { key: 'Tab' })
+    expect(buttons[0]).toHaveFocus()
+    unmount()
+    expect(trigger).toHaveFocus()
+    trigger.remove()
+  })
 })

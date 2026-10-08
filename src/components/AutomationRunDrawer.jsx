@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   X, CheckCircle2, AlertCircle, Clock, Zap, Copy, Check,
   Mail, Calendar, FileText, ChevronRight, Share2, Download
@@ -7,14 +7,40 @@ import OutputRenderer from './OutputRenderer'
 
 export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   const [copied, setCopied] = useState(false)
+  const panelRef = useRef(null)
+  const previousFocusRef = useRef(null)
 
   useEffect(() => {
     if (!isOpen) return
+    previousFocusRef.current = document.activeElement
+    panelRef.current?.focus({ preventScroll: true })
     const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.()
+      if (e.key === 'Escape') {
+        onClose?.()
+        return
+      }
+      if (e.key !== 'Tab' || !panelRef.current) return
+      const focusable = [
+        ...panelRef.current.querySelectorAll(
+          'button:not([disabled]), a[href], textarea, input, select, [tabindex]:not([tabindex="-1"])'
+        ),
+      ]
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      if (e.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) {
+        e.preventDefault()
+        last.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      previousFocusRef.current?.focus?.()
+    }
   }, [isOpen, onClose])
 
   if (!isOpen || !run) return null
@@ -56,7 +82,7 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
       />
 
       {/* Drawer Panel */}
-      <div role="dialog" aria-modal="true" aria-label="Run execution details" className="relative w-full max-w-2xl h-full bg-white dark:bg-[#12131a] text-gray-900 dark:text-gray-100 shadow-2xl border-l dark:border-border/80 border-gray-200 z-10 flex flex-col animate-fade-in">
+      <div ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Run execution details" className="relative w-full max-w-2xl h-full bg-white dark:bg-[#12131a] text-gray-900 dark:text-gray-100 shadow-2xl border-l dark:border-border/80 border-gray-200 z-10 flex flex-col animate-fade-in outline-none">
         {/* Header */}
         <div className="p-6 border-b dark:border-border/60 border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
