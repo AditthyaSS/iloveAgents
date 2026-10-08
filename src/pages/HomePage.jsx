@@ -11,6 +11,7 @@ import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { useAgents } from '../lib/useAgents'
 import RecommendationWizardEntry from '../components/recommendation/RecommendationWizardEntry'
 import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
+import { useAgentFiltering } from '../lib/useAgentFiltering'
 import RecommendationWizardModal from '../components/recommendation/RecommendationWizardModal'
 import { Link } from "react-router-dom";
 import { getGlobalKeys } from '../lib/globalKeys'
@@ -205,43 +206,16 @@ export default function HomePage() {
       .filter(Boolean)
   }, [favorites, agents])
 
-  // Filter agents based on search + category
-  const filteredAgents = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-
-    return agents.filter((agent) => {
-      const matchesCategory = !selectedCategory || agent.category === selectedCategory
-      if (!matchesCategory) return false
-
-      const provider = agent.provider || 'any'
-      const matchesProvider = !selectedProvider || provider === selectedProvider
-      if (!matchesProvider) return false
-
-      const matchesCollection =
-        activeCollectionId === DEFAULT_COLLECTION_ID
-          ? true
-          : getAgentCollectionId(agent.id) === activeCollectionId
-
-      if (!matchesCollection) return false
-
-      if (!q) return true
-
-      const searchableText = [
-        agent.name,
-        agent.description,
-        agent.category,
-        agent.id,
-        agent.model,
-        providerLabels[provider],
-        provider,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-
-      return searchableText.includes(q)
-    })
-  }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider])
+  // Filter agents based on search + category (logic lives in lib/useAgentFiltering
+  // so it is unit-testable and reusable by other surfaces).
+  const filteredAgents = useAgentFiltering(agents, {
+    query: searchQuery,
+    category: selectedCategory,
+    provider: selectedProvider,
+    collectionId: activeCollectionId,
+    defaultCollectionId: DEFAULT_COLLECTION_ID,
+    getCollectionId: getAgentCollectionId,
+  })
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
