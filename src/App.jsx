@@ -1,5 +1,5 @@
 import { useState, Suspense, lazy } from 'react'
-import { Routes, Route, Outlet } from 'react-router-dom'
+import { Routes, Route, Outlet, useLocation } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
@@ -63,6 +63,21 @@ function MainLayout({ sidebarOpen, setSidebarOpen, onStartTour, isTourActive, on
   )
 }
 
+function RouteBoundary({ children }) {
+  const { pathname } = useLocation()
+  return (
+    <ErrorBoundary
+      key={pathname}
+      resetKeys={[pathname]}
+      title="This page ran into a problem"
+      description="Something broke while rendering this page. Try again, or go back and continue elsewhere."
+      showDetails={false}
+    >
+      {children}
+    </ErrorBoundary>
+  )
+}
+
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { isTourActive, startTour, endTour } = useOnboarding()
@@ -75,13 +90,15 @@ export default function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route element={
-              <MainLayout
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
-                onStartTour={startTour}
-                isTourActive={isTourActive}
-                onTourEnd={endTour}
-              />
+              <RouteBoundary>
+                <MainLayout
+                  sidebarOpen={sidebarOpen}
+                  setSidebarOpen={setSidebarOpen}
+                  onStartTour={startTour}
+                  isTourActive={isTourActive}
+                  onTourEnd={endTour}
+                />
+              </RouteBoundary>
             }>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
