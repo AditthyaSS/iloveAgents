@@ -114,6 +114,17 @@ export default function AgentRunner({ agent }) {
   // its results if the id has since changed (cleared, superseded, unmounted).
   const runIdRef = useRef(0);
   const textareaRefs = useRef({});
+  // Coalesces per-token stream callbacks into at most one state update per
+  // window, so long outputs do not re-render once per token.
+  const chunkBufferRef = useRef('');
+  const chunkFlushTimerRef = useRef(null);
+  const clearChunkBuffer = () => {
+    chunkBufferRef.current = '';
+    if (chunkFlushTimerRef.current) {
+      clearTimeout(chunkFlushTimerRef.current);
+      chunkFlushTimerRef.current = null;
+    }
+  };
 
   // Abort the in-flight request AND invalidate the run that owns it.
   const cancelActiveRun = () => {
@@ -126,7 +137,10 @@ export default function AgentRunner({ agent }) {
 
   // Leaving the page mid-stream must stop the (billed) request and must not
   // write history/analytics for a run the user walked away from.
-  useEffect(() => cancelActiveRun, []);
+  useEffect(() => () => {
+    cancelActiveRun();
+    clearChunkBuffer();
+  }, []);
   
 
   useKeyboardShortcuts({
@@ -280,10 +294,25 @@ const getTokenCount = (text) => {
     });
   };
 
-  const handleChunk = useCallback((chunk) => {
-    setStreamingOutput((prev) => prev + chunk);
-    setIsStreaming(true);
+  const flushChunkBuffer = useCallback(() => {
+    const pending = chunkBufferRef.current;
+    chunkBufferRef.current = '';
+    if (chunkFlushTimerRef.current) {
+      clearTimeout(chunkFlushTimerRef.current);
+      chunkFlushTimerRef.current = null;
+    }
+    if (pending) {
+      setStreamingOutput((prev) => prev + pending);
+      setIsStreaming(true);
+    }
   }, []);
+
+  const handleChunk = useCallback((chunk) => {
+    chunkBufferRef.current += chunk;
+    if (!chunkFlushTimerRef.current) {
+      chunkFlushTimerRef.current = setTimeout(flushChunkBuffer, 100);
+    }
+  }, [flushChunkBuffer]);
 
 const handleRun = async () => {
     setLoading(true);
@@ -309,6 +338,7 @@ const handleRun = async () => {
     // Supersede any run still winding down (e.g. one that was just stopped)
     // and give this run an identity so stale completions can be recognised.
     cancelActiveRun();
+    clearChunkBuffer();
     const runId = runIdRef.current;
     const isCurrentRun = () => runIdRef.current === runId;
 
@@ -336,6 +366,7 @@ const handleRun = async () => {
       // output is committed below exactly as before.)
       if (!isCurrentRun()) return;
 
+      clearChunkBuffer();
       setOutput(result.content);
       setStreamingOutput("");
       setIsStreaming(false);
@@ -395,7 +426,9 @@ const handleRun = async () => {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    setOutput(streamingOutput);
+    const pending = chunkBufferRef.current;
+    clearChunkBuffer();
+    setOutput(streamingOutput + pending);
     setStreamingOutput("");
     setIsStreaming(false);
     setLoading(false);
@@ -405,6 +438,7 @@ const handleRun = async () => {
     // Cancel *and invalidate* the in-flight run so its late completion cannot
     // resurrect the output we are about to discard.
     cancelActiveRun();
+    clearChunkBuffer();
     setLoading(false);
     setOutput(null);
     setStreamingOutput("");
