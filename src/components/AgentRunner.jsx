@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Suspense, lazy } from "react";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import ApiKeyBar from "./ApiKeyBar";
 import ApiKeyInfo from "./ApiKeyInfo";
-import OutputRenderer from "./OutputRenderer";
+const OutputRenderer = lazy(() => import("./OutputRenderer"));
 import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
 import TokenCounter from "./TokenCounter";
@@ -969,12 +969,14 @@ const handleRun = async () => {
             )}
             {modelRecommendation && (
               <div className="mt-2">
-                <OutputRenderer
-                  content={modelRecommendation}
-                  outputType="markdown"
-                  agentName="Model Analyser"
-                  systemPrompt=""
-                />
+                <Suspense fallback={<div className="text-xs text-gray-500">Loading output…</div>}>
+                  <OutputRenderer
+                    content={modelRecommendation}
+                    outputType="markdown"
+                    agentName="Model Analyser"
+                    systemPrompt=""
+                  />
+                </Suspense>
                 <button
                   onClick={() => setModelRecommendation(null)}
                   className="mt-2 text-[10px] text-accent hover:underline"
@@ -1136,13 +1138,15 @@ const handleRun = async () => {
       {output && !isStreaming && (
         <div className="space-y-4">
           <ErrorBoundary>
-            <OutputRenderer
-              content={output}
-              outputType={agent.outputType}
-              agentName={agent.name}
-              systemPrompt={lastRunSystemPrompt}
-              userMessage={lastRunUserMessage}
-            />
+            <Suspense fallback={<div className="text-xs text-gray-500">Loading output…</div>}>
+              <OutputRenderer
+                content={output}
+                outputType={agent.outputType}
+                agentName={agent.name}
+                systemPrompt={lastRunSystemPrompt}
+                userMessage={lastRunUserMessage}
+              />
+            </Suspense>
             <div className="flex items-center gap-2 mt-3">
   <button
     onClick={() => setShowModelSwitcher(!showModelSwitcher)}
