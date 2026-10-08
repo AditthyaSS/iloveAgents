@@ -54,9 +54,10 @@ export function useFavorites() {
       ? list.filter((id) => id !== agentId)
       : [agentId, ...list] // newest favorites first
     const saved = saveFavorites(next)
-    if (!saved) return
+    // Memory stays authoritative so the toggle works offline; other tabs
+    // are only notified when the write actually persisted.
     setFavorites(next)
-    notify()
+    if (saved) notify()
   }, [])
 
   return { favorites, isFavorite, toggleFavorite }
