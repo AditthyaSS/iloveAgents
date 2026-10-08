@@ -74,7 +74,7 @@ function PublishModal({ agents, onClose, onPublished }) {
 
   const handlePublish = () => {
     if (!canPublish) return
-    const listing = publishAgent({
+    const { listing, warnings } = publishAgent({
       name,
       description,
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
@@ -88,7 +88,7 @@ function PublishModal({ agents, onClose, onPublished }) {
         outputType: selected.outputType ?? 'text',
       },
     })
-    onPublished(listing)
+    onPublished(listing, warnings)
   }
 
   const inputClass = `w-full px-3 py-2 rounded-lg border text-sm transition-all
@@ -292,10 +292,14 @@ export default function MarketplacePage() {
     setListings(loadListings())
   }
 
-  const handlePublished = (listing) => {
+  const handlePublished = (listing, warnings = []) => {
     setShowPublish(false)
     setListings(loadListings())
-    flash(`Published "${listing.name}" to the marketplace.`)
+    flash(
+      warnings.length > 0
+        ? `Published "${listing.name}" with notes: ${warnings.join(' ')}`
+        : `Published "${listing.name}" to the marketplace.`
+    )
   }
 
   const inputClass = `px-3 py-2 rounded-lg border text-sm transition-all
