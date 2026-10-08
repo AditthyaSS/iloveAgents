@@ -36,9 +36,20 @@ const FeedbackPage = lazy(() => import('./pages/FeedbackPage'))
 
 function PageLoader() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-      <Loader2 size={32} className="animate-spin text-accent" />
-      <p className="text-sm dark:text-text-secondary text-gray-500">Loading...</p>
+    <div
+      className="flex flex-col items-center justify-center min-h-[50vh] gap-3"
+      role="status"
+      aria-live="polite"
+      aria-label="Loading page"
+    >
+      <Loader2
+        size={32}
+        className="animate-spin text-accent"
+        aria-hidden="true"
+      />
+      <p className="text-sm dark:text-text-secondary text-gray-500">
+        Loading...
+      </p>
     </div>
   )
 }
@@ -46,10 +57,20 @@ function PageLoader() {
 function MainLayout({ sidebarOpen, setSidebarOpen, onStartTour, isTourActive, onTourEnd }) {
   return (
     <>
+    <a
+  href="#main-content"
+  className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[9999] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-black focus:shadow-lg"
+>
+  Skip to main content
+</a>
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onStartTour={onStartTour} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <CustomCursor />
-      <main className="pt-28 lg:pl-60">
+      <main
+  id="main-content"
+  className="pt-28 lg:pl-60"
+  tabIndex="-1"
+>
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
         </div>
