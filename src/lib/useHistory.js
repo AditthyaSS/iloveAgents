@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { truncateStoredText } from './storageBudget';
 
 const STORAGE_KEY = 'iloveAgents_history';
 const MAX_HISTORY = 10;
@@ -59,6 +60,7 @@ export const useHistory = () => {
     const timestamp = Date.now();
     const newRun = {
       ...run,
+      output: truncateStoredText(run.output),
       id: `${run.agentId}_${timestamp}`,
       timestamp,
     };
