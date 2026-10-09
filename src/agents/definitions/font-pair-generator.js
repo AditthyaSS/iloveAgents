@@ -1,5 +1,5 @@
 const fontPairingAgent= {
-  id: 'font-pairing-agent',           // lowercase, kebab-case, URL safe
+  id: 'font-pair-generator',           // lowercase, kebab-case, URL safe
   name: 'Font Pairing Agent',
   description: 'The agent takes in mood and industry as input and generates 3 font pairings for design',
   category: 'Design',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
