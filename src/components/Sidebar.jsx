@@ -206,7 +206,7 @@ export default function Sidebar({ open, onClose }) {
             </div>
 
             {feedback && (
-              <div className="mb-2 rounded-md border border-accent/20 bg-accent/10 px-2 py-1.5 text-[11px] text-accent">
+              <div role="status" className="mb-2 rounded-md border border-accent/20 bg-accent/10 px-2 py-1.5 text-[11px] text-accent">
                 {feedback}
               </div>
             )}
