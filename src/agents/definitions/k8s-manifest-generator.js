@@ -5,7 +5,7 @@ export default {
   category: 'DevOps',
   icon: 'Box',
   provider: 'any',
-  defaultProvider: 'google',
+  defaultProvider: 'gemini',
   model: 'gemini-2.5-flash',
   inputs: [
     {
