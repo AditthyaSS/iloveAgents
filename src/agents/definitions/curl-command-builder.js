@@ -76,4 +76,5 @@ Respond in this format:
 
 ## Notes
 - [assumptions, placeholders to fill in, or safer alternatives]`,
+  outputType: 'markdown',
 };
