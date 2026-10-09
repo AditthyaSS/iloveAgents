@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { loadAllAgents } from '../agents/registry'
+import { reloadAgents as reloadRegistry } from '../agents/registry'
 
 const AgentsContext = createContext(null)
 
@@ -15,7 +15,7 @@ export function AgentsProvider({ children }) {
   const reloadAgents = () => {
     setLoading(true)
     setError(null)
-    loadAllAgents()
+    reloadRegistry()
       .then((loaded) => {
         setAgents(loaded)
         setLoading(false)
