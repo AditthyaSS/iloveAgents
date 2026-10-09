@@ -4,7 +4,7 @@ const salesDiscoveryCallGenerator = {
   name: 'Sales Discovery Call Script Generator',
 
   description:
-    'Generates a complete discovery call script for sales reps with opening, qualification questions, pain point exploration, objection handling, and next steps — tailored to your product, industry, and ideal customer profile.',
+    'Builds a complete discovery call script with qualification, pain-point exploration, and next steps — tailored to your product and customer.',
 
   category: 'Sales',
 
