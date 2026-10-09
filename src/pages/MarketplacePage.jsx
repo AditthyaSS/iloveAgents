@@ -238,8 +238,10 @@ function ListingCard({ listing, onImport, onRate, imported }) {
           </span>
           <button
             onClick={() => onImport(listing.id)}
+            disabled={imported}
+            aria-label={imported ? `Already imported ${listing.name}` : `Import ${listing.name}`}
             className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-semibold transition-colors
-              bg-accent/10 text-accent hover:bg-accent hover:text-white"
+              bg-accent/10 text-accent hover:bg-accent hover:text-white disabled:opacity-50 disabled:cursor-default disabled:hover:bg-accent/10 disabled:hover:text-accent"
           >
             {imported ? <Check size={11} /> : <Download size={11} />}
             {imported ? 'Imported' : 'Import'}
@@ -258,7 +260,13 @@ export default function MarketplacePage() {
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
   const [showPublish, setShowPublish] = useState(false)
-  const [importedIds, setImportedIds] = useState(new Set())
+  const [importedIds, setImportedIds] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('ila_marketplace_imported') || '[]'))
+    } catch {
+      return new Set()
+    }
+  })
   const [notice, setNotice] = useState(null)
 
   useEffect(() => {
@@ -276,10 +284,17 @@ export default function MarketplacePage() {
   }
 
   const handleImport = (listingId) => {
+    if (importedIds.has(listingId)) return
     const draft = importAgent(listingId)
     if (!draft) return
     setListings(loadListings())
-    setImportedIds((prev) => new Set(prev).add(listingId))
+    setImportedIds((prev) => {
+      const next = new Set(prev).add(listingId)
+      try {
+        localStorage.setItem('ila_marketplace_imported', JSON.stringify([...next]))
+      } catch {}
+      return next
+    })
     flash(
       draft.pendingCredentialFields.length > 0
         ? `Imported "${draft.name}". Configure ${draft.pendingCredentialFields.length} credential field(s) before running it.`
