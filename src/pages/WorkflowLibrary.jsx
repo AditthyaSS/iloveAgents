@@ -270,7 +270,7 @@ export default function WorkflowLibrary() {
       )}
 
       {!loading && !error && filtered.length === 0 && (
-        <div className="text-center py-20 rounded-xl border
+        <div role="status" className="text-center py-20 rounded-xl border
           dark:bg-surface-card dark:border-border bg-white border-gray-200 animate-fade-in">
           <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
             <GitBranch size={24} className="text-accent" />
