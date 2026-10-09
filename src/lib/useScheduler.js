@@ -9,6 +9,7 @@ const API_KEY_PREFIX = 'ila_scheduler_key_'
 const MAX_RESULTS = 50
 
 const activeJobIds = new Set()
+const lastCompletedAt = new Map()
 
 // ── Intervals in milliseconds
 export const SCHEDULE_OPTIONS = [
@@ -153,8 +154,11 @@ export function useScheduler({ autoRun = true } = {}) {
   }, [])
 
   // ── Manually run a job right now
-  const runJob = useCallback(async (job) => {
+  const runJob = useCallback(async (job, { force = false } = {}) => {
     if (activeJobIds.has(job.id)) return null
+    const cadence = SCHEDULE_OPTIONS.find((s) => s.value === job.schedule)
+    const completedAt = lastCompletedAt.get(job.id) ?? 0
+    if (!force && Date.now() - completedAt < (cadence?.ms ?? 86_400_000)) return null
     activeJobIds.add(job.id)
     setRunning(prev => ({ ...prev, [job.id]: true }))
 
@@ -209,6 +213,7 @@ export function useScheduler({ autoRun = true } = {}) {
         `${job.agentName}: ${errorMsg}`
       )
     } finally {
+      lastCompletedAt.set(job.id, Date.now())
       activeJobIds.delete(job.id)
       setRunning(prev => ({ ...prev, [job.id]: false }))
     }
@@ -252,14 +257,17 @@ export function useScheduler({ autoRun = true } = {}) {
     const checkDue = () => {
       const currentJobs = loadJobs()
       const now = Date.now()
-      currentJobs.forEach(job => {
-        if (!job.enabled) return
-        if (!job.apiKey) return
-        if (activeJobIds.has(job.id)) return
+      for (const job of currentJobs) {
+        if (!job.enabled) continue
+        if (!job.apiKey) continue
+        if (activeJobIds.has(job.id)) continue
+        const interval = SCHEDULE_OPTIONS.find((s) => s.value === job.schedule)
+        const completedAt = lastCompletedAt.get(job.id) ?? 0
+        if (now - completedAt < (interval?.ms ?? 86_400_000)) continue
         if (now >= job.nextRunAt) {
-          runJob(job)
+          void runJob(job)
         }
-      })
+      }
     }
 
     // Check immediately on mount
