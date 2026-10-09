@@ -126,6 +126,7 @@ The repository contains AI agents for a wide variety of real-world use cases. Th
 | OpenAI | <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg" width="80"/> | GPT-4o, GPT-4o-mini | [platform.openai.com](https://platform.openai.com/api-keys) |
 | Anthropic | <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Anthropic_logo.svg" width="80"/> | Claude Opus, Claude Sonnet | [console.anthropic.com](https://console.anthropic.com/) |
 | Google Gemini | <img src="https://upload.wikimedia.org/wikipedia/commons/8/8a/Google_Gemini_logo.svg" width="80"/> | Gemini 2.5 Flash | [aistudio.google.com](https://aistudio.google.com/apikey) |
+| OpenRouter | — | GPT-4o Mini, Claude 3.5 Sonnet, Gemini 2.5 Flash via one key | [openrouter.ai](https://openrouter.ai/keys) |
 
 You can switch providers on any agent at runtime from the dropdown. No restart needed.
 
