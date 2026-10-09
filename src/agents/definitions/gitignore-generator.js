@@ -60,4 +60,5 @@ Respond in this format:
 
 ## Notes
 - [anything the user should adjust for their setup]`,
+  outputType: 'markdown',
 };
