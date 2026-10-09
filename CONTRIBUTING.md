@@ -2,13 +2,14 @@
 
 ## ⚠️ Before You Submit a PR
 
-**You MUST run this locally before opening a PR:**
+**You MUST run these locally before opening a PR:**
 
 ```bash
+npm test
 npm run build
 ```
 
-If it fails, fix the errors before submitting. PRs with failing builds will be automatically closed.
+If either fails, fix the errors before submitting. PRs with failing builds will be automatically closed.
 
 **Common mistake to avoid:**
 
