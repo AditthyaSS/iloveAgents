@@ -315,10 +315,11 @@ export default function BattleModeSetup() {
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-3 mb-10">
+        <ol aria-label="Battle setup progress" className="flex items-center justify-center gap-3 mb-10">
           {[1, 2].map((s) => (
-            <div key={s} className="flex items-center gap-3">
+            <li key={s} className="flex items-center gap-3" aria-current={step === s ? 'step' : undefined}>
               <div
+                aria-hidden="true"
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all duration-200
                   ${step >= s
                     ? "bg-yellow-400/20 border-yellow-400/60 text-yellow-300"
@@ -327,16 +328,18 @@ export default function BattleModeSetup() {
               >
                 {s}
               </div>
+              <span className="sr-only">Step {s} of 2{step === s ? ' (current step)' : step > s ? ' (completed)' : ''}</span>
               {s < 2 && (
                 <div
+                  aria-hidden="true"
                   className={`h-px w-12 transition-all duration-300 ${
                     step > s ? "bg-yellow-400/40" : "bg-gray-700"
                   }`}
                 />
               )}
-            </div>
+            </li>
           ))}
-        </div>
+        </ol>
 
         {/* ── STEP 1: Agent Selection ── */}
         {step === 1 && (
