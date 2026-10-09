@@ -30,7 +30,14 @@ export default function AgentPage() {
   }, [agent])
 
   if (isLoading) {
-    return null
+    return (
+      <div role="status" aria-label="Loading agent" className="max-w-2xl mx-auto animate-pulse">
+        <div className="h-8 w-48 rounded-lg bg-gray-200 dark:bg-white/10 mb-4" />
+        <div className="h-4 w-full rounded bg-gray-200 dark:bg-white/10 mb-2" />
+        <div className="h-4 w-3/4 rounded bg-gray-200 dark:bg-white/10 mb-6" />
+        <div className="h-24 w-full rounded-xl bg-gray-200 dark:bg-white/10" />
+      </div>
+    )
   }
 
   if (!agent) {
