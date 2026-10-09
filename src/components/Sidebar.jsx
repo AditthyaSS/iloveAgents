@@ -114,8 +114,10 @@ export default function Sidebar({ open, onClose }) {
   return (
     <>
       {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          className="fixed inset-0 z-30 bg-black/50 lg:hidden cursor-default"
           onClick={onClose}
         />
       )}
