@@ -85,7 +85,7 @@ export function useAgentRatings() {
   const getUserVote = (agentId) => getStoredVotes()[agentId] || null
 
   const getAgentRatingInfo = (agentId) => {
-    const agentData = ratings[agentId] || { up: 0, down: 0 }
+    const agentData = getStoredRatings()[agentId] || { up: 0, down: 0 }
     const total = agentData.up + agentData.down
     const percentage = total > 0 ? Math.round((agentData.up / total) * 100) : 0
     
