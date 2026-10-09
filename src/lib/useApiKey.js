@@ -51,7 +51,6 @@ export function useApiKey() {
 useEffect(() => {
   // 1. First check if a session key exists
   const sessionKey = getSafeApiKey(provider)
-  
   if (sessionKey) {
     setApiKey(sessionKey)
     setSaveForSession(true)
@@ -69,14 +68,29 @@ useEffect(() => {
     }
   }
 }, [provider])
+  // Pick up global-key changes made elsewhere (e.g. the settings page)
+  // without waiting for a provider switch. Session keys still win.
+  useEffect(() => {
+    const syncGlobals = (event) => {
+      if (event.key && !event.key.startsWith('iloveagents_')) return
+      if (getSafeApiKey(provider)) return
+      const savedGlobalKey = getGlobalKeys()[provider]
+      setApiKey(savedGlobalKey || '')
+      setSaveForSession(false)
+    }
+    window.addEventListener('storage', syncGlobals)
+    return () => window.removeEventListener('storage', syncGlobals)
+  }, [provider])
   // Persist or clear from sessionStorage when saveForSession changes
  const updateApiKey = useCallback(
     (key) => {
       setApiKey(key)
       if (saveForSession && key) {
         setSafeApiKey(provider, key)
-      } else if (!key) {
-        setSafeApiKey(provider, null) // Ensures purging when input is cleared
+      } else {
+        // Not persisting this key: purge any stale session value so the
+        // mount effect cannot resurrect it over the visible input.
+        setSafeApiKey(provider, null)
       }
     },
     [provider, saveForSession]
