@@ -16,7 +16,7 @@ export default function TokenCounter({ value = '', modelId = '' }) {
       : 'dark:text-text-muted text-gray-400'
 
   return (
-    <span className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${colorClass}`}>
+    <span role="status" className={`inline-flex items-center gap-1 text-[11px] font-medium transition-colors ${colorClass}`}>
       <svg
         width="10"
         height="10"
@@ -26,6 +26,7 @@ export default function TokenCounter({ value = '', modelId = '' }) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        aria-hidden="true"
         className="opacity-70"
       >
         <circle cx="12" cy="12" r="10" />
@@ -34,7 +35,7 @@ export default function TokenCounter({ value = '', modelId = '' }) {
       <span>
         ~{tokens.toLocaleString()} tokens
         {isEstimating && (
-          <span className="ml-0.5 inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
+          <span aria-hidden="true" className="ml-0.5 inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin align-middle" />
         )}
       </span>
       {contextWindow > 0 && (
