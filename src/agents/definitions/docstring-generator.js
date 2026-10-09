@@ -82,4 +82,5 @@ Respond in this format:
 
 ## Notes
 - [any assumptions you made, or ambiguities the author should clarify]`,
+  outputType: 'markdown',
 };
