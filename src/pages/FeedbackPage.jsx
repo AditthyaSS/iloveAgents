@@ -48,17 +48,19 @@ export default function FeedbackPage() {
           >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent/10 text-accent">
-                <Icon size={22} />
+                <Icon size={22} aria-hidden="true" />
               </div>
 
               <ArrowUpRight
                 size={18}
+                aria-hidden="true"
                 className="text-gray-400 group-hover:text-accent transition-colors"
               />
             </div>
 
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
               {title}
+              <span className="sr-only"> (opens in new tab)</span>
             </h2>
 
             <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
