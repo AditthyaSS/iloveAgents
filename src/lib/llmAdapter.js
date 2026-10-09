@@ -45,8 +45,9 @@ const PROVIDER_CONFIGS = {
       try {
         const json = JSON.parse(line.slice(6))
         const delta = json.choices?.[0]?.delta?.content || ''
-        const finished = json.choices?.[0]?.finish_reason === 'stop'
-        return { content: delta, done: finished }
+        const finishReason = json.choices?.[0]?.finish_reason ?? null
+        const truncated = finishReason === 'length'
+        return { content: delta, done: finishReason != null, truncated }
       } catch {
         return null
       }
@@ -90,8 +91,9 @@ const PROVIDER_CONFIGS = {
       try {
         const json = JSON.parse(line.slice(6))
         const delta = json.choices?.[0]?.delta?.content || ''
-        const finished = json.choices?.[0]?.finish_reason === 'stop'
-        return { content: delta, done: finished }
+        const finishReason = json.choices?.[0]?.finish_reason ?? null
+        const truncated = finishReason === 'length'
+        return { content: delta, done: finishReason != null, truncated }
       } catch {
         return null
       }
@@ -177,8 +179,9 @@ const PROVIDER_CONFIGS = {
       try {
         const json = JSON.parse(line.slice(6))
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text || ''
-        const finished = json.candidates?.[0]?.finishReason === 'STOP'
-        return { content: text, done: finished }
+        const finishReason = json.candidates?.[0]?.finishReason ?? null
+        const truncated = finishReason === 'MAX_TOKENS'
+        return { content: text, done: finishReason != null, truncated }
       } catch {
         return null
       }
@@ -349,6 +352,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
+    let streamDone = false
 
     while (true) {
       const { done, value } = await reader.read()
@@ -373,8 +377,12 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
           onChunk(parsed.content)
         }
 
-        if (parsed.done) break
+        if (parsed.done) {
+          streamDone = true
+          break
+        }
       }
+      if (streamDone) break
     }
 
     // Process any remaining buffer content
