@@ -11,7 +11,7 @@
 // `ila_theme` and `iloveagents_banner_dismissed`).
 // ============================================================
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 
 const STORAGE_KEY = 'ila_onboarding_complete'
 
@@ -30,8 +30,21 @@ export function useOnboarding() {
     if (window.innerWidth < 768) return false
     return !hasCompleted()
   })
+  const [completed, setCompleted] = useState(hasCompleted)
+
+  useEffect(() => {
+    const sync = () => setCompleted(hasCompleted())
+    window.addEventListener('storage', sync)
+    return () => window.removeEventListener('storage', sync)
+  }, [])
 
   const startTour = useCallback(() => {
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch {
+      // localStorage unavailable — fail silently
+    }
+    setCompleted(false)
     setIsTourActive(true)
   }, [])
 
@@ -42,6 +55,7 @@ export function useOnboarding() {
     } catch {
       // localStorage unavailable — fail silently
     }
+    setCompleted(true)
   }, [])
 
   const resetTour = useCallback(() => {
@@ -50,12 +64,13 @@ export function useOnboarding() {
     } catch {
       // fail silently
     }
+    setCompleted(false)
     setIsTourActive(true)
   }, [])
 
   return {
     isTourActive,
-    hasCompletedTour: hasCompleted(),
+    hasCompletedTour: completed,
     startTour,
     endTour,
     resetTour,
