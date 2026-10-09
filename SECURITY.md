@@ -11,9 +11,13 @@ Here is exactly what happens:
 - There is no backend server that could ever see your key
 - There is no analytics or tracking of any kind
 
-If you want to verify this yourself, the two files that handle your key are:
+If you want to verify this yourself, the key files are:
 - `src/lib/llmAdapter.js`
 - `src/lib/useApiKey.js`
+- `src/lib/globalKeys.js`
+- `src/lib/automationsService.js` (scheduled automations persist an encrypted
+  vault in localStorage and sync to Supabase `user_secrets` when configured)
+- `src/lib/supabase.js`
 
 Both are short and easy to read.
 
