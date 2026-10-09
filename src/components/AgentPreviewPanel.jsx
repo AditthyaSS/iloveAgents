@@ -93,6 +93,8 @@ export default function AgentPreviewPanel({ agent }) {
       <div className="rounded-lg border dark:bg-surface-card dark:border-border bg-white border-gray-200">
         <button
           onClick={() => setPromptOpen(!promptOpen)}
+          aria-expanded={promptOpen}
+          aria-controls="agent-preview-prompt"
           className="w-full flex items-center justify-between px-4 py-3 text-left"
         >
           <div className="flex items-center gap-2">
@@ -108,7 +110,7 @@ export default function AgentPreviewPanel({ agent }) {
           )}
         </button>
         {promptOpen && (
-          <div className="px-4 pb-4">
+          <div id="agent-preview-prompt" role="region" className="px-4 pb-4">
             <pre className="whitespace-pre-wrap text-xs font-mono leading-relaxed p-3 rounded-md dark:bg-[#0d1117] dark:text-text-secondary bg-gray-50 text-gray-700 border dark:border-border border-gray-200">
               {agent.systemPrompt}
             </pre>
