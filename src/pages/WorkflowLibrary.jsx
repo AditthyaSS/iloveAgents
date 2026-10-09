@@ -224,7 +224,7 @@ export default function WorkflowLibrary() {
           dark:from-cyan-500/50 dark:via-indigo-500/50 dark:to-rose-500/50 blur-[2px]" />
 
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-          <Search size={14} className="dark:text-text-muted text-gray-400 group-focus-within:text-accent transition-colors duration-200" />
+          <Search size={14} aria-hidden="true" className="dark:text-text-muted text-gray-400 group-focus-within:text-accent transition-colors duration-200" />
         </div>
         <input
           id="workflow-search"
@@ -232,6 +232,7 @@ export default function WorkflowLibrary() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search workflows..."
+          aria-label="Search workflows"
           className="relative w-full pl-10 pr-10 py-2.5 rounded-full border text-sm transition-all duration-300
             dark:bg-[#101014]/80 dark:border-white/10 dark:text-text-primary dark:placeholder-text-muted
             bg-white/80 border-white/60 text-gray-900 placeholder-gray-400
@@ -243,10 +244,11 @@ export default function WorkflowLibrary() {
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
+            aria-label="Clear workflow search"
             className="absolute inset-y-0 right-0 pr-4 flex items-center z-10
               dark:text-text-muted text-gray-400 hover:text-accent transition-colors duration-200"
           >
-            <X size={14} />
+            <X size={14} aria-hidden="true" />
           </button>
         )}
       </div>
