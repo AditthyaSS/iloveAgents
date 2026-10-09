@@ -149,8 +149,19 @@ export function removeAutomationKey(automationId) {
   delete vault[automationId]
   saveVault(vault)
 
+  try {
+    const automations = loadAutomations()
+    const updated = automations.map((a) =>
+      a.id === automationId ? { ...a, hasKey: false } : a
+    )
+    saveAutomations(updated)
+  } catch {}
+
   if (isSupabaseConfigured) {
-    supabase.from('user_secrets').delete().eq('automation_id', automationId).then()
+    supabase.from('user_secrets').delete().eq('automation_id', automationId).then(
+      () => {},
+      () => {}
+    )
   }
 }
 
@@ -508,7 +519,10 @@ export function deleteRun(runId) {
   const allRuns = loadRuns()
   saveRuns(allRuns.filter(r => r.id !== runId))
   if (isSupabaseConfigured) {
-    supabase.from('automation_runs').delete().eq('id', runId).then()
+    supabase.from('automation_runs').delete().eq('id', runId).then(
+      () => {},
+      () => {}
+    )
   }
 }
 
@@ -630,7 +644,7 @@ export async function runAutomationNow(automationId, options = {}) {
   // Update automation nextRunAt and lastRunAt
   const preset = SCHEDULE_PRESETS.find(p => p.value === automation.schedule) || SCHEDULE_PRESETS[1]
   const updatedNextRun = completedAt + preset.ms
-  updateAutomation(automation.id, {
+  await updateAutomation(automation.id, {
     lastRunAt: completedAt,
     nextRunAt: updatedNextRun,
   })
