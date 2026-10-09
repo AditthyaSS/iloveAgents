@@ -42,7 +42,7 @@ export const PROVIDERS = [
   {
     id: "anthropic",
     label: "Claude Sonnet",
-    model: "claude-sonnet-4-6",
+    model: "claude-3-5-sonnet-20241022",
     color: "violet",
     borderClass: "border-violet-400/40 battle-card-violet",
     glowClass: "hover:shadow-violet-400/30",
@@ -149,9 +149,24 @@ export default function BattleModeArena() {
 
   // Runs (or re-runs) a single provider's request. Shared by the initial
   // fire-all-providers effect and by the per-panel retry button, so a retry
-  // only touches the one panel and leaves the other two untouched.
+  // only touches the one panel and leaves the others untouched. Providers
+  // without a configured key resolve immediately to a key missing state.
   const runProvider = useCallback(
     (prov) => {
+      const configuredKey = (apiKeys?.[prov.id] || '').trim()
+      if (!configuredKey) {
+        setResults((prev) => ({
+          ...prev,
+          [prov.id]: {
+            loading: false,
+            content: null,
+            error: `API key for ${prov.label} is not configured. Add it on the setup page to include this provider.`,
+            duration: null,
+          },
+        }));
+        return
+      }
+
       const userMessage = buildUserMessage(agent, inputs);
 
       setPrompts((prev) => ({
@@ -174,7 +189,7 @@ export default function BattleModeArena() {
       runAgent({
         provider: prov.id,
         model: prov.model,
-        apiKey: apiKeys[prov.id],
+        apiKey: configuredKey,
         systemPrompt: agent.systemPrompt,
         userMessage,
       }, {
@@ -359,7 +374,7 @@ export default function BattleModeArena() {
           <p className="text-base dark:text-text-primary text-gray-900">
             Running{" "}
             <span className="dark:text-text-primary text-gray-900 font-semibold">{agent.name}</span>{" "}
-            across four providers
+            across your configured providers
           </p>
         </div>
 

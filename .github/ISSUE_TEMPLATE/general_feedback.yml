@@ -1,0 +1,62 @@
+name: General Feedback
+description: Share your thoughts, experience, or suggestions about iloveAgents
+title: "[Feedback]: "
+labels: ["OSIC'26"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share your feedback!
+        Your thoughts help us improve iloveAgents.
+
+  - type: textarea
+    id: feedback
+    attributes:
+      label: What would you like us to know?
+      description: Share your experience, thoughts, suggestions, or anything else about iloveAgents.
+      placeholder: Tell us what you think...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: experience
+    attributes:
+      label: How has your overall experience been?
+      options:
+        - Very positive
+        - Positive
+        - Neutral
+        - Negative
+        - Very negative
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the app is your feedback about?
+      options:
+        - Agent Runner
+        - Homepage / Agent Grid
+        - API Key / Provider Bar
+        - Output Panel
+        - Sidebar / Navigation
+        - Mobile Experience
+        - Performance
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: improvements
+    attributes:
+      label: What could we improve?
+      description: Optional — tell us what would make your experience better.
+      placeholder: I think the experience could be improved by...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Anything else?
+      description: Optional — add any additional context, screenshots, or details.
