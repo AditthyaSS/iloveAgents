@@ -160,7 +160,7 @@ export default function WorkflowBuilder() {
 
       {/* Title */}
       <div className="mb-4">
-        <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
+        <label htmlFor="workflow-title" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Workflow Title <span className="text-red-400">*</span>
         </label>
         <input
@@ -178,7 +178,7 @@ export default function WorkflowBuilder() {
 
       {/* Description */}
       <div className="mb-6">
-        <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
+        <label htmlFor="workflow-description" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Description <span className="dark:text-text-muted text-gray-400 font-normal">(optional)</span>
         </label>
         <div className="relative">
@@ -282,6 +282,9 @@ export default function WorkflowBuilder() {
             <button
               id="add-agent-btn"
               onClick={() => setDropdownOpen((o) => !o)}
+              aria-expanded={dropdownOpen}
+              aria-haspopup="listbox"
+              aria-controls="builder-agent-listbox"
               className="w-full flex items-center justify-between gap-2 px-4 py-2.5 rounded-lg border
                 text-sm font-semibold transition-all duration-200
                 dark:bg-surface-card dark:border-border dark:text-text-secondary
@@ -300,7 +303,7 @@ export default function WorkflowBuilder() {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
+              <div id="builder-agent-listbox" role="listbox" aria-label="Available agents" className="absolute top-full mt-1.5 left-0 right-0 z-50 rounded-lg border shadow-xl
                 dark:bg-surface-card dark:border-border bg-white border-gray-200
                 max-h-64 overflow-y-auto animate-fade-in p-1.5 space-y-1">
                 <div className="p-1.5 sticky top-0 bg-white dark:bg-surface-card border-b border-gray-100 dark:border-border/60 z-10 mb-1">
@@ -309,6 +312,7 @@ export default function WorkflowBuilder() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search agents by name or category..."
+                    aria-label="Search agents by name or category"
                     className="w-full px-3 py-2 rounded-md border text-xs transition-all duration-200
                       dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder-text-muted
                       bg-gray-50 border-gray-200 text-gray-900 placeholder-gray-400
@@ -431,7 +435,7 @@ export default function WorkflowBuilder() {
 
       {/* Error */}
       {error && (
-        <div className="mb-4 p-3 rounded-lg border bg-red-500/10 border-red-500/30 text-red-400 text-xs animate-fade-in">
+        <div role="alert" className="mb-4 p-3 rounded-lg border bg-red-500/10 border-red-500/30 text-red-400 text-xs animate-fade-in">
           {error}
         </div>
       )}
