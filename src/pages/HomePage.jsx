@@ -28,6 +28,17 @@ const categoryMeta = {
   Design:       { color: 'from-fuchsia-500 to-pink-400',  ring: 'ring-fuchsia-500/30' },
   Product:      { color: 'from-teal-500 to-cyan-400',     ring: 'ring-teal-500/30' },
   'Developer Tools': { color: 'from-slate-600 to-slate-400', ring: 'ring-slate-500/30' },
+  'Content Writing': { color: 'from-sky-500 to-cyan-400', ring: 'ring-sky-500/30' },
+  Cybersecurity: { color: 'from-red-600 to-rose-500',     ring: 'ring-red-600/30' },
+  'Data Science': { color: 'from-cyan-500 to-blue-400',  ring: 'ring-cyan-500/30' },
+  Finance:      { color: 'from-emerald-500 to-teal-400', ring: 'ring-emerald-500/30' },
+  Healthcare:   { color: 'from-rose-500 to-pink-400',    ring: 'ring-rose-500/30' },
+  Sales:        { color: 'from-orange-500 to-red-400',   ring: 'ring-orange-500/30' },
+  DevOps:       { color: 'from-lime-500 to-green-400',   ring: 'ring-lime-500/30' },
+  Web3:         { color: 'from-violet-600 to-purple-500', ring: 'ring-violet-600/30' },
+  Gaming:       { color: 'from-purple-500 to-indigo-400', ring: 'ring-purple-500/30' },
+  'Real Estate': { color: 'from-amber-500 to-orange-400', ring: 'ring-amber-500/30' },
+  'Personal Development': { color: 'from-teal-500 to-emerald-400', ring: 'ring-teal-500/30' },
 }
 
 const defaultMeta = { color: 'from-gray-500 to-gray-400', ring: 'ring-gray-500/30' }
