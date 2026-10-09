@@ -47,7 +47,7 @@ Return the response in this exact Markdown format:
 ## Postman Collection JSON
 Copy this JSON and save it as a file (e.g., \`collection.json\`), then import it directly into Postman.
 \`\`\`json
-[Your valid Postman Collection JSON v2.1.0]
+[Complete Postman Collection JSON v2.1.0 for the endpoints above — full item list, no truncation]
 \`\`\`
 
 ## Client Integration Snippets
