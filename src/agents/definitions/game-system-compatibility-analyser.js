@@ -1,5 +1,5 @@
 const gameCompatibilityAgent= {
-  id: 'game-system-compatibility-agent',           // lowercase, kebab-case, URL safe
+  id: 'game-system-compatibility-analyser',           // lowercase, kebab-case, URL safe
   name: 'Game System Compatibility Analyser',
   description: 'The agent takes in the game you would like to install along with specifications of your system and provides a verdict with explanation regarding whether the game can be run or not.',
   category: 'Gaming',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
