@@ -226,6 +226,17 @@ export function useCollections() {
         ) || createDefaultCollection()
         const now = new Date().toISOString()
 
+        const mergedIds = [
+          ...new Set([...defaultCollection.agentIds, ...collectionToDelete.agentIds]),
+        ]
+
+        if (mergedIds.length > MAX_AGENTS_PER_COLLECTION) {
+          return {
+            ok: false,
+            error: `Deleting would push the default collection past ${MAX_AGENTS_PER_COLLECTION} agents. Move some agents first.`,
+          }
+        }
+
         return {
           ok: true,
           collections: current
@@ -234,9 +245,7 @@ export function useCollections() {
               collection.id === DEFAULT_COLLECTION_ID
                 ? {
                     ...collection,
-                    agentIds: [
-                      ...new Set([...collection.agentIds, ...collectionToDelete.agentIds]),
-                    ],
+                    agentIds: mergedIds,
                     updatedAt: now,
                   }
                 : collection
@@ -369,13 +378,15 @@ export function useCollections() {
         return { ok: false, error: 'Collection and agent are required.' }
       }
 
+      const normalizedAgentId = typeof agentId === 'string' ? agentId.trim() : agentId
+
       return runMutation((current) => ({
         ok: true,
         collections: current.map((collection) =>
           collection.id === collectionId
             ? {
                 ...collection,
-                agentIds: collection.agentIds.filter((id) => id !== agentId),
+                agentIds: collection.agentIds.filter((id) => id !== normalizedAgentId),
                 updatedAt: new Date().toISOString(),
               }
             : collection
@@ -418,8 +429,10 @@ export function useCollections() {
   )
 
   const isAgentInCollection = useCallback(
-    (collectionId, agentId) =>
-      Boolean(getCollectionById(collectionId)?.agentIds.includes(agentId)),
+    (collectionId, agentId) => {
+      const normalizedAgentId = typeof agentId === 'string' ? agentId.trim() : agentId
+      return Boolean(getCollectionById(collectionId)?.agentIds.includes(normalizedAgentId))
+    },
     [getCollectionById]
   )
 
