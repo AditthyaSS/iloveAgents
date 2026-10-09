@@ -109,7 +109,19 @@ export function validateConditionalStep(step, allSteps = []) {
   for (const label of labels) {
     if (!Array.isArray(step.branches[label]) || step.branches[label].length === 0) {
       problems.push(`Branch "${label}" has no agent steps.`)
+    } else {
+      for (const entry of step.branches[label]) {
+        if (typeof entry !== 'string' || entry.trim() === '') {
+          problems.push(`Branch "${label}" contains a non-agent entry.`)
+          break
+        }
+      }
     }
+  }
+  const folded = labels.map((label) => label.trim().toLowerCase())
+  const dupes = folded.filter((label, index) => folded.indexOf(label) !== index)
+  for (const dupe of [...new Set(dupes)]) {
+    problems.push(`Branches collide after normalization: "${dupe}" matches more than one label.`)
   }
   const circularProblems = detectCircularBranches(step, allSteps)
   problems.push(...circularProblems)
