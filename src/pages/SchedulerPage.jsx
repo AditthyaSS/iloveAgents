@@ -124,6 +124,8 @@ export default function SchedulerPage() {
                   {/* Toggle */}
                   <button
                     onClick={() => toggleJob(job.id)}
+                    aria-label={job.enabled ? `Pause ${job.label}` : `Resume ${job.label}`}
+                    aria-pressed={job.enabled}
                     className={`flex-shrink-0 transition-colors ${job.enabled ? 'text-accent' : 'dark:text-text-muted text-gray-300'}`}
                     title={job.enabled ? 'Disable' : 'Enable'}
                   >
@@ -166,6 +168,7 @@ export default function SchedulerPage() {
                     <button
                       onClick={() => runJob(job)}
                       disabled={isRunning}
+                      aria-label={`Run ${job.label} now`}
                       title="Run now"
                       className="p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors
                         dark:text-text-secondary text-gray-500 hover:text-accent
@@ -180,6 +183,8 @@ export default function SchedulerPage() {
                     {/* Expand results */}
                     <button
                       onClick={() => setExpandedJob(isExpanded ? null : job.id)}
+                      aria-label={`${isExpanded ? 'Hide' : 'Show'} results for ${job.label}`}
+                      aria-expanded={isExpanded}
                       title="View results"
                       className="p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors
                         dark:text-text-secondary text-gray-500"
@@ -209,6 +214,7 @@ export default function SchedulerPage() {
                     ) : (
                       <button
                         onClick={() => setConfirmDelete(job.id)}
+                        aria-label={`Delete ${job.label}`}
                         title="Delete"
                         className="p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors
                           dark:text-text-muted text-gray-400 hover:text-red-500"
@@ -221,10 +227,10 @@ export default function SchedulerPage() {
 
                 {/* Results panel */}
                 {isExpanded && (
-                  <div className="border-t dark:border-border border-gray-100 px-4 py-3 animate-fade-in">
+                  <div role="region" aria-label={`Results for ${job.label}`} className="border-t dark:border-border border-gray-100 px-4 py-3 animate-fade-in">
                     {jobResults.length === 0 ? (
                       <p className="text-xs dark:text-text-muted text-gray-400 py-2">
-                        No results yet. Click ▶ to run now.
+                        No results yet. Use the Run control above to run now.
                       </p>
                     ) : (
                       <div className="space-y-2">
@@ -281,9 +287,10 @@ function ResultCard({ result, expanded, onToggle, onDelete }) {
         </button>
         <button
           onClick={onDelete}
+          aria-label="Delete this result"
           className="p-0.5 dark:text-text-muted text-gray-400 hover:text-red-500 transition-colors"
         >
-          <X size={12} />
+          <X size={12} aria-hidden="true" />
         </button>
       </div>
 
