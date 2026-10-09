@@ -12,10 +12,18 @@ const initialPreferences = {
   freeTextGoal: '',
 }
 
+function freshPreferences() {
+  return {
+    ...initialPreferences,
+    categories: [...initialPreferences.categories],
+    extraPreferences: [...initialPreferences.extraPreferences],
+  }
+}
+
 export function useRecommendationWizard(agents = []) {
   const [isOpen, setIsOpen] = useState(false)
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [preferences, setPreferences] = useState(initialPreferences)
+  const [preferences, setPreferences] = useState(freshPreferences)
   const [hasCompleted, setHasCompleted] = useState(false)
   const [errors, setErrors] = useState({})
 
@@ -52,6 +60,17 @@ export function useRecommendationWizard(agents = []) {
     }
     return true
   }
+  const validateAll = () => {
+    if (!preferences.primaryGoal) {
+      setErrors({ primaryGoal: 'Choose a goal to continue.' })
+      return false
+    }
+    if (!preferences.experienceLevel) {
+      setErrors({ experienceLevel: 'Choose how much guidance you want.' })
+      return false
+    }
+    return true
+  }
   const nextStep = () => {
     if (!validateStep()) return false
     setCurrentStepIndex((idx) => Math.min(idx + 1, 4))
@@ -66,12 +85,12 @@ export function useRecommendationWizard(agents = []) {
     setCurrentStepIndex((idx) => Math.max(idx - 1, 0))
   }
   const completeWizard = () => {
-    if (!validateStep()) return false
+    if (!validateAll()) return false
     setHasCompleted(true)
     return true
   }
   const resetWizard = () => {
-    setPreferences(initialPreferences)
+    setPreferences(freshPreferences())
     setErrors({})
     setHasCompleted(false)
     setCurrentStepIndex(0)
