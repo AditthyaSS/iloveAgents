@@ -8,15 +8,8 @@ import {
 import { useAnalytics } from '../lib/useAnalytics'
 import { useSessionSpend } from '../lib/useSessionSpend'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
-
-// ── Provider colors ─────────────────────────────────────────────────────────
-const PROVIDER_COLORS = {
-  openai:     { color: '#22c55e', label: 'OpenAI' },
-  anthropic:  { color: '#f97316', label: 'Anthropic' },
-  gemini:     { color: '#3b82f6', label: 'Gemini' },
-  openrouter: { color: '#06b6d4', label: 'OpenRouter' },
-  unknown:    { color: '#71717a', label: 'Unknown' },
-}
+import TopAgentsChart from '../components/analytics/TopAgentsChart'
+import ProviderDonut, { PROVIDER_COLORS } from '../components/analytics/ProviderDonut'
 
 // ── Category gradient mapping (matches HomePage categoryMeta) ───────────────
 const CATEGORY_COLORS = {
@@ -439,116 +432,6 @@ function ActivityHeatmap({ data }) {
 }
 
 // ── Top Agents Bar Chart ────────────────────────────────────────────────────
-
-function TopAgentsChart({ agents, navigate }) {
-  if (agents.length === 0) return <EmptyMini text="No agent data yet" />
-
-  const maxCount = agents[0]?.count || 1
-
-  return (
-    <div className="space-y-2.5">
-      {agents.map((agent, i) => {
-        const pct = Math.max(5, (agent.count / maxCount) * 100)
-        return (
-          <div
-            key={agent.agentId}
-            className="group cursor-pointer"
-            onClick={() => navigate(`/agent/${agent.agentId}`)}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs font-medium dark:text-text-primary text-gray-700 truncate max-w-[200px]
-                group-hover:text-accent transition-colors">
-                {agent.agentName}
-              </span>
-              <span className="text-[11px] font-bold tabular-nums dark:text-text-muted text-gray-400">
-                {agent.count}
-              </span>
-            </div>
-            <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-accent to-indigo-400 transition-all duration-700 ease-out
-                  group-hover:from-accent group-hover:to-cyan-400"
-                style={{
-                  width: `${pct}%`,
-                  animationDelay: `${i * 80}ms`,
-                }}
-              />
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-// ── Provider Donut (SVG) ────────────────────────────────────────────────────
-
-function ProviderDonut({ data, total }) {
-  if (data.length === 0) return <EmptyMini text="No provider data" />
-
-  const size = 140
-  const strokeWidth = 22
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-
-  let cumulativeOffset = 0
-  const segments = data.map((item) => {
-    const pct = item.count / total
-    const dash = pct * circumference
-    const offset = cumulativeOffset
-    cumulativeOffset += dash
-    const providerInfo = PROVIDER_COLORS[item.name] || PROVIDER_COLORS.unknown
-    return { ...item, dash, offset, color: providerInfo.color, label: providerInfo.label }
-  })
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-          {/* Background ring */}
-          <circle
-            cx={size / 2} cy={size / 2} r={radius}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={strokeWidth}
-            className="text-gray-100 dark:text-white/5"
-          />
-          {/* Segments */}
-          {segments.map((seg, i) => (
-            <circle
-              key={seg.name}
-              cx={size / 2} cy={size / 2} r={radius}
-              fill="none"
-              stroke={seg.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
-              strokeDashoffset={-seg.offset}
-              strokeLinecap="round"
-              className="transition-all duration-700 ease-out"
-              style={{ animationDelay: `${i * 100}ms` }}
-            />
-          ))}
-        </svg>
-        {/* Center text */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-bold dark:text-text-primary text-gray-900 tabular-nums">{total}</span>
-          <span className="text-[9px] dark:text-text-muted text-gray-400 font-medium">RUNS</span>
-        </div>
-      </div>
-      {/* Legend */}
-      <div className="flex flex-wrap justify-center gap-x-3 gap-y-1">
-        {segments.map((seg) => (
-          <div key={seg.name} className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: seg.color }} />
-            <span className="text-[10px] font-medium dark:text-text-secondary text-gray-500">
-              {seg.label} ({seg.pct}%)
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 // ── Category Breakdown Bars ─────────────────────────────────────────────────
 
