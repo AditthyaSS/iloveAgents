@@ -20,10 +20,11 @@ Gemini Models:
 `;
 
 export async function analyseModels(agent, apiKey, provider) {
+  const promptSlice = typeof agent.systemPrompt === 'string' ? agent.systemPrompt.slice(0, 300) : ''
   const agentContext = `
     Agent name: ${agent.name}
     Description: ${agent.description}
-    System prompt purpose: ${agent.systemPrompt.slice(0, 300)}
+    System prompt purpose: ${promptSlice}
   `;
 
   const systemPrompt = `You are an AI model selection expert. 
@@ -58,7 +59,7 @@ Be specific and practical. Consider context window, speed, cost and output quali
     gemini: "gemini-2.5-flash",
     anthropic: "claude-3-5-haiku-20241022",
     openai: "gpt-4o-mini",
-
+    openrouter: "openai/gpt-4o-mini",
   };
 
   const result = await streamAgent({
