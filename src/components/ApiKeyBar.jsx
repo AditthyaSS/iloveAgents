@@ -203,6 +203,7 @@ export default function ApiKeyBar({
                 }
             }}
             placeholder={`Enter your ${provider} API key...`}
+            aria-label={`${provider} API key`}
             className="w-full h-8 px-3 pr-10 rounded-md text-xs font-mono transition-colors
               dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
               bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
