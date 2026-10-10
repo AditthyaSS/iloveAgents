@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, FolderPlus, Trash2, X } from 'lucide-react'
 import AgentCard from '../components/AgentCard'
@@ -21,6 +21,7 @@ export default function CollectionDetailPage() {
     removeAgentFromCollection,
   } = useCollections()
   const { agents, loading, error } = useAgents()
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const collection = getCollectionById(id)
 
@@ -89,6 +90,10 @@ export default function CollectionDetailPage() {
   const staleCount = collection.agentIds.length - collectionAgents.length
 
   const handleDelete = () => {
+    if (!confirmingDelete) {
+      setConfirmingDelete(true)
+      return
+    }
     deleteCollection(collection.id)
     navigate('/collections')
   }
@@ -130,13 +135,31 @@ export default function CollectionDetailPage() {
           </p>
         </div>
 
-        <button
-          onClick={handleDelete}
-          className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
-        >
-          <Trash2 size={16} />
-          Delete Collection
-        </button>
+        {confirmingDelete ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-red-500 font-medium">Delete "{collection.name}"?</span>
+            <button
+              onClick={handleDelete}
+              className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors"
+            >
+              Yes, delete
+            </button>
+            <button
+              onClick={() => setConfirmingDelete(false)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium dark:text-text-muted text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleDelete}
+            className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
+          >
+            <Trash2 size={16} />
+            Delete Collection
+          </button>
+        )}
       </div>
 
       <section>
