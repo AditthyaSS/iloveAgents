@@ -7,7 +7,7 @@ export default {
   icon: "Code",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-opus-4-20250514",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     code: "function processData(items) {\n  let result = [];\n  for (var i = 0; i < items.length; i++) {\n    var item = items[i];\n    if (item.status == 'active') {\n      let data = eval(item.config);\n      result.push(data);\n    }\n  }\n  return result;\n}",
     language: "JavaScript",
