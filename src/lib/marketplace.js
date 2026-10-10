@@ -152,6 +152,7 @@ export function loadDrafts() {
  * @returns {{ average: number, count: number }|null}
  */
 export function rateAgent(listingId, stars) {
+  if (typeof stars !== 'number' || !Number.isFinite(stars)) return null
   const value = Math.min(5, Math.max(1, Math.round(stars)))
   const listings = loadListings()
   const listing = listings.find((l) => l.id === listingId)
@@ -190,7 +191,9 @@ export function getUserVote(listingId) {
  */
 export function getAverageRating(listing) {
   if (!listing?.ratingCount) return 0
-  return Math.round((listing.ratingTotal / listing.ratingCount) * 10) / 10
+  const average = listing.ratingTotal / listing.ratingCount
+  if (!Number.isFinite(average)) return 0
+  return Math.round(average * 10) / 10
 }
 
 /**
