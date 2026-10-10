@@ -22,17 +22,31 @@ class ErrorBoundary extends React.Component {
           <AlertTriangle className="mx-auto text-red-400 mb-4" size={48} />
           <h3 className="text-xl font-bold text-red-400 mb-2">Failed to render output</h3>
           <p className="dark:text-text-secondary text-gray-600 text-sm mb-4">
-            The AI generated content that our renderer could not process.
+            The AI generated content that our renderer could not process. Reload the page to retry, or return home and try another agent.
           </p>
-          <pre className="text-left dark:bg-surface-card bg-white p-4 rounded-lg text-xs text-red-300 overflow-x-auto whitespace-pre-wrap">
-            {this.state.error?.toString() || 'Unknown rendering error'}
+          <pre className="text-left dark:bg-surface-card bg-white p-4 rounded-lg text-xs text-red-300 overflow-x-auto whitespace-pre-wrap" aria-hidden="true">
+            Rendering failed. Details are available in the browser console.
           </pre>
+          <div className="flex items-center justify-center gap-2 flex-wrap">
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
             className="mt-4 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors text-sm font-medium"
           >
             Try Again
           </button>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg transition-colors text-sm font-medium"
+          >
+            Reload Page
+          </button>
+          <a
+            href="/"
+            className="mt-4 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-lg transition-colors text-sm font-medium"
+          >
+            Go Home
+          </a>
+          </div>
         </div>
       );
     }
