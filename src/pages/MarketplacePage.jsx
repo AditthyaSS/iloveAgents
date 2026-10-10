@@ -27,6 +27,14 @@ function StarRating({ listing, onRate }) {
   const [hover, setHover] = useState(0)
   const userVote = getUserVote(listing.id)
   const average = getAverageRating(listing)
+  const tabStar = userVote || Math.round(average) || 1
+
+  const handleStarKey = (event, star) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return
+    event.preventDefault()
+    const next = event.key === 'ArrowRight' ? Math.min(5, star + 1) : Math.max(1, star - 1)
+    document.querySelector(`[data-star-rating="${listing.id}-${next}"]`)?.focus()
+  }
 
   return (
     <div className="flex items-center gap-1.5">
@@ -37,13 +45,17 @@ function StarRating({ listing, onRate }) {
             role="radio"
             aria-checked={userVote === star}
             aria-label={`${star} star${star > 1 ? 's' : ''}`}
+            tabIndex={star === tabStar ? 0 : -1}
+            data-star-rating={`${listing.id}-${star}`}
             onClick={() => onRate(listing.id, star)}
+            onKeyDown={(event) => handleStarKey(event, star)}
             onMouseEnter={() => setHover(star)}
             onMouseLeave={() => setHover(0)}
             className="p-0.5"
           >
             <Star
               size={13}
+              aria-hidden="true"
               className={
                 star <= (hover || userVote || Math.round(average))
                   ? 'text-amber-400 fill-amber-400'
@@ -68,6 +80,14 @@ function PublishModal({ agents, onClose, onPublished }) {
   const [category, setCategory] = useState(MARKETPLACE_CATEGORIES[0])
   const [readme, setReadme] = useState('')
   const [author, setAuthor] = useState('')
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const selected = agents.find((a) => a.id === agentId)
   const canPublish = agentId && name.trim() && description.trim()
@@ -120,10 +140,10 @@ function PublishModal({ agents, onClose, onPublished }) {
 
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
+            <label htmlFor="publish-agent" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
               Agent <span className="text-red-400">*</span>
             </label>
-            <select value={agentId} onChange={(e) => setAgentId(e.target.value)} className={inputClass}>
+            <select id="publish-agent" value={agentId} onChange={(e) => setAgentId(e.target.value)} className={inputClass}>
               <option value="">Select an agent to publish...</option>
               {agents.map((a) => (
                 <option key={a.id} value={a.id}>{a.name}</option>
@@ -132,39 +152,39 @@ function PublishModal({ agents, onClose, onPublished }) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
+            <label htmlFor="publish-name" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
               Display Name <span className="text-red-400">*</span>
             </label>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="My Agent Pack" className={inputClass} />
+            <input id="publish-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Agent Pack" className={inputClass} />
           </div>
 
           <div>
-            <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
+            <label htmlFor="publish-description" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
               Description <span className="text-red-400">*</span>
             </label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="What does this agent do?" className={inputClass} />
+            <textarea id="publish-description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="What does this agent do?" className={inputClass} />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">Category</label>
-              <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
+              <label htmlFor="publish-category" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">Category</label>
+              <select id="publish-category" value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
                 {MARKETPLACE_CATEGORIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">Author</label>
-              <input value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Your name" className={inputClass} />
+              <label htmlFor="publish-author" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">Author</label>
+              <input id="publish-author" value={author} onChange={(e) => setAuthor(e.target.value)} placeholder="Your name" className={inputClass} />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
+            <label htmlFor="publish-tags" className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1">
               Tags <span className="dark:text-text-muted text-gray-400 font-normal">(comma separated)</span>
             </label>
-            <input value={tags} onChange={(e) => setTags(e.target.value)} placeholder="summarizer, research, markdown" className={inputClass} />
+            <input id="publish-tags" value={tags} onChange={(e) => setTags(e.target.value)} placeholder="summarizer, research, markdown" className={inputClass} />
           </div>
 
           <div>
@@ -355,7 +375,7 @@ export default function MarketplacePage() {
 
       {/* Notice */}
       {notice && (
-        <div className="mb-4 p-3 rounded-lg border bg-emerald-500/10 border-emerald-500/20 animate-fade-in">
+        <div role="status" className="mb-4 p-3 rounded-lg border bg-emerald-500/10 border-emerald-500/20 animate-fade-in">
           <p className="text-xs font-medium text-emerald-400">{notice}</p>
         </div>
       )}
