@@ -3,7 +3,7 @@ const databaseQueryOptimizer = {
   name: 'Database Query Optimizer',
   description: 'This agent takes a SQL query and optional schema context as input and returns an optimized version with an explanation of what changed, what indexes to add, and why the original was slow.',
   category: 'Engineering',         
-  icon: 'database',              
+  icon: 'Database',              
   provider: 'any',              
   defaultProvider: 'openai',    
   model: 'gpt-4o',
