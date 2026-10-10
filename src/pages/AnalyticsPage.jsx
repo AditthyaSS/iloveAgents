@@ -269,6 +269,7 @@ export default function AnalyticsPage() {
 // ═════════════════════════════════════════════════════════════════════════════
 
 function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
+  const [confirmClear, setConfirmClear] = useState(false)
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-3">
@@ -298,14 +299,34 @@ function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
           ))}
         </div>
         {hasData && (
-          <button
-            onClick={onClear}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
-              text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
-          >
-            <Trash2 size={13} />
-            Clear Data
-          </button>
+          confirmClear ? (
+            <span className="flex items-center gap-2">
+              <span className="text-[11px] dark:text-text-muted text-gray-500">
+                Clear all recorded data?
+              </span>
+              <button
+                onClick={() => { onClear(); setConfirmClear(false) }}
+                className="text-[11px] font-semibold text-red-500 hover:text-red-600"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => setConfirmClear(false)}
+                className="text-[11px] text-accent hover:underline"
+              >
+                Cancel
+              </button>
+            </span>
+          ) : (
+            <button
+              onClick={() => setConfirmClear(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            >
+              <Trash2 size={13} />
+              Clear Data
+            </button>
+          )
         )}
       </div>
     </div>
