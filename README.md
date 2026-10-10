@@ -115,7 +115,7 @@ The repository contains AI agents for a wide variety of real-world use cases. Th
 | 🔐 Security | Cybersecurity analysis, phishing detection, password reviews, and threat intelligence |
 | 🌐 Specialized Domains | HR, Finance, Legal, Real Estate, Gaming, Product, Web3, and many more |
 
-> **Note:** The repository currently contains **160+ AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
+> **Note:** The repository currently contains **161 AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
 
 ---
 
