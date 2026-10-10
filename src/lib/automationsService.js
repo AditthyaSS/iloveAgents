@@ -161,10 +161,10 @@ export async function sendResendNotification({ to, automationName, agentName, ou
     to,
     automationName,
     agentName,
-    status: status === 'failed' ? 'Failed' : 'Delivered',
+    status: status === 'failed' ? 'Failed' : (status || 'Delivered'),
     sentAt: Date.now(),
     subject: `[Open Agents Hub] ${status === 'failed' ? '❌ Failed' : '✅ Completed'}: ${automationName}`,
-    preview: output ? output.slice(0, 180) + '...' : error || 'Run finished',
+    preview: output ? (output.length > 180 ? output.slice(0, 180) + '...' : output) : error || 'Run finished',
   }
 
   // Save to local email delivery log
