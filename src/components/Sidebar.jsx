@@ -432,7 +432,8 @@ export default function Sidebar({ open, onClose }) {
 
           {filteredAgents.length === 0 && (
             <div className="px-4 py-8 text-center text-xs text-gray-500 dark:text-text-muted">
-              No agents found
+              <p>No agents found</p>
+              <p className="mt-1">Try a different search or clear the filter.</p>
             </div>
           )}
         </nav>
