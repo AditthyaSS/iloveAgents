@@ -1,30 +1,46 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { Bot, Home, Swords, Search, Ghost } from 'lucide-react';
 import { useDocumentTitle } from '../lib/useDocumentTitle';
 
 export default function NotFoundPage() {
-  const navigate = useNavigate();
   useDocumentTitle('Page Not Found');
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const particles = useMemo(
+    () =>
+      [...Array(20)].map((_, i) => ({
+        id: i,
+        size: `${Math.random() * 6 + 2}px`,
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        delay: `${Math.random() * 5}s`,
+        duration: `${Math.random() * 10 + 10}s`,
+      })),
+    []
+  );
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
       {/* Background Particles (Pure CSS) */}
-      <div className="absolute inset-0 pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute bg-accent/20 rounded-full animate-float"
-            style={{
-              width: `${Math.random() * 6 + 2}px`,
-              height: `${Math.random() * 6 + 2}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${Math.random() * 10 + 10}s`,
-            }}
-          />
-        ))}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+        {!reduceMotion &&
+          particles.map((p) => (
+            <div
+              key={p.id}
+              className="absolute bg-accent/20 rounded-full animate-float"
+              style={{
+                width: p.size,
+                height: p.size,
+                left: p.left,
+                top: p.top,
+                animationDelay: p.delay,
+                animationDuration: p.duration,
+              }}
+            />
+          ))}
       </div>
 
       {/* Main Content */}
@@ -54,8 +70,8 @@ export default function NotFoundPage() {
 
         {/* Quick Links */}
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <button
-            onClick={() => navigate('/')}
+          <Link
+            to="/"
             className="group relative flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm
               bg-accent text-white hover:bg-accent-hover transition-all duration-300
               hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] active:scale-95 overflow-hidden"
@@ -63,10 +79,10 @@ export default function NotFoundPage() {
             <Home size={18} />
             <span>Go Home</span>
             <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-          </button>
+          </Link>
 
-          <button
-            onClick={() => navigate('/battle')}
+          <Link
+            to="/battle"
             className="group flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm
               dark:bg-surface-card dark:border-border border border-gray-200 bg-white
               dark:text-text-primary text-gray-900 hover:border-yellow-500/50 transition-all duration-300
@@ -74,15 +90,10 @@ export default function NotFoundPage() {
           >
             <Swords size={18} className="group-hover:text-yellow-500 transition-colors" />
             <span>Battle Mode</span>
-          </button>
+          </Link>
 
-          <button
-            onClick={() => {
-              navigate('/');
-              setTimeout(() => {
-                document.getElementById('agent-search')?.focus();
-              }, 100);
-            }}
+          <Link
+            to="/"
             className="group flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm
               dark:bg-surface-card dark:border-border border border-gray-200 bg-white
               dark:text-text-primary text-gray-900 hover:border-accent/50 transition-all duration-300
@@ -90,7 +101,7 @@ export default function NotFoundPage() {
           >
             <Search size={18} className="group-hover:text-accent transition-colors" />
             <span>Browse Agents</span>
-          </button>
+          </Link>
         </div>
       </div>
 
