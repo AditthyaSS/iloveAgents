@@ -24,9 +24,9 @@ function saveEvents(events) {
 
 function seedFromHistory() {
   const SEED_FLAG = 'ila_analytics_seeded'
-  if (localStorage.getItem(SEED_FLAG)) return
-
   try {
+    if (localStorage.getItem(SEED_FLAG)) return
+
     const historyRaw = localStorage.getItem('iloveAgents_history')
     if (!historyRaw) { localStorage.setItem(SEED_FLAG, '1'); return }
 
@@ -57,9 +57,15 @@ function seedFromHistory() {
       saveEvents(merged)
       window.dispatchEvent(new Event('ila_analytics_update'))
     }
-  } catch {}
+  } catch {
+    // Storage blocked or corrupt; dashboard renders empty stats
+  }
 
-  localStorage.setItem(SEED_FLAG, '1')
+  try {
+    localStorage.setItem(SEED_FLAG, '1')
+  } catch {
+    // best effort only; a later mount retries the seed
+  }
 }
 
 // ── Plain function (for use outside React components) ───────────────────────
