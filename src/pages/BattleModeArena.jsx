@@ -128,6 +128,9 @@ export default function BattleModeArena() {
     gemini: new AbortController(),
     openrouter: new AbortController(),
   });
+  const timeoutIdsRef = useRef({});
+  const timedOutRef = useRef({});
+  const mountedRef = useRef(true);
 
   // Tracks which provider finished (success or error) first
   const [firstFinisher, setFirstFinisher] = useState(null);
@@ -183,8 +186,10 @@ export default function BattleModeArena() {
 
       // Create a timeout that aborts the request after LLM_REQUEST_TIMEOUT_MS
       const timeoutId = setTimeout(() => {
+        timedOutRef.current[prov.id] = true;
         controller.abort();
       }, LLM_REQUEST_TIMEOUT_MS);
+      timeoutIdsRef.current[prov.id] = timeoutId;
 
       runAgent({
         provider: prov.id,
@@ -197,6 +202,8 @@ export default function BattleModeArena() {
       })
         .then((result) => {
           clearTimeout(timeoutId);
+          delete timeoutIdsRef.current[prov.id];
+          if (!mountedRef.current) return;
           recordAnalyticsRun({
             agentId: agent.id,
             agentName: agent.name,
@@ -218,10 +225,15 @@ export default function BattleModeArena() {
         })
         .catch((err) => {
           clearTimeout(timeoutId);
-          // Handle timeout errors specifically
+          delete timeoutIdsRef.current[prov.id];
+          if (!mountedRef.current) return;
+          // Handle timeout errors specifically; a plain abort (unmount or
+          // retry) is a cancellation, not a timeout.
           let errorMessage = err.message || "An unknown error occurred";
           if (err.name === "AbortError" || err.code === "ABORT_ERR") {
-            errorMessage = TIMEOUT_ERROR_MESSAGE;
+            errorMessage = timedOutRef.current[prov.id]
+              ? TIMEOUT_ERROR_MESSAGE
+              : "Request cancelled before it finished. Retry the provider to run it again.";
           }
           setResults((prev) => ({
             ...prev,
@@ -245,6 +257,8 @@ export default function BattleModeArena() {
 
     // Cleanup: abort all pending requests when component unmounts
     return () => {
+      mountedRef.current = false;
+      Object.values(timeoutIdsRef.current).forEach((id) => clearTimeout(id));
       Object.values(abortControllersRef.current).forEach(controller => {
         controller.abort();
       });
@@ -262,6 +276,7 @@ export default function BattleModeArena() {
       [providerId]: { loading: true, content: null, error: null, duration: null },
     }));
 
+    delete timedOutRef.current[providerId];
     runProvider(prov);
   };
 
