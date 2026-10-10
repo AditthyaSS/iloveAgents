@@ -161,8 +161,8 @@ export default function SettingsPage() {
               {/* Provider name row */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <img src={p.logo} alt={p.label} className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm font-semibold dark:text-text-primary text-gray-800">
+                  <img src={p.logo} alt="" className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm font-semibold dark:text-text-primary text-gray-800" id={`key-label-${p.id}`}>
                     {p.label} API Key
                   </span>
                   {savedStatus[p.id] && (
@@ -192,6 +192,7 @@ export default function SettingsPage() {
                   value={keys[p.id]}
                   onChange={(e) => setKeys((prev) => ({ ...prev, [p.id]: e.target.value }))}
                   placeholder={savedStatus[p.id] ? '••••••••••••••••••••••••' : p.placeholder}
+                  aria-labelledby={`key-label-${p.id}`}
                   className="w-full h-9 pl-3 pr-10 rounded-md text-xs font-mono transition-colors
                     dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
@@ -201,9 +202,10 @@ export default function SettingsPage() {
                   onClick={() => toggleShow(p.id)}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 dark:text-text-muted text-gray-400
                     hover:text-accent transition-colors"
-                  aria-label={showKey[p.id] ? 'Hide key' : 'Show key'}
+                  aria-label={showKey[p.id] ? `Hide ${p.label} key` : `Show ${p.label} key`}
+                  aria-pressed={!!showKey[p.id]}
                 >
-                  {showKey[p.id] ? <EyeOff size={14} /> : <Eye size={14} />}
+                  {showKey[p.id] ? <EyeOff size={14} aria-hidden="true" /> : <Eye size={14} aria-hidden="true" />}
                 </button>
               </div>
 
@@ -227,8 +229,8 @@ export default function SettingsPage() {
         {/* Save button */}
         <div className="px-5 py-4 border-t dark:border-border border-gray-100 flex items-center justify-between">
           {saveMessage ? (
-            <span className="text-xs font-medium text-emerald-500 flex items-center gap-1.5">
-              <Check size={13} />
+            <span role="status" className="text-xs font-medium text-emerald-500 flex items-center gap-1.5">
+              <Check size={13} aria-hidden="true" />
               {saveMessage}
             </span>
           ) : (
@@ -268,6 +270,7 @@ export default function SettingsPage() {
                 setDefaultProvider(val)
                 saveGlobalKeys({ defaultProvider: val })
               }}
+              aria-label="Default provider"
               className="w-full sm:w-64 h-9 px-3 rounded-md text-sm transition-colors
                 dark:bg-surface-input dark:border-border dark:text-text-primary
                 bg-gray-50 border border-gray-200 text-gray-900
@@ -301,8 +304,8 @@ export default function SettingsPage() {
           </div>
 
           {confirmClearAll ? (
-            <div className="flex flex-col gap-3 p-3 rounded-lg border border-red-500/20 bg-red-500/5">
-              <p className="text-xs font-medium text-red-500">
+            <div role="alertdialog" aria-label="Confirm clearing all keys" aria-describedby="clear-all-desc" className="flex flex-col gap-3 p-3 rounded-lg border border-red-500/20 bg-red-500/5">
+              <p id="clear-all-desc" className="text-xs font-medium text-red-500">
                 Are you sure? This will remove all saved keys and your default provider preference.
               </p>
               <div className="flex items-center gap-2">
