@@ -48,7 +48,13 @@ export default function SuitesPage() {
     setGeneratorError(null)
     try {
       const result = await generateCustomSuite(goal, apiKey, provider)
-      setCustomSuite(result)
+      const seen = new Set()
+      const agents = (result.agents || []).filter((a) => {
+        if (!a || typeof a.id !== 'string' || seen.has(a.id)) return false
+        seen.add(a.id)
+        return true
+      })
+      setCustomSuite({ ...result, agents })
     } catch (err) {
       setGeneratorError("Couldn't generate your suite. Please try again.")
     } finally {
@@ -57,6 +63,7 @@ export default function SuitesPage() {
   }
 
   const handleCreateWorkflow = () => {
+    if (!customSuite?.agents?.length) return
     navigate('/workflows/build', {
       state: {
         preselectedAgents: customSuite.agents.map((a) => a.id),
