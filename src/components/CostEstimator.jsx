@@ -38,6 +38,8 @@ export default function CostEstimator({ inputText = '', systemPrompt = '', model
     <div className="rounded-lg border dark:bg-surface-card dark:border-border bg-white border-gray-200 p-3 text-xs">
       <div className="flex items-center gap-1.5 mb-2">
         <svg
+          aria-hidden="true"
+          focusable="false"
           width="12"
           height="12"
           viewBox="0 0 24 24"
@@ -54,7 +56,7 @@ export default function CostEstimator({ inputText = '', systemPrompt = '', model
         <span className="font-semibold dark:text-text-primary text-gray-900">
           Cost Estimate
         </span>
-        <span className="dark:text-text-muted text-gray-400">·</span>
+        <span aria-hidden="true" className="dark:text-text-muted text-gray-400">·</span>
         <span className="dark:text-text-muted text-gray-400">{pricing.provider}</span>
       </div>
 
