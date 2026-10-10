@@ -31,8 +31,8 @@ const normalizeAgents = (agents) => {
 
 let cachedAgentsPromise = null;
 
-export function loadAllAgents() {
-  if (cachedAgentsPromise) return cachedAgentsPromise;
+export function loadAllAgents({ reload = false } = {}) {
+  if (cachedAgentsPromise && !reload) return cachedAgentsPromise;
 
   cachedAgentsPromise = Promise.all(
     Object.values(modules).map((loader) => loader())
@@ -46,5 +46,9 @@ export function loadAllAgents() {
   });
 
   return cachedAgentsPromise;
+}
+
+export function reloadAgents() {
+  return loadAllAgents({ reload: true });
 }
 
