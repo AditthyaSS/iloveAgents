@@ -54,6 +54,7 @@ export default function SuggestedChainPills({ agent }) {
               key={pred.id}
               onClick={() => handlePillClick(pred)}
               title={`Start a workflow: ${pred.name} → ${agent.name}`}
+              aria-label={`Start a workflow: ${pred.name} then ${agent.name}`}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium
                 border transition-all duration-150 active:scale-[0.97]
                 dark:bg-surface-input dark:border-border dark:text-text-secondary
