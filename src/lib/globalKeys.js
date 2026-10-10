@@ -90,11 +90,26 @@ export function getGlobalKeys() {
  * @param {{ openai?: string, anthropic?: string, gemini?: string, openrouter?: string, defaultProvider?: string }} keys
  */
 export function saveGlobalKeys({ openai, anthropic, gemini, openrouter, defaultProvider } = {}) {
-  if (openai          !== undefined && openai.trim()          !== '') writeSecret(KEYS.openai,          openai.trim())
-  if (anthropic       !== undefined && anthropic.trim()       !== '') writeSecret(KEYS.anthropic,       anthropic.trim())
-  if (gemini          !== undefined && gemini.trim()          !== '') writeSecret(KEYS.gemini,          gemini.trim())
-  if (openrouter      !== undefined && openrouter.trim()      !== '') writeSecret(KEYS.openrouter,      openrouter.trim())
-  if (defaultProvider !== undefined && defaultProvider.trim() !== '') localStorage.setItem(DEFAULT_PROVIDER_KEY, defaultProvider.trim())
+  const saveSecret = (storageKey, value) => {
+    if (value === undefined) return
+    if (typeof value !== 'string' || value.trim() === '') return
+    writeSecret(storageKey, value.trim())
+  }
+  saveSecret(KEYS.openai, openai)
+  saveSecret(KEYS.anthropic, anthropic)
+  saveSecret(KEYS.gemini, gemini)
+  saveSecret(KEYS.openrouter, openrouter)
+  if (defaultProvider !== undefined) {
+    if (typeof defaultProvider === 'string' && defaultProvider.trim() !== '') {
+      localStorage.setItem(DEFAULT_PROVIDER_KEY, defaultProvider.trim())
+    } else {
+      localStorage.removeItem(DEFAULT_PROVIDER_KEY)
+    }
+  }
+}
+
+export function clearDefaultProvider() {
+  localStorage.removeItem(DEFAULT_PROVIDER_KEY)
 }
 
 /**
