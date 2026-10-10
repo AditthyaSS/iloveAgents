@@ -317,9 +317,15 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
             className="hidden"
           />
           {items.length > 0 && (
-            <span className="text-[11px] dark:text-text-muted text-gray-400">
-              {items.length} item{items.length !== 1 ? 's' : ''} detected
-            </span>
+            items.length > MAX_BATCH_SIZE ? (
+              <span className="text-[11px] text-red-500 font-medium">
+                {items.length} items detected — max is {MAX_BATCH_SIZE}. Remove {items.length - MAX_BATCH_SIZE} item{items.length - MAX_BATCH_SIZE !== 1 ? 's' : ''} to run.
+              </span>
+            ) : (
+              <span className="text-[11px] dark:text-text-muted text-gray-400">
+                {items.length} item{items.length !== 1 ? 's' : ''} detected
+              </span>
+            )
           )}
         </div>
 
