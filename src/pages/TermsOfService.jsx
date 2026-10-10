@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import {
   FileText,
   Users,
@@ -56,13 +57,16 @@ const sections = [
 ];
 
 export default function TermsOfService() {
+  const navigate = useNavigate();
   const handleBack = () => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && window.history.length > 1) {
       window.history.back();
+    } else {
+      navigate("/");
     }
   };
   return (
-    <div className="min-h-screen bg-[#06070A] text-white overflow-hidden">
+    <div className="min-h-screen bg-white text-gray-900 dark:bg-[#06070A] dark:text-white overflow-hidden">
       {/* Background */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-20 left-20 h-72 w-72 rounded-full bg-cyan-500/10 blur-[120px]" />
@@ -101,8 +105,8 @@ export default function TermsOfService() {
         </div>
 
         <div className="flex items-center justify-center gap-2 mt-10 text-slate-400">
-          <Calendar size={18} />
-          <span>Last Updated: June 2026</span>
+          <Calendar size={18} aria-hidden="true" />
+          <span>Last Updated: <time dateTime="2026-06">June 2026</time></span>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 mt-16">
@@ -115,7 +119,7 @@ export default function TermsOfService() {
                 className="rounded-3xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-fuchsia-500/10 backdrop-blur-xl p-8 transition duration-300 hover:-translate-y-1 hover:border-cyan-400/30"
               >
                 <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-fuchsia-500/20 flex items-center justify-center mb-6">
-                  <Icon className="text-cyan-400" size={28} />
+                  <Icon className="text-cyan-400" size={28} aria-hidden="true" />
                 </div>
 
                 <h2 className="text-2xl font-semibold mb-4">
