@@ -176,6 +176,13 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
+    setResults((prev) =>
+      prev.map((r) =>
+        r.status === 'done' || r.status === 'failed'
+          ? r
+          : { ...r, status: 'failed', error: 'Stopped by user.' }
+      )
+    )
     setRunning(false)
   }
 
