@@ -19,11 +19,14 @@ function downloadBlob(content, mimeType, filename) {
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
-function csvEscape(value) {
-  const str = String(value ?? '')
+export function csvEscape(value) {
+  let str = String(value ?? '')
+  if (/^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`
+  }
   if (/[",\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`
   }
