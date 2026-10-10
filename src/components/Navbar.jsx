@@ -36,7 +36,11 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   })
 
   useEffect(() => {
-    const saved = localStorage.getItem('ila_theme')
+    // Guard against SecurityError in strict browsers or blocked storage
+    let saved = null
+    try {
+      saved = localStorage.getItem('ila_theme')
+    } catch {}
 
     if (saved === 'light') {
       setDarkMode(false)
@@ -52,11 +56,13 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
 
     if (next) {
       document.documentElement.classList.add('dark')
-      localStorage.setItem('ila_theme', 'dark')
     } else {
       document.documentElement.classList.remove('dark')
-      localStorage.setItem('ila_theme', 'light')
     }
+    // Best-effort persistence — fail silently if storage is unavailable
+    try {
+      localStorage.setItem('ila_theme', next ? 'dark' : 'light')
+    } catch {}
   }
 
   const navItems = [
