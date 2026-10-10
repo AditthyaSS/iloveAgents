@@ -64,7 +64,7 @@ export function publishAgent(entry) {
     id: `mkt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: String(entry.name ?? '').trim(),
     description: String(entry.description ?? '').trim(),
-    tags: (entry.tags ?? []).map((t) => String(t).trim()).filter(Boolean).slice(0, 8),
+    tags: normalizeTags(entry.tags).slice(0, 8),
     category: MARKETPLACE_CATEGORIES.includes(entry.category) ? entry.category : MARKETPLACE_CATEGORIES[0],
     readme: entry.readme ? String(entry.readme) : '',
     author: String(entry.author ?? 'Anonymous').trim() || 'Anonymous',
@@ -90,13 +90,22 @@ export function loadListings() {
   return Array.isArray(listings) ? listings.map(normalizeListing) : []
 }
 
+export function normalizeTags(tags) {
+  const seen = new Set()
+  const out = []
+  for (const raw of Array.isArray(tags) ? tags : []) {
+    const tag = String(raw ?? '').trim().toLowerCase()
+    if (!tag || seen.has(tag)) continue
+    seen.add(tag)
+    out.push(tag)
+  }
+  return out
+}
 export function normalizeListing(listing) {
   if (!listing || typeof listing !== 'object') return listing
   return {
     ...listing,
-    tags: Array.isArray(listing.tags)
-      ? listing.tags.filter((t) => typeof t === 'string')
-      : [],
+    tags: normalizeTags(listing.tags),
     sanitizedFields: Array.isArray(listing.sanitizedFields) ? listing.sanitizedFields : [],
     importCount: typeof listing.importCount === 'number' ? listing.importCount : 0,
   }
