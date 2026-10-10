@@ -200,9 +200,14 @@ export function getAverageRating(listing) {
  * @returns {Array<object>}
  */
 export function filterListings(listings, { search = '', category = '' } = {}) {
-  const q = search.trim().toLowerCase()
+  if (!Array.isArray(listings)) return []
+  const q = String(search ?? '').trim().toLowerCase()
+  const wantedCategory = String(category ?? '').trim().toLowerCase()
   return listings.filter((l) => {
-    if (category && l.category !== category) return false
+    if (!l || typeof l !== 'object') return false
+    if (wantedCategory && String(l.category ?? '').trim().toLowerCase() !== wantedCategory) {
+      return false
+    }
     if (!q) return true
     const tags = Array.isArray(l.tags) ? l.tags : []
     return (
