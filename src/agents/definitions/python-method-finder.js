@@ -7,7 +7,7 @@ export default{
   icon: "Code",
   provider: "any",
   defaultProvider:  "gemini", 
-  model: "gemini-3.1-flash",
+  model: "gemini-2.5-flash",
  exampleInputs: {
   problem_description: "I have two lists and I want to combine them into one list without duplicates",
 },
