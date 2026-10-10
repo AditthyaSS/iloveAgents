@@ -370,7 +370,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 
         if (parsed.content) {
           fullContent += parsed.content
-          onChunk(parsed.content)
+          if (typeof onChunk === 'function') onChunk(parsed.content)
         }
 
         if (parsed.done) break
@@ -382,7 +382,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       const parsed = config.parseStreamChunk(buffer.trim())
       if (parsed?.content) {
         fullContent += parsed.content
-        onChunk(parsed.content)
+        if (typeof onChunk === 'function') onChunk(parsed.content)
       }
     }
 
