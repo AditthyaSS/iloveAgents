@@ -315,10 +315,9 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
         </div>
 
         <div
-          role="menu"
-          aria-hidden={ !mobileMenuOpen }
+          aria-hidden={!mobileMenuOpen}
           className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
-            mobileMenuOpen ? 'max-h-80 opacity-100 pt-3' : 'max-h-0 opacity-0 pt-0'
+            mobileMenuOpen ? 'visible max-h-80 opacity-100 pt-3' : 'invisible max-h-0 opacity-0 pt-0'
           }`}
         >
           <div className="rounded-[1.5rem] border border-white/50 bg-white/70 p-2 shadow-inner shadow-white/50 dark:border-white/10 dark:bg-black/25 dark:shadow-black/20">
