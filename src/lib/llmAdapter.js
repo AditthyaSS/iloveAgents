@@ -145,9 +145,9 @@ const PROVIDER_CONFIGS = {
 
   gemini: {
     url: (model, apiKey) =>
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${apiKey}`,
     streamUrl: (model, apiKey) =>
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${apiKey}`,
     buildHeaders: () => ({
       'Content-Type': 'application/json',
     }),
@@ -209,11 +209,11 @@ async function handleErrorResponse(response, provider = "unknown") {
   }
 
   if (errorKey === 'invalid_api_key') {
-    throw {
-      type: "invalid_api_key",
-      provider,
-      detail: detail || 'No additional details',
-    };
+    const keyError = new Error(detail || 'Invalid API key.')
+    keyError.type = 'invalid_api_key'
+    keyError.provider = provider
+    keyError.detail = detail || 'No additional details'
+    throw keyError
   }
 
   const friendlyMessage =
@@ -244,7 +244,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
     throw new Error(`Unsupported provider: ${provider}`)
   }
 
-  if (!apiKey || apiKey.trim() === '') {
+  if (typeof apiKey !== 'string' || apiKey.trim() === '') {
     throw new Error('Please provide an API key to run this agent.')
   }
 
@@ -273,6 +273,10 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
     const data = await response.json()
     const parsed = config.parseResponse(data)
     const duration = Math.round(performance.now() - startTime)
+
+    if (typeof parsed.content !== 'string' || parsed.content.trim() === '') {
+      throw new Error('The provider returned an empty response. Please try again.')
+    }
 
     return {
       content: parsed.content,
@@ -310,7 +314,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     throw new Error(`Unsupported provider: ${provider}`)
   }
 
-  if (!apiKey || apiKey.trim() === '') {
+  if (typeof apiKey !== 'string' || apiKey.trim() === '') {
     throw new Error('Please provide an API key to run this agent.')
   }
 
