@@ -37,7 +37,7 @@ export function sanitizeAgentConfig(config) {
       const out = {}
       for (const [key, v] of Object.entries(value)) {
         const childPath = path ? `${path}.${key}` : key
-        if (CREDENTIAL_KEY_PATTERN.test(key) && typeof v === 'string' && v !== '') {
+        if (CREDENTIAL_KEY_PATTERN.test(key) && v !== '' && v != null) {
           out[key] = `YOUR_${key.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}_HERE`
           sanitizedFields.push(childPath)
         } else {
