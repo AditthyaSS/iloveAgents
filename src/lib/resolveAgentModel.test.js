@@ -66,6 +66,39 @@ describe('resolveAgentModel', () => {
     expect(result).toBe(MODEL_MAP.gemini)
   })
 
+  it('should fall back to provider default when agent.models[provider] is unlisted', () => {
+    const agent = {
+      ...baseAgent,
+      models: { anthropic: 'unlisted-claude-model-123' },
+    }
+    const result = resolveAgentModel(agent, 'anthropic', null)
+    expect(result).toBe(MODEL_MAP.anthropic)
+  })
+
+  it('should fall back to provider default when agent.model is unlisted for provider match', () => {
+    const agent = {
+      provider: 'openai',
+      model: 'unlisted-openai-model-456',
+    }
+    const result = resolveAgentModel(agent, 'openai', null)
+    expect(result).toBe(MODEL_MAP.openai)
+  })
+
+  it('should fall back to provider default when agent.model is unlisted for defaultProvider match', () => {
+    const agent = {
+      provider: 'any',
+      defaultProvider: 'openai',
+      model: 'unlisted-openai-model-789',
+    }
+    const result = resolveAgentModel(agent, 'openai', null)
+    expect(result).toBe(MODEL_MAP.openai)
+  })
+
+  it('should handle undefined or null agent gracefully', () => {
+    const result = resolveAgentModel(null, 'openai', null)
+    expect(result).toBe(MODEL_MAP.openai)
+  })
+
   it('should fall back to openai default for completely unknown provider', () => {
     const agent = { provider: 'any' }
     const result = resolveAgentModel(agent, 'unknown-provider', null)
