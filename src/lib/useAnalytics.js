@@ -88,7 +88,7 @@ export function recordAnalyticsRun({ agentId, agentName, category, provider, mod
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 
-function computeStats(events, timeRange = 'all') {
+export function computeStats(events, timeRange = 'all') {
   // ── Time-range filtering
   const now = new Date()
   let filteredEvents = events
