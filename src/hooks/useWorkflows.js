@@ -72,7 +72,7 @@ export async function saveWorkflow(workflow) {
         title: workflow.title,
         description: workflow.description || '',
         agents: workflow.agents,
-        is_public: true,
+        is_public: workflow.is_public ?? true,
         usage_count: 0,
       },
     ])
@@ -124,10 +124,16 @@ export async function updateWorkflow(id, updates) {
     }
   }
 
-  // Proceed with update (ownership verified)
+  // Proceed with update (ownership verified). Only user-editable fields
+  // pass through — identifiers, ownership, and counters stay server-owned.
   const { data, error } = await supabase
     .from('workflows')
-    .update(updates)
+    .update({
+      ...(updates.title !== undefined ? { title: updates.title } : {}),
+      ...(updates.description !== undefined ? { description: updates.description } : {}),
+      ...(updates.agents !== undefined ? { agents: updates.agents } : {}),
+      ...(updates.is_public !== undefined ? { is_public: updates.is_public } : {}),
+    })
     .eq('id', id)
     .eq('user_id', userId)
     .select()
