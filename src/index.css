@@ -347,6 +347,9 @@ html:not(.dark) .markdown-output code {
 
 .markdown-output table {
   @apply w-full mb-4 border-collapse;
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .markdown-output th,
