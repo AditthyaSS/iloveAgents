@@ -116,8 +116,8 @@ export default function WorkflowDetail() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-3 animate-fade-in">
-        <Loader2 size={24} className="animate-spin text-accent" />
+      <div role="status" className="flex flex-col items-center justify-center py-20 gap-3 animate-fade-in">
+        <Loader2 size={24} className="animate-spin text-accent" aria-hidden="true" />
         <p className="text-sm dark:text-text-secondary text-gray-500">Loading workflow...</p>
       </div>
     )
@@ -176,7 +176,7 @@ export default function WorkflowDetail() {
         <div className="flex items-center gap-4 mb-5">
           <div className="flex items-center gap-1.5">
             <TrendingUp size={13} className="dark:text-text-muted text-gray-400" />
-            <span className="text-sm font-semibold dark:text-text-primary text-gray-900">
+            <span className="text-sm font-semibold dark:text-text-primary text-gray-900" aria-live="polite" aria-atomic="true" aria-label={`${usageCount} runs`}>
               {usageCount}
             </span>
             <span className="text-xs dark:text-text-muted text-gray-400">runs</span>
