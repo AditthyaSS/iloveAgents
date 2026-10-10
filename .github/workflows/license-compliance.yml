@@ -1,0 +1,54 @@
+name: License compliance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  licenses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate license report
+        run: |
+          npx --yes license-checker --json --out licenses.json
+          npx --yes license-checker --summary >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail on disallowed licenses
+        run: |
+          node -e "
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('licenses.json', 'utf8'));
+          const blocked = ['GPL', 'AGPL', 'GPL-2.0', 'GPL-3.0', 'AGPL-3.0'];
+          const bad = Object.entries(report).filter(([name, info]) => {
+            const licenses = String(info.licenses || '');
+            return blocked.some(b => licenses.includes(b));
+          });
+          if (bad.length > 0) {
+            console.log('Disallowed licenses found:');
+            bad.forEach(([name, info]) => console.log('- ' + name + ': ' + info.licenses));
+            process.exit(1);
+          }
+          console.log('No disallowed licenses found.');
+          "
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: license-report
+          path: licenses.json
