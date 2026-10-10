@@ -184,7 +184,10 @@ export default function AgentRunner({ agent }) {
   }, [loading, isStreaming]);
 
   const updateInput = (id, value) => {
-    setInputs((prev) => ({ ...prev, [id]: value }));
+    const capped = typeof value === 'string' && value.length > MAX_CHAR_LIMIT
+      ? value.slice(0, MAX_CHAR_LIMIT)
+      : value
+    setInputs((prev) => ({ ...prev, [id]: capped }));
   };
 
   // Finds the first free-text style input (textarea/text/code) with content,
@@ -708,7 +711,11 @@ const handleRun = async () => {
               <div className="relative">
                 <textarea
                   value={inputs[input.id] || ""}
-                  onChange={(e) => updateInput(input.id, e.target.value)}
+                  onChange={(e) => {
+                    if (e.target.value.length <= MAX_CHAR_LIMIT) {
+                      updateInput(input.id, e.target.value)
+                    }
+                  }}
                   placeholder={input.placeholder}
                   rows={8}
                   className="w-full pl-3 pr-10 py-2 rounded-md text-xs font-mono transition-colors resize-y leading-relaxed
@@ -719,13 +726,15 @@ const handleRun = async () => {
                 />
                 <VoiceInput
                   value={inputs[input.id] || ""}
-                  onChange={(v) => updateInput(input.id, v)}
+                  onChange={(v) => {
+                    if (v.length <= MAX_CHAR_LIMIT) updateInput(input.id, v)
+                  }}
                   className="top-2 right-2"
                 />
                 <div className="flex items-center gap-3 mt-1">
                   <CharCounter
                     value={inputs[input.id] || ""}
-                    maxLength={5000}
+                    maxLength={MAX_CHAR_LIMIT}
                   />
                   <TokenCounter
                     value={inputs[input.id] || ""}
