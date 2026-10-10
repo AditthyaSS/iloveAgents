@@ -100,6 +100,11 @@ export default function CustomSelect({
 
   return (
     <div ref={containerRef} className={`relative inline-block w-full ${className || ''}`}>
+      {label && (
+        <span className="mb-1 block text-xs font-medium dark:text-text-secondary text-gray-600">
+          {label}
+        </span>
+      )}
       {/* Dropdown trigger */}
       <button
         ref={triggerRef}
@@ -109,7 +114,7 @@ export default function CustomSelect({
         onKeyDown={handleTriggerKeyDown}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        aria-label={label || `${selectedLabel}, ${placeholder}`}
+        aria-label={label || selectedLabel}
         className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg border text-sm transition-all duration-200
           dark:bg-surface-input dark:border-border dark:text-text-primary
           bg-white border-gray-200 text-gray-900
