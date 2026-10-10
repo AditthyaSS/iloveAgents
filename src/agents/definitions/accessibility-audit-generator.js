@@ -8,7 +8,7 @@ export default {
   icon: "Accessibility",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     code: "<button onClick={() => setIsOpen(!isOpen)}>\n  <img src='/icons/menu.svg' />\n</button>\n<div style={{ color: '#DDD', backgroundColor: '#FFF' }}>\n  Click here to see more options\n</div>",
     standard: "WCAG 2.1 AA (recommended)",
