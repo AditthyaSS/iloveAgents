@@ -56,10 +56,14 @@ export const useHistory = () => {
    * @param {Object} run - The run data (agentId, agentName, inputs, output, provider)
    */
   const saveRun = useCallback((run) => {
+    if (!run || typeof run !== 'object' || typeof run.agentId !== 'string' || !run.agentId) {
+      console.error('Cannot save history run without an agentId.');
+      return null;
+    }
     const timestamp = Date.now();
     const newRun = {
       ...run,
-      id: `${run.agentId}_${timestamp}`,
+      id: `${run.agentId}_${timestamp}_${Math.random().toString(36).slice(2, 8)}`,
       timestamp,
     };
 
@@ -69,6 +73,7 @@ export const useHistory = () => {
     const updatedHistory = [newRun, ...loadHistory()].slice(0, MAX_HISTORY);
     saveHistory(updatedHistory);
     setHistory(updatedHistory);
+    return newRun;
   }, []);
 
   /**
