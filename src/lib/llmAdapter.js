@@ -209,11 +209,11 @@ async function handleErrorResponse(response, provider = "unknown") {
   }
 
   if (errorKey === 'invalid_api_key') {
-    throw {
-      type: "invalid_api_key",
-      provider,
-      detail: detail || 'No additional details',
-    };
+    const err = new Error(detail || 'Invalid API key. Please check your configuration.');
+    err.type = "invalid_api_key";
+    err.provider = provider;
+    err.detail = detail || 'No additional details';
+    throw err;
   }
 
   const friendlyMessage =
