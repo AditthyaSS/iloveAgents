@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useRef } from 'react'
+import { useState, useMemo, useEffect, useRef, useDeferredValue } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown, Lightbulb } from 'lucide-react'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
@@ -205,9 +205,35 @@ export default function HomePage() {
       .filter(Boolean)
   }, [favorites, agents])
 
-  // Filter agents based on search + category
+  // Filter agents based on search + category. The text input stays immediate
+  // for typing feel while the expensive filter runs on the deferred value,
+  // and per-agent searchable text is indexed once per agent list.
+  const deferredQuery = useDeferredValue(searchQuery)
+  const searchIndex = useMemo(() => {
+    const index = new Map()
+    agents.forEach((agent) => {
+      const provider = agent.provider || 'any'
+      index.set(
+        agent.id,
+        [
+          agent.name,
+          agent.description,
+          agent.category,
+          agent.id,
+          agent.model,
+          providerLabels[provider],
+          provider,
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+      )
+    })
+    return index
+  }, [agents])
+
   const filteredAgents = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
+    const q = deferredQuery.trim().toLowerCase()
 
     return agents.filter((agent) => {
       const matchesCategory = !selectedCategory || agent.category === selectedCategory
@@ -226,22 +252,9 @@ export default function HomePage() {
 
       if (!q) return true
 
-      const searchableText = [
-        agent.name,
-        agent.description,
-        agent.category,
-        agent.id,
-        agent.model,
-        providerLabels[provider],
-        provider,
-      ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase()
-
-      return searchableText.includes(q)
+      return (searchIndex.get(agent.id) || '').includes(q)
     })
-  }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider])
+  }, [activeCollectionId, agents, getAgentCollectionId, deferredQuery, searchIndex, selectedCategory, selectedProvider])
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
@@ -273,7 +286,7 @@ export default function HomePage() {
   }
 
   const showingFiltered =
-    searchQuery.trim() || selectedCategory || selectedProvider || activeCollectionId !== DEFAULT_COLLECTION_ID
+    deferredQuery.trim() || selectedCategory || selectedProvider || activeCollectionId !== DEFAULT_COLLECTION_ID
 
   return (
     <div className="animate-fade-in">
