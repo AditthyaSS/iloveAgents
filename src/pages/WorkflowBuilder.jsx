@@ -437,7 +437,7 @@ export default function WorkflowBuilder() {
       )}
 
       {/* Action Buttons */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         <button
           id="save-workflow-btn"
           onClick={handleSave}
