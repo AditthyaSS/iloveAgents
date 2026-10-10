@@ -6,7 +6,7 @@ const mlExperimentAutopsy = {
   icon: 'ChartSpline',
 
   provider: 'any',
-  supportedProviders: ['openai', 'anthropic', 'google', 'mistral'],
+  supportedProviders: ['openai', 'anthropic', 'gemini', 'openrouter'],
   defaultProvider: 'anthropic',
   defaultModels: {
     openai: 'gpt-4o',
