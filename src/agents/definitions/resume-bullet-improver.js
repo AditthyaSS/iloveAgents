@@ -8,7 +8,7 @@ export default {
   icon: "FileText",
   provider: "any",
   defaultProvider: "gemini",
-  model: "gemini-3.1-flash-lite",
+  model: "gemini-2.5-flash",
   exampleInputs: {
     bullet_point:
       "worked on a website for my college club and made it faster",
