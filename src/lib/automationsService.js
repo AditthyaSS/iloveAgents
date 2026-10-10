@@ -154,7 +154,7 @@ export function removeAutomationKey(automationId) {
   }
 }
 
-// ── Email Notification Dispatch (Resend integration / simulation) ──
+// ── Email Notification Dispatch (server-side Resend via /api/send-automation-email) ──
 export async function sendResendNotification({ to, automationName, agentName, output, status, duration, error }) {
   const logEntry = {
     id: `email_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -173,46 +173,27 @@ export async function sendResendNotification({ to, automationName, agentName, ou
     localStorage.setItem(EMAIL_LOGS_KEY, JSON.stringify([logEntry, ...existingLogs].slice(0, 50)))
   } catch {}
 
-  // Check if Resend API key is available in environment
-  const resendApiKey = import.meta.env.VITE_RESEND_API_KEY
-  if (resendApiKey && to) {
+  // Hand off actual delivery to the server function so the Resend API key
+  // never appears in browser code. If the server is not configured the
+  // local log above still records the attempt.
+  if (to) {
     try {
-      await fetch('https://api.resend.com/emails', {
+      await fetch('/api/send-automation-email', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${resendApiKey}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          from: 'Open Agents Hub <automations@openagentshub.dev>',
-          to: [to],
+          to,
           subject: logEntry.subject,
-          html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b;">
-              <div style="border-bottom: 2px solid #6366f1; padding-bottom: 12px; margin-bottom: 20px;">
-                <h2 style="margin: 0; color: #4338ca;">⏰ Open Agents Hub Autopilot Report</h2>
-                <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Automation: <strong>${automationName}</strong> (${agentName})</p>
-              </div>
-              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
-                <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${status === 'failed' ? '#ef4444' : '#10b981'}; font-weight: 600;">${status.toUpperCase()}</span></p>
-                <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Execution Time:</strong> ${new Date().toLocaleString()}</p>
-                <p style="margin: 0; font-size: 13px;"><strong>Duration:</strong> ${(duration / 1000).toFixed(2)}s</p>
-              </div>
-              <div style="margin-bottom: 20px;">
-                <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #0f172a;">Agent Output</h3>
-                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">
-                  ${output || error || 'No output generated.'}
-                </div>
-              </div>
-              <p style="font-size: 12px; color: #94a3b8; text-align: center; margin-top: 30px;">
-                Sent automatically by Open Agents Hub Scheduled Automations. Encrypted with pgsodium.
-              </p>
-            </div>
-          `,
+          automationName,
+          agentName,
+          output,
+          status,
+          duration,
+          error,
         }),
       })
     } catch (e) {
-      console.warn('Resend API dispatch error:', e)
+      console.warn('Email dispatch error:', e)
     }
   }
 
