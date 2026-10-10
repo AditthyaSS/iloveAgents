@@ -13,6 +13,7 @@ export default function CollectionsPage() {
   const [modal, setModal] = useState(null)
   const [name, setName] = useState('')
   const [error, setError] = useState('')
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   const customCollections = useMemo(
     () => collections.filter((collection) => collection.id !== DEFAULT_COLLECTION_ID),
@@ -52,7 +53,7 @@ export default function CollectionsPage() {
         return <article key={collection.id} className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-lg dark:border-border dark:bg-surface-card">
           <div className="mb-4 flex items-start justify-between gap-3"><div className="flex items-center gap-3"><div className="rounded-lg bg-accent/10 p-2 text-accent"><FolderPlus size={20} /></div><div><h2 className="font-semibold text-gray-900 dark:text-text-primary">{collection.name}</h2><p className="text-xs text-gray-500 dark:text-text-muted">{collection.agentIds.length} agents</p></div></div></div>
           <p className="min-h-10 text-sm text-gray-500 dark:text-text-secondary">{getPreviewText(collection)}</p>
-          <div className="mt-5 flex flex-wrap gap-2"><Link to={`/collections/${collection.id}`} className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-hover">Open</Link><button onClick={() => { setModal(collection); setName(collection.name); setError('') }} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:border-border dark:bg-surface-input dark:text-text-secondary"><Edit3 size={14} />Rename</button><button onClick={() => deleteCollection(collection.id)} className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"><Trash2 size={14} />Delete</button></div>
+          <div className="mt-5 flex flex-wrap gap-2"><Link to={`/collections/${collection.id}`} className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-hover">Open</Link><button onClick={() => { setModal(collection); setName(collection.name); setError('') }} className="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-600 hover:text-gray-900 dark:border-border dark:bg-surface-input dark:text-text-secondary"><Edit3 size={14} />Rename</button><button onClick={() => { if (confirmDeleteId === collection.id) { deleteCollection(collection.id); setConfirmDeleteId(null) } else { setConfirmDeleteId(collection.id) } }} onBlur={() => setConfirmDeleteId((id) => (id === collection.id ? null : id))} className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"><Trash2 size={14} />{confirmDeleteId === collection.id ? `Confirm delete (${collection.agentIds.length} agents)` : 'Delete'}</button></div>
         </article>
       })}
     </div>}

@@ -88,7 +88,13 @@ export default function CollectionDetailPage() {
 
   const staleCount = collection.agentIds.length - collectionAgents.length
 
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
   const handleDelete = () => {
+    if (!confirmDelete) {
+      setConfirmDelete(true)
+      return
+    }
     deleteCollection(collection.id)
     navigate('/collections')
   }
@@ -132,10 +138,14 @@ export default function CollectionDetailPage() {
 
         <button
           onClick={handleDelete}
+          onBlur={() => setConfirmDelete(false)}
+          aria-live="polite"
           className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"
         >
           <Trash2 size={16} />
-          Delete Collection
+          {confirmDelete
+            ? `Confirm delete (${collection.agentIds.length} agents move back)`
+            : 'Delete Collection'}
         </button>
       </div>
 
