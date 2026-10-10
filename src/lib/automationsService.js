@@ -155,6 +155,18 @@ export function removeAutomationKey(automationId) {
 }
 
 // ── Email Notification Dispatch (Resend integration / simulation) ──
+export function buildEmailPreview(output, error) {
+  if (typeof output === 'string' && output) {
+    return output.length > 180 ? `${output.slice(0, 180)}...` : output
+  }
+  return error || 'Run finished'
+}
+
+export function formatEmailDuration(duration) {
+  if (!Number.isFinite(duration) || duration < 0) return '—'
+  return `${(duration / 1000).toFixed(2)}s`
+}
+
 export async function sendResendNotification({ to, automationName, agentName, output, status, duration, error }) {
   const logEntry = {
     id: `email_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -164,7 +176,7 @@ export async function sendResendNotification({ to, automationName, agentName, ou
     status: status === 'failed' ? 'Failed' : 'Delivered',
     sentAt: Date.now(),
     subject: `[Open Agents Hub] ${status === 'failed' ? '❌ Failed' : '✅ Completed'}: ${automationName}`,
-    preview: output ? output.slice(0, 180) + '...' : error || 'Run finished',
+    preview: buildEmailPreview(output, error),
   }
 
   // Save to local email delivery log
@@ -196,7 +208,7 @@ export async function sendResendNotification({ to, automationName, agentName, ou
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
                 <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Status:</strong> <span style="color: ${status === 'failed' ? '#ef4444' : '#10b981'}; font-weight: 600;">${status.toUpperCase()}</span></p>
                 <p style="margin: 0 0 8px 0; font-size: 13px;"><strong>Execution Time:</strong> ${new Date().toLocaleString()}</p>
-                <p style="margin: 0; font-size: 13px;"><strong>Duration:</strong> ${(duration / 1000).toFixed(2)}s</p>
+                <p style="margin: 0; font-size: 13px;"><strong>Duration:</strong> ${formatEmailDuration(duration)}</p>
               </div>
               <div style="margin-bottom: 20px;">
                 <h3 style="margin: 0 0 10px 0; font-size: 16px; color: #0f172a;">Agent Output</h3>

@@ -167,7 +167,7 @@ Analyze the provided experiment details and respond using ONLY this exact struct
 <2-4 sentences identifying the primary reason the experiment failed or underperformed>
 
 ## Detected Issues
-// IMPROVEMENT 3: Severity tagging — each issue now includes a [CRITICAL], [WARNING], or [INFO] tag
+Each issue carries a severity tag:
 - [SEVERITY] <issue>: <one-line explanation>
 - [SEVERITY] <issue>: <one-line explanation>
 ...
@@ -228,7 +228,6 @@ HYPERPARAMETER RULES:
 - For tree models (XGBoost, LightGBM): focus on max_depth, n_estimators, subsample
 - For neural nets: focus on lr, batch size, dropout, weight decay
 
-// IMPROVEMENT 4: Architecture-specific fix templates
 ARCHITECTURE-SPECIFIC RULES:
 
 CNN:
