@@ -12,7 +12,22 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
 .env.local
+.env.development
+.env.production
+.env.*.local
+!.env.example
+
+# Secrets - never commit keys or certs
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.json
+secrets.yaml
+secrets.yml
+config/secrets.*
 
 # Editor
 .vscode/*

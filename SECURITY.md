@@ -26,6 +26,14 @@ If you are contributing code, please do not add anything that:
 
 Any PR that does this will be closed, even if it was not intentional.
 
+## Key Rotation
+
+If a key was pasted into a file by mistake:
+1. Revoke it in the provider dashboard first.
+2. Generate a new key and put it in your local `.env` file.
+3. Clear sessionStorage in the browser so the old key is gone.
+4. Run `git status` and confirm `.env` does not show up before committing.
+
 ## Found a Problem?
 
 If you find something that looks like a security issue, please **do not open a public GitHub issue**.
