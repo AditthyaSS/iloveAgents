@@ -1,74 +1,83 @@
 import { describe, it, expect } from 'vitest'
 import { resolveAgentModel, MODELS, MODEL_MAP } from './resolveAgentModel'
 
-describe('MODELS', () => {
-  it('should have entries for all four providers', () => {
+describe('resolveAgentModel', () => {
+  const agent = {
+    models: {
+      openai: 'gpt-4o',
+      anthropic: 'claude-3-5-haiku-20241022',
+    },
+    defaultProvider: 'openai',
+  }
+
+  it('uses selectedModel when it is valid for the provider', () => {
+    const result = resolveAgentModel(agent, 'openai', 'gpt-4o-mini')
+    expect(result).toBe('gpt-4o-mini')
+  })
+
+  it('rejects selectedModel that is not valid for the provider', () => {
+    // claude model not valid for openai provider
+    const result = resolveAgentModel(agent, 'openai', 'claude-3-5-sonnet-20241022')
+    // Should fall back to agent.models or default
+    expect(result).not.toBe('claude-3-5-sonnet-20241022')
+  })
+
+  it('uses agent.models[provider] when no selectedModel', () => {
+    const result = resolveAgentModel(agent, 'anthropic', null)
+    expect(result).toBe('claude-3-5-haiku-20241022')
+  })
+
+  it('uses agent.model when provider matches defaultProvider', () => {
+    const agentWithModel = { model: 'gpt-4o', defaultProvider: 'openai' }
+    const result = resolveAgentModel(agentWithModel, 'openai', null)
+    expect(result).toBe('gpt-4o')
+  })
+
+  it('falls back to MODEL_MAP for unknown provider', () => {
+    const result = resolveAgentModel({}, 'openai', null)
+    expect(result).toBe(MODEL_MAP.openai)
+  })
+
+  it('falls back to openai default for completely unknown provider', () => {
+    const result = resolveAgentModel({}, 'unknown_provider', null)
+    expect(result).toBe(MODEL_MAP.openai)
+  })
+})
+
+describe('MODELS structure', () => {
+  it('has entries for all four providers', () => {
     expect(MODELS).toHaveProperty('openai')
     expect(MODELS).toHaveProperty('anthropic')
     expect(MODELS).toHaveProperty('gemini')
     expect(MODELS).toHaveProperty('openrouter')
   })
 
-  it('each provider should have at least one model', () => {
-    Object.values(MODELS).forEach((models) => {
+  it('each provider has at least one model', () => {
+    for (const models of Object.values(MODELS)) {
       expect(models.length).toBeGreaterThan(0)
-      models.forEach((m) => {
+    }
+  })
+
+  it('each model entry has value and label', () => {
+    for (const models of Object.values(MODELS)) {
+      for (const m of models) {
         expect(m).toHaveProperty('value')
         expect(m).toHaveProperty('label')
-      })
-    })
-  })
-})
-
-describe('MODEL_MAP', () => {
-  it('should map each provider to its first model', () => {
-    expect(MODEL_MAP.openai).toBe(MODELS.openai[0].value)
-    expect(MODEL_MAP.anthropic).toBe(MODELS.anthropic[0].value)
-    expect(MODEL_MAP.gemini).toBe(MODELS.gemini[0].value)
-    expect(MODEL_MAP.openrouter).toBe(MODELS.openrouter[0].value)
-  })
-})
-
-describe('resolveAgentModel', () => {
-  const baseAgent = {
-    provider: 'any',
-    defaultProvider: 'openai',
-    model: 'gpt-4o',
-  }
-
-  it('should return selectedModel if valid for the provider', () => {
-    const result = resolveAgentModel(baseAgent, 'openai', 'gpt-4o-mini')
-    expect(result).toBe('gpt-4o-mini')
-  })
-
-  it('should ignore selectedModel if invalid for the provider', () => {
-    const result = resolveAgentModel(baseAgent, 'anthropic', 'gpt-4o-mini')
-    expect(result).not.toBe('gpt-4o-mini')
-  })
-
-  it('should use agent.models[provider] if available', () => {
-    const agent = {
-      ...baseAgent,
-      models: { anthropic: 'claude-3-opus-20240229' },
+      }
     }
-    const result = resolveAgentModel(agent, 'anthropic', null)
-    expect(result).toBe('claude-3-opus-20240229')
+  })
+})
+
+describe('MODEL_MAP defaults', () => {
+  it('openai default is gpt-4o', () => {
+    expect(MODEL_MAP.openai).toBe('gpt-4o')
   })
 
-  it('should use agent.model if provider matches defaultProvider', () => {
-    const result = resolveAgentModel(baseAgent, 'openai', null)
-    expect(result).toBe('gpt-4o')
+  it('anthropic default is Claude 3.5 Sonnet', () => {
+    expect(MODEL_MAP.anthropic).toContain('claude-3-5-sonnet')
   })
 
-  it('should fall back to MODEL_MAP default for unknown provider match', () => {
-    const agent = { provider: 'any', defaultProvider: 'openai', model: 'gpt-4o' }
-    const result = resolveAgentModel(agent, 'gemini', null)
-    expect(result).toBe(MODEL_MAP.gemini)
-  })
-
-  it('should fall back to openai default for completely unknown provider', () => {
-    const agent = { provider: 'any' }
-    const result = resolveAgentModel(agent, 'unknown-provider', null)
-    expect(result).toBe(MODEL_MAP.openai)
+  it('gemini default is gemini-2.5-flash', () => {
+    expect(MODEL_MAP.gemini).toBe('gemini-2.5-flash')
   })
 })
