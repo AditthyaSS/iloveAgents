@@ -11,12 +11,14 @@ import geminiLogo from "../assets/gemini.svg";
 import openrouterLogo from "../assets/openrouter.svg";
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { getGlobalKeys, getAvailableProviders } from '../lib/globalKeys'
+import groqLogo from "../assets/groq.svg";
 
 const PROVIDERS = [
   { value: 'openai', label: 'OpenAI' },
   { value: 'anthropic', label: 'Anthropic' },
   { value: 'gemini', label: 'Gemini' },
   { value: 'openrouter', label: 'OpenRouter' },
+  { value: 'groq', label: 'Groq' },
 ]
 
 const providerLogos = {
@@ -24,14 +26,15 @@ const providerLogos = {
   anthropic: anthropicLogo,
   gemini: geminiLogo,
   openrouter: openrouterLogo,
+  groq: groqLogo,
 }
-
 
 const providerUrls = {
   openai: 'https://platform.openai.com/account/api-keys',
   anthropic: 'https://console.anthropic.com/keys',
   gemini: 'https://console.cloud.google.com/apis/credentials',
   openrouter: 'https://openrouter.ai/keys',
+  groq: 'https://console.groq.com/keys',
 }
 
 function ProviderIcon({ provider, label }) {
@@ -66,6 +69,8 @@ export default function ApiKeyBar({
   agentProvider,
   model,
   setModel,
+  customModelId,
+  setCustomModelId,
 }) {
   const [showKey, setShowKey] = useState(false)
   const [geminiModels, setGeminiModels] = useState([])
@@ -144,7 +149,9 @@ export default function ApiKeyBar({
   }))
 
   const availableModels =
-    provider === 'gemini' ? geminiModels : MODELS[provider] || []
+    provider === 'gemini'
+      ? [...geminiModels, { value: 'custom', label: 'Custom Model ID...' }]
+      : [...(MODELS[provider] || []), { value: 'custom', label: 'Custom Model ID...' }]
 
   useKeyboardShortcuts({
     'Alt+1': () => {
@@ -163,6 +170,10 @@ export default function ApiKeyBar({
       const p = availableProviders.find(p => p.value === 'openrouter');
       if (p) setProvider('openrouter');
     },
+    'Alt+5': () => {
+      const p = availableProviders.find(p => p.value === 'groq');
+      if (p) setProvider('groq');
+    },
   });
 
   return (
@@ -179,15 +190,29 @@ export default function ApiKeyBar({
         />
 
         {/* Model Select */}
-        <CustomSelect
-          value={model}
-          onChange={setModel}
-          options={availableModels.map(m => ({ value: m.value, label: m.label }))}
-          disabled={geminiLoading}
-          placeholder={geminiLoading ? 'Loading models...' : 'Select Model'}
-          className="w-auto min-w-[150px]"
-          triggerClassName="h-8 py-0 px-2.5 font-semibold text-xs border dark:bg-surface-input dark:border-border hover:border-accent/30 dark:hover:border-accent/40 bg-white border-gray-200"
-        />
+        <div className="flex items-center gap-2">
+          <CustomSelect
+            value={model}
+            onChange={setModel}
+            options={availableModels.map(m => ({ value: m.value, label: m.label }))}
+            disabled={geminiLoading}
+            placeholder={geminiLoading ? 'Loading models...' : 'Select Model'}
+            className="w-auto min-w-[150px]"
+            triggerClassName="h-8 py-0 px-2.5 font-semibold text-xs border dark:bg-surface-input dark:border-border hover:border-accent/30 dark:hover:border-accent/40 bg-white border-gray-200"
+          />
+          {model === 'custom' && (
+            <input
+              type="text"
+              value={customModelId}
+              onChange={(e) => setCustomModelId(e.target.value)}
+              placeholder="Model ID (e.g. gpt-4-turbo)"
+              className="h-8 px-3 rounded-md text-xs font-mono transition-colors
+                dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
+                bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
+                focus:ring-1 focus:ring-accent focus:border-accent outline-none w-40"
+            />
+          )}
+        </div>
 
         {/* API Key Input */}
         <div className="flex-1 min-w-[180px] relative">

@@ -16,6 +16,7 @@ import openaiLogo   from '../assets/openai.svg'
 import anthropicLogo from '../assets/anthropic.svg'
 import geminiLogo    from '../assets/gemini.svg'
 import openrouterLogo from '../assets/openrouter.svg'
+import groqLogo from '../assets/groq.svg'
 
 const PROVIDERS = [
   {
@@ -54,16 +55,25 @@ const PROVIDERS = [
     keyLabel:    'Get your key →',
     placeholder: 'sk-or-...',
   },
+  {
+    id:          'groq',
+    label:       'Groq',
+    logo:        groqLogo,
+    description: 'Powers Groq models such as Mixtral 8×7B',
+    keyUrl:      'https://console.groq.com/keys',
+    keyLabel:    'Get free key →',
+    placeholder: 'gsk-',
+  },
 ]
 
 export default function SettingsPage() {
   useDocumentTitle('Settings')
 
   // ── Form state
-  const [keys, setKeys] = useState({ openai: '', anthropic: '', gemini: '', openrouter: '' })
+  const [keys, setKeys] = useState({ openai: '', anthropic: '', gemini: '', openrouter: '', groq: '' })
   const [defaultProvider, setDefaultProvider] = useState('')
-  const [showKey, setShowKey] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
-  const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
+  const [showKey, setShowKey] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false, groq: false })
+  const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false, groq: false })
   const [saveMessage, setSaveMessage] = useState('')
   const [confirmClearAll, setConfirmClearAll] = useState(false)
 
@@ -75,6 +85,7 @@ export default function SettingsPage() {
       anthropic:  stored.anthropic  || '',
       gemini:     stored.gemini     || '',
       openrouter: stored.openrouter || '',
+      groq:       stored.groq       || '',
     })
     setDefaultProvider(stored.defaultProvider || '')
     setSavedStatus({
@@ -82,6 +93,7 @@ export default function SettingsPage() {
       anthropic:  !!stored.anthropic,
       gemini:     !!stored.gemini,
       openrouter: !!stored.openrouter,
+      groq:       !!stored.groq,
     })
   }, [])
 
@@ -96,6 +108,7 @@ export default function SettingsPage() {
       anthropic:  !!stored.anthropic,
       gemini:     !!stored.gemini,
       openrouter: !!stored.openrouter,
+      groq:       !!stored.groq,
     })
     setSaveMessage('Keys saved successfully ✅')
     setTimeout(() => setSaveMessage(''), 3000)
@@ -114,9 +127,9 @@ export default function SettingsPage() {
 
   const handleClearAll = () => {
     clearAllGlobalKeys()
-    setKeys({ openai: '', anthropic: '', gemini: '', openrouter: '' })
+    setKeys({ openai: '', anthropic: '', gemini: '', openrouter: '', groq: '' })
     setDefaultProvider('')
-    setSavedStatus({ openai: false, anthropic: false, gemini: false, openrouter: false })
+    setSavedStatus({ openai: false, anthropic: false, gemini: false, openrouter: false, groq: false })
     setConfirmClearAll(false)
     setSaveMessage('All keys cleared.')
     setTimeout(() => setSaveMessage(''), 3000)
@@ -161,7 +174,11 @@ export default function SettingsPage() {
               {/* Provider name row */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <img src={p.logo} alt={p.label} className="w-5 h-5 flex-shrink-0" />
+                  {p.logo && typeof p.logo === 'string' ? (
+                    <img src={p.logo} alt={p.label} className="w-5 h-5 flex-shrink-0" />
+                  ) : (
+                    <img src={p.logo} alt={p.label} className="w-5 h-5 flex-shrink-0" />
+                  )}
                   <span className="text-sm font-semibold dark:text-text-primary text-gray-800">
                     {p.label} API Key
                   </span>

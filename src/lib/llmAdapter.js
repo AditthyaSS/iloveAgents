@@ -12,21 +12,25 @@ const PROVIDER_CONFIGS = {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     }),
-    buildBody: (model, systemPrompt, userMessage) => ({
+    buildBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
     }),
-    buildStreamBody: (model, systemPrompt, userMessage) => ({
+    buildStreamBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
       stream: true,
     }),
     parseResponse: (data) => ({
@@ -61,21 +65,72 @@ const PROVIDER_CONFIGS = {
       'HTTP-Referer': 'https://iloveagents.ai',
       'X-Title': 'ILoveAgents',
     }),
-    buildBody: (model, systemPrompt, userMessage) => ({
+    buildBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
     }),
-    buildStreamBody: (model, systemPrompt, userMessage) => ({
+    buildStreamBody: (model, systemPrompt, userMessage, options = {}) => ({
       model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 4096,
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
+      stream: true,
+    }),
+    parseResponse: (data) => ({
+      content: data.choices?.[0]?.message?.content || '',
+      tokens:
+        (data.usage?.prompt_tokens || 0) +
+        (data.usage?.completion_tokens || 0),
+    }),
+    parseStreamChunk: (line) => {
+      if (line === 'data: [DONE]') return { content: '', done: true }
+      if (!line.startsWith('data: ')) return null
+      try {
+        const json = JSON.parse(line.slice(6))
+        const delta = json.choices?.[0]?.delta?.content || ''
+        const finished = json.choices?.[0]?.finish_reason === 'stop'
+        return { content: delta, done: finished }
+      } catch {
+        return null
+      }
+    },
+  },
+
+  groq: {
+    url: 'https://api.groq.com/openai/v1/chat/completions',
+    buildHeaders: (apiKey) => ({
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    }),
+    buildBody: (model, systemPrompt, userMessage, options = {}) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
+    }),
+    buildStreamBody: (model, systemPrompt, userMessage, options = {}) => ({
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userMessage },
+      ],
+      max_tokens: options.max_tokens || 4096,
+      temperature: options.temperature,
+      top_p: options.top_p,
       stream: true,
     }),
     parseResponse: (data) => ({
@@ -193,7 +248,7 @@ const ERROR_MESSAGES = {
   500: 'The API server encountered an error. Try again shortly.',
   502: 'Bad gateway — the API is temporarily unavailable.',
   503: 'The API service is temporarily unavailable. Try again in a minute.',
-};
+}
 
 /**
  * Handle non-OK HTTP responses consistently.
@@ -216,10 +271,15 @@ async function handleErrorResponse(response, provider = "unknown") {
     };
   }
 
-  const friendlyMessage =
+  let friendlyMessage =
     typeof ERROR_MESSAGES[response.status] === 'string'
       ? ERROR_MESSAGES[response.status]
       : `API returned status ${response.status}. Please check your configuration.`;
+
+  // Groq-specific 429 refinement
+  if (provider === 'groq' && response.status === 429) {
+    friendlyMessage = 'Groq rate limit exceeded. Please try a different model or check your usage limits in the Groq console.';
+  }
 
   throw new Error(
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
@@ -229,7 +289,7 @@ async function handleErrorResponse(response, provider = "unknown") {
  * Run an agent against the specified LLM provider (one-shot, non-streaming).
  *
  * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
+ * @param {'openai'|'anthropic'|'gemini'|'openrouter'|'groq'} params.provider
  * @param {string} params.model
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
@@ -251,12 +311,12 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
   const url =
     typeof config.url === 'function'
       ? config.url(model, apiKey)
-      : config.url
+      : config.url;
 
-  const headers = config.buildHeaders(apiKey)
-  const body = config.buildBody(model, systemPrompt, userMessage)
+  const headers = config.buildHeaders(apiKey);
+  const body = config.buildBody(model, systemPrompt, userMessage, options);
 
-  const startTime = performance.now()
+  const startTime = performance.now();
 
   try {
     const response = await fetch(url, {
@@ -264,28 +324,28 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
       headers,
       body: JSON.stringify(body),
       signal,
-    })
+    });
 
     if (!response.ok) {
-      await handleErrorResponse(response, provider)
+      await handleErrorResponse(response, provider);
     }
 
-    const data = await response.json()
-    const parsed = config.parseResponse(data)
-    const duration = Math.round(performance.now() - startTime)
+    const data = await response.json();
+    const parsed = config.parseResponse(data);
+    const duration = Math.round(performance.now() - startTime);
 
     return {
       content: parsed.content,
       tokens: parsed.tokens,
       duration,
-    }
+    };
   } catch (error) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       throw new Error(
         "Couldn't reach the API. Check your internet connection and try again."
-      )
+      );
     }
-    throw error
+    throw error;
   }
 }
 
@@ -294,7 +354,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * as it arrives so the UI can render progressively.
  *
  * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
+ * @param {'openai'|'anthropic'|'gemini'|'openrouter'|'groq'} params.provider
  * @param {string} params.model
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
@@ -304,29 +364,29 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * @returns {Promise<{content: string, duration: number}>}
  */
 export async function streamAgent({ provider, model, apiKey, systemPrompt, userMessage, onChunk, signal }) {
-  const config = PROVIDER_CONFIGS[provider]
+  const config = PROVIDER_CONFIGS[provider];
 
   if (!config) {
     throw new Error(`Unsupported provider: ${provider}`)
   }
 
   if (!apiKey || apiKey.trim() === '') {
-    throw new Error('Please provide an API key to run this agent.')
+    throw new Error('Please provide an API key to run this agent.');
   }
 
   // Determine the streaming URL
-  let url
+  let url;
   if (provider === 'gemini') {
-    url = config.streamUrl(model, apiKey)
+    url = config.streamUrl(model, apiKey);
   } else {
-    url = typeof config.url === 'function' ? config.url(model, apiKey) : config.url
+    url = typeof config.url === 'function' ? config.url(model, apiKey) : config.url;
   }
 
-  const headers = config.buildHeaders(apiKey)
-  const body = config.buildStreamBody(model, systemPrompt, userMessage)
+  const headers = config.buildHeaders(apiKey);
+  const body = config.buildStreamBody(model, systemPrompt, userMessage, options);
 
-  const startTime = performance.now()
-  let fullContent = ''
+  const startTime = performance.now();
+  let fullContent = '';
 
   try {
     const response = await fetch(url, {
@@ -334,75 +394,75 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       headers,
       body: JSON.stringify(body),
       signal,
-    })
+    });
 
     if (!response.ok) {
-      await handleErrorResponse(response, provider)
+      await handleErrorResponse(response, provider);
     }
 
     if (!response.body || typeof response.body.getReader !== 'function') {
       throw new Error(
         'Streaming is not supported by this response. Please try again.'
-      )
+      );
     }
 
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    let buffer = ''
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
 
     while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
+      const { done, value } = await reader.read();
+      if (done) break;
 
-      buffer += decoder.decode(value, { stream: true })
+      buffer += decoder.decode(value, { stream: true });
 
       // Process complete lines from the buffer
-      const lines = buffer.split('\n')
+      const lines = buffer.split('\n');
       // Keep the last (potentially incomplete) line in the buffer
-      buffer = lines.pop() || ''
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed) continue
+        const trimmed = line.trim();
+        if (!trimmed) continue;
 
-        const parsed = config.parseStreamChunk(trimmed)
-        if (!parsed) continue
+        const parsed = config.parseStreamChunk(trimmed);
+        if (!parsed) continue;
 
         if (parsed.content) {
-          fullContent += parsed.content
-          onChunk(parsed.content)
+          fullContent += parsed.content;
+          onChunk(parsed.content);
         }
 
-        if (parsed.done) break
+        if (parsed.done) break;
       }
     }
 
     // Process any remaining buffer content
     if (buffer.trim()) {
-      const parsed = config.parseStreamChunk(buffer.trim())
+      const parsed = config.parseStreamChunk(buffer.trim());
       if (parsed?.content) {
-        fullContent += parsed.content
-        onChunk(parsed.content)
+        fullContent += parsed.content;
+        onChunk(parsed.content);
       }
     }
 
-    const duration = Math.round(performance.now() - startTime)
+    const duration = Math.round(performance.now() - startTime);
 
     return {
       content: fullContent,
       duration,
-    }
+    };
   } catch (error) {
     if (error.name === 'AbortError') {
-      const duration = Math.round(performance.now() - startTime)
-      return { content: fullContent, duration }
+      const duration = Math.round(performance.now() - startTime);
+      return { content: fullContent, duration };
     }
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       throw new Error(
         "Couldn't reach the API. Check your internet connection and try again."
-      )
+      );
     }
-    throw error
+    throw error;
   }
 }
 
@@ -416,13 +476,50 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 export async function fetchGeminiModels(apiKey) {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
-  )
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  const data = await res.json()
+  );
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
   return (data.models || [])
     .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
     .map(m => ({
       value: m.name.replace('models/', ''),
       label: m.displayName || m.name.replace('models/', ''),
-    }))
+    }));
 }
+
+export async function fetchGroqModels(apiKey) {
+  const res = await fetch('https://api.groq.com/openai/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data.data || []).map(m => ({
+    value: m.id,
+    label: m.id,
+  }));
+}
+
+export async function fetchOpenAIModels(apiKey) {
+  const res = await fetch('https://api.openai.com/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data.data || []).map(m => ({
+    value: m.id,
+    label: m.id,
+  }));
+}
+
+export async function fetchOpenRouterModels(apiKey) {
+  const res = await fetch('https://openrouter.ai/api/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const data = await res.json();
+  return (data.data || []).map(m => ({
+    value: m.id,
+    label: m.id,
+  }));
+}
+
