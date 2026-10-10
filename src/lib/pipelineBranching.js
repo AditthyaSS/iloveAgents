@@ -70,11 +70,13 @@ export function resolveTemplate(template, context) {
 export function selectBranch(conditionValue, branches) {
   if (!branches || typeof branches !== 'object') return null
   const normalized = String(conditionValue ?? '').trim().toLowerCase()
-  const match = Object.keys(branches).find(
-    (label) => label !== DEFAULT_BRANCH && label.trim().toLowerCase() === normalized
+  const labels = Object.keys(branches)
+  const defaultKey = labels.find((label) => label.trim().toLowerCase() === DEFAULT_BRANCH)
+  const match = labels.find(
+    (label) => label !== defaultKey && label.trim().toLowerCase() === normalized
   )
   if (match) return match
-  return Object.prototype.hasOwnProperty.call(branches, DEFAULT_BRANCH) ? DEFAULT_BRANCH : null
+  return defaultKey ?? null
 }
 
 /**
