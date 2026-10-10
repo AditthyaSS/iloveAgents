@@ -158,6 +158,7 @@
 | 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
 | 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
 | 153 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
+
 | 154 | Research Gap Finder | Paste paper summaries and get unexplored areas, shared limits, and future research directions. | Research |
 | 155 | Helm Chart Generator | Describe your app and get a complete Helm chart with Chart.yaml, values.yaml, and templated manifests ready to install. | DevOps |
 | 156 | Debt Payoff Strategist | Compare debt repayment strategies, estimate payoff timelines, and build a realistic plan for becoming debt-free. | Finance |
@@ -165,5 +166,6 @@
 | 158 | Java DSA Interview Prep | Generates Java DSA problems, provides hints, reviews attempts, and simulates coding interviews. | Education |
 | 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | Education |
 | 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
+| 161 | StackSphere Tech Stack Architect | Describe your project goals and constraints to get a reasoned frontend, backend, database and deployment stack with trade offs. | Engineering |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
 | 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
