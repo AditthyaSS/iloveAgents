@@ -84,10 +84,10 @@ const RecentRuns = ({ history, onRerun, onCopy, onDelete, onClearAll }) => {
                   <span className={`text-[9px] px-2 py-0.5 rounded-md border font-bold uppercase tracking-wider ${getProviderStyle(run.provider)}`}>
                     {run.provider || 'Unknown'}
                   </span>
-                  <span className="text-[10px] font-medium dark:text-text-muted text-gray-400 flex items-center gap-1">
+                  <time dateTime={new Date(run.timestamp).toISOString()} title={new Date(run.timestamp).toLocaleString()} className="text-[10px] font-medium dark:text-text-muted text-gray-400 flex items-center gap-1">
                     <div className="w-1 h-1 rounded-full bg-gray-300 dark:bg-gray-600" />
                     {formatTimeAgo(run.timestamp)}
-                  </span>
+                  </time>
                 </div>
               </div>
 
