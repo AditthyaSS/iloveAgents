@@ -6,6 +6,18 @@ const normalize = (value) => String(value || '').trim().toLowerCase()
 const searchableText = (agent = {}) => normalize([agent.id, agent.name, agent.description, agent.category, agent.provider].filter(Boolean).join(' '))
 const FREE_TEXT_TOKEN_LIMIT = 12
 
+// Short keywords must match whole words: `plan` should not fire inside
+// `explanation`, nor `tone` inside `milestone`.
+export function matchesKeyword(text, term) {
+  const haystack = normalize(text)
+  const needle = normalize(term)
+  if (!needle) return false
+  if (needle.length <= 4) {
+    return haystack.split(/[^a-z0-9]+/).includes(needle)
+  }
+  return haystack.includes(needle)
+}
+
 export function tokenizeFreeText(text = '') {
   return normalize(text)
     .split(/[^a-z0-9+#.-]+/i)
@@ -88,17 +100,17 @@ export function scoreAgent(agent = {}, preferences = {}, weights = DEFAULT_RECOM
     const beginnerTerms = ['explainer', 'guide', 'planner', 'study', 'quiz', 'checklist']
     const advancedTerms = ['code', 'sql', 'api', 'architecture', 'audit', 'solidity', 'kubernetes']
     const terms = preferences.experienceLevel === 'advanced' ? advancedTerms : beginnerTerms
-    if (terms.some((term) => text.includes(term))) {
+    if (terms.some((term) => matchesKeyword(text, term))) {
       score += weights.experience
       matchedSignals.experience = preferences.experienceLevel
     }
   }
 
-  if (preferences.budgetPreference === 'fast' && ['summary', 'reply', 'regex', 'email', 'tone'].some((term) => text.includes(term))) {
+  if (preferences.budgetPreference === 'fast' && ['summary', 'reply', 'regex', 'email', 'tone'].some((term) => matchesKeyword(text, term))) {
     score += weights.urgency
     matchedSignals.preference = 'fast'
   }
-  if (preferences.budgetPreference === 'capable' && ['audit', 'report', 'plan', 'architecture', 'analysis'].some((term) => text.includes(term))) {
+  if (preferences.budgetPreference === 'capable' && ['audit', 'report', 'plan', 'architecture', 'analysis'].some((term) => matchesKeyword(text, term))) {
     score += weights.urgency
     matchedSignals.preference = 'capable'
   }
