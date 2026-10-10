@@ -19,7 +19,9 @@ function getSafeApiKey(provider) {
     }
     return key
   } catch {
-    // Migrate legacy plaintext keys (no expiry)
+    // Migrate legacy plaintext keys (no expiry) — re-wrap with a fresh expiry
+    // so the 8-hour bound is applied immediately and the key is not valid forever.
+    setSafeApiKey(provider, raw)
     return raw
   }
 }
