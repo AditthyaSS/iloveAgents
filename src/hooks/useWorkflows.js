@@ -124,10 +124,14 @@ export async function updateWorkflow(id, updates) {
     }
   }
 
-  // Proceed with update (ownership verified)
+  // Proceed with update (ownership verified). Only editable columns pass through.
+  const ALLOWED_WORKFLOW_FIELDS = ['name', 'description', 'steps', 'is_public', 'tags', 'updated_at']
+  const safeUpdates = Object.fromEntries(
+    Object.entries(updates || {}).filter(([key]) => ALLOWED_WORKFLOW_FIELDS.includes(key))
+  )
   const { data, error } = await supabase
     .from('workflows')
-    .update(updates)
+    .update(safeUpdates)
     .eq('id', id)
     .eq('user_id', userId)
     .select()
