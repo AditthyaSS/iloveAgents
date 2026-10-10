@@ -1,4 +1,4 @@
-import { Bug, Lightbulb, MessageSquare, ArrowUpRight } from 'lucide-react'
+import { Bug, Lightbulb, MessageSquare, ArrowUpRight, Sparkles } from 'lucide-react'
 
 const GITHUB_ISSUES_URL = 'https://github.com/AditthyaSS/iloveAgents/issues/new'
 
@@ -14,6 +14,12 @@ const feedbackOptions = [
     description: 'Have an idea that could make iloveAgents better? Share your suggestion.',
     icon: Lightbulb,
     url: `${GITHUB_ISSUES_URL}?template=feature_request.yml`,
+  },
+  {
+    title: 'Propose a new agent',
+    description: 'Describe an agent you would like to see, with its inputs and outputs.',
+    icon: Sparkles,
+    url: `${GITHUB_ISSUES_URL}?template=new_agent.yml`,
   },
   {
     title: 'General feedback',

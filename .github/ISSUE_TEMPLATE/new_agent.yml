@@ -41,6 +41,18 @@ body:
         - Design
         - Product
         - Legal
+        - Healthcare
+        - DevOps
+        - Data Science
+        - Cybersecurity
+        - Gaming
+        - Web3
+        - Finance
+        - Real Estate
+        - Sales
+        - Developer Tools
+        - Content Writing
+        - Personal Development
         - Other
     validations:
       required: true
@@ -53,6 +65,7 @@ body:
         - OpenAI
         - Anthropic
         - Google Gemini
+        - OpenRouter
         - Any
     validations:
       required: true
