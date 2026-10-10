@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   AlertCircle,
   ArrowRight,
   GitBranch,
+  Eye,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
 import { useAgents } from '../lib/useAgents'
@@ -35,15 +36,19 @@ import { useDocumentTitle } from '../lib/useDocumentTitle'
 const STATUS_COLORS = {
   waiting: 'dark:text-text-muted text-gray-400',
   running: 'text-accent',
+  review: 'text-amber-400',
   done: 'text-emerald-400',
   failed: 'text-red-400',
+  cancelled: 'text-orange-400',
 }
 
 function StepStatusIcon({ status }) {
   if (status === 'waiting') return <Clock size={15} className={STATUS_COLORS.waiting} />
   if (status === 'running') return <Loader2 size={15} className="text-accent animate-spin" />
+  if (status === 'review') return <Eye size={15} className={STATUS_COLORS.review} />
   if (status === 'done') return <CheckCircle2 size={15} className={STATUS_COLORS.done} />
   if (status === 'failed') return <XCircle size={15} className={STATUS_COLORS.failed} />
+  if (status === 'cancelled') return <XCircle size={15} className={STATUS_COLORS.cancelled} />
   return null
 }
 
@@ -99,6 +104,20 @@ export default function WorkflowRunner() {
   const [steps, setSteps] = useState([])
   const [allDone, setAllDone] = useState(false)
   const [hasRun, setHasRun] = useState(false)
+  const [runCancelled, setRunCancelled] = useState(false)
+  const [reviewBetweenSteps, setReviewBetweenSteps] = useState(true)
+  const [review, setReview] = useState(null)
+  const [reviewDraft, setReviewDraft] = useState('')
+  const reviewResolveRef = useRef(null)
+
+  const handleReviewAction = (action) => {
+    const resolve = reviewResolveRef.current
+    reviewResolveRef.current = null
+    setReview(null)
+    if (resolve) {
+      resolve({ action, text: reviewDraft })
+    }
+  }
   useDocumentTitle(workflow?.title ? `Run ${workflow.title}` : 'Run Workflow')
 
   // Fetch workflow if not passed via state
@@ -162,6 +181,9 @@ export default function WorkflowRunner() {
     setRunning(true)
     setAllDone(false)
     setHasRun(true)
+    setRunCancelled(false)
+    setReview(null)
+    setReviewDraft('')
 
     // Rebuild from the workflow definition so branch steps injected by a
     // previous run are dropped before this run starts.
@@ -176,6 +198,14 @@ export default function WorkflowRunner() {
     let i = 0
 
     const syncSteps = () => setSteps([...execSteps])
+
+    const waitForReview = (index, output) => {
+      setReviewDraft(output || '')
+      setReview({ index, output: output || '' })
+      return new Promise((resolve) => {
+        reviewResolveRef.current = resolve
+      })
+    }
 
     while (i < execSteps.length) {
       const step = execSteps[i]
@@ -240,22 +270,28 @@ export default function WorkflowRunner() {
         : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
 
       if (!keyToUse) {
-        setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
+        execSteps[i] = { ...step, status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` }
+        syncSteps()
         failed = true
         break
       }
 
       const model = resolveAgentModel(step.agent, actualProvider)
 
-      try {
-        const result = await runAgent({
+      const runOnce = () =>
+        runAgent({
           provider: actualProvider,
           model,
           apiKey: keyToUse,
           systemPrompt: step.agent.systemPrompt,
           userMessage: currentInput,
         })
-        execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
+
+      let stepOutput = null
+      try {
+        const result = await runOnce()
+        stepOutput = result.content
+        execSteps[i] = { ...execSteps[i], status: 'done', output: stepOutput }
         syncSteps()
         recordAnalyticsRun({
           agentId: step.agent.id,
@@ -265,22 +301,70 @@ export default function WorkflowRunner() {
           model,
           duration: result.duration,
         })
-        currentInput = result.content // pass output to next step
-
-        // Expose this step's output to later condition templates. Branch
-        // output also merges under the parent conditional's id.
-        context.steps[step.agentId] = { output: result.content }
-        if (step.parentConditionalId) {
-          context.steps[step.parentConditionalId] = {
-            output: result.content,
-            branch: step.branchLabel,
-          }
-        }
       } catch (err) {
         execSteps[i] = { ...execSteps[i], status: 'failed', error: err.message }
         syncSteps()
         failed = true
         break
+      }
+
+      const laterAgentExists = execSteps.slice(i + 1).some((s) => s.agent || s.kind === 'conditional')
+      if (!failed && reviewBetweenSteps && stepOutput !== null && laterAgentExists) {
+        execSteps[i] = { ...execSteps[i], status: 'review' }
+        syncSteps()
+        let settled = false
+        while (!settled) {
+          const decision = await waitForReview(i, stepOutput)
+          if (!decision || decision.action === 'approve') {
+            settled = true
+          } else if (decision.action === 'edit') {
+            stepOutput = decision.text || stepOutput
+            execSteps[i] = { ...execSteps[i], status: 'done', output: stepOutput }
+            syncSteps()
+            settled = true
+          } else if (decision.action === 'retry') {
+            execSteps[i] = { ...execSteps[i], status: 'running', output: null, error: null }
+            syncSteps()
+            try {
+              const result = await runOnce()
+              stepOutput = result.content
+              execSteps[i] = { ...execSteps[i], status: 'review', output: stepOutput }
+              syncSteps()
+            } catch (err) {
+              execSteps[i] = { ...execSteps[i], status: 'failed', error: err.message }
+              syncSteps()
+              failed = true
+              settled = true
+            }
+          } else if (decision.action === 'cancel') {
+            failed = true
+            setRunCancelled(true)
+            execSteps[i] = { ...execSteps[i], status: 'cancelled', output: stepOutput }
+            syncSteps()
+            settled = true
+          } else {
+            settled = true
+          }
+        }
+        if (failed) break
+        if (execSteps[i].status === 'review') {
+          execSteps[i] = { ...execSteps[i], status: 'done' }
+          syncSteps()
+        }
+      }
+
+      if (!failed) {
+        currentInput = stepOutput // pass output to next step
+
+        // Expose this step's output to later condition templates. Branch
+        // output also merges under the parent conditional's id.
+        context.steps[step.agentId] = { output: stepOutput }
+        if (step.parentConditionalId) {
+          context.steps[step.parentConditionalId] = {
+            output: stepOutput,
+            branch: step.branchLabel,
+          }
+        }
       }
 
       i += 1
@@ -300,6 +384,9 @@ export default function WorkflowRunner() {
   const handleRunAgain = () => {
     setAllDone(false)
     setHasRun(false)
+    setRunCancelled(false)
+    setReview(null)
+    setReviewDraft('')
     // Rebuild from the definition so previously injected branch steps are removed
     setSteps(buildInitialSteps(workflow, agents))
   }
@@ -398,11 +485,11 @@ export default function WorkflowRunner() {
       </div>
 
       {/* Run Button */}
-      <div className="flex items-center gap-3 mb-8">
-        {!hasRun || allDone || hasFailed ? (
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        {!hasRun || allDone || hasFailed || runCancelled ? (
           <button
             id="run-workflow-btn"
-            onClick={hasRun && (allDone || hasFailed) ? handleRunAgain : handleRun}
+            onClick={hasRun && (allDone || hasFailed || runCancelled) ? handleRunAgain : handleRun}
             disabled={!userInput.trim() || !apiKey || running}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
@@ -413,7 +500,7 @@ export default function WorkflowRunner() {
                 <Loader2 size={15} className="animate-spin" />
                 Running...
               </>
-            ) : hasRun && hasFailed ? (
+            ) : hasRun && (hasFailed || runCancelled) ? (
               <>
                 <RotateCcw size={15} />
                 Retry
@@ -440,21 +527,90 @@ export default function WorkflowRunner() {
             Running...
           </button>
         )}
-
-        {allDone && (
-           <>
-            <CopyAllButton steps={steps} />
-            <button
-              onClick={() => exportWorkflowAsMarkdown(workflow?.title ?? 'workflow', steps)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
-               dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
-                bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
-            >
-              Export as Markdown
-            </button>
-          </>
-        )}
+        <label className="flex items-center gap-2 text-xs dark:text-text-secondary text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={reviewBetweenSteps}
+            onChange={(e) => setReviewBetweenSteps(e.target.checked)}
+            disabled={running}
+            className="rounded text-accent"
+          />
+          Review each step before continuing
+        </label>
       </div>
+
+      {review && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Review workflow step output"
+          className="mb-6 rounded-xl border p-4
+            dark:bg-surface-card dark:border-accent/40 bg-white border-accent/40 shadow-lg"
+        >
+          <div className="text-xs font-bold uppercase tracking-wider dark:text-text-muted text-gray-500 mb-1">
+            Review step {review.index + 1} of {steps.length}
+          </div>
+          <p className="text-xs dark:text-text-secondary text-gray-600 mb-2">
+            Approve the output as is, edit it below, retry the step, or cancel the run. The confirmed text becomes the next step input.
+          </p>
+          <textarea
+            value={reviewDraft}
+            onChange={(e) => setReviewDraft(e.target.value)}
+            rows={6}
+            aria-label="Edit step output"
+            className="w-full px-3 py-2 rounded-lg border text-sm font-mono
+              dark:bg-surface-input dark:border-border dark:text-text-primary
+              bg-gray-50 border-gray-200 text-gray-900
+              focus:outline-none focus:ring-2 focus:ring-accent/40"
+          />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleReviewAction('approve')}
+              className="px-4 py-2 rounded-lg text-xs font-bold text-white bg-accent hover:bg-accent-hover transition-colors"
+            >
+              Approve and Continue
+            </button>
+            <button
+              type="button"
+              onClick={() => handleReviewAction('edit')}
+              className="px-4 py-2 rounded-lg text-xs font-semibold border
+                dark:border-border dark:text-text-primary bg-white border-gray-200 text-gray-700 hover:border-accent/40 transition-colors"
+            >
+              Edit and Continue
+            </button>
+            <button
+              type="button"
+              onClick={() => handleReviewAction('retry')}
+              className="px-4 py-2 rounded-lg text-xs font-semibold border
+                dark:border-border dark:text-text-primary bg-white border-gray-200 text-gray-700 hover:border-accent/40 transition-colors"
+            >
+              Retry Step
+            </button>
+            <button
+              type="button"
+              onClick={() => handleReviewAction('cancel')}
+              className="px-4 py-2 rounded-lg text-xs font-semibold text-red-500 border border-red-500/30 hover:bg-red-500/10 transition-colors"
+            >
+              Cancel Workflow
+            </button>
+          </div>
+        </div>
+      )}
+
+      {allDone && (
+        <div className="flex flex-wrap items-center gap-3 mb-8">
+          <CopyAllButton steps={steps} />
+          <button
+            onClick={() => exportWorkflowAsMarkdown(workflow?.title ?? 'workflow', steps)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors
+              dark:bg-surface-card dark:border-border dark:text-text-secondary dark:hover:text-text-primary
+              bg-white border border-gray-200 text-gray-600 hover:text-gray-900"
+          >
+            Export as Markdown
+          </button>
+        </div>
+      )}
 
       {/* Steps */}
       {hasRun && (
@@ -552,7 +708,7 @@ export default function WorkflowRunner() {
                   </div>
                 )}
 
-                {step.status === 'done' && step.output && (
+                {(step.status === 'done' || step.status === 'cancelled') && step.output && (
                   <div className="p-4">
                     <OutputRenderer
                       content={step.output}
