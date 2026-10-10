@@ -26,6 +26,7 @@ import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
 import TokenCounter from "./TokenCounter";
 import CostEstimator from "./CostEstimator";
+import ExecutionCostPanel from "./ExecutionCostPanel";
 import { useSessionSpend } from "../lib/useSessionSpend";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
@@ -85,6 +86,8 @@ export default function AgentRunner({ agent }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [duration, setDuration] = useState(null);
+  const [inputTokenEstimate, setInputTokenEstimate] = useState(null);
+  const [outputTokenEstimate, setOutputTokenEstimate] = useState(null);
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
   );
@@ -152,6 +155,8 @@ export default function AgentRunner({ agent }) {
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    setInputTokenEstimate(null);
+    setOutputTokenEstimate(null);
     setCustomPrompt(agent.systemPrompt);
     setPlaygroundOpen(false);
     setBatchMode(false);
@@ -292,6 +297,8 @@ const handleRun = async () => {
     setStreamingOutput("");
     setIsStreaming(false);
     setDuration(null);
+    setInputTokenEstimate(null);
+    setOutputTokenEstimate(null);
     setMsgIndex(0);
 
     setVersionHistory((prevHistory) => [
@@ -341,16 +348,19 @@ const handleRun = async () => {
       setIsStreaming(false);
       setDuration(result.duration);
 
-      const inputTokenEstimate = Math.max(
+      const currentInputTokenEstimate = Math.max(
         1,
         Math.round((customPrompt.length + buildUserMessage().length) / 4),
       );
-      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
+      const currentOutputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
+
+      setInputTokenEstimate(currentInputTokenEstimate);
+      setOutputTokenEstimate(currentOutputTokenEstimate);
 
       addRun({
         model,
-        inputTokens: inputTokenEstimate,
-        outputTokens: outputTokenEstimate,
+        inputTokens: currentInputTokenEstimate,
+        outputTokens: currentOutputTokenEstimate,
         inputCost: null,
         outputCost: null,
       });
@@ -411,6 +421,8 @@ const handleRun = async () => {
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    setInputTokenEstimate(null);
+    setOutputTokenEstimate(null);
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -1142,6 +1154,12 @@ const handleRun = async () => {
               agentName={agent.name}
               systemPrompt={lastRunSystemPrompt}
               userMessage={lastRunUserMessage}
+            />
+            <ExecutionCostPanel
+              modelId={selectedModel}
+              provider={agent.provider === "any" ? provider : agent.provider}
+              inputTokens={inputTokenEstimate}
+              outputTokens={outputTokenEstimate}
             />
             <div className="flex items-center gap-2 mt-3">
   <button
