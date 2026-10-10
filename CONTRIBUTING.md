@@ -60,8 +60,13 @@ It takes about 5 minutes and you do not need to know much React at all.
 git clone https://github.com/YOUR_USERNAME/iloveAgents.git
 cd iloveAgents
 npm install
+cp .env.example .env.local
 npm run dev
 ```
+
+Requires Node.js v18 or newer. The `.env.local` copy enables Supabase-backed
+features (workflows, automations) with `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY`; provider keys are still entered at runtime.
 
 ### Step 2 — Create a feature branch
 
