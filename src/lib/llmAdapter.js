@@ -120,7 +120,7 @@ const PROVIDER_CONFIGS = {
       stream: true,
     }),
     parseResponse: (data) => ({
-      content: data.content?.[0]?.text || '',
+      content: (data.content || []).filter((b) => b?.type !== 'tool_use').map((b) => b?.text || '').join('') || data.content?.[0]?.text || '',
       tokens:
         (data.usage?.input_tokens || 0) +
         (data.usage?.output_tokens || 0),
@@ -167,7 +167,7 @@ const PROVIDER_CONFIGS = {
     }),
     parseResponse: (data) => ({
       content:
-        data.candidates?.[0]?.content?.parts?.[0]?.text || '',
+        (data.candidates?.[0]?.content?.parts || []).map((p) => p?.text || '').join('') || '',
       tokens:
         (data.usageMetadata?.promptTokenCount || 0) +
         (data.usageMetadata?.candidatesTokenCount || 0),
