@@ -8,7 +8,7 @@ export default {
   icon: "Bug",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     description:
       "When a user tries to upload an image larger than 5MB on the profile settings page, the progress bar hangs at 100% and no error message is shown. The profile picture doesn't update.",
