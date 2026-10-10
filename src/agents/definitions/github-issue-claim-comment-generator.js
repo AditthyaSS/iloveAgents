@@ -44,8 +44,8 @@ const githubIssueClaimCommentGenerator = {
       id: 'program_name',
       label: 'Program Name',
       type: 'select',          // text | textarea | code | select | multiselect
-      options : ["GSSoC", "Hacktoberfest", "NSOC", null],
-      placeholder: 'GSSoC. GSOC, Hacktoberfest, NSoC...',
+      options : ["GSSoC", "Hacktoberfest", "NSOC"],
+      defaultValue: 'GSSoC',
       required: false,
     },
 
