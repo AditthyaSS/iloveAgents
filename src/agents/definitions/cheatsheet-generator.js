@@ -8,7 +8,7 @@ export default {
   icon: "FileText",
   provider: "any",
   defaultProvider: "gemini", 
-  model: "gemini-3.1-flash-lite", 
+  model: "gemini-2.5-flash", 
    exampleInputs: {
     source_material: "Every cell inside our body is surrounded by a cell membrane (Plasma). The cell membrane divides the material outside the cell, known as extracellular material, from the stuff inside the cell, known as intracellular material. It protects a cell’s integrity and regulates the transport of materials into and out of the cell. For the necessary exchange, all materials inside a cell must have accessibility to the cell membrane (the cell’s boundary).",
   focus_area: "Make it simple and easy to recall",
