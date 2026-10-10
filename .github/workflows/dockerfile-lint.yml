@@ -1,0 +1,49 @@
+name: Dockerfile lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hadolint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Dockerfiles with Hadolint
+        run: |
+          files=$(find . -path ./node_modules -prune -o -type f \( -name 'Dockerfile' -o -name '*.Dockerfile' \) -print)
+          if [ -z "$files" ]; then
+            echo "No Dockerfiles found. Skipping."
+            echo "## Dockerfile lint" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Checked 0 Dockerfile(s). No issues." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          count=$(echo "$files" | wc -l | tr -d ' ')
+          echo "Checking $count Dockerfile(s)"
+          failed=0
+          for f in $files; do
+            echo "--- $f ---"
+            docker run --rm -i hadolint/hadolint:latest < "$f" | tee -a hadolint-report.txt || failed=1
+          done
+          echo "## Dockerfile lint" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Checked $count Dockerfile(s)." >> $GITHUB_STEP_SUMMARY
+          if [ "$failed" = "1" ]; then
+            echo "Hadolint reported errors. See artifact." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+          echo "No lint errors." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload lint report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: hadolint-report
+          path: hadolint-report.txt
