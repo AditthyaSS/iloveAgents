@@ -1,7 +1,7 @@
 # 🤖 Available Agents
 
 
-151 agents and growing — built by the community. 🚀
+161 agents and growing — built by the community. 🚀
 
 | # | Name | Description | Category |
 |---|---|---|---|
