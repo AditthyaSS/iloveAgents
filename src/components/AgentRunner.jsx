@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import CustomSelect from "./CustomSelect";
@@ -26,7 +25,6 @@ import ErrorCard from "./ErrorCard";
 import CharCounter from "./CharCounter";
 import TokenCounter from "./TokenCounter";
 import CostEstimator from "./CostEstimator";
-import { useSessionSpend } from "../lib/useSessionSpend";
 import VoiceInput from "./VoiceInput";
 import SuggestedChainPills from "./SuggestedChainPills";
 import RunRating from "./RunRating";
@@ -38,10 +36,9 @@ import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
-import { streamAgent } from "../lib/llmAdapter";
 import { analyseModels } from "../lib/modelAnalyser";
-import { useHistory } from "../lib/useHistory";
-import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
+import { MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
+import { useAgentExecution } from "./useAgentExecution";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
 
 const providerLabels = {
@@ -75,24 +72,14 @@ export default function AgentRunner({ agent }) {
     setSaveForSession,
   } = useApiKey();
 
-  const { saveRun } = useHistory();
   const navigate = useNavigate();
 
   const [inputs, setInputs] = useState({});
-  const [output, setOutput] = useState(null);
-  const [streamingOutput, setStreamingOutput] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [duration, setDuration] = useState(null);
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
   );
-  const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
-  const [lastRunSystemPrompt, setLastRunSystemPrompt] = useState("");
-  const [lastRunUserMessage, setLastRunUserMessage] = useState("");
   const [msgIndex, setMsgIndex] = useState(0);
   const [analyserOpen, setAnalyserOpen] = useState(false);
   const [modelRecommendation, setModelRecommendation] = useState(null);
@@ -104,35 +91,68 @@ export default function AgentRunner({ agent }) {
   const [viewMode, setViewMode] = useState("code");
   const { savePrompt } = usePromptHistory();
   const { addJob } = useScheduler({ autoRun: false });
-  const { addRun } = useSessionSpend();
 
-  const isPromptModified = customPrompt !== agent.systemPrompt;
-  const abortControllerRef = useRef(null);
-  // Identifies the current run. streamAgent() resolves (rather than rejects)
-  // when aborted, so a cancelled run's continuation looks identical to a
-  // finished one. Every run captures the id it started with and must discard
-  // its results if the id has since changed (cleared, superseded, unmounted).
-  const runIdRef = useRef(0);
-  const textareaRefs = useRef({});
+  const buildUserMessage = () => {
+    const parts = [];
+    agent.inputs.forEach((input) => {
+      const val = inputs[input.id];
+      if (!val || (Array.isArray(val) && val.length === 0)) return;
 
-  // Abort the in-flight request AND invalidate the run that owns it.
-  const cancelActiveRun = () => {
-    runIdRef.current += 1;
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
+      const sanitizedVal = typeof val === "string" ? val.trim() : val;
+      if (sanitizedVal === "") return;
+
+      parts.push(
+        Array.isArray(sanitizedVal)
+          ? `${input.label}: ${sanitizedVal.join(", ")}`
+          : `${input.label}: ${sanitizedVal}`,
+      );
+    });
+
+    return parts
+      .join("\n\n")
+      .trim()
+      .replace(/\n{3,}/g, "\n\n");
   };
 
-  // Leaving the page mid-stream must stop the (billed) request and must not
-  // write history/analytics for a run the user walked away from.
-  useEffect(() => cancelActiveRun, []);
+  const {
+    output,
+    streamingOutput,
+    isStreaming,
+    error,
+    loading,
+    duration,
+    versionHistory,
+    lastRunSystemPrompt,
+    lastRunUserMessage,
+    setError,
+    handleRun,
+    handleStop,
+    handleClearExecution,
+    cancelActiveRun,
+    clearExecution,
+  } = useAgentExecution({
+    agent,
+    provider,
+    apiKey,
+    selectedModel,
+    customPrompt,
+    inputs,
+    buildUserMessage,
+  });
+
+  const isPromptModified = customPrompt !== agent.systemPrompt;
+  const textareaRefs = useRef({});
   
+
+  const handleRunWithReset = useCallback(() => {
+    setMsgIndex(0);
+    return handleRun();
+  }, [handleRun]);
 
   useKeyboardShortcuts({
   'Control+Enter': () => {
     if (batchMode) return;
-    if (canRun() && !loading) handleRun();
+    if (canRun() && !loading) handleRunWithReset();
   },
     'Escape': () => {
       handleClear();
@@ -146,12 +166,7 @@ export default function AgentRunner({ agent }) {
 
   useEffect(() => {
     cancelActiveRun();
-    setLoading(false);
-    setOutput(null);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setError(null);
-    setDuration(null);
+    clearExecution();
     setCustomPrompt(agent.systemPrompt);
     setPlaygroundOpen(false);
     setBatchMode(false);
@@ -234,28 +249,6 @@ const getTokenCount = (text) => {
     });
   };
 
-  const buildUserMessage = () => {
-    const parts = [];
-    agent.inputs.forEach((input) => {
-      const val = inputs[input.id];
-      if (!val || (Array.isArray(val) && val.length === 0)) return;
-      
-      const sanitizedVal = typeof val === "string" ? val.trim() : val;
-      if (sanitizedVal === "") return;
-
-      parts.push(
-        Array.isArray(sanitizedVal)
-          ? `${input.label}: ${sanitizedVal.join(", ")}`
-          : `${input.label}: ${sanitizedVal}`,
-      );
-    });
-
-    return parts
-      .join("\n\n")
-      .trim()
-      .replace(/\n{3,}/g, "\n\n");
-  };
-
   const canRun = () => {
     if (!apiKey) return false;
     return hasRequiredInputs();
@@ -280,137 +273,9 @@ const getTokenCount = (text) => {
     });
   };
 
-  const handleChunk = useCallback((chunk) => {
-    setStreamingOutput((prev) => prev + chunk);
-    setIsStreaming(true);
-  }, []);
-
-const handleRun = async () => {
-    setLoading(true);
-    setError(null);
-    setOutput(null);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setDuration(null);
-    setMsgIndex(0);
-
-    setVersionHistory((prevHistory) => [
-      {
-        versionNumber: prevHistory.length + 1,
-        timestamp: new Date().toLocaleTimeString(),
-        configSnapshot: { ...inputs },
-      },
-      ...prevHistory,
-    ]);
-
-    setLastRunSystemPrompt(customPrompt);
-    setLastRunUserMessage(buildUserMessage());
-
-    // Supersede any run still winding down (e.g. one that was just stopped)
-    // and give this run an identity so stale completions can be recognised.
-    cancelActiveRun();
-    const runId = runIdRef.current;
-    const isCurrentRun = () => runIdRef.current === runId;
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    try {
-      const actualProvider =
-        agent.provider === "any" ? provider : agent.provider;
-      const model = resolveAgentModel(agent, actualProvider, selectedModel);
-
-      const result = await streamAgent({
-        provider: actualProvider,
-        model,
-        apiKey,
-        systemPrompt: customPrompt,
-        userMessage: buildUserMessage(),
-        onChunk: (chunk) => {
-          if (isCurrentRun()) handleChunk(chunk);
-        },
-        signal: controller.signal,
-      });
-
-      // Cleared / superseded / unmounted while streaming: discard everything.
-      // (Stop is different: it doesn't invalidate the run, so its partial
-      // output is committed below exactly as before.)
-      if (!isCurrentRun()) return;
-
-      setOutput(result.content);
-      setStreamingOutput("");
-      setIsStreaming(false);
-      setDuration(result.duration);
-
-      const inputTokenEstimate = Math.max(
-        1,
-        Math.round((customPrompt.length + buildUserMessage().length) / 4),
-      );
-      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
-
-      addRun({
-        model,
-        inputTokens: inputTokenEstimate,
-        outputTokens: outputTokenEstimate,
-        inputCost: null,
-        outputCost: null,
-      });
-
-      saveRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        inputs: { ...inputs },
-        output: result.content,
-        provider: actualProvider,
-      });
-
-      recordAnalyticsRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        category: agent.category,
-        provider: actualProvider,
-        model,
-        duration: result.duration,
-      });
-   } catch (err) {
-  if (!isCurrentRun()) return;
-  if (err.name !== "AbortError") {
-    if (err && err.type === "invalid_api_key") {
-      setError(err);
-    } else {
-      setError({ type: "generic", message: err.message });
-    }
-  }
-} finally {
-      // Only the owning run may touch shared state; a stale run's late
-      // cleanup must not null the controller / loading flag of a newer run.
-      if (isCurrentRun()) {
-        setLoading(false);
-        abortControllerRef.current = null;
-      }
-    }
-  };
-
-  const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setOutput(streamingOutput);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setLoading(false);
-  };
 
   const handleClear = () => {
-    // Cancel *and invalidate* the in-flight run so its late completion cannot
-    // resurrect the output we are about to discard.
-    cancelActiveRun();
-    setLoading(false);
-    setOutput(null);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setError(null);
-    setDuration(null);
+    handleClearExecution();
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -1001,7 +866,7 @@ const handleRun = async () => {
           </button>
         ) : (
           <button
-            onClick={handleRun}
+            onClick={handleRunWithReset}
             disabled={!canRun()}
             className="flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold text-white
               bg-accent hover:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed
@@ -1179,7 +1044,7 @@ const handleRun = async () => {
     <button
       onClick={async () => {
         setShowModelSwitcher(false);
-        await handleRun();
+        await handleRunWithReset();
       }}
       className="px-4 py-2 rounded-lg bg-accent text-white"
     >
