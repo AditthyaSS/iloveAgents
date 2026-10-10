@@ -349,41 +349,63 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     const reader = response.body.getReader()
     const decoder = new TextDecoder()
     let buffer = ''
+    let streamDone = false
 
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-
-      buffer += decoder.decode(value, { stream: true })
-
-      // Process complete lines from the buffer
-      const lines = buffer.split('\n')
-      // Keep the last (potentially incomplete) line in the buffer
-      buffer = lines.pop() || ''
-
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (!trimmed) continue
-
-        const parsed = config.parseStreamChunk(trimmed)
-        if (!parsed) continue
-
-        if (parsed.content) {
-          fullContent += parsed.content
-          onChunk(parsed.content)
-        }
-
-        if (parsed.done) break
-      }
+    const cancelReader = () => {
+      try {
+        const result = reader.cancel()
+        if (result && typeof result.catch === 'function') result.catch(() => {})
+      } catch {}
     }
+    signal?.addEventListener('abort', cancelReader, { once: true })
 
-    // Process any remaining buffer content
-    if (buffer.trim()) {
-      const parsed = config.parseStreamChunk(buffer.trim())
-      if (parsed?.content) {
-        fullContent += parsed.content
-        onChunk(parsed.content)
+    try {
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        // Process complete lines from the buffer
+        const lines = buffer.split('\n')
+        // Keep the last (potentially incomplete) line in the buffer
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (signal?.aborted) break
+          const trimmed = line.trim()
+          if (!trimmed) continue
+
+          const parsed = config.parseStreamChunk(trimmed)
+          if (!parsed) continue
+
+          if (parsed.content) {
+            fullContent += parsed.content
+            if (typeof onChunk === 'function') onChunk(parsed.content)
+          }
+
+          if (parsed.done) {
+            streamDone = true
+            break
+          }
+        }
+        if (streamDone || signal?.aborted) break
       }
+
+      // Process any remaining buffer content
+      if (buffer.trim() && !signal?.aborted) {
+        const parsed = config.parseStreamChunk(buffer.trim())
+        if (parsed?.content) {
+          fullContent += parsed.content
+          if (typeof onChunk === 'function') onChunk(parsed.content)
+        }
+      }
+    } finally {
+      signal?.removeEventListener('abort', cancelReader)
+      if (streamDone) cancelReader()
+      try {
+        reader.releaseLock()
+      } catch {}
     }
 
     const duration = Math.round(performance.now() - startTime)
