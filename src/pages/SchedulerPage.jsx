@@ -46,6 +46,7 @@ export default function SchedulerPage() {
   const [expandedJob, setExpandedJob] = useState(null)
   const [expandedResult, setExpandedResult] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [confirmClearResults, setConfirmClearResults] = useState(null) // job.id
 
   const handleRequestNotification = () => {
     if (!('Notification' in window)) return
@@ -232,12 +233,26 @@ export default function SchedulerPage() {
                           <span className="text-[11px] font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
                             {jobResults.length} result{jobResults.length !== 1 ? 's' : ''}
                           </span>
-                          <button
-                            onClick={() => clearResultsForJob(job.id)}
-                            className="text-[10px] text-red-400 hover:text-red-500 transition-colors"
-                          >
-                            Clear all
-                          </button>
+                          {confirmClearResults === job.id ? (
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-red-400">Clear {jobResults.length} result{jobResults.length !== 1 ? 's' : ''}?</span>
+                              <button
+                                onClick={() => { clearResultsForJob(job.id); setConfirmClearResults(null) }}
+                                className="text-[10px] font-semibold text-red-500 hover:text-red-600 transition-colors"
+                              >Yes</button>
+                              <button
+                                onClick={() => setConfirmClearResults(null)}
+                                className="text-[10px] dark:text-text-muted text-gray-400 hover:text-gray-600 transition-colors"
+                              >Cancel</button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setConfirmClearResults(job.id)}
+                              className="text-[10px] text-red-400 hover:text-red-500 transition-colors"
+                            >
+                              Clear all
+                            </button>
+                          )}
                         </div>
                         {jobResults.map(result => (
                           <ResultCard
