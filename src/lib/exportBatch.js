@@ -19,7 +19,9 @@ function downloadBlob(content, mimeType, filename) {
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  // Defer revocation so Firefox can complete the download stream before the
+  // blob URL is invalidated (matching the pattern in OutputRenderer.jsx).
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 function csvEscape(value) {
