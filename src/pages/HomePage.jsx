@@ -584,7 +584,7 @@ export default function HomePage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
+            <div role="status" className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
               <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                 <Search size={24} className="text-accent" />
               </div>
