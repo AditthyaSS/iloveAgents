@@ -84,8 +84,14 @@ export default function ScheduleAgentModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-2xl shadow-2xl animate-fade-in
-        dark:bg-[#12131a] dark:border dark:border-border bg-white border border-gray-200 overflow-hidden">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Schedule Agent"
+        className="relative w-full max-w-md rounded-2xl shadow-2xl animate-fade-in
+        dark:bg-[#12131a] dark:border dark:border-border bg-white border border-gray-200 overflow-hidden"
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+      >
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b dark:border-border border-gray-100 bg-gradient-to-r from-indigo-500/10 to-purple-500/10">

@@ -155,8 +155,14 @@ export default function CreateAutomationModal({
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-2xl my-8 rounded-2xl shadow-2xl border transition-all
-        dark:bg-[#12131a] dark:border-border/80 bg-white border-gray-200 text-gray-900 dark:text-gray-100 overflow-hidden z-10">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Create Automation"
+        onKeyDown={(e) => { if (e.key === 'Escape') onClose() }}
+        className="relative w-full max-w-2xl my-8 rounded-2xl shadow-2xl border transition-all
+        dark:bg-[#12131a] dark:border-border/80 bg-white border-gray-200 text-gray-900 dark:text-gray-100 overflow-hidden z-10"
+      >
 
         {/* Header with Gradient Accent */}
         <div className="relative px-6 py-5 border-b dark:border-border/60 border-gray-100 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10">
