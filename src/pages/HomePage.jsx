@@ -462,6 +462,7 @@ export default function HomePage() {
           <input
             id="agent-search"
             type="text"
+            aria-label="Search agents by name, description, or category"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search agents by name, description, or category..."
