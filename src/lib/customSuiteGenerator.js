@@ -8,6 +8,20 @@ const MODEL_DEFAULTS = {
   openai: "gpt-4o-mini",
 };
 
+const KNOWN_PROVIDERS = Object.keys(MODEL_DEFAULTS);
+const MAX_GOAL_CHARS = 1000;
+
+export function resolveSuiteModel(provider) {
+  const safe = KNOWN_PROVIDERS.includes(provider) ? provider : "openai";
+  return { provider: safe, model: MODEL_DEFAULTS[safe] };
+}
+
+export function buildSuiteUserMessage(goal) {
+  const trimmed = typeof goal === "string" ? goal.trim() : "";
+  if (!trimmed) throw new Error("Describe your goal first.");
+  return `My goal is: ${trimmed.slice(0, MAX_GOAL_CHARS)}`;
+}
+
 export async function generateCustomSuite(goal, apiKey, provider) {
   // Building a flat list of all agents across all suites
   const agentList = suites.map((suite) => ({
@@ -44,12 +58,13 @@ Rules:
 - Keep reasons short and specific to the user's goal
 - Return ONLY valid JSON, no markdown, no extra text`;
 
-  const userMessage = `My goal is: ${goal}`;
+  const userMessage = buildSuiteUserMessage(goal);
+  const { provider: safeProvider, model } = resolveSuiteModel(provider);
 
   const result = await streamAgent({
-    provider,
+    provider: safeProvider,
     apiKey,
-    model: MODEL_DEFAULTS[provider] || "gemini-2.5-flash",
+    model,
     systemPrompt,
     userMessage,
     onChunk: () => {},
@@ -59,8 +74,8 @@ Rules:
     agentId: 'custom-suite-generator',
     agentName: 'Custom Suite Generator',
     category: 'Suites',
-    provider,
-    model: MODEL_DEFAULTS[provider] || "gemini-2.5-flash",
+    provider: safeProvider,
+    model,
     duration: result.duration,
   });
 
