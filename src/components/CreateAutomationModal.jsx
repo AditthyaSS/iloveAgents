@@ -42,6 +42,14 @@ export default function CreateAutomationModal({
 
   const selectedAgent = agents.find(a => a.id === selectedAgentId) || preselectedAgent
 
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
   // Update defaults when agent changes
   useEffect(() => {
     if (selectedAgent && !initialData) {
@@ -155,7 +163,7 @@ export default function CreateAutomationModal({
       />
 
       {/* Modal Card */}
-      <div className="relative w-full max-w-2xl my-8 rounded-2xl shadow-2xl border transition-all
+      <div role="dialog" aria-modal="true" aria-label="Schedule automation" className="relative w-full max-w-2xl my-8 rounded-2xl shadow-2xl border transition-all
         dark:bg-[#12131a] dark:border-border/80 bg-white border-gray-200 text-gray-900 dark:text-gray-100 overflow-hidden z-10">
 
         {/* Header with Gradient Accent */}
@@ -176,6 +184,7 @@ export default function CreateAutomationModal({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close automation dialog"
               className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
             >
               <X size={18} />
@@ -186,7 +195,7 @@ export default function CreateAutomationModal({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
           {error && (
-            <div className="flex items-center gap-2 p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
+            <div role="alert" className="flex items-center gap-2 p-3 text-xs rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">
               <AlertCircle size={15} className="shrink-0" />
               <span>{error}</span>
             </div>
@@ -229,6 +238,7 @@ export default function CreateAutomationModal({
                         type="button"
                         key={a.id}
                         onClick={() => setSelectedAgentId(a.id)}
+                        aria-pressed={selectedAgentId === a.id}
                         className={`p-2.5 rounded-lg text-left text-xs transition-all border flex items-start justify-between gap-2
                           ${selectedAgentId === a.id
                             ? 'border-accent bg-accent/15 text-accent font-semibold shadow-sm'
@@ -300,6 +310,7 @@ export default function CreateAutomationModal({
                               type="button"
                               key={opt}
                               onClick={() => handleToggleMultiselect(inp.id, opt)}
+                              aria-pressed={isSel}
                               className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${
                                 isSel
                                   ? 'bg-accent/15 text-accent border-accent/40 font-semibold'
@@ -337,6 +348,7 @@ export default function CreateAutomationModal({
                   type="button"
                   key={preset.value}
                   onClick={() => setSchedule(preset.value)}
+                  aria-pressed={schedule === preset.value}
                   className={`p-3 rounded-xl border text-left transition-all relative
                     ${schedule === preset.value
                       ? 'border-accent bg-accent/10 dark:bg-accent/15 text-accent shadow-md shadow-accent/10 font-semibold'
