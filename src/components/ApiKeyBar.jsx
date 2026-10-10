@@ -108,21 +108,29 @@ export default function ApiKeyBar({
       setGeminiError(null)
       return
     }
+    let cancelled = false
     const timer = setTimeout(async () => {
       setGeminiLoading(true)
       setGeminiError(null)
       try {
         const models = await fetchGeminiModels(apiKey)
+        if (cancelled) return // discard stale responses
         setGeminiModels(models)
-        if (models.length > 0) setModel(models[0].value)
+        // Only reset selection when the current model is no longer in the new list
+        if (models.length > 0) {
+          setModel((prev) =>
+            models.some((m) => m.value === prev) ? prev : models[0].value
+          )
+        }
       } catch {
+        if (cancelled) return
         setGeminiError('Could not load Gemini models. Check your API key.')
         setGeminiModels([])
       } finally {
-        setGeminiLoading(false)
+        if (!cancelled) setGeminiLoading(false)
       }
     }, 400)
-    return () => clearTimeout(timer)
+    return () => { clearTimeout(timer); cancelled = true }
   }, [provider, apiKey])
 
   // Filter providers if agent requires a specific one
