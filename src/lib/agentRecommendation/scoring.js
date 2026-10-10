@@ -31,6 +31,7 @@ export function scoreAgent(agent = {}, preferences = {}, weights = DEFAULT_RECOM
   const text = searchableText(agent)
   const category = agent?.category || ''
   const provider = normalize(agent?.provider || 'any')
+  const hasExplicitProvider = Boolean(normalize(agent?.provider || ''))
   const goal = getGoal(preferences.primaryGoal)
   const categories = Array.isArray(preferences.categories) ? preferences.categories : []
   const extras = getExtras(preferences.extraPreferences)
@@ -68,7 +69,7 @@ export function scoreAgent(agent = {}, preferences = {}, weights = DEFAULT_RECOM
     if (provider === preferences.providerPreference) {
       score += weights.providerExact
       matchedSignals.provider = 'exact'
-    } else if (!provider || provider === 'any') {
+    } else if (hasExplicitProvider && provider === 'any') {
       score += weights.providerAny
       matchedSignals.provider = 'compatible'
     }
