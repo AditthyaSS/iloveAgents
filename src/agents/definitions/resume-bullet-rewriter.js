@@ -4,7 +4,7 @@ export default {
   name: "Resume Bullet Point Rewriter",
   description:
     "Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly.",
-  category: "Education",
+  category: "HR",
   icon: "PenLine",
   provider: "any",
   defaultProvider: "anthropic",
