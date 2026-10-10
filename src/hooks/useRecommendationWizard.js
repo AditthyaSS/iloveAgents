@@ -28,7 +28,7 @@ export function useRecommendationWizard(agents = []) {
       ...prev,
       [key]: value,
       ...(key === 'primaryGoal' && {
-        categories: GOAL_OPTIONS.find((option) => option.id === value)?.categories || [],
+        categories: [...(GOAL_OPTIONS.find((option) => option.id === value)?.categories || [])],
       }),
     }))
     setErrors((prev) => ({ ...prev, [key]: undefined }))
