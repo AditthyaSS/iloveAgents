@@ -106,13 +106,18 @@ export function loadCollections() {
 }
 
 export function saveCollections(collections) {
-  if (typeof localStorage === 'undefined') return
+  if (typeof localStorage === 'undefined') return false
 
   const normalized = Array.isArray(collections)
     ? buildCollections(collections)
     : [createDefaultCollection()]
 
-  localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(normalized))
+  try {
+    localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(normalized))
+    return true
+  } catch {
+    return false
+  }
 }
 
 function persist(updater) {
