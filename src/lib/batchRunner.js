@@ -3,8 +3,8 @@
  * No UI here. Used by BatchModeRunner.jsx.
  */
 
-import { runAgent } from './llmAdapter'
-import { recordAnalyticsRun } from './useAnalytics'
+import { executeAgentStep, normalizeStepError } from './executeAgentStep'
+
 
 /**
  * Parse pasted multi-line text into batch items.
@@ -155,25 +155,23 @@ export async function runBatch({
 
       try {
         const userMessage = buildBatchUserMessage(agent, fixedInputs, batchFieldId, itemValue)
-        const result = await runAgent(
-          { provider, model, apiKey, systemPrompt, userMessage },
-          { signal }
-        )
-        if (signal?.aborted) return
-        recordAnalyticsRun({
-          agentId: agent.id,
-          agentName: agent.name,
-          category: agent.category,
+        const result = await executeAgentStep({
+          agent,
           provider,
           model,
-          duration: result.duration,
+          apiKey,
+          systemPrompt,
+          userMessage,
+          signal,
         })
+        if (signal?.aborted) return
         onItemUpdate(index, { status: 'done', output: result.content })
       } catch (err) {
-        if (signal?.aborted) return
+        if (signal?.aborted || err?.name === 'AbortError') return
+        const normalized = normalizeStepError(err, { provider, model })
         onItemUpdate(index, {
           status: 'failed',
-          error: err?.message || err?.detail || 'Failed to process this item.',
+          error: normalized.message,
         })
       }
     }
