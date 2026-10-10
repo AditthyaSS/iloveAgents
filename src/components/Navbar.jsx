@@ -273,7 +273,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
               text-gray-500
               focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500
             "
-            aria-label="Toggle theme"
+            aria-label={darkMode ? "Switch to light theme" : "Switch to dark theme"}
+            aria-pressed={darkMode}
           >
             {darkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
