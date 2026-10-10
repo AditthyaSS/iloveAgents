@@ -477,6 +477,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 | [pgsodium](https://github.com/michelp/pgsodium) | Secure cryptographic encryption for automation keys |
 | [Resend](https://resend.com) | Email delivery for scheduled automation reports |
 | [Vercel Cron & Functions](https://vercel.com/docs/cron-jobs) | Scheduled background execution & serverless endpoints |
+| [Vitest](https://vitest.dev) | Test runner (`npm test`) |
+| [Testing Library](https://testing-library.com) | Component tests (react, jest-dom, user-event) |
 
 ---
 
