@@ -245,6 +245,25 @@ if (isInteractive && !isSelectedOptionButton) {
   // ─────────────────────────────────────────────────────
   // QUIZ VIEW
   // ─────────────────────────────────────────────────────
+  if (questions.length === 0) {
+    return (
+      <div className="max-w-xl mx-auto animate-fade-in text-center py-10">
+        <p className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
+          No quiz questions for this suite yet
+        </p>
+        <p className="text-xs dark:text-text-muted text-gray-500 mb-4">
+          Browse the member agents below to get started.
+        </p>
+        <button
+          onClick={onBack}
+          className="px-4 py-2 rounded-lg text-sm font-semibold bg-accent text-white hover:bg-accent-hover"
+        >
+          Back to suites
+        </button>
+      </div>
+    )
+  }
+
   const question = questions[step]
   const progress =
   questions.length > 0
