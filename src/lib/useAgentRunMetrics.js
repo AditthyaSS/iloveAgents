@@ -9,7 +9,12 @@ const PRICING = {
 export function estimateCost(model, inputTokens, outputTokens) {
   const p = PRICING[model];
   if (!p) return null; // unknown model — don't silently record as $0
-  return (inputTokens / 1000) * p.input + (outputTokens / 1000) * p.output;
+  const inputs = Number(inputTokens);
+  const outputs = Number(outputTokens);
+  if (!Number.isFinite(inputs) || !Number.isFinite(outputs) || inputs < 0 || outputs < 0) {
+    return null;
+  }
+  return (inputs / 1000) * p.input + (outputs / 1000) * p.output;
 }
 
 export async function logAgentRun({
@@ -68,10 +73,10 @@ export function useAgentRunMetrics(rangeDays = 30) {
     0,
   );
  const totalCostUSD = runs.reduce(
-    (sum, r) => (r.estimated_cost_usd == null ? sum : sum + r.estimated_cost_usd),
+    (sum, r) => (r.estimated_cost_usd == null || !Number.isFinite(r.estimated_cost_usd) ? sum : sum + r.estimated_cost_usd),
     0
   )
-  const unknownCostRuns = runs.filter((r) => r.estimated_cost_usd == null).length
+  const unknownCostRuns = runs.filter((r) => r.estimated_cost_usd == null || !Number.isFinite(r.estimated_cost_usd)).length
   const avgDurationMs = totalRuns
     ? runs.reduce((sum, r) => sum + (r.duration_ms || 0), 0) / totalRuns
     : 0;
