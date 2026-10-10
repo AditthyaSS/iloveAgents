@@ -101,6 +101,9 @@ function InputField({ input, value, onChange }) {
       <div>
         <div className="relative">
           <select
+            id={`battle-${input.id}`}
+            aria-label={input.label}
+            aria-invalid={!validation.valid}
             value={value ?? input.defaultValue ?? ""}
             onChange={(e) => onChange(input.id, e.target.value)}
             className={`${baseClass} ${borderClass} appearance-none cursor-pointer`}
@@ -118,7 +121,7 @@ function InputField({ input, value, onChange }) {
           />
         </div>
         {!validation.valid && (
-          <div className="flex items-center gap-2 mt-1 text-xs text-red-400">
+          <div role="alert" className="flex items-center gap-2 mt-1 text-xs text-red-400">
             <AlertCircle size={12} />
             {validation.error}
           </div>
@@ -147,6 +150,8 @@ function InputField({ input, value, onChange }) {
                 key={opt}
                 type="button"
                 onClick={() => toggle(opt)}
+                aria-pressed={active}
+                aria-label={`${input.label}: ${opt}`}
                 className={`px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150
                   ${active
                     ? "bg-yellow-400/20 border-yellow-400/60 text-yellow-300"
@@ -172,6 +177,9 @@ function InputField({ input, value, onChange }) {
     return (
       <div>
         <textarea
+          id={`battle-${input.id}`}
+          aria-label={input.label}
+          aria-invalid={!validation.valid}
           value={value ?? ""}
           onChange={(e) => onChange(input.id, e.target.value)}
           placeholder={input.placeholder}
@@ -181,10 +189,10 @@ function InputField({ input, value, onChange }) {
         <div className="flex items-center justify-between mt-1 text-xs">
           <div className={validation.valid ? "text-gray-500" : "text-red-400 flex items-center gap-1"}>
             {!validation.valid && (
-              <>
+              <span role="alert" className="flex items-center gap-1">
                 <AlertCircle size={12} />
                 {validation.error}
-              </>
+              </span>
             )}
             {validation.valid && validation.length > 0 && (
               <span className="text-gray-500">{validation.length}/{validation.limit} characters</span>
@@ -200,13 +208,16 @@ function InputField({ input, value, onChange }) {
     <div>
       <input
         type="text"
+        id={`battle-${input.id}`}
+        aria-label={input.label}
+        aria-invalid={!validation.valid}
         value={value ?? ""}
         onChange={(e) => onChange(input.id, e.target.value)}
         placeholder={input.placeholder}
         className={`${baseClass} ${borderClass}`}
       />
       {!validation.valid && (
-        <div className="flex items-center gap-2 mt-1 text-xs text-red-400">
+        <div role="alert" className="flex items-center gap-2 mt-1 text-xs text-red-400">
           <AlertCircle size={12} />
           {validation.error}
         </div>
@@ -407,7 +418,7 @@ export default function BattleModeSetup() {
               <div className="space-y-5">
                 {selectedAgent.inputs?.map((input) => (
                   <div key={input.id}>
-                    <label className="block text-xs font-semibold dark:text-text-primary text-gray-900 mb-1.5 uppercase tracking-wide">
+                    <label htmlFor={`battle-${input.id}`} className="block text-xs font-semibold dark:text-text-primary text-gray-900 mb-1.5 uppercase tracking-wide">
                       {input.label}
                       {input.required && (
                         <span className="text-yellow-400 ml-1">*</span>
