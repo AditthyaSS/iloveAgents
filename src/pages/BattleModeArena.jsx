@@ -385,6 +385,8 @@ export default function BattleModeArena() {
           </div>
           <button
             onClick={() => setPromptViewerOpen(!promptViewerOpen)}
+            aria-expanded={promptViewerOpen}
+            aria-controls="prompt-comparison-panel"
             className="w-full flex items-center justify-between px-5 py-3 rounded-lg
                   dark:bg-surface-card dark:bg-gray-900/60  backdrop-blur-md
                   backdrop-blur-sm
@@ -403,7 +405,7 @@ export default function BattleModeArena() {
           </button>
 
           {promptViewerOpen && (
-            <div className="mt-4 battle-fade-in">
+            <div id="prompt-comparison-panel" className="mt-4 battle-fade-in">
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 {/* OpenAI Column */}
                 <div className="min-w-0 rounded-xl border dark:border-border border-gray-200 dark:bg-surface-card/60 bg-white/80 backdrop-blur-sm flex flex-col overflow-hidden">
