@@ -8,7 +8,7 @@ export default {
   icon: "Brain",
   provider: "any",
   defaultProvider: "gemini", 
-  model: "gemini-3.1-flash-lite", 
+  model: "gemini-2.5-flash", 
   exampleInputs: {
     source_material: "The order of planets from the Sun: Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune",
   focus_area: "Make it funny and easy to remember"
