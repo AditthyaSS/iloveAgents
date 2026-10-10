@@ -57,7 +57,11 @@ export function useAgentRatings() {
     const currentRatings = getStoredRatings()
     const votes = getStoredVotes()
     const previous = votes[agentId] || null
-    const agentData = currentRatings[agentId] || { up: 0, down: 0 }
+    const stored = currentRatings[agentId] || {}
+    const agentData = {
+      up: Number.isFinite(Number(stored.up)) ? Number(stored.up) : 0,
+      down: Number.isFinite(Number(stored.down)) ? Number(stored.down) : 0,
+    }
 
     if (previous === value) {
       agentData[value] = Math.max(0, agentData[value] - 1)
