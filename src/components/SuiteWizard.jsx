@@ -101,8 +101,11 @@ if (isInteractive && !isSelectedOptionButton) {
   advance()
 }
 
-  // Skip current question without recording an answer
+  // Skip current question without recording an answer. Any stale answer
+  // for this step (e.g. answered, backed up, then skipped) is cleared so
+  // the final tally never counts a skipped question.
   const handleSkip = () => {
+    setAnswers((prev) => prev.map((a, i) => (i === step ? null : a)))
     advance()
   }
 
