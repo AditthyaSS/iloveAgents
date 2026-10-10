@@ -24,8 +24,8 @@ function estimateTokens(text) {
         }
         tokens += Math.ceil(wordLen / 4)
       } else if (/\s/.test(char)) {
-        tokens += 1
-        i++
+        // Collapse whitespace runs: gaps between words cost nothing extra.
+        while (i < len && /\s/.test(cleaned[i])) i++
       } else {
         tokens += 1
         i++
