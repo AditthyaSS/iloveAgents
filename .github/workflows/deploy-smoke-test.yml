@@ -1,0 +1,116 @@
+name: Deployment Smoke Test
+
+# Vercel deploys main to production through its GitHub integration and reports
+# the result back as a deployment status. This workflow runs after each
+# successful production deployment and checks that the live site actually serves
+# the app: the index page, client-side routes (vercel.json rewrite), and every
+# built JS/CSS asset reachable from the page, including lazy-loaded route chunks.
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Override with a repository variable if the production domain changes.
+      SITE_URL: ${{ vars.PRODUCTION_URL || 'https://iloveagents.vercel.app' }}
+    steps:
+      - name: Check the live site
+        run: |
+          set -euo pipefail
+          base="${SITE_URL%/}"
+
+          # Prints "<status> <content-type>" for the URL in $1 and saves the body to $2.
+          fetch() {
+            curl --silent --show-error --location --retry 3 --retry-delay 5 --retry-all-errors \
+              --max-time 20 --output "$2" --write-out '%{http_code} %{content_type}\n' "$1"
+          }
+
+          for path in / /about /agent/code-reviewer; do
+            read -r code _ < <(fetch "$base$path" page.html)
+            if [ "$code" != "200" ]; then
+              echo "::error::$base$path returned HTTP $code"
+              exit 1
+            fi
+            if ! grep -q 'id="root"' page.html; then
+              echo "::error::$base$path did not return the app shell"
+              exit 1
+            fi
+            echo "OK  $path"
+          done
+
+          # Routes are lazy-loaded, so their chunks are only referenced from other
+          # JS files, never from the HTML. Start from the assets in the page and
+          # follow every "./name.js" / "assets/name.js" reference so that a
+          # missing route chunk fails here instead of in the browser.
+          mapfile -t level < <(grep -oE '(src|href)="/assets/[^"]+\.(js|css)"' page.html | sed -E 's#^(src|href)="/assets/##; s/"$//' | sort -u || true)
+          if [ ${#level[@]} -eq 0 ]; then
+            echo "::error::No built assets referenced from the page"
+            exit 1
+          fi
+
+          mkdir -p chunks
+          declare -A seen=()
+          for name in "${level[@]}"; do
+            seen[$name]=1
+          done
+
+          # Fetch one level of the dependency graph at a time, in parallel over
+          # reused connections, then queue the newly referenced files.
+          while [ ${#level[@]} -gt 0 ]; do
+            args=()
+            for name in "${level[@]}"; do
+              args+=(--output "chunks/$name" "$base/assets/$name")
+            done
+            curl --silent --show-error --location --retry 3 --retry-delay 5 --retry-all-errors \
+              --max-time 20 --parallel --parallel-max 16 \
+              --write-out '%{url} %{http_code} %{content_type}\n' "${args[@]}" > results.txt || true
+
+            if [ "$(wc -l < results.txt)" -ne ${#level[@]} ]; then
+              echo "::error::Expected ${#level[@]} responses, got $(wc -l < results.txt)"
+              exit 1
+            fi
+
+            while read -r url code type; do
+              if [ "$code" != "200" ]; then
+                echo "::error::$url returned HTTP $code"
+                exit 1
+              fi
+              # The vercel.json catch-all rewrite answers a missing asset with the
+              # HTML app shell and HTTP 200, so the content type must match too.
+              case "$url" in
+                *.js)  expected='javascript' ;;
+                *.css) expected='text/css' ;;
+              esac
+              if [[ "${type:-}" != *"$expected"* ]]; then
+                echo "::error::$url returned '${type%%;*}' instead of $expected"
+                exit 1
+              fi
+            done < results.txt
+
+            next=()
+            for name in "${level[@]}"; do
+              if [[ "$name" != *.js ]]; then
+                continue
+              fi
+              mapfile -t refs < <(grep -oE '"(\./|assets/)[A-Za-z0-9_.-]+\.(js|css)"' "chunks/$name" | sed -E 's#^"(\./|assets/)##; s/"$//' | sort -u || true)
+              for ref in "${refs[@]}"; do
+                if [ -z "${seen[$ref]:-}" ]; then
+                  seen[$ref]=1
+                  next+=("$ref")
+                fi
+              done
+            done
+            level=("${next[@]}")
+          done
+          echo "OK  ${#seen[@]} JS/CSS assets, including lazy-loaded route chunks"
