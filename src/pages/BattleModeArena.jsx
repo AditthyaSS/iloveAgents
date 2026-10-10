@@ -674,9 +674,10 @@ export default function BattleModeArena() {
                   {/* Content */}
                   <div className="flex-1 p-5 overflow-y-auto max-h-[60vh]">
                     {r.loading && (
-                      <div className="flex flex-col items-center justify-center py-16 gap-3">
+                      <div className="flex flex-col items-center justify-center py-16 gap-3" role="status" aria-live="polite">
                         <Loader2
                           size={28}
+                          aria-hidden="true"
                           className={`animate-spin ${prov.loaderColor}`}
                         />
                         <span className="text-xs dark:text-text-muted dark:text-text-muted text-gray-700 font-medium">
