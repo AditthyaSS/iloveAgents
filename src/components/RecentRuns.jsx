@@ -91,13 +91,14 @@ const RecentRuns = ({ history, onRerun, onCopy, onDelete, onClearAll }) => {
                 </div>
               </div>
 
-              {/* Delete button (top right, fade in on hover) */}
+              {/* Delete button (top right, fade in on hover or focus) */}
               <button
                 onClick={() => onDelete(run.id)}
-                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 flex-shrink-0"
+                aria-label={`Delete run: ${run.agentName}`}
+                className="p-1.5 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100 focus-within:opacity-100 flex-shrink-0"
                 title="Delete run"
               >
-                <Trash2 size={14} />
+                <Trash2 size={14} aria-hidden="true" />
               </button>
             </div>
 
