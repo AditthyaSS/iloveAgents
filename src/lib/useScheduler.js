@@ -48,7 +48,11 @@ function loadJobs() {
 }
 
 function saveJobs(jobs) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map(stripJobSecret)))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs.map(stripJobSecret)))
+  } catch {
+    // Quota exceeded or storage unavailable — in-memory session continues normally.
+  }
 }
 
 function loadResults() {
@@ -57,7 +61,11 @@ function loadResults() {
 }
 
 function saveResults(results) {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(results))
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(results))
+  } catch {
+    // Quota exceeded or storage unavailable — results stay in memory for this session.
+  }
 }
 
 // ── Browser notification helper
