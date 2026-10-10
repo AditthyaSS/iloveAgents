@@ -112,7 +112,11 @@ export function saveCollections(collections) {
     ? buildCollections(collections)
     : [createDefaultCollection()]
 
-  localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(normalized))
+  try {
+    localStorage.setItem(COLLECTIONS_STORAGE_KEY, JSON.stringify(normalized))
+  } catch {
+    // Storage full or unavailable — the in-memory state is still updated.
+  }
 }
 
 function persist(updater) {
