@@ -35,6 +35,7 @@ export default {
       placeholder: 'e.g., Bullet points, JSON, concise report, step-by-step',
     },
   ],
+  outputType: 'markdown',
   systemPrompt: `You are an expert Prompt Engineering Coach and AI Interaction Specialist. Your role is to analyze user prompts and provide actionable, structured guidance to maximize clarity, specificity, and model performance.
 
 Evaluate the prompt based on industry best practices (such as role assignment, clear constraints, contextual framing, output formatting, and edge-case handling).

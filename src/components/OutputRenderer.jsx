@@ -115,6 +115,8 @@ function CopyButton({ text, label, icon: Icon = Copy }) {
   )
 }
 
+import { buildPdfHtml } from '../lib/exportPdf'
+
 export default function OutputRenderer({ content, outputType, agentName, systemPrompt, userMessage }) {
   if (!content) return null
 
@@ -167,6 +169,16 @@ ${stringContent}
     a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+
+  const handleExportPdf = () => {
+    const html = buildPdfHtml(agentName, stringContent)
+    const win = window.open('', '_blank', 'width=900,height=700')
+    if (!win) return
+    win.document.write(html)
+    win.document.close()
+    win.focus()
+    setTimeout(() => win.print(), 250)
+  }
 
   // Downloads just the raw output (no system prompt / inputs), as .md if
   // the output is markdown, otherwise .txt — matches the "Download Output"
@@ -227,6 +239,16 @@ ${stringContent}
           >
             <Download size={12} />
             Export JSON
+          </button>
+          <button
+            onClick={handleExportPdf}
+            title="Open print view to save as PDF"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors
+              dark:bg-surface-input dark:text-text-secondary dark:hover:text-text-primary dark:border-border
+              bg-gray-100 text-gray-500 hover:text-gray-900 border border-gray-200"
+          >
+            <Download size={12} />
+            Export PDF
           </button>
         </div>
       </div>
