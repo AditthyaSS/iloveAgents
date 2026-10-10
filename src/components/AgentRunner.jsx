@@ -43,14 +43,7 @@ import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
-
-const providerLabels = {
-  openai: "OpenAI",
-  anthropic: "Anthropic",
-  gemini: "Gemini",
-  openrouter: "OpenRouter",
-  any: "Any",
-};
+import { providerLabels } from "../lib/agentMeta";
 
 
 const LOADING_MESSAGES = [

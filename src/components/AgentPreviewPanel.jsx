@@ -1,14 +1,7 @@
 import { useState } from "react";
 import * as Icons from "lucide-react";
 import { ChevronDown, ChevronRight, FileCode2 } from "lucide-react";
-
-const providerLabels = {
-  openai: "OpenAI",
-  anthropic: "Anthropic",
-  gemini: "Gemini",
-  openrouter: "OpenRouter",
-  any: "Any",
-};
+import { providerLabels } from "../lib/agentMeta";
 
 const typeLabels = {
   text: "Text",
