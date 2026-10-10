@@ -26,12 +26,13 @@ export function createTrace({ workflowId = null, workflowTitle = '' } = {}) {
  * @returns {object} trace
  */
 export function recordStep(trace, step) {
+  if (!trace || !Array.isArray(trace.steps) || !step || typeof step !== 'object') return trace
   trace.steps.push({
     stepName: step.stepName,
     stepType: step.stepType || 'agent',
     input: truncateForStorage(step.input),
     output: truncateForStorage(step.output),
-    durationMs: Math.round(step.durationMs),
+    durationMs: Number.isFinite(step.durationMs) ? Math.round(step.durationMs) : 0,
     status: step.status,
     error: step.error ?? null,
   })
@@ -45,6 +46,8 @@ export function recordStep(trace, step) {
  * @returns {object} trace
  */
 export function finalizeTrace(trace, { status, finalOutput = null }) {
+  if (!trace || typeof trace !== 'object') return trace
+  if (trace.endedAt != null) return trace
   trace.endedAt = new Date().toISOString()
   trace.status = status
   trace.finalOutput = truncateForStorage(finalOutput)
@@ -101,6 +104,15 @@ function persistTrace(trace) {
 // Keep individual payloads bounded so a handful of runs cannot exhaust localStorage
 function truncateForStorage(value, limit = 8000) {
   if (value == null) return null
-  const str = String(value)
+  if (typeof value === 'string') {
+    return value.length > limit ? `${value.slice(0, limit)}\n... [truncated]` : value
+  }
+  let str
+  try {
+    str = JSON.stringify(value)
+  } catch {
+    str = String(value)
+  }
+  if (str == null) return null
   return str.length > limit ? `${str.slice(0, limit)}\n... [truncated]` : str
 }
