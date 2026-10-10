@@ -18,8 +18,15 @@ import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
 function AgentRow({ agentId, index, total, agents }) {
-  const agent = agents?.find((a) => a.id === agentId)
-  const IconComponent = (agent && Icons[agent.icon]) || Icons.Bot
+  const isBranch = agentId && typeof agentId === 'object'
+  const agent = !isBranch ? agents?.find((a) => a.id === agentId) : null
+  const IconComponent = isBranch
+    ? Icons.GitBranch
+    : (agent && Icons[agent.icon]) || Icons.Bot
+  const displayName = isBranch
+    ? `Branch: ${agentId.id || 'conditional'}`
+    : (agent?.name ?? agentId)
+  const displayCategory = isBranch ? 'Conditional' : (agent?.category ?? '—')
 
   return (
     <div className="flex items-center gap-3">
@@ -42,10 +49,10 @@ function AgentRow({ agentId, index, total, agents }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
-            {agent?.name ?? agentId}
+            {displayName}
           </div>
           <div className="text-[11px] dark:text-text-muted text-gray-400">
-            {agent?.category ?? '—'}
+            {displayCategory}
           </div>
         </div>
         {index < total - 1 && (
@@ -236,7 +243,7 @@ export default function WorkflowDetail() {
         <div>
           {(workflow.agents ?? []).map((agentId, index) => (
             <AgentRow
-              key={agentId + index}
+              key={`${typeof agentId === 'object' ? `branch-${agentId.id || index}` : agentId}-${index}`}
               agentId={agentId}
               index={index}
               total={workflow.agents.length}
