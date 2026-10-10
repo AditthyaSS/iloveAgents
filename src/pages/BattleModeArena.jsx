@@ -281,11 +281,19 @@ export default function BattleModeArena() {
     const copyText = `System Prompt: ${promptData?.systemPrompt || "Not available"}\n\nUser Prompt: ${promptData?.userMessage || "Not available"}`;
 
     try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error("Clipboard API is unavailable");
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(copyText);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = copyText;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'absolute';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
       }
-
-      await navigator.clipboard.writeText(copyText);
       setCopiedProvider(providerId);
       setCopyAnnouncement(`${providerLabel} prompt copied to clipboard.`);
       setTimeout(() => {
