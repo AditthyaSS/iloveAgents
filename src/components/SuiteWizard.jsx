@@ -88,7 +88,8 @@ if (isInteractive && !isSelectedOptionButton) {
 
     newAnsweredCount++
 
-    const option = questions[questionIndex].options[selected]
+    const option = questions[questionIndex]?.options?.[selected]
+    if (!option || !Array.isArray(option.tags)) return
 
     option.tags.forEach((tag) => {
       newCounts[tag] = (newCounts[tag] || 0) + 1
