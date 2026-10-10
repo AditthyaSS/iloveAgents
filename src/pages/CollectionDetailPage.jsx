@@ -177,9 +177,10 @@ export default function CollectionDetailPage() {
 
                 <button
                   onClick={() => handleRemoveAgent(agent.id)}
-                  className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 rounded-lg bg-white/90 px-2 py-1 text-xs font-semibold text-red-600 shadow hover:bg-red-50 dark:bg-surface-card/90 dark:hover:bg-red-500/10"
+                  aria-label={`Remove ${agent.name} from collection`}
+                  className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1 rounded-lg bg-white/90 px-3 py-2 text-xs font-semibold text-red-600 shadow hover:bg-red-50 dark:bg-surface-card/90 dark:hover:bg-red-500/10 min-h-[36px]"
                 >
-                  <X size={13} />
+                  <X size={13} aria-hidden="true" />
                   Remove
                 </button>
               </div>
