@@ -24,7 +24,11 @@ function saveEvents(events) {
 
 function seedFromHistory() {
   const SEED_FLAG = 'ila_analytics_seeded'
-  if (localStorage.getItem(SEED_FLAG)) return
+  try {
+    if (localStorage.getItem(SEED_FLAG)) return
+  } catch {
+    return
+  }
 
   try {
     const historyRaw = localStorage.getItem('iloveAgents_history')
@@ -65,6 +69,7 @@ function seedFromHistory() {
 // ── Plain function (for use outside React components) ───────────────────────
 
 export function recordAnalyticsRun({ agentId, agentName, category, provider, model, duration }) {
+  if (typeof agentId !== 'string' || !agentId.trim()) return false
   const event = {
     id: `${agentId}_${Date.now()}`,
     agentId,
@@ -82,6 +87,7 @@ export function recordAnalyticsRun({ agentId, agentName, category, provider, mod
 
   // Notify any mounted useAnalytics hooks
   window.dispatchEvent(new Event('ila_analytics_update'))
+  return true
 }
 
 // ── Stats computation ───────────────────────────────────────────────────────
