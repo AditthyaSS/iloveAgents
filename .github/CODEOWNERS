@@ -7,3 +7,9 @@ src/agents/registry.js @AditthyaSS
 # These files handle API keys — extra care needed
 src/lib/llmAdapter.js @AditthyaSS
 src/lib/useApiKey.js @AditthyaSS
+src/lib/automationsService.js @AditthyaSS
+
+# Automation runtime and docs
+api/cron/ @AditthyaSS
+docs/ @AditthyaSS
+.github/workflows/ @AditthyaSS
