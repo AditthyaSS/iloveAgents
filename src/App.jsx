@@ -1,6 +1,6 @@
 import { useState, Suspense, lazy } from 'react'
-import { Routes, Route, Outlet } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Routes, Route, Outlet ,Link} from 'react-router-dom'
+import { Loader2 ,MessageSquare} from 'lucide-react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
@@ -49,6 +49,23 @@ function MainLayout({ sidebarOpen, setSidebarOpen, onStartTour, isTourActive, on
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onStartTour={onStartTour} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <CustomCursor />
+      <Link
+        to="/feedback"
+        className="fixed bottom-6 right-6 z-50
+        inline-flex items-center gap-2
+        rounded-full bg-accent px-4 py-3
+        text-sm font-semibold text-white
+        shadow-lg transition-all
+        hover:scale-105 hover:shadow-xl
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-accent
+        focus-visible:ring-offset-2"
+        aria-label="Give feedback"
+      >
+        <MessageSquare size={18} />
+        <span>Feedback</span>
+      </Link>
       <main className="pt-28 lg:pl-60">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
