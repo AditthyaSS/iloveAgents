@@ -3,6 +3,7 @@ import { useParams, Navigate } from 'react-router-dom'
 import AgentRunner from '../components/AgentRunner'
 import { useAgents } from '../lib/useAgents'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
+import { recordRecentVisit } from '../lib/recentAgents'
 
 export default function AgentPage() {
   const { id } = useParams()
@@ -13,20 +14,7 @@ export default function AgentPage() {
 
   useEffect(() => {
     if (!agent) return
-
-    const existing = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
-
-    const updated = [
-      agent.id,
-      ...existing.filter((item) => item !== agent.id),
-    ].slice(0, 5)
-
-    localStorage.setItem(
-      'recentAgents',
-      JSON.stringify(updated)
-    )
+    recordRecentVisit(agent.id)
   }, [agent])
 
   if (isLoading) {
