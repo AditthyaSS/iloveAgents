@@ -19,7 +19,6 @@ const terms_and_conditions_simplifier = {
             id: 'focus_areas',
             label: 'Focus Areas',
             type: 'multiselect',
-            placeholder: 'Select the areas you want emphasized...',
             required: false,
             options: [
                 'Privacy',
