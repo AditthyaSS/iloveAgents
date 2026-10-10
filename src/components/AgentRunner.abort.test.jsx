@@ -177,4 +177,16 @@ describe('AgentRunner: stream cancellation lifecycle', () => {
     expect(history()).toHaveLength(0)
     expect(analyticsFor('test-agent')).toHaveLength(0)
   })
+
+  it('Stop keeps partial output visible but bills, saves, and records nothing', async () => {
+    const { user } = await startRun()
+    await act(async () => { push(0, 'partial text') })
+    await user.click(await screen.findByRole('button', { name: /stop/i }))
+    await flush()
+
+    expect(await screen.findByTestId('output')).toHaveTextContent('partial text')
+    expect(history()).toHaveLength(0)
+    expect(analyticsFor('test-agent')).toHaveLength(0)
+    expect(screen.getByRole('button', { name: /run agent/i })).toBeInTheDocument()
+  })
 })
