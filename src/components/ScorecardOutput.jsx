@@ -135,7 +135,7 @@ export default function ScorecardOutput({ data }) {
                     {val?.score ?? 0}/100
                   </span>
                 </div>
-                <div className="w-full h-2 rounded-full dark:bg-surface-input bg-gray-100 overflow-hidden">
+                <div className="w-full h-2 rounded-full dark:bg-surface-input bg-gray-100 overflow-hidden" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={val?.score ?? 0} aria-label={`${val?.score ?? 0} out of 100`}>
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{

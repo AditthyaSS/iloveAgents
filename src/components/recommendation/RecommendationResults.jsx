@@ -27,7 +27,7 @@ export default function RecommendationResults({ agents = [], results = [], onRef
         <p className="text-xs text-gray-500 dark:text-text-secondary mt-1">Based on your goal, level, and preferences. Match reflects your answers, not agent quality.</p>
       </div>
       {!hasConfidentMatch && (
-        <div className="rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs leading-relaxed text-gray-600 dark:text-text-secondary">
+        <div role="status" className="rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs leading-relaxed text-gray-600 dark:text-text-secondary">
           We couldn't find a perfect match, but here are the closest agents based on your preferences.
         </div>
       )}
