@@ -76,7 +76,7 @@ export default function CostEstimator({ inputText = '', systemPrompt = '', model
         <div className="border-t dark:border-border border-gray-200 pt-1.5 mt-1.5 flex justify-between">
           <span className="font-semibold dark:text-text-primary text-gray-900">Estimated Total</span>
           <span className="font-bold dark:text-text-primary text-gray-900 tabular-nums">
-            {formatCostShort(totalCost)}
+            {formatCost(totalCost)}
           </span>
         </div>
       </div>
