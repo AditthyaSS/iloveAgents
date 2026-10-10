@@ -8,7 +8,7 @@ export default {
   icon: "Siren",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     incidentSummary:
       "The 'Order History' service experienced a 100% failure rate for approximately 45 minutes. Users could browse products and add to cart but could not view past orders or track current shipments.",
