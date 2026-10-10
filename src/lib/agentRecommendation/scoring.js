@@ -10,7 +10,7 @@ export function tokenizeFreeText(text = '') {
   return normalize(text)
     .split(/[^a-z0-9+#.-]+/i)
     .map((token) => token.trim())
-    .filter((token) => token.length > 2 && !STOP_WORDS.has(token))
+    .filter((token) => token.length >= 2 && !STOP_WORDS.has(token))
     .slice(0, FREE_TEXT_TOKEN_LIMIT)
 }
 
