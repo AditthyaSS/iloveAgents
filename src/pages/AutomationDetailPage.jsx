@@ -255,8 +255,12 @@ export default function AutomationDetailPage() {
       )}
 
       {/* Tabs Header */}
-      <div className="flex items-center gap-2 border-b dark:border-border border-gray-200">
+      <div role="tablist" aria-label="Automation details" className="flex items-center gap-2 border-b dark:border-border border-gray-200">
         <button
+          role="tab"
+          aria-selected={activeTab === 'history'}
+          aria-controls="automation-tab-history"
+          id="automation-tabbtn-history"
           onClick={() => setActiveTab('history')}
           className={`px-4 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
             activeTab === 'history'
@@ -269,6 +273,10 @@ export default function AutomationDetailPage() {
         </button>
 
         <button
+          role="tab"
+          aria-selected={activeTab === 'config'}
+          aria-controls="automation-tab-config"
+          id="automation-tabbtn-config"
           onClick={() => setActiveTab('config')}
           className={`px-4 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
             activeTab === 'config'
@@ -281,6 +289,10 @@ export default function AutomationDetailPage() {
         </button>
 
         <button
+          role="tab"
+          aria-selected={activeTab === 'emails'}
+          aria-controls="automation-tab-emails"
+          id="automation-tabbtn-emails"
           onClick={() => setActiveTab('emails')}
           className={`px-4 py-3 text-xs font-bold border-b-2 transition-all flex items-center gap-2 ${
             activeTab === 'emails'
@@ -295,7 +307,7 @@ export default function AutomationDetailPage() {
 
       {/* Tab 1: Execution History Table */}
       {activeTab === 'history' && (
-        <div className="space-y-4">
+        <div role="tabpanel" id="automation-tab-history" aria-labelledby="automation-tabbtn-history" className="space-y-4">
           {runs.length === 0 ? (
             <div className="text-center py-16 rounded-2xl border dark:border-border border-gray-200 dark:bg-surface-card bg-white p-8">
               <Clock size={28} className="mx-auto mb-3 text-gray-400" />
@@ -313,14 +325,15 @@ export default function AutomationDetailPage() {
             <div className="rounded-2xl border dark:border-border/80 border-gray-200 dark:bg-surface-card bg-white overflow-hidden shadow-sm">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
+                  <caption className="sr-only">Automation execution history</caption>
                   <thead className="border-b dark:border-border/60 border-gray-100 dark:bg-surface-hover/40 bg-gray-50 text-[10px] uppercase tracking-wider text-gray-500">
                     <tr>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3">Execution Time</th>
-                      <th className="px-5 py-3">Duration</th>
-                      <th className="px-5 py-3">Tokens</th>
-                      <th className="px-5 py-3">Email Report</th>
-                      <th className="px-5 py-3 text-right">Actions</th>
+                      <th scope="col" className="px-5 py-3">Status</th>
+                      <th scope="col" className="px-5 py-3">Execution Time</th>
+                      <th scope="col" className="px-5 py-3">Duration</th>
+                      <th scope="col" className="px-5 py-3">Tokens</th>
+                      <th scope="col" className="px-5 py-3">Email Report</th>
+                      <th scope="col" className="px-5 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-border/40 divide-gray-100">
@@ -392,7 +405,7 @@ export default function AutomationDetailPage() {
 
       {/* Tab 2: Agent Configuration */}
       {activeTab === 'config' && (
-        <div className="space-y-4">
+        <div role="tabpanel" id="automation-tab-config" aria-labelledby="automation-tabbtn-config" className="space-y-4">
           <div className="p-6 rounded-2xl border dark:border-border/80 border-gray-200 dark:bg-surface-card bg-white space-y-6">
             <div>
               <h3 className="text-sm font-bold dark:text-white text-gray-900 uppercase tracking-wider mb-2">
@@ -430,7 +443,7 @@ export default function AutomationDetailPage() {
 
       {/* Tab 3: Resend Email Activity */}
       {activeTab === 'emails' && (
-        <div className="space-y-4">
+        <div role="tabpanel" id="automation-tab-emails" aria-labelledby="automation-tabbtn-emails" className="space-y-4">
           <div className="p-6 rounded-2xl border dark:border-border/80 border-gray-200 dark:bg-surface-card bg-white space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
