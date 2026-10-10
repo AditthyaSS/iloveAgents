@@ -249,10 +249,11 @@ export default function AutomationsPage() {
       {/* Filter and Search Bar */}
       <div className="p-3 sm:p-4 rounded-2xl border dark:border-border/80 border-gray-200 dark:bg-surface-card bg-white flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={15} aria-hidden="true" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search automations or agents..."
+            aria-label="Search automations or agents"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="w-full h-9 pl-9 pr-4 rounded-xl text-xs dark:bg-surface-input dark:border-border bg-gray-50 border border-gray-200 outline-none focus:ring-1 focus:ring-accent"
@@ -264,6 +265,7 @@ export default function AutomationsPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
+            aria-label="Filter by status"
             className="h-9 px-3 rounded-xl text-xs dark:bg-surface-input dark:border-border bg-gray-50 border border-gray-200 outline-none"
           >
             <option value="all">All Statuses</option>
@@ -275,6 +277,7 @@ export default function AutomationsPage() {
           <select
             value={scheduleFilter}
             onChange={e => setScheduleFilter(e.target.value)}
+            aria-label="Filter by schedule"
             className="h-9 px-3 rounded-xl text-xs dark:bg-surface-input dark:border-border bg-gray-50 border border-gray-200 outline-none"
           >
             <option value="all">All Schedules</option>
@@ -285,10 +288,11 @@ export default function AutomationsPage() {
 
           <button
             onClick={reloadData}
+            aria-label="Refresh automation list"
             title="Refresh list"
             className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={15} aria-hidden="true" />
           </button>
         </div>
       </div>
