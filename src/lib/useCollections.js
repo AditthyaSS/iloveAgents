@@ -347,14 +347,6 @@ export function useCollections() {
               }
             }
 
-            if (item.agentIds.includes(normalizedAgentId)) {
-              return {
-                ...item,
-                agentIds: item.agentIds.filter((id) => id !== normalizedAgentId),
-                updatedAt: now,
-              }
-            }
-
             return item
           }),
         }
@@ -391,9 +383,54 @@ export function useCollections() {
         return { ok: false, error: 'Collection and agent are required.' }
       }
 
-      return addAgentToCollection(collectionId, agentId)
+      const normalizedAgentId = typeof agentId === 'string' ? agentId.trim() : ''
+
+      if (!normalizedAgentId) {
+        return { ok: false, error: 'Agent is required.' }
+      }
+
+      return runMutation((current) => {
+        const without = current.map((item) =>
+          item.id === collectionId || item.id === DEFAULT_COLLECTION_ID
+            ? item
+            : {
+                ...item,
+                agentIds: item.agentIds.filter((id) => id !== normalizedAgentId),
+                updatedAt: new Date().toISOString(),
+              }
+        )
+        const target = without.find((item) => item.id === collectionId)
+
+        if (!target) {
+          return { ok: false, error: 'Collection not found.' }
+        }
+
+        if (target.agentIds.includes(normalizedAgentId)) {
+          return { ok: true, collections: without }
+        }
+
+        if (target.agentIds.length >= MAX_AGENTS_PER_COLLECTION) {
+          return {
+            ok: false,
+            error: `Collections can contain up to ${MAX_AGENTS_PER_COLLECTION} agents.`,
+          }
+        }
+
+        return {
+          ok: true,
+          collections: without.map((item) =>
+            item.id === collectionId
+              ? {
+                  ...item,
+                  agentIds: [...item.agentIds, normalizedAgentId],
+                  updatedAt: new Date().toISOString(),
+                }
+              : item
+          ),
+        }
+      })
     },
-    [addAgentToCollection]
+    [runMutation]
   )
 
   const getCollectionById = useCallback(
