@@ -164,13 +164,19 @@ export function useScheduler({ autoRun = true } = {}) {
 
     try {
       const agent = job.agentDefinition
+      if (!agent || typeof agent !== 'object') {
+        throw new Error('Saved agent definition is missing or corrupt.')
+      }
       const actualProvider = agent.provider === 'any' ? job.provider : agent.provider
       const model = resolveAgentModel(agent, actualProvider, job.model)
 
       // Build user message from saved inputs
       const parts = []
-      agent.inputs.forEach((input) => {
-        const val = job.inputs[input.id]
+      const agentInputs = Array.isArray(agent.inputs) ? agent.inputs : []
+      const savedInputs = job.inputs && typeof job.inputs === 'object' ? job.inputs : {}
+      agentInputs.forEach((input) => {
+        if (!input || typeof input.id === 'undefined') return
+        const val = savedInputs[input.id]
         if (!val || (Array.isArray(val) && val.length === 0)) return
         parts.push(
           Array.isArray(val)
@@ -184,7 +190,7 @@ export function useScheduler({ autoRun = true } = {}) {
         provider: actualProvider,
         model,
         apiKey: job.apiKey,
-        systemPrompt: agent.systemPrompt,
+        systemPrompt: typeof agent.systemPrompt === 'string' ? agent.systemPrompt : '',
         userMessage,
         onChunk: () => {},
       })
