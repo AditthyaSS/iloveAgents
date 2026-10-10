@@ -1159,21 +1159,24 @@ const handleRun = async () => {
 </div>
 {showModelSwitcher && (
   <div className="mt-3 p-4 border rounded-lg flex flex-wrap gap-3 items-center">
-<CustomSelect
-      value={provider}
-      onChange={setProvider}
-      options={[
-        { value: "openai", label: "OpenAI" },
-        { value: "anthropic", label: "Anthropic" },
-        { value: "gemini", label: "Gemini" },
-        { value: "openrouter", label: "OpenRouter" },
-      ]}
-    />
+    {/* Only show provider switcher for 'any'-provider agents */}
+    {agent.provider === 'any' && (
+      <CustomSelect
+        value={provider}
+        onChange={setProvider}
+        options={[
+          { value: "openai", label: "OpenAI" },
+          { value: "anthropic", label: "Anthropic" },
+          { value: "gemini", label: "Gemini" },
+          { value: "openrouter", label: "OpenRouter" },
+        ]}
+      />
+    )}
 
     <CustomSelect
       value={selectedModel}
       onChange={setSelectedModel}
-      options={MODELS[provider] || []}
+      options={MODELS[agent.provider !== 'any' ? agent.provider : provider] || []}
     />
 
     <button
