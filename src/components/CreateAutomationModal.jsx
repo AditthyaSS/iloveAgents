@@ -146,8 +146,17 @@ export default function CreateAutomationModal({
 
   const modelsForProvider = MODELS[provider] || MODELS.openai
 
+  useEffect(() => {
+    if (!isOpen) return
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isOpen, onClose])
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div role="dialog" aria-modal="true" aria-label={initialData ? 'Edit scheduled automation' : 'Schedule AI agent autopilot'} className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
@@ -176,6 +185,7 @@ export default function CreateAutomationModal({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close automation dialog"
               className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
             >
               <X size={18} />
