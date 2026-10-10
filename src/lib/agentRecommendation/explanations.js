@@ -55,9 +55,5 @@ export function buildRecommendationReasons(agent, preferences = {}, matchedSigna
   if (matchedSignals.preference === 'capable') reasons.push('Its detailed scope aligns with your capability preference.')
   if (matchedSignals.experience) reasons.push(`Its metadata aligns with your ${matchedSignals.experience} guidance preference.`)
   if (!reasons.length && goal && agent?.category) reasons.push(`Listed in ${agent.category}; this is one of the closest available matches.`)
-  if (reasons.length < 3 && agent?.category && !reasons.some((reason) => reason.includes(`Listed in ${agent.category}`))) {
-    reasons.push(`Agent metadata identifies its focus as ${agent.category}.`)
-  }
-  if (reasons.length < 3 && agent?.description) reasons.push('Its published description is relevant to the selected workflow.')
   return [...new Set(reasons)].slice(0, 4)
 }
