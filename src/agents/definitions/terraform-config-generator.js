@@ -1,5 +1,6 @@
 const terraformConfigGeneratorAgent = {
     id: 'terraform-config-generator',
+    createdAt: '2025-05-06',
     name: 'Terraform Config Generator Agent',
     description: 'Turns a plain-English infrastructure description into ready-to-use Terraform configuration (main.tf, variables.tf, outputs.tf) for your chosen cloud provider.',
     category: 'Engineering',
@@ -79,6 +80,11 @@ A bulleted list explaining, for each resource block, what it does and why it's c
 
 Use idiomatic, current Terraform syntax (Terraform >= 1.x, HCL2). Format the response using clean, beautiful markdown with properly fenced \`\`\`hcl code blocks for each file.`,
     outputType: 'markdown',
+    exampleInputs: {
+        infra_description: 'A VPC with 2 public subnets and an RDS database',
+        cloud_provider: 'AWS',
+        environment: 'dev',
+    },
 };
 
 export default terraformConfigGeneratorAgent;
