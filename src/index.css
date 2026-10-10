@@ -654,6 +654,16 @@ html:not(.dark) .light-text-secondary {
   body {
     overflow-x: hidden;
   }
+
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  img, pre, video {
+    max-width: 100%;
+  }
 }
 
 /* ===== Onboarding Tour ===== */
