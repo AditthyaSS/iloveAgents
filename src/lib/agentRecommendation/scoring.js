@@ -110,7 +110,15 @@ export function getMaxPossibleScore(preferences = {}, weights = DEFAULT_RECOMMEN
   const extras = Array.isArray(preferences.extraPreferences) ? preferences.extraPreferences.length : 0
   const taskCount = getGoal(preferences.primaryGoal)?.taskTypes?.length || 0
   const freeTextTokenCount = tokenizeFreeText(preferences.freeTextGoal).length
-  return weights.exactCategory + weights.goalCategory + Math.max(1, taskCount) * weights.taskType + extras * (weights.capabilityKeyword ?? 0) + weights.providerExact + weights.freeTextName * freeTextTokenCount + weights.experience + weights.urgency
+  const providerScore =
+    preferences.providerPreference && preferences.providerPreference !== 'any' ? weights.providerExact : 0
+  const experienceScore =
+    preferences.experienceLevel && preferences.experienceLevel !== 'any' ? weights.experience : 0
+  const urgencyScore =
+    preferences.budgetPreference === 'fast' || preferences.budgetPreference === 'capable'
+      ? weights.urgency
+      : 0
+  return weights.exactCategory + weights.goalCategory + Math.max(1, taskCount) * weights.taskType + extras * (weights.capabilityKeyword ?? 0) + providerScore + weights.freeTextName * freeTextTokenCount + experienceScore + urgencyScore
 }
 
 export function recommendAgents(agents = [], preferences = {}, options = {}) {
