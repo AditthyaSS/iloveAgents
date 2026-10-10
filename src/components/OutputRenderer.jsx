@@ -6,6 +6,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import ScorecardOutput from './ScorecardOutput'
 import VoiceOutput from './VoiceOutput'
+import { downloadBlob, downloadTextFile } from '../lib/downloadBlob'
 
 /**
  * XSS Protection:
@@ -143,13 +144,8 @@ ${userMessage || 'N/A'}
 --- Output ---
 ${stringContent}
 `;
-    const blob = new Blob([logText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'}_run_log.txt`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const blobName = agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'
+    downloadTextFile(logText, `${blobName}_run_log.txt`)
   };
 
   const handleDownloadJson = () => {
@@ -161,13 +157,8 @@ ${stringContent}
       inputs: userMessage || '',
       output: content || ''
     };
-    const blob = new Blob([JSON.stringify(logObj, null, 2)], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'}_run_log.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const blobName = agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'
+    downloadBlob(JSON.stringify(logObj, null, 2), 'application/json;charset=utf-8', `${blobName}_run_log.json`)
   };
 
   const handleExportPdf = () => {
@@ -185,13 +176,8 @@ ${stringContent}
   // request in issue #429.
   const handleDownloadOutput = () => {
     const extension = outputType === 'markdown' ? 'md' : 'txt';
-    const blob = new Blob([stringContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'}_output.${extension}`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    const blobName = agentName ? agentName.replace(/\s+/g, '_').toLowerCase() : 'agent'
+    downloadTextFile(stringContent, `${blobName}_output.${extension}`)
   };
 
   return (
