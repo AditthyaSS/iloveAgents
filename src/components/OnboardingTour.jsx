@@ -442,10 +442,11 @@ export default function OnboardingTour({
           {/* Footer */}
           <div className="px-5 pb-5 flex items-center justify-between gap-3">
             {/* Progress dots */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={TOUR_STEPS.length} aria-valuenow={currentStep + 1} aria-label={`Step ${currentStep + 1} of ${TOUR_STEPS.length}`}>
               {TOUR_STEPS.map((_, idx) => (
                 <div
                   key={idx}
+                  aria-hidden="true"
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     idx === currentStep
                       ? 'w-6 bg-gradient-to-r from-indigo-500 to-violet-500'
