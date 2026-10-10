@@ -4,13 +4,27 @@ import { estimateInputCost, estimateOutputCost, getPricing } from './modelPricin
 const STORAGE_KEY = 'ila_session_spend'
 const MAX_RUNS = 200
 
+function sanitizeRun(run) {
+  if (!run || typeof run !== 'object') return null
+  const totalCost = Number(run.totalCost)
+  return {
+    ...run,
+    inputTokens: Number.isFinite(Number(run.inputTokens)) ? Number(run.inputTokens) : 0,
+    outputTokens: Number.isFinite(Number(run.outputTokens)) ? Number(run.outputTokens) : 0,
+    inputCost: Number.isFinite(Number(run.inputCost)) ? Number(run.inputCost) : 0,
+    outputCost: Number.isFinite(Number(run.outputCost)) ? Number(run.outputCost) : 0,
+    totalCost: Number.isFinite(totalCost) ? totalCost : 0,
+  }
+}
+
 function loadSession() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (raw) {
       const data = JSON.parse(raw)
       if (data && typeof data === 'object' && Array.isArray(data.runs)) {
-        return data
+        const runs = data.runs.map(sanitizeRun).filter(Boolean)
+        return { runs, totalSpend: runs.reduce((sum, r) => sum + r.totalCost, 0) }
       }
     }
   } catch {}
