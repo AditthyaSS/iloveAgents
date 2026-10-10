@@ -36,7 +36,12 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   })
 
   useEffect(() => {
-    const saved = localStorage.getItem('ila_theme')
+    let saved = null
+    try {
+      saved = localStorage.getItem('ila_theme')
+    } catch {
+      // storage blocked; fall through to the dark default below
+    }
 
     if (saved === 'light') {
       setDarkMode(false)
@@ -50,12 +55,16 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
     const next = !darkMode
     setDarkMode(next)
 
-    if (next) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('ila_theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('ila_theme', 'light')
+    try {
+      if (next) {
+        document.documentElement.classList.add('dark')
+        localStorage.setItem('ila_theme', 'dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+        localStorage.setItem('ila_theme', 'light')
+      }
+    } catch {
+      // preference cannot persist; the in-memory theme still applies
     }
   }
 
