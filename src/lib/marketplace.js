@@ -194,7 +194,8 @@ export function getAverageRating(listing) {
 }
 
 /**
- * Filter listings by free-text search (name and tags) and category.
+ * Filter listings by free-text search (name, description, author, category,
+ * readme, and tags) and category.
  * @param {Array<object>} listings
  * @param {{ search?: string, category?: string }} filters
  * @returns {Array<object>}
@@ -205,10 +206,10 @@ export function filterListings(listings, { search = '', category = '' } = {}) {
     if (category && l.category !== category) return false
     if (!q) return true
     const tags = Array.isArray(l.tags) ? l.tags : []
-    return (
-      String(l.name || '').toLowerCase().includes(q) ||
-      tags.some((t) => String(t).toLowerCase().includes(q))
-    )
+    const haystack = [l.name, l.description, l.author, l.category, l.readme, ...tags]
+      .map((v) => String(v ?? '').toLowerCase())
+      .join(' ')
+    return haystack.includes(q)
   })
 }
 
