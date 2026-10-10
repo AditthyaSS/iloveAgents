@@ -42,7 +42,10 @@ export default function SuitesPage() {
   const [generatorError, setGeneratorError] = useState(null)
 
   const handleGenerateSuite = async () => {
-    if (!goal.trim() || !apiKey) return
+    if (!goal.trim() || !apiKey) {
+      setGeneratorError('Describe your goal and add an API key first.')
+      return
+    }
     setGenerating(true)
     setCustomSuite(null)
     setGeneratorError(null)
@@ -153,7 +156,7 @@ export default function SuitesPage() {
         </div>
 
         {generatorError && (
-          <p className="text-[11px] text-red-500 mt-2">{generatorError}</p>
+          <p role="alert" className="text-[11px] text-red-500 mt-2">{generatorError}</p>
         )}
 
         {/* Custom Suite Result */}
@@ -219,15 +222,26 @@ export default function SuitesPage() {
       </div>
 
       {/* Suite cards grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-        {suites.map((suite) => (
-          <SuiteCard
-            key={suite.id}
-            suite={suite}
-            onSelect={() => setActiveSuite(suite)}
-          />
-        ))}
-      </div>
+      {suites.length === 0 ? (
+        <div className="text-center py-10 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200 mb-10">
+          <p className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1">
+            No suites available
+          </p>
+          <p className="text-xs dark:text-text-muted text-gray-500">
+            Check back later or generate a custom suite above.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+          {suites.map((suite) => (
+            <SuiteCard
+              key={suite.id}
+              suite={suite}
+              onSelect={() => setActiveSuite(suite)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Footer note */}
       <div className="text-center">
