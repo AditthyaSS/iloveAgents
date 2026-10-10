@@ -12,14 +12,34 @@ function loadPrompts() {
   }
 }
 
+function isQuotaError(error) {
+  return (
+    error &&
+    (error.name === 'QuotaExceededError' || error.code === 22 || error.code === 1014)
+  )
+}
+
 function savePrompts(prompts) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(prompts))
-  } catch (error) {
-    if (error.name === 'QuotaExceededError') {
-      console.error('LocalStorage quota exceeded. Prompt history might be truncated.')
-    } else {
-      console.error('Error saving prompt history to localStorage:', error)
+  let list = Array.isArray(prompts) ? [...prompts] : []
+  for (;;) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+      return list
+    } catch (error) {
+      if (!isQuotaError(error) || list.length <= 1) {
+        if (isQuotaError(error)) {
+          console.error('LocalStorage quota exceeded. Oldest prompts pruned to save the latest.')
+        } else {
+          console.error('Error saving prompt history to localStorage:', error)
+        }
+        return list
+      }
+      const newest = list[0]
+      const others = list.slice(1)
+      const favorites = others.filter((p) => p.favorite)
+      const rest = others.filter((p) => !p.favorite)
+      const drop = Math.min(3, rest.length) || 1
+      list = [newest, ...favorites, ...rest.slice(drop)]
     }
   }
 }
@@ -87,7 +107,7 @@ export function usePromptHistory() {
     }
 
     savePrompts(updated)
-    setPrompts(updated)
+    setPrompts(loadPrompts())
     notify()
     return entry
   }, [])
@@ -95,7 +115,7 @@ export function usePromptHistory() {
   const deletePrompt = useCallback((id) => {
     const updated = loadPrompts().filter((p) => p.id !== id)
     savePrompts(updated)
-    setPrompts(updated)
+    setPrompts(loadPrompts())
     notify()
   }, [])
 
@@ -103,7 +123,7 @@ export function usePromptHistory() {
     // Preserve favorites when clearing history
     const favoritesOnly = loadPrompts().filter((p) => p.favorite)
     savePrompts(favoritesOnly)
-    setPrompts(favoritesOnly)
+    setPrompts(loadPrompts())
     notify()
   }, [])
 
@@ -112,7 +132,7 @@ export function usePromptHistory() {
       p.id === id ? { ...p, favorite: !p.favorite } : p
     )
     savePrompts(updated)
-    setPrompts(updated)
+    setPrompts(loadPrompts())
     notify()
   }, [])
 
