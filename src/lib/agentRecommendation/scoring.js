@@ -122,11 +122,15 @@ export function recommendAgents(agents = [], preferences = {}, options = {}) {
     .filter((agent) => agent && agent.id)
     .map((agent) => [agent.id, agent])).values()]
     .map((agent) => ({ agent, ...scoreAgent(agent, preferences, weights) }))
-    .map((result) => ({
-      ...result,
-      isConfident: result.score >= (options.minScore ?? MIN_CONFIDENT_SCORE),
-      matchPercentage: normalizeScore(result.score, maxScore),
-    }))
+    .map((result) => {
+      const matchPercentage = normalizeScore(result.score, maxScore)
+      const minScore = options.minScore ?? MIN_CONFIDENT_SCORE
+      return {
+        ...result,
+        isConfident: matchPercentage >= normalizeScore(minScore, maxScore),
+        matchPercentage,
+      }
+    })
     .sort((a, b) => b.score - a.score || Number(Boolean(b.matchedSignals.exactCategory)) - Number(Boolean(a.matchedSignals.exactCategory)) || Number(Boolean(b.matchedSignals.provider)) - Number(Boolean(a.matchedSignals.provider)) || String(a.agent.name).localeCompare(String(b.agent.name)))
     .slice(0, limit)
     .map(({ agent, ...result }) => result)
