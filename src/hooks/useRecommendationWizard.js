@@ -24,13 +24,19 @@ export function useRecommendationWizard(agents = []) {
   const openWizard = () => setIsOpen(true)
   const closeWizard = () => setIsOpen(false)
   const setPreference = (key, value) => {
-    setPreferences((prev) => ({
-      ...prev,
-      [key]: value,
-      ...(key === 'primaryGoal' && {
-        categories: GOAL_OPTIONS.find((option) => option.id === value)?.categories || [],
-      }),
-    }))
+    setPreferences((prev) => {
+      if (key !== 'primaryGoal') return { ...prev, [key]: value }
+      const goal = GOAL_OPTIONS.find((option) => option.id === value)
+      return {
+        ...prev,
+        [key]: value,
+        // Only adopt the goal's categories when the user has not picked
+        // their own; an unknown goal id leaves existing picks untouched.
+        categories: prev.categories?.length
+          ? prev.categories
+          : goal?.categories || [],
+      }
+    })
     setErrors((prev) => ({ ...prev, [key]: undefined }))
   }
   const toggleExtraPreference = (id) => {
