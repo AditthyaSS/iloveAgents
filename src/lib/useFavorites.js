@@ -1,60 +1,29 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
+import { useSyncedLocalStorage } from './useSyncedLocalStorage'
 
 const STORAGE_KEY = 'ila_favorites'
 
-function loadFavorites() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : []
-  } catch {
-    return []
-  }
-}
-
-function saveFavorites(ids) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
-    return true
-  } catch {
-    return false
-  }
-}
-
-// Global listeners so multiple components stay in sync
-const listeners = new Set()
-function notify() {
-  listeners.forEach((fn) => fn())
-}
-
 /**
  * Hook to manage favorite agent IDs, persisted in localStorage.
- * All components using this hook stay in sync via a shared listener set.
+ * All components using this hook stay in sync via the shared primitive.
  */
 export function useFavorites() {
-  const [favorites, setFavorites] = useState(loadFavorites)
+  const [favorites, setFavorites] = useSyncedLocalStorage(STORAGE_KEY, {
+    initial: [],
+    validate: Array.isArray,
+  })
 
-  // Subscribe to cross-component updates
-  useEffect(() => {
-    const sync = () => setFavorites(loadFavorites())
-    listeners.add(sync)
-    return () => listeners.delete(sync)
-  }, [])
+  const isFavorite = useCallback((agentId) => favorites.includes(agentId), [favorites])
 
-  const isFavorite = useCallback(
-    (agentId) => favorites.includes(agentId),
-    [favorites],
+  const toggleFavorite = useCallback(
+    (agentId) => {
+      setFavorites((current) => {
+        const list = Array.isArray(current) ? current : []
+        return list.includes(agentId) ? list.filter((id) => id !== agentId) : [agentId, ...list]
+      })
+    },
+    [setFavorites]
   )
-
-  const toggleFavorite = useCallback((agentId) => {
-    const current = loadFavorites()
-    const next = current.includes(agentId)
-      ? current.filter((id) => id !== agentId)
-      : [agentId, ...current] // newest favorites first
-    const saved = saveFavorites(next)
-    if (!saved) return
-    setFavorites(next)
-    notify()
-  }, [])
 
   return { favorites, isFavorite, toggleFavorite }
 }
