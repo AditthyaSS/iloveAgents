@@ -702,19 +702,21 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Resources</h4>
+              <h2 className="font-semibold text-gray-900 dark:text-white mb-2">Resources</h2>
               <a href="https://github.com/AditthyaSS/iloveAgents#readme" target="_blank" rel="noopener noreferrer"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
                 Documentation
+                <span className="sr-only"> (opens in new tab)</span>
               </a>
               <a href="https://github.com/AditthyaSS/iloveAgents/issues" target="_blank" rel="noopener noreferrer"
                 className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
                 Request an Agent
+                <span className="sr-only"> (opens in new tab)</span>
               </a>
             </div>
 
             <div className="flex flex-col gap-3">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h4>
+              <h2 className="font-semibold text-gray-900 dark:text-white mb-2">Legal</h2>
               <Link to="/privacy" className="text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:underline transition-colors">
                 Privacy Policy
               </Link>
@@ -724,7 +726,7 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-col gap-3">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h4>
+              <h2 className="font-semibold text-gray-900 dark:text-white mb-2">Contribute</h2>
               <p className="text-sm text-gray-700 dark:text-text-secondary mb-2">
                 Join us in building the ultimate agent library.
               </p>
@@ -734,9 +736,10 @@ export default function HomePage() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center w-fit gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 hover:from-indigo-500 hover:via-violet-500 hover:to-fuchsia-500 rounded-lg shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-violet-500/35"
               >
-                <Github size={16} />
+                <Github size={16} aria-hidden="true" />
                 GitHub Repo
-                <ArrowRight size={14} />
+                <span className="sr-only"> (opens in new tab)</span>
+                <ArrowRight size={14} aria-hidden="true" />
               </a>
             </div>
           </div>
