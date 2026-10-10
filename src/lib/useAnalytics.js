@@ -24,42 +24,48 @@ function saveEvents(events) {
 
 function seedFromHistory() {
   const SEED_FLAG = 'ila_analytics_seeded'
-  if (localStorage.getItem(SEED_FLAG)) return
-
+  // Wrap the entire function body so any storage access (including the
+  // bare getItem/setItem outside the inner try) degrades gracefully.
   try {
-    const historyRaw = localStorage.getItem('iloveAgents_history')
-    if (!historyRaw) { localStorage.setItem(SEED_FLAG, '1'); return }
+    if (localStorage.getItem(SEED_FLAG)) return
 
-    const history = JSON.parse(historyRaw)
-    if (!Array.isArray(history) || history.length === 0) {
-      localStorage.setItem(SEED_FLAG, '1')
-      return
-    }
+    try {
+      const historyRaw = localStorage.getItem('iloveAgents_history')
+      if (!historyRaw) { localStorage.setItem(SEED_FLAG, '1'); return }
 
-    const existing = loadEvents()
-    const existingIds = new Set(existing.map((e) => e.id))
+      const history = JSON.parse(historyRaw)
+      if (!Array.isArray(history) || history.length === 0) {
+        localStorage.setItem(SEED_FLAG, '1')
+        return
+      }
 
-    const seeded = history
-      .filter((run) => !existingIds.has(run.id))
-      .map((run) => ({
-        id: run.id,
-        agentId: run.agentId,
-        agentName: run.agentName,
-        provider: run.provider || 'unknown',
-        category: '',          // history doesn't store category
-        model: '',
-        duration: null,
-        timestamp: run.timestamp || Date.now(),
-      }))
+      const existing = loadEvents()
+      const existingIds = new Set(existing.map((e) => e.id))
 
-    if (seeded.length > 0) {
-      const merged = [...seeded, ...existing].slice(0, MAX_EVENTS)
-      saveEvents(merged)
-      window.dispatchEvent(new Event('ila_analytics_update'))
-    }
-  } catch {}
+      const seeded = history
+        .filter((run) => !existingIds.has(run.id))
+        .map((run) => ({
+          id: run.id,
+          agentId: run.agentId,
+          agentName: run.agentName,
+          provider: run.provider || 'unknown',
+          category: '',          // history doesn't store category
+          model: '',
+          duration: null,
+          timestamp: run.timestamp || Date.now(),
+        }))
 
-  localStorage.setItem(SEED_FLAG, '1')
+      if (seeded.length > 0) {
+        const merged = [...seeded, ...existing].slice(0, MAX_EVENTS)
+        saveEvents(merged)
+        window.dispatchEvent(new Event('ila_analytics_update'))
+      }
+    } catch {}
+
+    localStorage.setItem(SEED_FLAG, '1')
+  } catch {
+    // Storage entirely unavailable — skip seeding and degrade to empty dashboard.
+  }
 }
 
 // ── Plain function (for use outside React components) ───────────────────────
