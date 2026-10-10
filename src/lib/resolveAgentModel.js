@@ -41,7 +41,12 @@ export function resolveAgentModel(agent, actualProvider, selectedModel) {
   }
 
   if (agent.model && (actualProvider === agent.defaultProvider || actualProvider === agent.provider)) {
-    return agent.model
+    // Only use agent.model if it actually exists in the provider's supported list.
+    // If the agent carries a cross-provider id (e.g. a Claude id on an OpenAI run)
+    // it would be rejected by the API — fall through to the provider default instead.
+    if (MODELS[actualProvider]?.some(m => m.value === agent.model)) {
+      return agent.model
+    }
   }
 
   return MODEL_MAP[actualProvider] || MODEL_MAP.openai
