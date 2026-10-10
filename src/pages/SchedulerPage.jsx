@@ -164,7 +164,7 @@ export default function SchedulerPage() {
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {/* Run now */}
                     <button
-                      onClick={() => runJob(job)}
+                      onClick={() => runJob(job, { force: true })}
                       disabled={isRunning}
                       title="Run now"
                       className="p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors
