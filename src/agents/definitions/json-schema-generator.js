@@ -63,4 +63,5 @@ Respond in this format:
 
 ## Notes
 - [assumptions, ambiguous fields, or where you inferred format/required]`,
+  outputType: 'markdown',
 };
