@@ -46,6 +46,7 @@ export default function CostEstimator({ inputText = '', systemPrompt = '', model
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          aria-hidden="true"
           className="dark:text-text-muted text-gray-400"
         >
           <line x1="12" y1="1" x2="12" y2="23" />
@@ -85,10 +86,18 @@ export default function CostEstimator({ inputText = '', systemPrompt = '', model
         <div className="flex justify-between text-[10px] mb-1">
           <span className="dark:text-text-muted text-gray-400">Context window</span>
           <span className={`font-medium ${isOverLimit ? 'text-error' : isNearLimit ? 'text-warning' : 'dark:text-text-muted text-gray-400'}`}>
-            {Math.round(ratio * 100)}%
+            {Math.round(ratio * 100)}%{isOverLimit ? ' — over limit' : isNearLimit ? ' — near limit' : ''}
           </span>
         </div>
-        <div className="w-full h-1.5 rounded-full dark:bg-surface-input bg-gray-200 overflow-hidden">
+        <div
+          className="w-full h-1.5 rounded-full dark:bg-surface-input bg-gray-200 overflow-hidden"
+          role="progressbar"
+          aria-label="Context window usage"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(Math.min(ratio * 100, 100))}
+          aria-valuetext={isOverLimit ? 'over limit' : isNearLimit ? 'near limit' : 'within limit'}
+        >
           <div
             className={`h-full rounded-full transition-all duration-300 ${
               isOverLimit
