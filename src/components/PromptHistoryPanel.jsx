@@ -100,11 +100,26 @@ export default function PromptHistoryPanel({ open, onClose, onUsePrompt }) {
 
   const handleCopy = async (entry) => {
     try {
-      await navigator.clipboard.writeText(entry.text);
-      setCopiedId(entry.id);
-      setTimeout(() => setCopiedId(null), 1500);
-    } catch {}
-  };
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(entry.text)
+      } else {
+        throw new Error('Clipboard API unavailable')
+      }
+    } catch {
+      const ta = document.createElement('textarea')
+      ta.value = entry.text
+      document.body.appendChild(ta)
+      ta.select()
+      try {
+        document.execCommand('copy')
+      } catch {
+        // clipboard unavailable; toast below still confirms best effort
+      }
+      document.body.removeChild(ta)
+    }
+    setCopiedId(entry.id)
+    setTimeout(() => setCopiedId(null), 1500)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
