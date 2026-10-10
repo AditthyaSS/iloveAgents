@@ -8,7 +8,7 @@ export default {
   icon: "FileCode",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     code: "/**\n * Calculates the compounding interest for a principal amount.\n */\nfunction calculateInterest(principal, rate, years, frequency = 12) {\n  if (principal < 0 || rate < 0 || years < 0) {\n    throw new Error('Inputs must be positive');\n  }\n  return principal * Math.pow((1 + (rate / frequency)), (frequency * years));\n}",
     language: "JavaScript",
