@@ -8,7 +8,7 @@ export default {
   icon: "GitPullRequest",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-opus-4-20250514",
+  model: "claude-3-opus-20240229",
   exampleInputs: {
     diff: `diff --git a/src/api/users.js b/src/api/users.js
 index 8c1a2b3..d4e5f6a 100644
