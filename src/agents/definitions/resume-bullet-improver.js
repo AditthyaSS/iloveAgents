@@ -32,8 +32,6 @@ Rules:
 - If the original has no measurable result, do not add one.
 - Keep it to one line (ideally under 25 words). Use past tense unless the work is ongoing.
 - Do not add explanations, headings, or alternative versions.
-- description:
-  "Polishes a rough resume bullet into one concise, professional line while keeping your original facts. Never adds metrics, skills, or achievements.",
 
 Output only the improved bullet point, starting with "• ".`,
   outputType: "text",
