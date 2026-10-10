@@ -96,6 +96,12 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         setCsvRawRows(null)
         setItems(parsePastedLines(text))
       }
+      // Reset the input so the same file can be re-uploaded
+      e.target.value = ''
+    }
+    reader.onerror = () => {
+      alert(`Failed to read "${file.name}". The file may be unreadable or access was revoked.`)
+      e.target.value = ''
     }
     reader.readAsText(file)
   }
