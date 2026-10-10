@@ -103,7 +103,7 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
       if (copyTimer.current) clearTimeout(copyTimer.current);
       copyTimer.current = setTimeout(() => setCopied(false), 1500);
     } catch {
-      // clipboard unavailable, no toast to avoid noise
+      setCopied(false);
     }
   };
 
@@ -150,7 +150,7 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
           </span>
           <button
             onClick={handleCopyPrompt}
-            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-all duration-200"
             aria-label={copied ? "Prompt copied" : "Copy prompt"}
             title={copied ? "Copied!" : "Copy prompt"}
           >
@@ -158,7 +158,7 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
           </button>
           <button
             onClick={handleCollectionPicker}
-            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 transition-all duration-200"
             aria-label="Add to collection"
             title="Add to collection"
           >
@@ -169,7 +169,7 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
             className={`p-1 rounded-md transition-all duration-200
               ${favorited
                 ? "text-yellow-400 hover:text-yellow-300 scale-110"
-                : "dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-yellow-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+                : "dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-yellow-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-visible:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100"
               }`}
             aria-label={
               favorited ? "Remove from favorites" : "Add to favorites"
