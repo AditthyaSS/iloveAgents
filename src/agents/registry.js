@@ -11,6 +11,8 @@
 // Each definition file becomes a separate chunk loaded on demand.
 // ============================================================
 
+import { CATEGORIES } from './categories.js';
+
 const modules = import.meta.glob('./definitions/*.js', { eager: false });
 
 const normalizeAgents = (agents) => {
@@ -22,6 +24,13 @@ const normalizeAgents = (agents) => {
     }
     if (seenIds.has(agent.id)) {
       console.warn(`Skipping duplicate agent id "${agent.id}".`);
+      return false;
+    }
+    if (!agent.category || !CATEGORIES.includes(agent.category)) {
+      console.warn(
+        `Skipping agent "${agent.id}": category "${agent.category}" is not in the supported list.`,
+        'Supported categories:', CATEGORIES
+      );
       return false;
     }
     seenIds.add(agent.id);
