@@ -4,7 +4,7 @@ import {
   ChevronDown, ChevronRight, AlertCircle, CheckCircle2,
   Calendar, Zap, Loader2, X
 } from 'lucide-react'
-import { useScheduler, SCHEDULE_OPTIONS } from '../lib/useScheduler'
+import { useScheduler, SCHEDULE_OPTIONS, getJobReadiness } from '../lib/useScheduler'
 import OutputRenderer from '../components/OutputRenderer'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 
@@ -38,14 +38,15 @@ export default function SchedulerPage() {
   useDocumentTitle('Scheduled Agents')
 
   const {
-    jobs, results, running,
+    jobs, results, running, jobsNeedingKey,
     toggleJob, deleteJob, runJob,
-    deleteResult, clearResultsForJob,
+    deleteResult, clearResultsForJob, updateJobApiKey,
   } = useScheduler()
 
   const [expandedJob, setExpandedJob] = useState(null)
   const [expandedResult, setExpandedResult] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
+  const [keyDrafts, setKeyDrafts] = useState({})
 
   const handleRequestNotification = () => {
     if (!('Notification' in window)) return
@@ -53,6 +54,14 @@ export default function SchedulerPage() {
   }
 
   const notifStatus = 'Notification' in window ? Notification.permission : 'unsupported'
+
+  const handleSaveKey = (jobId) => (event) => {
+    event.preventDefault()
+    const value = (keyDrafts[jobId] || '').trim()
+    if (!value) return
+    updateJobApiKey(jobId, value)
+    setKeyDrafts(prev => ({ ...prev, [jobId]: '' }))
+  }
 
   return (
     <div className="max-w-3xl mx-auto animate-fade-in">
@@ -89,6 +98,29 @@ export default function SchedulerPage() {
         )}
       </div>
 
+      {/* Jobs whose key did not survive the last browser session would otherwise
+          look active while the scheduler skipped them on every tick. */}
+      {jobsNeedingKey.length > 0 && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 mb-6"
+        >
+          <AlertCircle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-xs font-semibold text-amber-600 dark:text-amber-400">
+              {jobsNeedingKey.length === 1
+                ? '1 scheduled job cannot run without its API key'
+                : `${jobsNeedingKey.length} scheduled jobs cannot run without their API key`}
+            </p>
+            <p className="text-[11px] dark:text-text-secondary text-gray-500 mt-1">
+              Keys are kept for the current browser session only, so they are cleared when the
+              browser closes. Enter the key again on {jobsNeedingKey.map(job => job.label).join(', ')}{' '}
+              to let {jobsNeedingKey.length === 1 ? 'this job' : 'these jobs'} run again.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Empty state */}
       {jobs.length === 0 && (
         <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
@@ -112,6 +144,7 @@ export default function SchedulerPage() {
             const isRunning = running[job.id]
             const scheduleLabel = SCHEDULE_OPTIONS.find(s => s.value === job.schedule)?.label ?? job.schedule
             const isExpanded = expandedJob === job.id
+            const readiness = getJobReadiness(job)
 
             return (
               <div
@@ -144,6 +177,11 @@ export default function SchedulerPage() {
                           Paused
                         </span>
                       )}
+                      {readiness === 'missing-key' && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                          API key required
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-[11px] dark:text-text-muted text-gray-400">
@@ -152,7 +190,7 @@ export default function SchedulerPage() {
                       <span className="text-[11px] dark:text-text-muted text-gray-400">
                         Last run: {formatDate(job.lastRunAt)}
                       </span>
-                      {job.enabled && (
+                      {job.enabled && readiness === 'ready' && (
                         <span className="text-[11px] text-accent">
                           Next: {formatNextRun(job.nextRunAt)}
                         </span>
@@ -165,8 +203,8 @@ export default function SchedulerPage() {
                     {/* Run now */}
                     <button
                       onClick={() => runJob(job)}
-                      disabled={isRunning}
-                      title="Run now"
+                      disabled={isRunning || readiness === 'missing-key'}
+                      title={readiness === 'missing-key' ? 'Add an API key before running this job' : 'Run now'}
                       className="p-1.5 rounded-md dark:hover:bg-surface-hover hover:bg-gray-100 transition-colors
                         dark:text-text-secondary text-gray-500 hover:text-accent
                         disabled:opacity-40 disabled:cursor-not-allowed"
@@ -218,6 +256,38 @@ export default function SchedulerPage() {
                     )}
                   </div>
                 </div>
+
+                {/* Re-enter the key so the job can run again */}
+                {readiness === 'missing-key' && (
+                  <div className="border-t dark:border-border border-gray-100 px-4 py-3">
+                    <p className="text-[11px] dark:text-text-secondary text-gray-500 mb-2">
+                      This job is enabled but has no key for the current session, so it will not
+                      run. Paste the {job.provider === 'any' ? 'provider' : job.provider} key to
+                      activate it again.
+                    </p>
+                    <form onSubmit={handleSaveKey(job.id)} className="flex items-center gap-2">
+                      <input
+                        type="password"
+                        value={keyDrafts[job.id] || ''}
+                        onChange={(e) => setKeyDrafts(prev => ({ ...prev, [job.id]: e.target.value }))}
+                        placeholder="API key"
+                        aria-label={`API key for ${job.label}`}
+                        className="flex-1 min-w-0 px-2.5 py-1.5 rounded-md text-xs
+                          dark:bg-surface-hover bg-gray-50 border dark:border-border border-gray-200
+                          dark:text-text-primary text-gray-900 focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                      <button
+                        type="submit"
+                        disabled={!(keyDrafts[job.id] || '').trim()}
+                        className="px-3 py-1.5 rounded-md text-xs font-medium
+                          bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20
+                          transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        Save key
+                      </button>
+                    </form>
+                  </div>
+                )}
 
                 {/* Results panel */}
                 {isExpanded && (
