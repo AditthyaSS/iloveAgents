@@ -2,6 +2,8 @@ import { supabase, isSupabaseConfigured } from './supabase'
 import { runAgent } from './llmAdapter'
 import { recordAnalyticsRun } from './useAnalytics'
 
+const MAX_AUTOMATION_RUNS = 100
+
 const STORAGE_KEY = 'ila_automations_v2'
 const RUNS_KEY = 'ila_automation_runs_v2'
 const VAULT_KEY = 'ila_encrypted_vault_v2'
@@ -364,7 +366,8 @@ export function loadRuns() {
 
 export function saveRuns(runs) {
   try {
-    localStorage.setItem(RUNS_KEY, JSON.stringify(runs))
+    const capped = Array.isArray(runs) ? runs.slice(0, MAX_AUTOMATION_RUNS) : runs
+    localStorage.setItem(RUNS_KEY, JSON.stringify(capped))
   } catch {}
 }
 
