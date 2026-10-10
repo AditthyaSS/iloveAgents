@@ -1,5 +1,5 @@
 const threatSummariserAgent= {
-  id: 'threat-intelligence-summariser-agent',           // lowercase, kebab-case, URL safe
+  id: 'threat-intelligence-summariser',           // lowercase, kebab-case, URL safe
   name: 'Threat Intelligence Summariser',
   description: 'The agent converts threat intelligence reports, CVEs, security advisories, malware analyses, and incident writeups into concise, structured summaries. ',
   category: 'Cybersecurity',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
@@ -9,7 +9,7 @@ const threatSummariserAgent= {
   model: 'gpt-4o',
   inputs: [
     {
-      id: 'Report',
+      id: 'report',
       label: 'Report',
       type: 'textarea',          // text | textarea | code | select | multiselect
       sensitive: true,
