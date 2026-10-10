@@ -8,7 +8,7 @@ export default {
   icon: "ScrollText",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     log_output:
       `2026-06-04T03:12:01Z INFO  [auth-service] User login attempt: user_id=4821
