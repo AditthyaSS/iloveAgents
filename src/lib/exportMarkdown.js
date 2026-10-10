@@ -1,4 +1,4 @@
-export function exportWorkflowAsMarkdown(workflowTitle, steps) {
+export function buildWorkflowMarkdown(workflowTitle, steps) {
   const date = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -16,6 +16,12 @@ export function exportWorkflowAsMarkdown(workflowTitle, steps) {
     .join('\n\n---\n\n')
 
   const content = `# ${workflowTitle} — Workflow Output\nGenerated on ${date}\n\n${stepContent}`
+
+  return { filename, content }
+}
+
+export function exportWorkflowAsMarkdown(workflowTitle, steps) {
+  const { filename, content } = buildWorkflowMarkdown(workflowTitle, steps)
 
   const blob = new Blob([content], { type: 'text/markdown' })
   const url = URL.createObjectURL(blob)
