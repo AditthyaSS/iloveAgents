@@ -99,6 +99,7 @@ export function evaluateConditionalStep(step, context) {
  */
 export function validateConditionalStep(step, allSteps = []) {
   const problems = []
+  if (!step || typeof step !== 'object') return ['Conditional step is missing or malformed.']
   if (!step.id) problems.push('Conditional step is missing an "id".')
   if (!step.condition) problems.push('Conditional step is missing a "condition" template.')
   const labels = step.branches && typeof step.branches === 'object' ? Object.keys(step.branches) : []
