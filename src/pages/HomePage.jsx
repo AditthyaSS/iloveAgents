@@ -774,7 +774,9 @@ ${description}
 
   return (
     <div className="flex flex-col gap-3">
+      <label htmlFor="request-agent-name" className="sr-only">Agent name</label>
       <input
+        id="request-agent-name"
         type="text"
         value={agentName}
         onChange={(e) => setAgentName(e.target.value)}
@@ -784,9 +786,12 @@ ${description}
           bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
           focus:ring-1 focus:ring-accent focus:border-accent outline-none"
       />
+      <label htmlFor="request-agent-desc" className="sr-only">Agent description</label>
       <textarea
+        id="request-agent-desc"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
+        aria-describedby="request-agent-help"
         placeholder="Describe what it should do — e.g. Takes a job description and rewrites my resume bullet points to match it"
         rows={3}
         className="w-full pl-3 pr-3 py-2 rounded-md text-sm transition-colors resize-none
@@ -795,7 +800,7 @@ ${description}
           focus:ring-1 focus:ring-accent focus:border-accent outline-none"
       />
       <div className="flex items-center justify-between">
-        <p className="text-[11px] dark:text-text-muted text-gray-400">
+        <p id="request-agent-help" className="text-[11px] dark:text-text-muted text-gray-400">
           Opens a pre-filled GitHub issue — you'll need a GitHub account to submit.
         </p>
         <button
