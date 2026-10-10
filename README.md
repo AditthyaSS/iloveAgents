@@ -404,11 +404,16 @@ src/
 | Directory | Purpose |
 |-----------|---------|
 | `src/agents/` | AI agent definitions and registry |
+| `src/suites/` | Curated agent suites and quiz data |
 | `src/components/` | Reusable React components |
 | `src/pages/` | Application pages |
-| `src/hooks/` | Custom React hooks |
-| `src/lib/` | Shared utilities and API adapters |
+| `src/hooks/` | Custom React hooks (incl. useWorkflows) |
+| `src/lib/` | Shared utilities, API adapters, automationsService |
 | `src/assets/` | Images, icons, and other bundled assets |
+| `src/test/` | Test setup and helpers |
+| `api/cron/` | Vercel cron tick handler |
+| `docs/` | Design notes (agent-recommendation-wizard) |
+| `.github/` | Workflows, issue templates, CODEOWNERS |
 | `public/` | Static files served directly by the app |
 
 ---
