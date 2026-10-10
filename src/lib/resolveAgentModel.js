@@ -30,6 +30,12 @@ export const MODEL_MAP = {
   openrouter: MODELS.openrouter[0].value,
 }
 
+const KNOWN_MODELS = new Set(Object.values(MODELS).flat().map((m) => m.value))
+
+export function isKnownModel(model) {
+  return typeof model === 'string' && KNOWN_MODELS.has(model)
+}
+
 export function resolveAgentModel(agent, actualProvider, selectedModel) {
   // Check if selectedModel is valid for the current actualProvider
   if (selectedModel && MODELS[actualProvider]?.some(m => m.value === selectedModel)) {
@@ -40,7 +46,11 @@ export function resolveAgentModel(agent, actualProvider, selectedModel) {
     return agent.models[actualProvider]
   }
 
-  if (agent.model && (actualProvider === agent.defaultProvider || actualProvider === agent.provider)) {
+  if (
+    agent.model &&
+    (actualProvider === agent.defaultProvider || actualProvider === agent.provider) &&
+    MODELS[actualProvider]?.some((m) => m.value === agent.model)
+  ) {
     return agent.model
   }
 

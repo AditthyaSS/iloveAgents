@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveAgentModel, MODELS, MODEL_MAP } from './resolveAgentModel'
+import { resolveAgentModel, MODELS, MODEL_MAP, isKnownModel } from './resolveAgentModel'
 
 describe('MODELS', () => {
   it('should have entries for all four providers', () => {
@@ -70,5 +70,22 @@ describe('resolveAgentModel', () => {
     const agent = { provider: 'any' }
     const result = resolveAgentModel(agent, 'unknown-provider', null)
     expect(result).toBe(MODEL_MAP.openai)
+  })
+
+  it('should not return unlisted agent models to any provider', () => {
+    const agent = { provider: 'any', defaultProvider: 'openai', model: 'claude-sonnet-4-6' }
+    expect(isKnownModel('claude-sonnet-4-6')).toBe(false)
+    expect(resolveAgentModel(agent, 'openai', null)).toBe(MODEL_MAP.openai)
+    expect(resolveAgentModel(agent, 'anthropic', null)).toBe(MODEL_MAP.anthropic)
+  })
+
+  it('should keep listed agent models on matching providers', () => {
+    const agent = { provider: 'any', defaultProvider: 'openai', model: 'gpt-4o-mini' }
+    expect(resolveAgentModel(agent, 'openai', null)).toBe('gpt-4o-mini')
+  })
+
+  it('should not send another provider model to the current provider', () => {
+    const agent = { provider: 'openai', defaultProvider: 'openai', model: 'claude-3-opus-20240229' }
+    expect(resolveAgentModel(agent, 'openai', null)).toBe(MODEL_MAP.openai)
   })
 })
