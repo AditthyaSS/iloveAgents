@@ -56,16 +56,30 @@ export function sanitizeAgentConfig(config) {
  * Publish an agent to the marketplace. The config is always sanitized before
  * it is stored.
  * @param {{ name: string, description: string, tags: string[], category: string, readme?: string, author?: string, config: object }} entry
- * @returns {object} the stored listing
+ * @returns {{ listing: object, warnings: string[] }} the stored listing plus
+ * human-readable notes about silent adjustments (trimmed tags, remapped
+ * category). Callers should surface warnings instead of claiming a clean
+ * publish.
  */
 export function publishAgent(entry) {
   const { config, sanitizedFields } = sanitizeAgentConfig(entry.config)
+  const warnings = []
+  const rawTags = entry.tags ?? []
+  const tags = rawTags.map((t) => String(t).trim()).filter(Boolean).slice(0, 8)
+  if (rawTags.length > tags.length) {
+    warnings.push(`${rawTags.length - tags.length} tag(s) dropped: at most 8 kept.`)
+  }
+  let category = entry.category
+  if (!MARKETPLACE_CATEGORIES.includes(category)) {
+    category = MARKETPLACE_CATEGORIES[0]
+    warnings.push(`Unknown category remapped to "${MARKETPLACE_CATEGORIES[0]}".`)
+  }
   const listing = {
     id: `mkt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     name: String(entry.name ?? '').trim(),
     description: String(entry.description ?? '').trim(),
-    tags: (entry.tags ?? []).map((t) => String(t).trim()).filter(Boolean).slice(0, 8),
-    category: MARKETPLACE_CATEGORIES.includes(entry.category) ? entry.category : MARKETPLACE_CATEGORIES[0],
+    tags,
+    category,
     readme: entry.readme ? String(entry.readme) : '',
     author: String(entry.author ?? 'Anonymous').trim() || 'Anonymous',
     config,
@@ -78,7 +92,7 @@ export function publishAgent(entry) {
   const listings = loadListings()
   listings.unshift(listing)
   saveJson(LISTINGS_KEY, listings)
-  return listing
+  return { listing, warnings }
 }
 
 /**
