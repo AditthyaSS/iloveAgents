@@ -8,7 +8,7 @@ export default {
   icon: "Network",
   provider: "any",
   defaultProvider: "gemini", 
-  model: "gemini-3.1-flash-lite", 
+  model: "gemini-2.5-flash", 
   exampleInputs: {
   source_material: "The human heart is a muscular organ that pumps blood throughout the body. It has four chambers: the left atrium, right atrium, left ventricle, and right ventricle. The right side of the heart receives deoxygenated blood from the body and sends it to the lungs. The left side receives oxygenated blood from the lungs and pumps it to the rest of the body. The heart beats around 60-100 times per minute controlled by the sinoatrial node which acts as the natural pacemaker.",
   focus_area: "Show the flow of blood through the heart as the central branch",
