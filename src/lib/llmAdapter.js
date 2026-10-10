@@ -147,7 +147,7 @@ const PROVIDER_CONFIGS = {
     url: (model, apiKey) =>
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     streamUrl: (model, apiKey) =>
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse&key=${apiKey}`,
     buildHeaders: () => ({
       'Content-Type': 'application/json',
     }),
