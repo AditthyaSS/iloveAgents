@@ -13,16 +13,43 @@ function loadHistory() {
   }
 }
 
-function saveHistory(history) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  } catch (error) {
-    if (error.name === 'QuotaExceededError') {
-      console.error('LocalStorage quota exceeded. History might be truncated.');
-    } else {
-      console.error('Error saving history to localStorage:', error);
+function isQuotaError(error) {
+  return (
+    error &&
+    (error.name === 'QuotaExceededError' ||
+      error.code === 22 ||
+      error.code === 1014)
+  )
+}
+
+export function saveHistoryWithPrune(history, storage) {
+  const target = storage || localStorage
+  let list = Array.isArray(history) ? [...history] : []
+  let pruned = 0
+  for (;;) {
+    try {
+      target.setItem(STORAGE_KEY, JSON.stringify(list))
+      if (pruned > 0) {
+        console.warn(`History pruned ${pruned} oldest entries to fit localStorage quota.`)
+      }
+      return { saved: list, pruned }
+    } catch (error) {
+      if (!isQuotaError(error)) {
+        console.error('Error saving history to localStorage:', error)
+        return { saved: list, pruned, failed: true }
+      }
+      if (list.length <= 1) {
+        console.error('LocalStorage quota exceeded. Latest run is too large to save.')
+        return { saved: list, pruned, failed: true }
+      }
+      list = list.slice(0, Math.max(1, list.length - 3))
+      pruned += 3
     }
   }
+}
+
+function saveHistory(history) {
+  saveHistoryWithPrune(history)
 }
 
 /**
@@ -67,8 +94,8 @@ export const useHistory = () => {
     // so a concurrent write (another tab, or a near-simultaneous call)
     // isn't silently discarded.
     const updatedHistory = [newRun, ...loadHistory()].slice(0, MAX_HISTORY);
-    saveHistory(updatedHistory);
-    setHistory(updatedHistory);
+    const { saved } = saveHistoryWithPrune(updatedHistory);
+    setHistory(saved);
   }, []);
 
   /**
@@ -77,16 +104,16 @@ export const useHistory = () => {
    */
   const deleteRun = useCallback((runId) => {
     const updatedHistory = loadHistory().filter((run) => run.id !== runId);
-    saveHistory(updatedHistory);
-    setHistory(updatedHistory);
+    const { saved } = saveHistoryWithPrune(updatedHistory);
+    setHistory(saved);
   }, []);
 
   /**
    * Clear all history from state and localStorage.
    */
   const clearHistory = useCallback(() => {
-    saveHistory([]);
-    setHistory([]);
+    const { saved } = saveHistoryWithPrune([]);
+    setHistory(saved);
   }, []);
 
   /**
