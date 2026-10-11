@@ -1,5 +1,6 @@
 const aiProjectArchitectureAgent = {
   id: 'ai-project-architecture-agent',
+  createdAt: '2025-05-06',
   name: 'AI Project Architecture Agent',
   description: 'Analyzes software or AI project ideas and recommends the most suitable frontend, backend, database, AI tools, and deployment stack.',
   category: 'Engineering',
@@ -114,6 +115,15 @@ Provide a concise, 1-2 paragraph description of how these components connect, ho
 
 Format the response using clean, beautiful markdown.`,
   outputType: 'markdown',
+  exampleInputs: {
+    project_idea: 'A budget tracking app for student clubs',
+    project_type: 'Web app',
+    expected_users: '1,000',
+    preferred_language: 'JavaScript',
+    budget_level: 'Low',
+    ai_features: 'Expense categorization',
+    target_platform: 'Web',
+  },
 };
 
 export default aiProjectArchitectureAgent;
