@@ -3,6 +3,18 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "description": "Run AI agents directly in your browser. Open source, community-built.",
+  "homepage": "https://iloveagents.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AditthyaSS/iloveAgents.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AditthyaSS/iloveAgents/issues"
+  },
+  "license": "MIT",
+  "author": "AditthyaSS",
+  "keywords": ["ai-agents", "react", "vite", "open-source"],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
