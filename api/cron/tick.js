@@ -104,10 +104,13 @@ export default async function handler(req, res) {
               ],
             }),
           })
-          const json = await resp.json()
+          const json = await resp.json().catch(() => ({}))
+          if (!resp.ok) {
+            throw new Error(json?.error?.message || `Provider returned status ${resp.status}`)
+          }
           output = json.choices?.[0]?.message?.content || 'No output generated'
         } else {
-          output = `Executed ${auto.agent_name} via ${auto.provider} successfully.`
+          throw new Error(`Server execution for provider "${auto.provider}" is not implemented in the cron worker.`)
         }
 
         // Email Notification via Resend
