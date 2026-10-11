@@ -282,10 +282,12 @@ function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
       </div>
       <div className="flex items-center gap-2 flex-wrap">
         {/* Time range pills */}
-        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-border">
+        <div role="radiogroup" aria-label="Time range" className="flex items-center gap-1 p-0.5 rounded-lg bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-border">
           {TIME_RANGES.map((range) => (
             <button
               key={range.value}
+              role="radio"
+              aria-checked={timeRange === range.value}
               onClick={() => setTimeRange(range.value)}
               className={`px-2.5 py-1 rounded-md text-[10px] font-semibold transition-all duration-200
                 ${timeRange === range.value
