@@ -1,5 +1,6 @@
 export default {
   id: 'api-error-message-writer',
+  createdAt: '2025-05-06',
   name: 'API Error Message Writer',
   description: 'Transforms technical, raw, or cryptic backend error codes and system logs into tailored, user-friendly notifications and precise diagnostic debugging steps.',
   category: 'Engineering',
@@ -40,5 +41,10 @@ You must format your entire final output as a single, valid JSON object matching
 }
 
 Ensure the "suggestedHttpStatus" field contains a valid standard HTTP status code integer between 100 and 599 according to RFC specifications. Output only the JSON object structure. Do not include markdown code fences, backticks, block quotes, or any surrounding conversational prose text formatting container.`,
-  outputType: 'json'
+  outputType: 'json',
+  exampleInputs: {
+    errorCode: 'PGRST116',
+    context: 'Supabase query on the orders table from the checkout service',
+    audience: 'Developer',
+  }
 };
