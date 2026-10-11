@@ -155,10 +155,11 @@ export function removeAutomationKey(automationId) {
 }
 
 // ── Email Notification Dispatch (Resend integration / simulation) ──
-export async function sendResendNotification({ to, automationName, agentName, output, status, duration, error }) {
+export async function sendResendNotification({ to, automationId, automationName, agentName, output, status, duration, error }) {
   const logEntry = {
     id: `email_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     to,
+    automationId: automationId || null,
     automationName,
     agentName,
     status: status === 'failed' ? 'Failed' : 'Delivered',
@@ -599,6 +600,7 @@ export async function runAutomationNow(automationId, options = {}) {
     try {
       await sendResendNotification({
         to: automation.notificationEmail,
+        automationId: automation.id,
         automationName: automation.name,
         agentName: automation.agentName,
         output: outputContent,

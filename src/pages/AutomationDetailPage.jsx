@@ -39,7 +39,7 @@ export default function AutomationDetailPage() {
     }
     setAutomation(item)
     setRuns(getRunsForAutomation(id))
-    setEmailLogs(getEmailLogs().filter(e => e.automationName === item.name || !e.automationName))
+    setEmailLogs(getEmailLogs().filter(e => e.automationId ? e.automationId === item.id : (e.automationName === item.name || !e.automationName)))
   }
 
   useEffect(() => {
@@ -98,6 +98,7 @@ export default function AutomationDetailPage() {
     try {
       await sendResendNotification({
         to: automation.notificationEmail,
+        automationId: automation.id,
         automationName: automation.name,
         agentName: automation.agentName,
         output: 'This is a test notification report from Open Agents Hub Scheduled Automations autopilot.',
