@@ -8,7 +8,7 @@ export default {
   icon: "Shield",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     appDescription:
       "Nexura is a social media management platform. We collect user names, emails, and social media handles. We process payments via Stripe and track site usage through Plausible Analytics. Users can schedule posts and upload images.",
