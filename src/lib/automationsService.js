@@ -627,10 +627,11 @@ export async function runAutomationNow(automationId, options = {}) {
   const allRuns = loadRuns().map(r => (r.id === runId ? finishedRunRecord : r))
   saveRuns(allRuns)
 
-  // Update automation nextRunAt and lastRunAt
+  // Update automation nextRunAt and lastRunAt (awaited: callers rely on
+  // durability before resolving, otherwise the 60s checkDue can re-fire it).
   const preset = SCHEDULE_PRESETS.find(p => p.value === automation.schedule) || SCHEDULE_PRESETS[1]
   const updatedNextRun = completedAt + preset.ms
-  updateAutomation(automation.id, {
+  await updateAutomation(automation.id, {
     lastRunAt: completedAt,
     nextRunAt: updatedNextRun,
   })
