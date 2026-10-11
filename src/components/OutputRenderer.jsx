@@ -197,11 +197,11 @@ ${stringContent}
   return (
     <div className="animate-fade-in">
       {/* Toolbar */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
           Output
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
           {/* VoiceOutput — reads the response aloud */}
           <VoiceOutput
             text={stringContent}
