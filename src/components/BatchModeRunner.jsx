@@ -382,7 +382,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         )}
 
         {hasRun && (
-          <span className="text-xs dark:text-text-secondary text-gray-500">
+          <span role="status" aria-live="polite" className="text-xs dark:text-text-secondary text-gray-500">
             {completedCount} of {results.length} complete
           </span>
         )}
