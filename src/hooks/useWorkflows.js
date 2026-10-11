@@ -42,7 +42,13 @@ export async function fetchWorkflowById(id) {
     .eq('id', id)
     .single()
 
-  return { data: data ?? null, error }
+  if (error || !data) return { data: null, error }
+
+  // Only public workflows or rows owned by the caller are visible.
+  if (data.is_public) return { data, error: null }
+  const userId = await getCurrentUserId()
+  if (userId && data.user_id === userId) return { data, error: null }
+  return { data: null, error: { message: 'Workflow not found.' } }
 }
 
 /**
