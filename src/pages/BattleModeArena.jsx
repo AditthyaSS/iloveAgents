@@ -131,6 +131,9 @@ export default function BattleModeArena() {
 
   // Tracks which provider finished (success or error) first
   const [firstFinisher, setFirstFinisher] = useState(null);
+  // True once the arena unmounts: aborts from cleanup are cancellations,
+  // not LLM timeouts, and must not be reported as slow responses.
+  const unmountedRef = useRef(false);
   // Flips to true once all four are done, triggers the reveal animation
   const [revealTriggered, setRevealTriggered] = useState(false);
 
@@ -218,11 +221,15 @@ export default function BattleModeArena() {
         })
         .catch((err) => {
           clearTimeout(timeoutId);
-          // Handle timeout errors specifically
+          // Handle timeout errors specifically. Aborts caused by unmounting
+          // the arena are user navigation, not slow models.
           let errorMessage = err.message || "An unknown error occurred";
-          if (err.name === "AbortError" || err.code === "ABORT_ERR") {
+          if (unmountedRef.current && (err.name === "AbortError" || err.code === "ABORT_ERR")) {
+            errorMessage = "Request cancelled.";
+          } else if (err.name === "AbortError" || err.code === "ABORT_ERR") {
             errorMessage = TIMEOUT_ERROR_MESSAGE;
           }
+          setFirstFinisher((prev) => prev ?? prov.id);
           setResults((prev) => ({
             ...prev,
             [prov.id]: {
@@ -245,6 +252,7 @@ export default function BattleModeArena() {
 
     // Cleanup: abort all pending requests when component unmounts
     return () => {
+      unmountedRef.current = true
       Object.values(abortControllersRef.current).forEach(controller => {
         controller.abort();
       });
@@ -257,6 +265,7 @@ export default function BattleModeArena() {
     const prov = PROVIDERS.find((p) => p.id === providerId);
     if (!prov) return;
 
+    setFirstFinisher((prev) => (prev === providerId ? null : prev));
     setResults((prev) => ({
       ...prev,
       [providerId]: { loading: true, content: null, error: null, duration: null },
