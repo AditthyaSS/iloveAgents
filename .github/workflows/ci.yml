@@ -23,6 +23,12 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run contract lint
+        run: npm run lint
+        # Non-blocking while the agent-metadata backlog lands; flip to
+        # required once the violation list is empty.
+        continue-on-error: true
+
   build:
     runs-on: ubuntu-latest
     needs: test
