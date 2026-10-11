@@ -559,6 +559,7 @@ const handleRun = async () => {
       <div className="flex items-center gap-1 mb-4 p-1 rounded-lg w-fit dark:bg-surface-input bg-gray-100 border dark:border-border border-gray-200">
         <button
           onClick={() => setViewMode("code")}
+          aria-pressed={viewMode === "code"}
           className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
             viewMode === "code"
               ? "bg-accent text-white shadow-sm"
@@ -569,6 +570,7 @@ const handleRun = async () => {
         </button>
         <button
           onClick={() => setViewMode("preview")}
+          aria-pressed={viewMode === "preview"}
           className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
             viewMode === "preview"
               ? "bg-accent text-white shadow-sm"
