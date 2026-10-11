@@ -8,6 +8,7 @@ We are grateful for every single contribution — big or small.
 <br/>
 
 [![Contributors](https://contrib.rocks/image?repo=AditthyaSS/iloveAgents)](https://github.com/AditthyaSS/iloveAgents/graphs/contributors)
+<!-- If the grid above does not load (third-party service), see the full list at https://github.com/AditthyaSS/iloveAgents/graphs/contributors -->
 
 <br/>
 
@@ -27,7 +28,7 @@ It takes about 5 minutes to add your first agent. [Here's how →](./CONTRIBUTIN
 
 ---
 
-*This grid updates automatically. Every new contributor appears here within hours — no manual updates, ever.*
+*This grid refreshes via a third-party service (contrib.rocks), usually within hours of a merged contribution. If it is ever unavailable, the canonical list lives at the contributors graph linked above.*
 
 *Want to see your avatar here? [Contribute to iloveAgents](./CONTRIBUTING.md) and you will automatically appear!*
 
