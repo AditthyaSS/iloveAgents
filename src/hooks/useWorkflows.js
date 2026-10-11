@@ -72,7 +72,7 @@ export async function saveWorkflow(workflow) {
         title: workflow.title,
         description: workflow.description || '',
         agents: workflow.agents,
-        is_public: true,
+        is_public: workflow.is_public ?? true,
         usage_count: 0,
       },
     ])
