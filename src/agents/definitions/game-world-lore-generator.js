@@ -8,7 +8,7 @@ export default {
 	icon: "ScrollText",
 	provider: "any",
 	defaultProvider: "anthropic",
-	model: "claude-sonnet-4-6",
+	model: "claude-3-5-sonnet-20241022",
 	exampleInputs: {
 		worldName: "Ashen Hollow",
 		genre: "Dark fantasy action RPG",
