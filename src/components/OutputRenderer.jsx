@@ -258,7 +258,7 @@ ${stringContent}
         {outputType === 'json' ? (
           <ScorecardOutput data={content} />
         ) : outputType === 'markdown' ? (
-          <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
+          <div className="markdown-output prose prose-sm max-w-none text-sm dark:text-text-primary text-gray-900">
             <ReactMarkdown
               skipHtml={true}
               remarkPlugins={[remarkGfm]}
