@@ -225,6 +225,64 @@ async function handleErrorResponse(response, provider = "unknown") {
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
   );
 }
+const DEFAULT_LLM_TIMEOUT_MS = 60000
+const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504])
+
+function combineSignalWithTimeout(signal, timeoutMs = DEFAULT_LLM_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(new Error('LLM request timed out')), timeoutMs)
+  const onAbort = () => {
+    clearTimeout(timer)
+    controller.abort(signal?.reason)
+  }
+  if (signal) {
+    if (signal.aborted) {
+      clearTimeout(timer)
+      controller.abort(signal.reason)
+    } else {
+      signal.addEventListener('abort', onAbort, { once: true })
+    }
+  }
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timer)
+      signal?.removeEventListener?.('abort', onAbort)
+    },
+  }
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function fetchWithRetry(url, options, { retries = 2, timeoutMs = DEFAULT_LLM_TIMEOUT_MS } = {}) {
+  let lastError = null
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const { signal, cleanup } = combineSignalWithTimeout(options?.signal, timeoutMs)
+    try {
+      const response = await fetch(url, { ...options, signal })
+      cleanup()
+      if (!response.ok && RETRYABLE_STATUSES.has(response.status) && attempt < retries) {
+        lastError = new Error(`Provider returned status ${response.status}`)
+        await sleep(1000 * 2 ** attempt)
+        continue
+      }
+      return response
+    } catch (error) {
+      cleanup()
+      const retryable =
+        (error?.name === 'TypeError' && error?.message === 'Failed to fetch') ||
+        error?.message === 'LLM request timed out'
+      if (retryable && attempt < retries) {
+        lastError = error
+        await sleep(1000 * 2 ** attempt)
+        continue
+      }
+      throw error
+    }
+  }
+  throw lastError ?? new Error('LLM request failed after retries')
+}
+
 /**
  * Run an agent against the specified LLM provider (one-shot, non-streaming).
  *
@@ -259,7 +317,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
   const startTime = performance.now()
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -329,7 +387,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
   let fullContent = ''
 
   try {
-    const response = await fetch(url, {
+    const response = await fetchWithRetry(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
