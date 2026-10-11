@@ -26,13 +26,21 @@ export default function CostEstimator({ inputText = '', systemPrompt = '', model
   const isNearLimit = ratio > 0.7
   const isOverLimit = ratio > 0.95
 
-  const projectedOutputTokens = Math.min(Math.round(totalInputTokens * 0.5), 4096)
+  const projectedOutputTokens = Math.min(Math.round(totalInputTokens * 0.5), pricing?.maxOutputTokens ?? 4096)
 
-  const inputCost = pricing ? (totalInputTokens / 1_000_000) * pricing.inputCostPer1M : null
-  const outputCost = pricing ? (projectedOutputTokens / 1_000_000) * pricing.outputCostPer1M : null
-  const totalCost = (inputCost ?? 0) + (outputCost ?? 0)
+  const hasInput = totalInputTokens > 0
+  const inputCost = pricing && hasInput ? (totalInputTokens / 1_000_000) * pricing.inputCostPer1M : null
+  const outputCost = pricing && hasInput ? (projectedOutputTokens / 1_000_000) * pricing.outputCostPer1M : null
+  const totalCost = hasInput ? (inputCost ?? 0) + (outputCost ?? 0) : null
 
-  if (!pricing) return null
+  if (!pricing) {
+    return (
+      <div className="rounded-lg border dark:bg-surface-card dark:border-border bg-white border-gray-200 p-3 text-xs">
+        <span className="font-semibold dark:text-text-primary text-gray-900">Cost Estimate</span>
+        <p className="mt-1 dark:text-text-muted text-gray-400">Unknown model: pricing unavailable.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-lg border dark:bg-surface-card dark:border-border bg-white border-gray-200 p-3 text-xs">
