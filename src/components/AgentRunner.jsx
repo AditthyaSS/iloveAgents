@@ -1095,9 +1095,9 @@ const handleRun = async () => {
       )}
 
       {loading && !isStreaming && (
-        <div className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
+        <div role="status" aria-live="polite" className="rounded-lg border p-6 dark:bg-surface-card dark:border-border bg-white border-gray-200 text-center animate-fade-in">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Loader2 size={16} className="animate-spin text-accent" />
+            <Loader2 size={16} aria-hidden="true" className="animate-spin text-accent" />
             <span className="text-xs font-medium text-accent">
               Connecting to API...
             </span>
@@ -1109,7 +1109,7 @@ const handleRun = async () => {
       )}
 
       {isStreaming && streamingOutput && (
-        <div className="animate-fade-in">
+        <div className="animate-fade-in" role="log" aria-live="polite" aria-label="Streaming output">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xs font-semibold uppercase tracking-wider dark:text-text-muted text-gray-400">
               Output
@@ -1126,7 +1126,7 @@ const handleRun = async () => {
             <div className="markdown-output text-sm dark:text-text-primary text-gray-900">
               <pre className="whitespace-pre-wrap font-sans leading-relaxed">
                 {streamingOutput}
-                <span className="inline-block w-[2px] h-[1em] bg-accent animate-blink ml-0.5 align-middle" />
+                <span aria-hidden="true" className="inline-block w-[2px] h-[1em] bg-accent animate-blink ml-0.5 align-middle" />
               </pre>
             </div>
           </div>
