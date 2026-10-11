@@ -41,7 +41,7 @@ const TOUR_STEPS = [
     target: '[data-tour="sidebar-agents"]',
     title: 'Browse Agents',
     description:
-      'Explore 100+ AI agents organized by category. Click any agent to open it and start using it right away.',
+      'Explore 160+ AI agents organized by category. Click any agent to open it and start using it right away.',
     icon: Bot,
     position: 'right',
   },
