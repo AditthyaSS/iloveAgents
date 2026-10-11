@@ -240,7 +240,8 @@ export default function WorkflowRunner() {
         : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
 
       if (!keyToUse) {
-        setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
+        execSteps[i] = { ...execSteps[i], status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` }
+        syncSteps()
         failed = true
         break
       }
