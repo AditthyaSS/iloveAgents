@@ -8,7 +8,7 @@ export default {
   icon: "FileText",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     decisionContext:
       "We need to choose between REST and GraphQL for our public API. Team is small (4 devs), we need fast iteration, and our mobile clients frequently ask for flexible data shapes. We're already using Node.js and Express.",
