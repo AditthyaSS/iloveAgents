@@ -162,12 +162,15 @@ export default function VoiceInput({
   };
 
   return (
+    <>
+    <span aria-live="polite" className="sr-only">{isRecording ? "Recording started" : ""}</span>
     <button
       type="button"
       onClick={handleClick}
       disabled={disabled}
       title={isRecording ? "Stop recording" : "Start voice input"}
       aria-label={isRecording ? "Stop voice input" : "Start voice input"}
+      aria-pressed={isRecording}
       className={`absolute z-10 flex items-center justify-center w-7 h-7 rounded-md transition-colors
         ${
           isRecording
@@ -178,7 +181,7 @@ export default function VoiceInput({
         ${className}`}
     >
       {isRecording && (
-        <span className="absolute inline-flex h-full w-full rounded-md bg-red-500/30 animate-ping" />
+        <span aria-hidden="true" className="absolute inline-flex h-full w-full rounded-md bg-red-500/30 animate-ping" />
       )}
       {isRecording ? (
   <MicOff size={14} className="relative" />
@@ -186,5 +189,6 @@ export default function VoiceInput({
   <Mic size={14} className="relative" />
       )}
     </button>
+    </>
   );
 }
