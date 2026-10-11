@@ -14,6 +14,7 @@ import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
 import RecommendationWizardModal from '../components/recommendation/RecommendationWizardModal'
 import { Link } from "react-router-dom";
 import { getGlobalKeys } from '../lib/globalKeys'
+import { loadRecentAgentIds } from '../lib/recentAgents'
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -189,9 +190,7 @@ export default function HomePage() {
   )
 
   const recentAgents = useMemo(() => {
-    const recentIds = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
+    const recentIds = loadRecentAgentIds()
 
     return recentIds
       .map((id) => agents.find((a) => a.id === id))
