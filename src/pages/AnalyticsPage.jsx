@@ -413,6 +413,9 @@ function ActivityHeatmap({ data }) {
             {week.map((day) => (
               <div
                 key={day.date}
+                role="img"
+                tabIndex={day.count > 0 ? 0 : -1}
+                aria-label={`${day.date}: ${day.count} run${day.count !== 1 ? 's' : ''}`}
                 className={`h-[14px] w-[14px] rounded-[3px] transition-all duration-300 ${getHeatmapIntensity(day.count)}`}
                 title={`${day.date}: ${day.count} run${day.count !== 1 ? 's' : ''}`}
               />
