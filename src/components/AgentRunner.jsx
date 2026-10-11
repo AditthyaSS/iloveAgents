@@ -503,6 +503,7 @@ const handleRun = async () => {
                 </div>
                 <button
                   onClick={() => setInputs(v.configSnapshot)}
+                  aria-label={`Restore Version ${v.versionNumber}`}
                   className="px-2 py-1 text-xs bg-gray-200 dark:bg-zinc-700 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white rounded transition"
                 >
                   Restore
