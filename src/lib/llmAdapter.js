@@ -301,7 +301,7 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * @param {string} params.userMessage
  * @param {(text: string) => void} params.onChunk — called with each token/chunk
  * @param {AbortSignal} [params.signal] — optional AbortSignal to cancel streaming
- * @returns {Promise<{content: string, duration: number}>}
+ * @returns {Promise<{content: string, tokens: number, duration: number}>}
  */
 export async function streamAgent({ provider, model, apiKey, systemPrompt, userMessage, onChunk, signal }) {
   const config = PROVIDER_CONFIGS[provider]
@@ -388,8 +388,15 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 
     const duration = Math.round(performance.now() - startTime)
 
+    // SSE usage deltas are provider-specific and not parsed here, so report
+    // usage on parity with the one-shot path (~4 chars per token). This keeps
+    // scheduler cost math and analytics working for streamed runs.
+    const promptChars = `${systemPrompt || ''}\n\n${userMessage || ''}`.length
+    const tokens = Math.ceil(promptChars / 4) + Math.ceil(fullContent.length / 4)
+
     return {
       content: fullContent,
+      tokens,
       duration,
     }
   } catch (error) {
