@@ -234,15 +234,42 @@ export default function WorkflowDetail() {
           Agent Sequence
         </h2>
         <div>
-          {(workflow.agents ?? []).map((agentId, index) => (
+          {(workflow.agents ?? []).map((agentId, index) => {
+            const isConditional = agentId && typeof agentId === 'object'
+            const entryKey = `${isConditional ? (agentId.id ?? 'conditional') : agentId}-${index}`
+            if (isConditional) {
+              return (
+                <div key={entryKey} className="flex items-center gap-3">
+                  <div className="flex flex-col items-center self-stretch w-6">
+                    <div className={`w-px flex-1 dark:bg-border bg-gray-200 ${index === 0 ? 'opacity-0' : ''}`} />
+                    <div className="w-6 h-6 rounded-full bg-accent/10 flex items-center justify-center text-[10px] font-bold text-accent flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className={`w-px flex-1 dark:bg-border bg-gray-200 ${index === (workflow.agents?.length ?? 0) - 1 ? 'opacity-0' : ''}`} />
+                  </div>
+                  <div className="flex items-center gap-3 flex-1 p-3 rounded-lg border my-1 dark:bg-surface-card dark:border-border bg-white border-gray-200">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium dark:text-text-primary text-gray-900 truncate">
+                        Conditional branch: {agentId.id ?? 'unnamed'}
+                      </div>
+                      <div className="text-[11px] dark:text-text-muted text-gray-400">
+                        {Object.keys(agentId.branches ?? {}).length} branch(es)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            }
+            return (
             <AgentRow
-              key={agentId + index}
+              key={entryKey}
               agentId={agentId}
               index={index}
               total={workflow.agents.length}
               agents={agents}
             />
-          ))}
+            )
+          })}
         </div>
         <p className="mt-4 text-[11px] dark:text-text-muted text-gray-400">
           Each agent's output becomes the input for the next agent in the chain.

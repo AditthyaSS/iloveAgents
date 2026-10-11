@@ -56,7 +56,12 @@ export default function WorkflowBuilder() {
       setTitle(`Copy of ${forkedWorkflow.title}`)
       setDescription(forkedWorkflow.description || '')
       const loaded = (forkedWorkflow.agents || [])
-        .map((id) => agents.find((a) => a.id === id))
+        .map((entry) => {
+          if (entry && typeof entry === 'object') {
+            return { ...entry, name: entry.name ?? `Branch: ${entry.id ?? 'conditional'}` }
+          }
+          return agents.find((a) => a.id === entry)
+        })
         .filter(Boolean)
       setSelectedAgents(loaded)
     }
@@ -93,7 +98,7 @@ export default function WorkflowBuilder() {
     const { data, error: saveError } = await saveWorkflow({
       title: title.trim(),
       description: description.trim(),
-      agents: selectedAgents.map((a) => a.id),
+      agents: selectedAgents.map((a) => (a.branches ? { id: a.id, branches: a.branches } : a.id)),
     })
     setSaving(false)
     if (saveError) {
@@ -111,7 +116,7 @@ export default function WorkflowBuilder() {
           id: null,
           title: title.trim(),
           description: description.trim(),
-          agents: selectedAgents.map((a) => a.id),
+          agents: selectedAgents.map((a) => (a.branches ? { id: a.id, branches: a.branches } : a.id)),
         },
         initialInput: location.state?.preFilledOutput || '',
       },
