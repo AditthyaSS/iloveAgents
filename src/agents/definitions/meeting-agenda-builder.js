@@ -8,7 +8,7 @@ export default {
   icon: "CalendarCheck",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     purpose: "Q3 planning",
     attendees: "PM, 2 engineers, designer, client",
