@@ -8,7 +8,7 @@ export default {
   icon: "Code",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     task: "Write a function that debounces another function by a given delay.",
     language: "JavaScript",
