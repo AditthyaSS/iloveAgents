@@ -8,7 +8,7 @@ export default {
   icon: "ClipboardCheck",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     commits:
       "feat: add multi-language support for the dashboard\nfix: resolve race condition in auth middleware\nfeat: implement CSV export for audit logs\nchore: update dependencies for security fixes\nrefactor: optimize database queries for the reports page",
