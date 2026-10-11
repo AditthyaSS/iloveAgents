@@ -228,6 +228,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
                       <button
                         key={opt}
                         type="button"
+                        aria-pressed={selected}
                         onClick={() => {
                           const current = fixedInputs[input.id] || input.defaultValue || []
                           updateFixedInput(
