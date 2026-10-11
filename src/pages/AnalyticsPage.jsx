@@ -452,8 +452,12 @@ function TopAgentsChart({ agents, navigate }) {
         return (
           <div
             key={agent.agentId}
+            role="link"
+            tabIndex={0}
+            aria-label={`Open ${agent.agentName}, ${agent.count} runs`}
             className="group cursor-pointer"
             onClick={() => navigate(`/agent/${agent.agentId}`)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/agent/${agent.agentId}`) } }}
           >
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs font-medium dark:text-text-primary text-gray-700 truncate max-w-[200px]
