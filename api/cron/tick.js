@@ -6,6 +6,52 @@
  * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
  */
 
+/**
+ * Decrypt a vault key produced by the browser encryptSecret helper
+ * (PBKDF2 password 'ila-pgsodium-salt-2026', salt 'salt-val-pgsodium',
+ * 100k SHA-256, AES-GCM-256, iv12 + ciphertext base64). Falls back to
+ * legacy plain-base64 for short payloads. Returns null when undecryptable.
+ */
+async function decryptVaultKey(encryptedBase64) {
+  if (!encryptedBase64) return null
+  try {
+    const bytes = Buffer.from(encryptedBase64, 'base64')
+    if (bytes.length <= 12) {
+      return Buffer.from(encryptedBase64, 'base64').toString('utf-8') || null
+    }
+    const iv = bytes.subarray(0, 12)
+    const ciphertext = bytes.subarray(12)
+    const { subtle } = await import('node:crypto').then((m) => m.webcrypto ?? globalThis.crypto)
+    const keyMaterial = await subtle.importKey(
+      'raw',
+      new TextEncoder().encode('ila-pgsodium-salt-2026'),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey']
+    )
+    const key = await subtle.deriveKey(
+      {
+        name: 'PBKDF2',
+        salt: new TextEncoder().encode('salt-val-pgsodium'),
+        iterations: 100000,
+        hash: 'SHA-256',
+      },
+      keyMaterial,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    )
+    const plain = await subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext)
+    return new TextDecoder().decode(plain) || null
+  } catch {
+    try {
+      return Buffer.from(encryptedBase64, 'base64').toString('utf-8') || null
+    } catch {
+      return null
+    }
+  }
+}
+
 export default async function handler(req, res) {
   // Verify Cron Secret if configured
   const authHeader = req.headers.authorization || req.headers['authorization']
@@ -73,7 +119,7 @@ export default async function handler(req, res) {
           .eq('automation_id', auto.id)
           .single()
 
-        const apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
+        const apiKey = await decryptVaultKey(secretData?.encrypted_key)
 
         if (!apiKey) {
           throw new Error('API key not found in encrypted secret vault.')
