@@ -207,20 +207,31 @@ export async function incrementUsage(id) {
   // 2. If we reach this point, the RPC failed. Attempt client-side fallback.
   console.warn('RPC failed, executing client-side fallback:', rpcError.message)
 
-  const { data: current } = await supabase
-    .from('workflows')
-    .select('usage_count')
-    .eq('id', id)
-    .single()
-
-  if (current) {
-    const { error: updateError } = await supabase
+  // 2. If we reach this point, the RPC failed. Fall back to an optimistic
+  // concurrency loop: only write when the count still matches what we read,
+  // otherwise re-read and retry instead of silently losing an increment.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { data: current } = await supabase
       .from('workflows')
-      .update({ usage_count: (current.usage_count ?? 0) + 1 })
+      .select('usage_count')
       .eq('id', id)
-    
-    return { error: updateError }
+      .single()
+
+    if (!current) return { error: null }
+
+    const next = (current.usage_count ?? 0) + 1
+    const { data: updated, error: updateError } = await supabase
+      .from('workflows')
+      .update({ usage_count: next })
+      .eq('id', id)
+      .eq('usage_count', current.usage_count ?? 0)
+      .select('id')
+
+    if (updateError) return { error: updateError }
+    if (updated && updated.length > 0) return { error: null }
   }
+
+  return { error: { message: 'Could not increment usage after retries.' } }
 
   // 3. THE FIX: If 'current' is null (row not found), return a clear contextual error
   // instead of letting it slip through to return the old rpcError.
