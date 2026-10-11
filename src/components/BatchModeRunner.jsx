@@ -337,10 +337,11 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
             </label>
             {csvRawRows[0]?.length > 1 && (
               <div className="flex items-center gap-2">
-                <span className="text-[11px] dark:text-text-muted text-gray-400">Use column:</span>
+                <span id="batch-csv-column-label" className="text-[11px] dark:text-text-muted text-gray-400">Use column:</span>
                 <CustomSelect
                   value={String(csvColumnIndex)}
                   onChange={handleCsvColumnChange}
+                  label="Use column"
                   options={
                     csvHasHeader
                       ? csvHeaders.map((h, i) => ({ value: String(i), label: h || `Column ${i + 1}` }))
