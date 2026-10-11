@@ -1162,6 +1162,7 @@ const handleRun = async () => {
 <CustomSelect
       value={provider}
       onChange={setProvider}
+      label="Provider"
       options={[
         { value: "openai", label: "OpenAI" },
         { value: "anthropic", label: "Anthropic" },
@@ -1173,6 +1174,7 @@ const handleRun = async () => {
     <CustomSelect
       value={selectedModel}
       onChange={setSelectedModel}
+      label="Model"
       options={MODELS[provider] || []}
     />
 
