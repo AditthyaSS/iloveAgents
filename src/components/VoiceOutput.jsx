@@ -103,6 +103,7 @@ export default function VoiceOutput({
 
   return (
     <span className="relative inline-flex items-center gap-1">
+      <span aria-live="polite" className="sr-only">{isSpeaking ? "Reading aloud" : isPaused ? "Reading paused" : ""}</span>
       {/* Play / Pause button */}
       <button
         type="button"
