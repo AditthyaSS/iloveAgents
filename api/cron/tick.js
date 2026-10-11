@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     if (!supabaseUrl || !supabaseServiceKey) {
       return res.status(200).json({
-        message: 'Open Agents Hub Cron Tick executed (Serverless simulated mode)',
+        message: 'I Love Agents Cron Tick executed (Serverless simulated mode)',
         processedCount: 0,
         timestamp: new Date().toISOString(),
         duration: Date.now() - startTime,
@@ -119,9 +119,9 @@ export default async function handler(req, res) {
               Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
             },
             body: JSON.stringify({
-              from: 'Open Agents Hub <automations@openagentshub.dev>',
+              from: 'I Love Agents <automations@iloveagents.vercel.app>',
               to: [auto.notification_email],
-              subject: `[Open Agents Hub] ✅ Completed: ${auto.name}`,
+              subject: `[I Love Agents] ✅ Completed: ${auto.name}`,
               html: `<h2>${auto.name} Run Output</h2><pre>${output}</pre>`,
             }),
           })
