@@ -504,7 +504,7 @@ function ProviderDonut({ data, total }) {
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="relative">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90" role="img" aria-label={`Provider mix across ${total} runs: ${segments.map((seg) => `${seg.label} ${seg.pct}%`).join(', ')}`}>
           {/* Background ring */}
           <circle
             cx={size / 2} cy={size / 2} r={radius}
