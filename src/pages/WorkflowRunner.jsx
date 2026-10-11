@@ -268,7 +268,10 @@ export default function WorkflowRunner() {
         currentInput = result.content // pass output to next step
 
         // Expose this step's output to later condition templates. Branch
-        // output also merges under the parent conditional's id.
+        // output also merges under the parent conditional's id. Keyed per
+        // step index so reusing the same agent keeps every run addressable;
+        // the agentId alias stays for back-compat templates.
+        context.steps[`step-${i}`] = { output: result.content }
         context.steps[step.agentId] = { output: result.content }
         if (step.parentConditionalId) {
           context.steps[step.parentConditionalId] = {
