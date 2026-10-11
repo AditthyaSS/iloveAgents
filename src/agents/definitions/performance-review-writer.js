@@ -8,7 +8,7 @@ export default {
   icon: "BarChart3",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     employeeName: "Priya Sharma, Senior Frontend Engineer",
     period: "Q1 2026",
