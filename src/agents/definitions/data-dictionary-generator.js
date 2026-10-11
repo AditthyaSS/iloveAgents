@@ -8,7 +8,7 @@ export default {
   icon: "TableProperties",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     schema:
       "users (id, email, password_hash, status, created_at)\nprofiles (user_id, bio, avatar_url, twitter_handle, website)\nposts (id, author_id, title, content, published_at, tags)",
