@@ -8,7 +8,7 @@ export default {
   icon: "Award",
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
+  model: "claude-3-5-sonnet-20241022",
   exampleInputs: {
     projectDescription:
       "Our project aims to install solar-powered internet kiosks in 20 remote villages in the Himalayan region to provide digital literacy training and access to telemedicine services for approximately 5,000 residents.",
