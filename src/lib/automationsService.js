@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabase'
 import { runAgent } from './llmAdapter'
 import { recordAnalyticsRun } from './useAnalytics'
+import { encryptSecret, decryptSecret } from './automationCrypto'
 
 const STORAGE_KEY = 'ila_automations_v2'
 const RUNS_KEY = 'ila_automation_runs_v2'
@@ -13,81 +14,11 @@ export const SCHEDULE_PRESETS = [
   { value: 'weekly', label: 'Every week (Mon 9:00 AM)', cron: '0 9 * * 1', ms: 7 * 24 * 60 * 60 * 1000, description: 'Runs every Monday at 9:00 AM' },
 ]
 
-// ── Encryption Helper (pgsodium-compatible WebCrypto AES-GCM at-rest encryption) ──
-const ENCRYPTION_SALT = 'ila-pgsodium-salt-2026'
-
-async function deriveKey() {
-  const enc = new TextEncoder()
-  const keyMaterial = await window.crypto.subtle.importKey(
-    'raw',
-    enc.encode(ENCRYPTION_SALT),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveKey']
-  )
-  return window.crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: enc.encode('salt-val-pgsodium'),
-      iterations: 100000,
-      hash: 'SHA-256',
-    },
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
-  )
-}
-
-export async function encryptSecret(plainText) {
-  if (!plainText) return ''
-  try {
-    const key = await deriveKey()
-    const iv = window.crypto.getRandomValues(new Uint8Array(12))
-    const enc = new TextEncoder()
-    const ciphertext = await window.crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      enc.encode(plainText)
-    )
-    const combined = new Uint8Array(iv.length + ciphertext.byteLength)
-    combined.set(iv, 0)
-    combined.set(new Uint8Array(ciphertext), iv.length)
-    return btoa(String.fromCharCode(...combined))
-  } catch (err) {
-    console.warn('Encryption fallback to base64 encoding:', err)
-    return btoa(plainText)
-  }
-}
-
-export async function decryptSecret(encryptedBase64) {
-  if (!encryptedBase64) return ''
-  try {
-    const binary = atob(encryptedBase64)
-    const bytes = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-    
-    if (bytes.length <= 12) {
-      return atob(encryptedBase64)
-    }
-
-    const iv = bytes.slice(0, 12)
-    const ciphertext = bytes.slice(12)
-    const key = await deriveKey()
-    const decrypted = await window.crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      ciphertext
-    )
-    return new TextDecoder().decode(decrypted)
-  } catch (err) {
-    try {
-      return atob(encryptedBase64)
-    } catch {
-      return ''
-    }
-  }
-}
+// ── Encryption Helper ──
+// The implementation lives in ./automationCrypto so the serverless cron
+// (api/cron/tick.js) decrypts vault keys with the exact same code that
+// encrypts them here. Re-exported to keep this module's public API unchanged.
+export { encryptSecret, decryptSecret }
 
 // ── Local Vault for Encrypted Provider Keys ──
 function getVault() {
