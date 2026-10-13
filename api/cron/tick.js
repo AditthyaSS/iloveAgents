@@ -124,6 +124,52 @@ export function parseCronResponse(provider, json) {
 }
 
 /**
+ * Sends an email notification via Resend and verifies the HTTP response.
+ *
+ * @param {object} params - Notification parameters.
+ * @param {string} params.apiKey - Resend API key for authentication.
+ * @param {string} params.to - Recipient email address.
+ * @param {string} params.automationName - Name of the automation being executed.
+ * @param {string} params.output - Generated output text to include in the email body.
+ * @returns {Promise<object>} Parsed Resend response JSON.
+ * @throws {Error} If Resend responds with a non-2xx status code or a network error occurs.
+ */
+export async function sendResendNotification({ apiKey, to, automationName, output }) {
+  let resp
+  try {
+    resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: 'Open Agents Hub <automations@openagentshub.dev>',
+        to: [to],
+        subject: `[Open Agents Hub] ✅ Completed: ${automationName}`,
+        html: `<h2>${automationName} Run Output</h2><pre>${output}</pre>`,
+      }),
+    })
+  } catch (networkErr) {
+    throw new Error(`Resend notification network error: ${networkErr.message}`)
+  }
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '')
+    let detail = text
+    try {
+      const parsed = JSON.parse(text)
+      detail = parsed?.message || parsed?.error?.message || (typeof parsed === 'string' ? parsed : text)
+    } catch {}
+    throw new Error(
+      `Resend notification error ${resp.status}: ${String(detail || resp.statusText || 'Unknown error').slice(0, 500)}`
+    )
+  }
+
+  return resp.json().catch(() => ({}))
+}
+
+/**
  * Vercel Cron Handler: /api/cron/tick
  *
  * Runs automatically on schedule configured in vercel.json cron.
@@ -249,18 +295,11 @@ export default async function handler(req, res) {
 
         // Email Notification via Resend
         if (auto.email_notification && auto.notification_email && process.env.RESEND_API_KEY) {
-          await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-            },
-            body: JSON.stringify({
-              from: 'Open Agents Hub <automations@openagentshub.dev>',
-              to: [auto.notification_email],
-              subject: `[Open Agents Hub] ✅ Completed: ${auto.name}`,
-              html: `<h2>${auto.name} Run Output</h2><pre>${output}</pre>`,
-            }),
+          await sendResendNotification({
+            apiKey: process.env.RESEND_API_KEY,
+            to: auto.notification_email,
+            automationName: auto.name,
+            output,
           })
         }
       } catch (err) {
