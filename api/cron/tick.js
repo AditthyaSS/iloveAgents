@@ -150,7 +150,9 @@ export async function sendCronEmailNotification(apiKey, { to, name, output }) {
       }),
     })
   } catch (netErr) {
-    throw new Error(`Resend notification network error: ${netErr.message || 'Failed to send email'}`)
+    const rawMsg = netErr.message || 'Failed to send email'
+    const safeMsg = apiKey ? rawMsg.replaceAll(apiKey, '[REDACTED]') : rawMsg
+    throw new Error(`Resend notification network error: ${safeMsg}`)
   }
 
   if (!resp.ok) {
@@ -160,7 +162,8 @@ export async function sendCronEmailNotification(apiKey, { to, name, output }) {
       const errJson = JSON.parse(text)
       detail = errJson?.message || errJson?.error?.message || (typeof errJson?.error === 'string' ? errJson.error : null) || text
     } catch {}
-    throw new Error(`Resend notification error ${resp.status}: ${String(detail).slice(0, 500)}`)
+    const safeDetail = apiKey ? String(detail).replaceAll(apiKey, '[REDACTED]') : String(detail)
+    throw new Error(`Resend notification error ${resp.status}: ${safeDetail.slice(0, 500)}`)
   }
 
   return await resp.json().catch(() => ({ success: true }))
