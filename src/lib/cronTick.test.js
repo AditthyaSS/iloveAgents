@@ -985,5 +985,34 @@ describe('error message sanitization', () => {
     expect(insertedRuns[0].error).not.toContain(secretKey)
     expect(insertedRuns[0].error).toContain('[REDACTED]')
   })
+
+  it('redacts API key even when it spans the 500-char truncation boundary', async () => {
+    const secretKey = 'test-gemini-secret-key'
+    const padding = 'x'.repeat(500 - secretKey.length / 2)
+    const longMessage = padding + secretKey + padding
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => JSON.stringify({
+        error: { message: longMessage },
+      }),
+    })
+
+    const req = { headers: {} }
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn(),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).not.toContain(secretKey)
+    expect(insertedRuns[0].error).not.toMatch(new RegExp(secretKey.slice(0, 10)))
+    expect(insertedRuns[0].error).toContain('[REDACTED]')
+  })
 })
 
