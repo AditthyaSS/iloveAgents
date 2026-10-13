@@ -1012,7 +1012,30 @@ describe('error message sanitization', () => {
     expect(insertedRuns[0].status).toBe('failed')
     expect(insertedRuns[0].error).not.toContain(secretKey)
     expect(insertedRuns[0].error).not.toMatch(new RegExp(secretKey.slice(0, 10)))
+    expect(insertedRuns[0].error.length).toBeLessThanOrEqual(500)
+  })
+
+  it('redacts and truncates long error from catch block when fetch throws', async () => {
+    const secretKey = 'test-gemini-secret-key'
+    const padding = 'a'.repeat(490)
+    const longError = padding + secretKey + padding
+
+    global.fetch = vi.fn().mockRejectedValue(new Error(longError))
+
+    const req = { headers: {} }
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn(),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).not.toContain(secretKey)
     expect(insertedRuns[0].error).toContain('[REDACTED]')
+    expect(insertedRuns[0].error.length).toBeLessThanOrEqual(500)
   })
 })
 

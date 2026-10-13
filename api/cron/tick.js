@@ -309,7 +309,8 @@ export default async function handler(req, res) {
       } catch (err) {
         status = 'failed'
         const rawMessage = err.message || 'Execution error'
-        error = apiKey ? rawMessage.replaceAll(apiKey, '[REDACTED]') : rawMessage
+        const redacted = apiKey ? rawMessage.replaceAll(apiKey, '[REDACTED]') : rawMessage
+        error = redacted.slice(0, 500)
       }
 
       const autoDuration = Date.now() - autoStart
