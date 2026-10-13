@@ -373,6 +373,31 @@ describe('sendCronEmailNotification', () => {
       })
     ).rejects.toThrow('Resend notification network error: Connection timed out')
   })
+
+  it('redacts Resend API key from error detail when key straddles the 500-char truncation boundary', async () => {
+    const resendKey = 're_live_secretkey1234567890'
+    const padding = 'x'.repeat(500 - resendKey.length / 2)
+    const longMessage = padding + resendKey + padding
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: async () => JSON.stringify({ message: longMessage }),
+    })
+
+    await expect(
+      sendCronEmailNotification(resendKey, {
+        to: 'user@example.com',
+        name: 'Test Auto',
+        output: 'test output',
+      })
+    ).rejects.toSatisfy((err) => {
+      expect(err.message).not.toContain(resendKey)
+      expect(err.message).not.toMatch(new RegExp(resendKey.slice(0, 10)))
+      expect(err.message).toContain('[REDACTED]')
+      return true
+    })
+  })
 })
 
 describe('handler authorization and serverless simulation', () => {
