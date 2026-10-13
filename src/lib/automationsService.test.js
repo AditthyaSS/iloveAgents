@@ -122,6 +122,7 @@ describe('sendResendNotification', () => {
     const savedLogs = getEmailLogs()
     expect(savedLogs).toHaveLength(1)
     expect(savedLogs[0].status).toBe('Failed')
+    expect(savedLogs[0].error).toContain('API key is invalid')
   })
 
   it('throws and records Failed log when Resend responds with HTTP 429 rate limit', async () => {
@@ -147,6 +148,7 @@ describe('sendResendNotification', () => {
     const savedLogs = getEmailLogs()
     expect(savedLogs).toHaveLength(1)
     expect(savedLogs[0].status).toBe('Failed')
+    expect(savedLogs[0].error).toContain('Rate limit exceeded')
   })
 
   it('throws and records Failed log when Resend dispatch encounters network error', async () => {
@@ -168,6 +170,7 @@ describe('sendResendNotification', () => {
     const savedLogs = getEmailLogs()
     expect(savedLogs).toHaveLength(1)
     expect(savedLogs[0].status).toBe('Failed')
+    expect(savedLogs[0].error).toBe('Connection dropped')
   })
 
   it('handles non-JSON error responses from Resend gracefully', async () => {
@@ -194,5 +197,6 @@ describe('sendResendNotification', () => {
     const savedLogs = getEmailLogs()
     expect(savedLogs).toHaveLength(1)
     expect(savedLogs[0].status).toBe('Failed')
+    expect(savedLogs[0].error).toContain('Service Unavailable')
   })
 })

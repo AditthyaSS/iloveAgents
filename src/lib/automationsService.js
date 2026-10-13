@@ -219,6 +219,7 @@ export async function sendResendNotification({ to, automationName, agentName, ou
       })
     } catch (networkErr) {
       logEntry.status = 'Failed'
+      logEntry.error = networkErr.message
       saveEmailLog(logEntry)
       throw new Error(`Resend notification network error: ${networkErr.message}`)
     }
@@ -231,11 +232,11 @@ export async function sendResendNotification({ to, automationName, agentName, ou
         detail = parsed?.message || parsed?.error?.message || (typeof parsed === 'string' ? parsed : text)
       } catch {}
 
+      const errorMsg = `Resend notification error ${resp.status}: ${String(detail || resp.statusText || 'Unknown error').slice(0, 500)}`
       logEntry.status = 'Failed'
+      logEntry.error = errorMsg
       saveEmailLog(logEntry)
-      throw new Error(
-        `Resend notification error ${resp.status}: ${String(detail || resp.statusText || 'Unknown error').slice(0, 500)}`
-      )
+      throw new Error(errorMsg)
     }
   }
 
