@@ -236,6 +236,8 @@ export default async function handler(req, res) {
       let output = ''
       let error = null
 
+      let apiKey = null
+
       try {
         // Fetch encrypted key from user_secrets (decrypted via pgsodium RPC or server key)
         const { data: secretData } = await supabase
@@ -244,7 +246,7 @@ export default async function handler(req, res) {
           .eq('automation_id', auto.id)
           .single()
 
-        const apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
+        apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
 
         if (!apiKey) {
           throw new Error('API key not found in encrypted secret vault.')
@@ -284,7 +286,12 @@ export default async function handler(req, res) {
             } catch {}
             throw new Error(`${normalizedProvider} API error ${resp.status}: ${String(detail).slice(0, 500)}`)
           }
-          const json = await resp.json()
+          let json
+          try {
+            json = await resp.json()
+          } catch {
+            throw new Error(`${normalizedProvider} returned an unparseable response (HTTP ${resp.status})`)
+          }
           output = parseCronResponse(normalizedProvider, json)
         } else {
           output = `Executed ${auto.agent_name} via ${auto.provider} successfully.`
@@ -300,7 +307,8 @@ export default async function handler(req, res) {
         }
       } catch (err) {
         status = 'failed'
-        error = err.message || 'Execution error'
+        const rawMessage = err.message || 'Execution error'
+        error = apiKey ? rawMessage.replaceAll(apiKey, '[REDACTED]') : rawMessage
       }
 
       const autoDuration = Date.now() - autoStart
