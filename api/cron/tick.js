@@ -284,7 +284,8 @@ export default async function handler(req, res) {
             try {
               detail = JSON.parse(text)?.error?.message || text
             } catch {}
-            throw new Error(`${normalizedProvider} API error ${resp.status}: ${String(detail).slice(0, 500)}`)
+            const safeDetail = apiKey ? String(detail).replaceAll(apiKey, '[REDACTED]') : String(detail)
+            throw new Error(`${normalizedProvider} API error ${resp.status}: ${safeDetail.slice(0, 500)}`)
           }
           let json
           try {
