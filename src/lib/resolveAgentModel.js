@@ -31,18 +31,28 @@ export const MODEL_MAP = {
 }
 
 export function resolveAgentModel(agent, actualProvider, selectedModel) {
-  // Check if selectedModel is valid for the current actualProvider
-  if (selectedModel && MODELS[actualProvider]?.some(m => m.value === selectedModel)) {
+  const isListed = (modelId) =>
+    Boolean(modelId && MODELS[actualProvider]?.some((m) => m.value === modelId))
+
+  // 1. User-selected model wins if listed for the actual provider
+  if (isListed(selectedModel)) {
     return selectedModel
   }
 
-  if (agent.models && agent.models[actualProvider]) {
+  // 2. Agent-specific provider model override if listed
+  if (agent?.models && isListed(agent.models[actualProvider])) {
     return agent.models[actualProvider]
   }
 
-  if (agent.model && (actualProvider === agent.defaultProvider || actualProvider === agent.provider)) {
+  // 3. Agent default model if provider matches and is listed
+  if (
+    agent?.model &&
+    (actualProvider === agent.defaultProvider || actualProvider === agent.provider) &&
+    isListed(agent.model)
+  ) {
     return agent.model
   }
 
+  // 4. Provider default fallback
   return MODEL_MAP[actualProvider] || MODEL_MAP.openai
 }
