@@ -165,5 +165,9 @@
 | 158 | Java DSA Interview Prep | Generates Java DSA problems, provides hints, reviews attempts, and simulates coding interviews. | Education |
 | 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | Education |
 | 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
-> Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
 | 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
+| 162 | Data Visualization Advisor | Recommends suitable data visualizations based on a dataset, its variables, and the user's analytical goal, with an explanation of why each chart is appropriate. | Data Science |
+| 163 | Dependency Impact Analyzer | Analyzes software dependency upgrades or replacements to assess breaking changes, compatibility risks, affected modules, and migration steps. | Engineering |
+| 164 | GitHub Actions Workflow Optimizer | Audits and optimizes GitHub Actions workflow YAML files for execution speed, caching strategies, matrix concurrency, secret security, and token permissions. | DevOps |
+
+> Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
