@@ -12,6 +12,10 @@ import {
   Check,
   Zap,
   RefreshCw,
+  BarChart2,
+  Clock,
+  FileText,
+  Hash,
 } from "lucide-react";
 import { runAgent } from "../lib/llmAdapter";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
@@ -720,6 +724,50 @@ export default function BattleModeArena() {
                       </div>
                     )}
                   </div>
+
+                  {/* Response Statistics Panel */}
+                  {r.content && !r.loading && (
+                    <div className="mx-5 mb-3 p-3 rounded-lg border dark:border-border border-gray-200/80 dark:bg-surface-card/80 bg-gray-50/90 text-xs">
+                      <div className="flex items-center gap-1.5 font-semibold text-[11px] uppercase tracking-wider dark:text-text-muted text-gray-500 mb-2">
+                        <BarChart2 size={13} className={prov.textColor} />
+                        <span>Response Statistics</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center justify-between py-1 px-2 rounded dark:bg-surface/60 bg-white border dark:border-border/50 border-gray-200/60">
+                          <span className="dark:text-text-secondary text-gray-600 flex items-center gap-1">
+                            <FileText size={12} className="opacity-70" /> Words
+                          </span>
+                          <span className="font-semibold dark:text-text-primary text-gray-900">
+                            {(r.content.trim() ? r.content.trim().split(/\s+/).length : 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-1 px-2 rounded dark:bg-surface/60 bg-white border dark:border-border/50 border-gray-200/60">
+                          <span className="dark:text-text-secondary text-gray-600 flex items-center gap-1">
+                            <Hash size={12} className="opacity-70" /> Characters
+                          </span>
+                          <span className="font-semibold dark:text-text-primary text-gray-900">
+                            {r.content.length.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-1 px-2 rounded dark:bg-surface/60 bg-white border dark:border-border/50 border-gray-200/60">
+                          <span className="dark:text-text-secondary text-gray-600 flex items-center gap-1">
+                            <Zap size={12} className="opacity-70" /> Tokens (est.)
+                          </span>
+                          <span className="font-semibold dark:text-text-primary text-gray-900">
+                            {Math.ceil(r.content.length / 4).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between py-1 px-2 rounded dark:bg-surface/60 bg-white border dark:border-border/50 border-gray-200/60">
+                          <span className="dark:text-text-secondary text-gray-600 flex items-center gap-1">
+                            <Clock size={12} className="opacity-70" /> Duration
+                          </span>
+                          <span className="font-semibold dark:text-text-primary text-gray-900">
+                            {r.duration ? `${(r.duration / 1000).toFixed(1)}s` : "—"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Pick Winner Button */}
                   {r.content && !r.loading && (
