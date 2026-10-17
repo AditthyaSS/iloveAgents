@@ -66,7 +66,7 @@ Follow GraphQL best practices:
 
 Format your output in clean Markdown with:
 - An overview of the schema architecture
-- A complete, valid \`\`\`graphql code block containing the full schema SDL (types, inputs, enums, Query, Mutation, Subscription)
+- A complete, valid \`\`\`graphql code block containing the full schema SDL (types, inputs, enums, Query, and Mutation / Subscription root types included only when requested by user selection)
 - Explanation of key design decisions (why fields are non-null vs nullable, relationship modeling, input types)`,
   outputType: "markdown",
 };
