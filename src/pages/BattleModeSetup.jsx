@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAgents } from "../lib/useAgents";
+import AgentCardSkeleton from "../components/AgentCardSkeleton";
 
 // Input validation constants - prevent LLM calls with excessively long inputs
 const INPUT_LIMITS = {
@@ -359,8 +360,10 @@ export default function BattleModeSetup() {
             </div>
 
             {agentsLoading ? (
-              <div className="text-center py-16 dark:text-text-muted dark:text-text-muted text-gray-500 text-sm">
-                Loading agents...
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <AgentCardSkeleton key={idx} />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
