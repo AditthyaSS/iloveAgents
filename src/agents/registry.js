@@ -10,6 +10,7 @@
 // with `eager: false` to reduce the initial JS bundle size.
 // Each definition file becomes a separate chunk loaded on demand.
 // ============================================================
+import { CATEGORIES } from './categories';
 
 const modules = import.meta.glob('./definitions/*.js', { eager: false });
 
@@ -19,6 +20,10 @@ const normalizeAgents = (agents) => {
     if (!agent?.id) {
       console.warn('Skipping agent without an id:', agent);
       return false;
+    }
+    if (!agent?.category || !CATEGORIES.includes(agent.category)) {
+    console.warn(`Skipping agent "${agent.id}" with invalid category:`, agent.category);
+    return false;
     }
     if (seenIds.has(agent.id)) {
       console.warn(`Skipping duplicate agent id "${agent.id}".`);
@@ -47,4 +52,4 @@ export function loadAllAgents() {
 
   return cachedAgentsPromise;
 }
-
+
