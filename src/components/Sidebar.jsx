@@ -106,6 +106,13 @@ export default function Sidebar({ open, onClose }) {
     window.setTimeout(() => setFeedback(''), 2200)
   }
 
+  useEffect(() => {
+    if (!open) return
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [open, onClose])
+
   const customCollections = collections.filter(
     (collection) => collection.id !== DEFAULT_COLLECTION_ID
   )
@@ -121,6 +128,7 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside
+        aria-label="Agent sidebar"
         className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
           dark:border-border border-gray-200
           ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
