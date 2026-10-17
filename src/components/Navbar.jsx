@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
   Sun,
@@ -30,6 +30,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showSpendPopup, setShowSpendPopup] = useState(false)
   const { totalSpend, runs, clearSession } = useSessionSpend()
+  const themeTimeoutRef = useRef(null)
 
   useKeyboardShortcuts({
     '?': () => setShowShortcuts(true),
@@ -44,9 +45,20 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
     } else {
       document.documentElement.classList.add('dark')
     }
+
+    return () => {
+      if (themeTimeoutRef.current) {
+        clearTimeout(themeTimeoutRef.current)
+      }
+    }
   }, [])
 
   const toggleTheme = () => {
+    if (themeTimeoutRef.current) {
+      clearTimeout(themeTimeoutRef.current)
+    }
+
+    document.documentElement.classList.add('theme-transition')
     const next = !darkMode
     setDarkMode(next)
 
@@ -57,6 +69,11 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
       document.documentElement.classList.remove('dark')
       localStorage.setItem('ila_theme', 'light')
     }
+
+    themeTimeoutRef.current = setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition')
+      themeTimeoutRef.current = null
+    }, 200)
   }
 
   const navItems = [
