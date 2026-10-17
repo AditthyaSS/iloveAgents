@@ -74,14 +74,21 @@ jobs:
             done
             curl --silent --show-error --location --retry 3 --retry-delay 5 --retry-all-errors \
               --max-time 20 --parallel --parallel-max 16 \
-              --write-out '%{url} %{http_code} %{content_type}\n' "${args[@]}" > results.txt || true
+              --write-out '%{url} %{http_code} %{exitcode} %{content_type}\n' "${args[@]}" > results.txt || true
 
             if [ "$(wc -l < results.txt)" -ne ${#level[@]} ]; then
               echo "::error::Expected ${#level[@]} responses, got $(wc -l < results.txt)"
               exit 1
             fi
 
-            while read -r url code type; do
+            while read -r url code curl_exit type; do
+              # curl's own exit status only reflects one of the parallel transfers,
+              # so check each one: a transfer cut off after an HTTP 200 leaves a
+              # truncated file that the status and content-type checks would pass.
+              if [ "$curl_exit" != "0" ]; then
+                echo "::error::$url transfer failed (curl exit code $curl_exit)"
+                exit 1
+              fi
               if [ "$code" != "200" ]; then
                 echo "::error::$url returned HTTP $code"
                 exit 1
