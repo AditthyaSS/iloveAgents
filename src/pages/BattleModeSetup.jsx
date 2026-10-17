@@ -103,11 +103,17 @@ function InputField({ input, value, onChange }) {
           <select
             value={value ?? input.defaultValue ?? ""}
             onChange={(e) => onChange(input.id, e.target.value)}
-            className={`${baseClass} ${borderClass} appearance-none cursor-pointer`}
-            style={{ background: "rgb(17 24 39 / 0.6)" }}
+            className={`w-full rounded-lg px-3 py-2 pr-9 text-sm border dark:border-gray-700 border-gray-300 dark:bg-gray-800 dark:text-white bg-white text-gray-900 outline-none focus:border-yellow-400/60 appearance-none cursor-pointer transition-colors duration-200 ${
+              !validation.valid ? "border-red-500/50 focus:border-red-500" : ""
+            }`}
           >
             {input.options.map((opt) => (
-              <option key={opt} value={opt} style={{ background: "#111827" }}>
+              <option
+                key={opt}
+                value={opt}
+                className="dark:bg-gray-900 dark:text-white bg-white text-gray-900"
+                style={{ backgroundColor: "#111827", color: "#f3f4f6" }}
+              >
                 {opt}
               </option>
             ))}
