@@ -19,7 +19,7 @@ import { useAgents } from '../lib/useAgents'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
-import { useApiKey } from '../lib/useApiKey'
+import { useApiKey, getEffectiveApiKey } from '../lib/useApiKey'
 import { recordAnalyticsRun } from '../lib/useAnalytics'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
@@ -235,9 +235,9 @@ export default function WorkflowRunner() {
           ? provider
           : step.agent.provider
 
-      const keyToUse = actualProvider === provider
+      const keyToUse = (actualProvider === provider && apiKey)
         ? apiKey
-        : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
+        : getEffectiveApiKey(actualProvider)
 
       if (!keyToUse) {
         setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
