@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { streamAgent } from './llmAdapter'
 import { resolveAgentModel } from './resolveAgentModel'
 import { recordAnalyticsRun } from './useAnalytics'
+import { getGlobalKeys } from './globalKeys'
 
 const STORAGE_KEY = 'ila_scheduled_jobs'
 const HISTORY_KEY = 'ila_scheduler_results'
@@ -34,6 +35,18 @@ function removeStoredJobKey(jobId) {
   setStoredJobKey(jobId, '')
 }
 
+function getResolvedJobKey(job, actualProvider) {
+  if (job?.apiKey) return job.apiKey
+  const fromSession = getStoredJobKey(job.id)
+  if (fromSession) return fromSession
+  try {
+    const globalKeys = getGlobalKeys()
+    return globalKeys[actualProvider] || ''
+  } catch {
+    return ''
+  }
+}
+
 function stripJobSecret(job) {
   const { apiKey, ...safeJob } = job
   return safeJob
@@ -42,7 +55,10 @@ function stripJobSecret(job) {
 function loadJobs() {
   try {
     return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
-      .map(job => ({ ...job, apiKey: getStoredJobKey(job.id) }))
+      .map(job => {
+        const actualProvider = job.agentDefinition?.provider === 'any' ? job.provider : (job.agentDefinition?.provider || job.provider)
+        return { ...job, apiKey: getResolvedJobKey(job, actualProvider) }
+      })
   }
   catch { return [] }
 }
@@ -152,6 +168,12 @@ export function useScheduler({ autoRun = true } = {}) {
     setResults(prev => prev.filter(r => r.jobId !== jobId))
   }, [])
 
+  // ── Update API key for a job
+  const updateJobKey = useCallback((jobId, apiKey) => {
+    setStoredJobKey(jobId, apiKey)
+    setJobs(prev => prev.map(j => (j.id === jobId ? { ...j, apiKey } : j)))
+  }, [])
+
   // ── Manually run a job right now
   const runJob = useCallback(async (job) => {
     if (activeJobIds.has(job.id)) return null
@@ -165,6 +187,10 @@ export function useScheduler({ autoRun = true } = {}) {
     try {
       const agent = job.agentDefinition
       const actualProvider = agent.provider === 'any' ? job.provider : agent.provider
+      const apiKey = getResolvedJobKey(job, actualProvider)
+      if (!apiKey) {
+        throw new Error(`API key missing for ${actualProvider}. Please configure an API key in Settings or re-enter it for this job.`)
+      }
       const model = resolveAgentModel(agent, actualProvider, job.model)
 
       // Build user message from saved inputs
@@ -183,7 +209,7 @@ export function useScheduler({ autoRun = true } = {}) {
       const result = await streamAgent({
         provider: actualProvider,
         model,
-        apiKey: job.apiKey,
+        apiKey,
         systemPrompt: agent.systemPrompt,
         userMessage,
         onChunk: () => {},
@@ -254,10 +280,40 @@ export function useScheduler({ autoRun = true } = {}) {
       const now = Date.now()
       currentJobs.forEach(job => {
         if (!job.enabled) return
-        if (!job.apiKey) return
         if (activeJobIds.has(job.id)) return
         if (now >= job.nextRunAt) {
-          runJob(job)
+          const actualProvider = job.agentDefinition?.provider === 'any' ? job.provider : (job.agentDefinition?.provider || job.provider)
+          const key = getResolvedJobKey(job, actualProvider)
+          if (!key) {
+            const interval = SCHEDULE_OPTIONS.find(s => s.value === job.schedule)
+            const errorMsg = `API key missing after browser session ended. Re-enter your ${actualProvider} API key or save it in Settings to resume automatic runs.`
+            const newResult = {
+              id: `result_${now}_${Math.random().toString(36).slice(2)}`,
+              jobId: job.id,
+              jobLabel: job.label,
+              agentName: job.agentName,
+              output: '',
+              ranAt: now,
+              duration: 0,
+              error: errorMsg,
+            }
+            setResults(prev => [newResult, ...prev].slice(0, MAX_RESULTS))
+            setJobs(prev => prev.map(j =>
+              j.id === job.id
+                ? {
+                    ...j,
+                    lastRunAt: now,
+                    nextRunAt: now + (interval?.ms ?? 86_400_000),
+                  }
+                : j
+            ))
+            notify(
+              `⚠️ ${job.label} — API Key Required`,
+              `Automatic run skipped. Open iloveAgents to re-enter your ${actualProvider} key.`
+            )
+            return
+          }
+          runJob({ ...job, apiKey: key })
         }
       })
     }
@@ -276,6 +332,7 @@ export function useScheduler({ autoRun = true } = {}) {
     running,
     addJob,
     toggleJob,
+    updateJobKey,
     deleteJob,
     deleteResult,
     clearResultsForJob,

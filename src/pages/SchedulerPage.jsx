@@ -2,7 +2,7 @@ import { useState } from 'react'
 import {
   Clock, Play, Trash2, ToggleLeft, ToggleRight,
   ChevronDown, ChevronRight, AlertCircle, CheckCircle2,
-  Calendar, Zap, Loader2, X
+  Calendar, Zap, Loader2, X, Key
 } from 'lucide-react'
 import { useScheduler, SCHEDULE_OPTIONS } from '../lib/useScheduler'
 import OutputRenderer from '../components/OutputRenderer'
@@ -39,7 +39,7 @@ export default function SchedulerPage() {
 
   const {
     jobs, results, running,
-    toggleJob, deleteJob, runJob,
+    toggleJob, updateJobKey, deleteJob, runJob,
     deleteResult, clearResultsForJob,
   } = useScheduler()
 
@@ -144,6 +144,11 @@ export default function SchedulerPage() {
                           Paused
                         </span>
                       )}
+                      {!job.apiKey && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 font-medium inline-flex items-center gap-1">
+                          <AlertCircle size={10} /> Key Required
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       <span className="text-[11px] dark:text-text-muted text-gray-400">
@@ -156,6 +161,22 @@ export default function SchedulerPage() {
                         <span className="text-[11px] text-accent">
                           Next: {formatNextRun(job.nextRunAt)}
                         </span>
+                      )}
+                      {!job.apiKey && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const actualProvider = job.agentDefinition?.provider === 'any' ? job.provider : (job.agentDefinition?.provider || job.provider)
+                            const entered = window.prompt(`Enter ${actualProvider} API key for "${job.label}":`)
+                            if (entered?.trim()) {
+                              updateJobKey(job.id, entered.trim())
+                            }
+                          }}
+                          className="text-[11px] font-medium text-accent hover:underline flex items-center gap-1"
+                          title="Enter API key"
+                        >
+                          <Key size={11} /> Enter Key
+                        </button>
                       )}
                     </div>
                   </div>
