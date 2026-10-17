@@ -1,171 +1,72 @@
-const graphqlSchemaGenerator = {
+export default {
   id: "graphql-schema-generator",
-
+  createdAt: "2026-10-17",
   name: "GraphQL Schema Generator",
-
   description:
-    "Describe your application's domain model and generate a production-ready GraphQL schema with object types, queries, mutations, subscriptions, enums, scalars, and input types.",
-
+    "Generate production-ready GraphQL SDL schemas complete with types, relationships, queries, mutations, and subscriptions from your data model.",
   category: "Engineering",
-
   icon: "GitMerge",
-
   provider: "any",
-
   defaultProvider: "openai",
-
   model: "gpt-4o",
-
   exampleInputs: {
     domainDescription:
-      "An e-commerce platform with users, products, categories, shopping carts and orders.",
+      "An e-commerce platform with products, categories, customers, shopping carts, and orders.",
     entities:
-      "User, Product, Category, Cart, Order, OrderItem",
-    includeMutations: "Yes",
-    includeSubscriptions: "No",
+      "Product (id, title, price, inventoryCount, category)\nCategory (id, name, slug, parentCategory)\nCustomer (id, email, fullName, shippingAddress)\nCart (id, customer, items, totalAmount)\nOrder (id, orderNumber, customer, items, status, createdAt)",
+    includeMutations: "yes",
+    includeSubscriptions: "no",
   },
-
   inputs: [
     {
       id: "domainDescription",
-      label: "Domain Description",
+      label: "Domain description",
       type: "textarea",
       placeholder:
-        "Describe your application, business domain, and relationships between entities.",
+        "Describe your application domain and business context (e.g., An e-commerce app with products, categories, users, and orders)...",
       required: true,
     },
     {
       id: "entities",
-      label: "Entities to Include",
+      label: "Entities to include",
       type: "textarea",
       placeholder:
-        "User, Product, Order, Category, Payment, Review...",
+        "List your core domain entities, their primary fields, and relationships between them...",
       required: true,
     },
     {
       id: "includeMutations",
-      label: "Include Mutations",
+      label: "Include mutations",
       type: "select",
-      options: ["Yes", "No", "Read-only"],
+      options: ["yes", "no", "read-only"],
+      defaultValue: "yes",
       required: true,
     },
     {
       id: "includeSubscriptions",
-      label: "Include Subscriptions",
+      label: "Include subscriptions",
       type: "select",
-      options: ["Yes", "No"],
+      options: ["yes", "no"],
+      defaultValue: "no",
       required: true,
     },
   ],
+  systemPrompt: `You are an expert GraphQL architect and schema designer.
+Your task is to take a domain description, list of entities, mutation preference, and subscription preference, and design a clean, production-ready GraphQL Schema Definition Language (SDL) specification.
 
-  systemPrompt: `You are a senior GraphQL Architect with extensive experience designing scalable GraphQL APIs.
+Follow GraphQL best practices:
+1. Strict type safety and clear nullability (use Non-Null '!' where fields are guaranteed to exist, like IDs and mandatory attributes).
+2. Model relationships cleanly with object types and references.
+3. Pagination and query conventions (e.g. pagination inputs or filters where applicable).
+4. If mutations are requested ("yes"), provide standard CRUD inputs and payload types (e.g. CreateEntityInput, CreateEntityPayload, UpdateEntityInput).
+5. If mutations are "read-only" or "no", omit mutation definitions accordingly.
+6. If subscriptions are requested ("yes"), provide relevant real-time event subscriptions.
+7. Use descriptive scalar types where appropriate (e.g. custom scalars DateTime, JSON if needed).
+8. Provide a concise explanation of design decisions and field nullability at the end.
 
-Your task is to generate a production-ready GraphQL schema from the user's application description.
-
-## INPUT
-
-You will receive:
-
-1. Domain Description
-2. List of Entities
-3. Whether Mutations should be included
-4. Whether Subscriptions should be included
-
-## OBJECTIVE
-
-Understand the business domain.
-
-Infer relationships between entities.
-
-Design a clean and scalable GraphQL schema using GraphQL SDL.
-
-## REQUIREMENTS
-
-Generate:
-
-- Object Types
-- Query Type
-- Mutation Type (if enabled)
-- Subscription Type (if enabled)
-- Input Types
-- Enum Types whenever appropriate
-- Custom Scalars if required
-- Relationship fields
-- Pagination-friendly list fields where appropriate
-
-## DESIGN RULES
-
-- Use GraphQL SDL only.
-- Use ID! for all primary identifiers.
-- Apply correct nullability.
-- Use meaningful field names.
-- Infer one-to-one relationships.
-- Infer one-to-many relationships.
-- Infer many-to-many relationships.
-- Generate reusable Input types.
-- Use descriptive type names.
-- Keep naming consistent.
-- Follow GraphQL best practices.
-- Avoid duplicate types.
-- Include timestamps when appropriate.
-- Include comments where useful.
-
-## QUERIES
-
-Generate useful queries such as:
-
-- get by id
-- list all
-- filtered search
-- pagination-ready collections
-
-## MUTATIONS
-
-If mutations are enabled generate operations such as:
-
-- create
-- update
-- delete
-
-Generate matching Input types.
-
-If user selected "Read-only", do NOT generate mutations.
-
-If user selected "No", omit the Mutation type entirely.
-
-## SUBSCRIPTIONS
-
-If subscriptions are enabled generate meaningful subscriptions such as:
-
-- entityCreated
-- entityUpdated
-- entityDeleted
-
-Otherwise omit the Subscription type.
-
-## OUTPUT FORMAT
-
-Return the response using the following sections.
-
-### GraphQL Schema
-
-Return ONE markdown code block containing the complete GraphQL SDL.
-
-### Explanation
-
-Briefly explain:
-
-- inferred entities
-- relationships
-- queries
-- mutations
-- subscriptions
-- important design decisions
-
-Do not include any additional commentary outside these sections.
-`,
-
+Format your output in clean Markdown with:
+- An overview of the schema architecture
+- A complete, valid \`\`\`graphql code block containing the full schema SDL (types, inputs, enums, Query, Mutation, Subscription)
+- Explanation of key design decisions (why fields are non-null vs nullable, relationship modeling, input types)`,
   outputType: "markdown",
 };
-
-export default graphqlSchemaGenerator;
