@@ -318,6 +318,20 @@ export default function WorkflowRunner() {
     setSteps(buildInitialSteps(workflow, agents))
   }
 
+  // Handle keyboard shortcut: Ctrl+Enter or Cmd+Enter to run workflow
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault()
+      if (userInput.trim() && apiKey && !running) {
+        if (hasRun && (allDone || hasFailed)) {
+          handleRunAgain()
+        } else {
+          handleRun()
+        }
+      }
+    }
+  }
+
   // Loading workflow from Supabase
   if (loadingWorkflow) {
     return (
@@ -393,13 +407,14 @@ export default function WorkflowRunner() {
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Your Input <span className="text-red-400">*</span>
           <span className="ml-1 dark:text-text-muted text-gray-400 font-normal">
-            — passed to the first agent, then chained through each step
+            — passed to the first agent, then chained through each step (Tip: Press <kbd className="px-1 py-0.5 text-[10px] font-mono rounded bg-gray-100 dark:bg-surface-hover border dark:border-border border-gray-200">Ctrl</kbd> + <kbd className="px-1 py-0.5 text-[10px] font-mono rounded bg-gray-100 dark:bg-surface-hover border dark:border-border border-gray-200">Enter</kbd> to run!)
           </span>
         </label>
         <textarea
           id="workflow-input"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Paste your main input here. The first agent will process this, and each subsequent agent receives the previous output."
           rows={4}
           disabled={running}
@@ -574,7 +589,6 @@ export default function WorkflowRunner() {
                       agentName={step.agentName}
                     />
                     <RunRating agentId={step.agent?.id} /> 
-
                   </div>
                 )}
 
