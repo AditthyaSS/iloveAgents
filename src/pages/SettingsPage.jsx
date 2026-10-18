@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Settings, Eye, EyeOff, Check, X,
-  Trash2, ExternalLink, ShieldCheck, KeyRound,
+  Trash2, ExternalLink, ShieldCheck, KeyRound, AlertCircle,
 } from 'lucide-react'
 import {
   getGlobalKeys,
@@ -65,7 +65,34 @@ export default function SettingsPage() {
   const [showKey, setShowKey] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [saveMessage, setSaveMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [confirmClearAll, setConfirmClearAll] = useState(false)
+  const messageTimeoutRef = useRef(null)
+
+  const showFeedback = (type, message) => {
+    if (messageTimeoutRef.current) {
+      clearTimeout(messageTimeoutRef.current)
+    }
+    if (type === 'error') {
+      setSaveMessage('')
+      setErrorMessage(message)
+    } else {
+      setErrorMessage('')
+      setSaveMessage(message)
+    }
+    messageTimeoutRef.current = setTimeout(() => {
+      setErrorMessage('')
+      setSaveMessage('')
+    }, 3000)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (messageTimeoutRef.current) {
+        clearTimeout(messageTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // ── Load from localStorage on mount
   useEffect(() => {
@@ -88,6 +115,15 @@ export default function SettingsPage() {
   const availableForDefault = getAvailableProviders()
 
   const handleSave = () => {
+    const hasAnyKey = Object.values(keys).some(
+      (val) => typeof val === 'string' && val.trim() !== ''
+    )
+
+    if (!hasAnyKey) {
+      showFeedback('error', 'Please enter at least one API key before saving.')
+      return
+    }
+
     saveGlobalKeys({ ...keys, defaultProvider })
     // Refresh saved status
     const stored = getGlobalKeys()
@@ -97,8 +133,7 @@ export default function SettingsPage() {
       gemini:     !!stored.gemini,
       openrouter: !!stored.openrouter,
     })
-    setSaveMessage('Keys saved successfully ✅')
-    setTimeout(() => setSaveMessage(''), 3000)
+    showFeedback('success', 'Keys saved successfully ✅')
   }
 
   const handleClearKey = (provider) => {
@@ -118,8 +153,7 @@ export default function SettingsPage() {
     setDefaultProvider('')
     setSavedStatus({ openai: false, anthropic: false, gemini: false, openrouter: false })
     setConfirmClearAll(false)
-    setSaveMessage('All keys cleared.')
-    setTimeout(() => setSaveMessage(''), 3000)
+    showFeedback('success', 'All keys cleared.')
   }
 
   const toggleShow = (provider) => {
@@ -190,8 +224,12 @@ export default function SettingsPage() {
                 <input
                   type={showKey[p.id] ? 'text' : 'password'}
                   value={keys[p.id]}
-                  onChange={(e) => setKeys((prev) => ({ ...prev, [p.id]: e.target.value }))}
+                  onChange={(e) => {
+                    setKeys((prev) => ({ ...prev, [p.id]: e.target.value }))
+                    if (errorMessage) setErrorMessage('')
+                  }}
                   placeholder={savedStatus[p.id] ? '••••••••••••••••••••••••' : p.placeholder}
+                  aria-label={`${p.label} API Key`}
                   className="w-full h-9 pl-3 pr-10 rounded-md text-xs font-mono transition-colors
                     dark:bg-surface-input dark:border-border dark:text-text-primary dark:placeholder:text-text-muted
                     bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400
@@ -226,8 +264,13 @@ export default function SettingsPage() {
 
         {/* Save button */}
         <div className="px-5 py-4 border-t dark:border-border border-gray-100 flex items-center justify-between">
-          {saveMessage ? (
-            <span className="text-xs font-medium text-emerald-500 flex items-center gap-1.5">
+          {errorMessage ? (
+            <span className="text-xs font-medium text-red-500 flex items-center gap-1.5" role="alert">
+              <AlertCircle size={13} />
+              {errorMessage}
+            </span>
+          ) : saveMessage ? (
+            <span className="text-xs font-medium text-emerald-500 flex items-center gap-1.5" role="status">
               <Check size={13} />
               {saveMessage}
             </span>
