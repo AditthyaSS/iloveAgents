@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import BattleModeWinner from './BattleModeWinner'
 
@@ -25,7 +25,7 @@ function setup(provider) {
   )
 }
 
-describe('BattleModeWinner theme', () => {
+describe('BattleModeWinner', () => {
   it('themes the openrouter winner teal instead of yellow', () => {
     const { container } = setup({ color: 'teal', label: 'OpenRouter' })
     expect(screen.getByText('OpenRouter')).toBeInTheDocument()
@@ -36,5 +36,32 @@ describe('BattleModeWinner theme', () => {
   it('keeps the openai winner yellow', () => {
     const { container } = setup({ color: 'yellow', label: 'GPT-4o' })
     expect(container.querySelector('.text-yellow-400')).not.toBeNull()
+  })
+
+  it('renders victory celebration and action buttons', () => {
+    setup({ color: 'yellow', label: 'GPT-4o' })
+    expect(screen.getByText('Victory!')).toBeInTheDocument()
+    expect(screen.getByText(/You chose/i)).toBeInTheDocument()
+    expect(screen.getByText('Share Result')).toBeInTheDocument()
+    expect(screen.getByText('Copy Output')).toBeInTheDocument()
+    expect(screen.getByText('Run Again')).toBeInTheDocument()
+    expect(screen.getByText('Back to Agents')).toBeInTheDocument()
+  })
+
+  it('copies share text when Share Result is clicked', async () => {
+    const writeText = vi.fn().mockResolvedValue()
+    Object.assign(navigator, {
+      clipboard: { writeText },
+    })
+
+    setup({ color: 'blue', label: 'Claude' })
+    const shareBtn = screen.getByText('Share Result')
+    await act(async () => {
+      fireEvent.click(shareBtn)
+    })
+
+    expect(writeText).toHaveBeenCalledWith(
+      expect.stringContaining('Battle Mode Winner: Claude')
+    )
   })
 })
