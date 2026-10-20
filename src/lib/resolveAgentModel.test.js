@@ -18,6 +18,21 @@ describe('MODELS', () => {
       })
     })
   })
+
+  it('should not offer retired Anthropic models', () => {
+    const retired = [
+      'claude-3-5-sonnet-20241022',
+      'claude-3-5-haiku-20241022',
+      'claude-3-opus-20240229',
+      'claude-opus-4-20250514',
+      'claude-sonnet-4-20250514',
+      'anthropic/claude-3.5-sonnet',
+    ]
+    const offered = [...MODELS.anthropic, ...MODELS.openrouter]
+    offered.forEach((m) => {
+      expect(retired).not.toContain(m.value)
+    })
+  })
 })
 
 describe('MODEL_MAP', () => {
@@ -49,10 +64,10 @@ describe('resolveAgentModel', () => {
   it('should use agent.models[provider] if available', () => {
     const agent = {
       ...baseAgent,
-      models: { anthropic: 'claude-3-opus-20240229' },
+      models: { anthropic: 'claude-opus-4-8' },
     }
     const result = resolveAgentModel(agent, 'anthropic', null)
-    expect(result).toBe('claude-3-opus-20240229')
+    expect(result).toBe('claude-opus-4-8')
   })
 
   it('should use agent.model if provider matches defaultProvider', () => {

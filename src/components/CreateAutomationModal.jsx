@@ -368,7 +368,7 @@ export default function CreateAutomationModal({
                 className="w-full h-10 px-3 rounded-xl text-xs font-medium dark:bg-surface-input dark:border-border bg-gray-50 border border-gray-200 outline-none"
               >
                 <option value="openai">OpenAI (GPT-4o, o3-mini)</option>
-                <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+                <option value="anthropic">Anthropic (Claude Sonnet 5.5)</option>
                 <option value="gemini">Google Gemini (Gemini 1.5 Pro / Flash)</option>
                 <option value="openrouter">OpenRouter (DeepSeek / Llama 3)</option>
               </select>
