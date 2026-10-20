@@ -39,6 +39,12 @@ import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
+import TraceViewer from "./TraceViewer";
+import {
+  createTrace,
+  recordStep,
+  finalizeTrace,
+} from "../lib/executionTrace";
 import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
@@ -84,6 +90,8 @@ export default function AgentRunner({ agent }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [executionTrace, setExecutionTrace] = useState(null);
   const [duration, setDuration] = useState(null);
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
@@ -274,6 +282,7 @@ const handleRun = async () => {
     setLoading(true);
     setError(null);
     setOutput(null);
+    setExecutionTrace(null);
     setStreamingOutput("");
     setIsStreaming(false);
     setDuration(null);
@@ -293,6 +302,20 @@ const handleRun = async () => {
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
+    const userMessage = buildUserMessage();
+
+const trace = debugMode
+  ? createTrace({
+      workflowId: agent.id,
+      workflowTitle: agent.name,
+      agentRunId: `agent_${agent.id}_${Date.now()}`,
+    })
+  : null;
+
+const stepStart = new Date().toISOString();
+const startedAt = Date.now();
+
+if (trace) setExecutionTrace(trace);
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
@@ -312,6 +335,29 @@ const handleRun = async () => {
       setStreamingOutput("");
       setIsStreaming(false);
       setDuration(result.duration);
+      if (trace) {
+  recordStep(trace, {
+    stepName: "Agent execution",
+    stepType: "agent",
+    toolName: `${actualProvider} / ${model}`,
+    input: {
+      systemPrompt: customPrompt,
+      userMessage,
+    },
+    output: result.content,
+    startTime: stepStart,
+    endTime: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+    status: "success",
+  });
+
+  finalizeTrace(trace, {
+    status: "success",
+    finalOutput: result.content,
+  });
+
+  setExecutionTrace({ ...trace, steps: [...trace.steps] });
+}
 
       const inputTokenEstimate = Math.max(
         1,
@@ -344,6 +390,32 @@ const handleRun = async () => {
         duration: result.duration,
       });
    } catch (err) {
+    
+if (trace) {
+  recordStep(trace, {
+    stepName: "Agent execution",
+    stepType: "agent",
+    input: {
+      systemPrompt: customPrompt,
+      userMessage,
+    },
+    output: null,
+    startTime: stepStart,
+    endTime: new Date().toISOString(),
+    durationMs: Date.now() - startedAt,
+    status: err.name === "AbortError" ? "skipped" : "error",
+    errorMessage:
+      err.name === "AbortError" ? "Execution cancelled" : err.message,
+  });
+
+  finalizeTrace(trace, {
+    status: err.name === "AbortError" ? "skipped" : "error",
+    finalOutput: null,
+  });
+
+  setExecutionTrace({ ...trace, steps: [...trace.steps] });
+}
+
   if (err.name !== "AbortError") {
     if (err && err.type === "invalid_api_key") {
       setError(err);
@@ -954,6 +1026,34 @@ const handleRun = async () => {
         )}
       </div>
 
+<div className="flex items-center justify-between gap-3 mb-4 rounded-lg border p-3 dark:border-border border-gray-200">
+  <div>
+    <p className="text-sm font-medium dark:text-text-primary text-gray-900">
+      Debug Mode
+    </p>
+    <p className="text-xs dark:text-text-muted text-gray-500">
+      View agent inputs, outputs and execution timing.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    role="switch"
+    aria-label="Debug Mode"
+    aria-checked={debugMode}
+    onClick={() => setDebugMode((enabled) => !enabled)}
+    className={`relative h-6 w-11 rounded-full transition-colors ${
+      debugMode ? "bg-accent" : "bg-gray-300"
+    }`}
+  >
+    <span
+      className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+        debugMode ? "translate-x-6" : "translate-x-1"
+      }`}
+    />
+  </button>
+</div>
+
       {/* Action Buttons */}
       <div className="flex items-center gap-2 mb-6">
         {loading ? (
@@ -1172,6 +1272,24 @@ const handleRun = async () => {
 
       </>
       )}
+
+{debugMode && executionTrace && (
+  <div className="mt-5 rounded-xl border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
+    <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-2">
+      Agent Execution Trace
+    </h3>
+
+    <p className="text-xs dark:text-text-muted text-gray-500 mb-1">
+      Run ID: {executionTrace.runId}
+    </p>
+
+    <p className="text-xs dark:text-text-muted text-gray-500 mb-3">
+      Status: {executionTrace.status}
+    </p>
+
+    <TraceViewer trace={executionTrace} />
+  </div>
+)}
 
       {/* Prompt History Panel */}
       <PromptHistoryPanel
