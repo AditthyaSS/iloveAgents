@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Swords,
@@ -11,7 +11,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
-import { loadAllAgents } from "../agents/registry";
+import { useAgents } from "../lib/useAgents";
+import AgentCardSkeleton from "../components/AgentCardSkeleton";
 
 // Input validation constants - prevent LLM calls with excessively long inputs
 const INPUT_LIMITS = {
@@ -75,6 +76,15 @@ const API_KEY_FIELDS = [
     border: "border-blue-400/30",
     bg: "bg-blue-400/10",
     focusBorder: "focus:border-blue-400/60",
+  },
+  {
+    id: "openrouter",
+    label: "OpenRouter API Key",
+    placeholder: "sk-or-...",
+    color: "text-teal-400",
+    border: "border-teal-400/30",
+    bg: "bg-teal-400/10",
+    focusBorder: "focus:border-teal-400/60",
   },
 ];
 
@@ -210,8 +220,7 @@ export default function BattleModeSetup() {
   const navigate = useNavigate();
   useDocumentTitle("Battle Setup");
 
-  const [agents, setAgents] = useState([]);
-  const [agentsLoading, setAgentsLoading] = useState(true);
+  const { agents, loading: agentsLoading } = useAgents();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [inputs, setInputs] = useState({});
@@ -219,19 +228,15 @@ export default function BattleModeSetup() {
     openai: "",
     anthropic: "",
     gemini: "",
+    openrouter: "",
   });
   const [showKeys, setShowKeys] = useState({
     openai: false,
     anthropic: false,
     gemini: false,
+    openrouter: false,
   });
   const [step, setStep] = useState(1); // 1 = pick agent, 2 = fill inputs + keys
-
-  useEffect(() => {
-    loadAllAgents()
-      .then(setAgents)
-      .finally(() => setAgentsLoading(false));
-  }, []);
 
   const filteredAgents = agents.filter((a) => {
     const q = searchQuery.toLowerCase();
@@ -261,9 +266,7 @@ export default function BattleModeSetup() {
 
   const canSubmit =
     selectedAgent &&
-    apiKeys.openai.trim() &&
-    apiKeys.anthropic.trim() &&
-    apiKeys.gemini.trim() &&
+    Object.values(apiKeys).some((k) => k.trim()) &&
     selectedAgent.inputs?.every((inp) => {
       const val = inputs[inp.id];
       if (!inp.required) {
@@ -307,7 +310,7 @@ export default function BattleModeSetup() {
           </h1>
           <p className="text-sm dark:text-text-muted dark:text-text-muted text-gray-500">
             {step === 1
-              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, and Gemini Flash"
+              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, Gemini Flash and OpenRouter"
               : `Setting up ${selectedAgent?.name}`}
           </p>
         </div>
@@ -357,8 +360,10 @@ export default function BattleModeSetup() {
             </div>
 
             {agentsLoading ? (
-              <div className="text-center py-16 dark:text-text-muted dark:text-text-muted text-gray-500 text-sm">
-                Loading agents...
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <AgentCardSkeleton key={idx} />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
@@ -431,7 +436,8 @@ export default function BattleModeSetup() {
               </div>
               <p className="text-xs dark:text-text-muted dark:text-text-muted text-gray-500 mb-5 leading-relaxed">
                 Your keys are used directly in the browser and never sent to our
-                servers.
+                servers. Add at least one key. Providers without a key are
+                skipped in the arena.
               </p>
               <div className="space-y-4">
                 {API_KEY_FIELDS.map((field) => (

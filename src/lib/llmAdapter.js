@@ -209,11 +209,14 @@ async function handleErrorResponse(response, provider = "unknown") {
   }
 
   if (errorKey === 'invalid_api_key') {
-    throw {
-      type: "invalid_api_key",
-      provider,
-      detail: detail || 'No additional details',
-    };
+    const message = detail
+      ? `Invalid API key for ${provider}: ${detail}`
+      : `Invalid API key for ${provider}. Please check your API key in Settings.`
+    const err = new Error(message)
+    err.type = 'invalid_api_key'
+    err.provider = provider
+    err.detail = detail || 'No additional details'
+    throw err
   }
 
   const friendlyMessage =
@@ -338,6 +341,12 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 
     if (!response.ok) {
       await handleErrorResponse(response, provider)
+    }
+
+    if (!response.body || typeof response.body.getReader !== 'function') {
+      throw new Error(
+        'Streaming is not supported by this response. Please try again.'
+      )
     }
 
     const reader = response.body.getReader()

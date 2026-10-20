@@ -1,6 +1,6 @@
 const threatSummariserAgent= {
   id: 'threat-intelligence-summariser-agent',           // lowercase, kebab-case, URL safe
-  name: 'Threat Intelligence Summarise4r',
+  name: 'Threat Intelligence Summariser',
   description: 'The agent converts threat intelligence reports, CVEs, security advisories, malware analyses, and incident writeups into concise, structured summaries. ',
   category: 'Cybersecurity',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
   icon: 'Radar',              // Any icon from lucide.dev/icons

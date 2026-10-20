@@ -14,6 +14,7 @@ import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
 import RecommendationWizardModal from '../components/recommendation/RecommendationWizardModal'
 import { Link } from "react-router-dom";
 import { getGlobalKeys } from '../lib/globalKeys'
+import { getRecentAgentIds } from '../lib/recentAgents'
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -189,11 +190,7 @@ export default function HomePage() {
   )
 
   const recentAgents = useMemo(() => {
-    const recentIds = JSON.parse(
-      localStorage.getItem('recentAgents') || '[]'
-    )
-
-    return recentIds
+    return getRecentAgentIds()
       .map((id) => agents.find((a) => a.id === id))
       .filter(Boolean)
   }, [agents])
@@ -253,8 +250,23 @@ export default function HomePage() {
     navigate(`/agent/${run.agentId}`, { state: { prefill: run.inputs } })
   }
 
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text)
+  const handleCopy = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch {
+      // Clipboard API unavailable — fall back to hidden textarea
+      try {
+        const ta = document.createElement('textarea')
+        ta.value = text
+        ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none'
+        document.body.appendChild(ta)
+        ta.select()
+        document.execCommand('copy')
+        document.body.removeChild(ta)
+      } catch {
+        // Both paths failed — silently ignore
+      }
+    }
   }
 
   const showingFiltered =
@@ -354,7 +366,7 @@ export default function HomePage() {
             <Users size={20} className="text-accent" />
           </div>
           <div className="text-xl font-bold dark:text-text-primary text-gray-900">
-            3
+            4
           </div>
           <div className="text-[11px] dark:text-text-muted text-gray-400 font-medium">
             Providers

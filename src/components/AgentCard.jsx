@@ -5,9 +5,9 @@
 
 import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
-import { ArrowRight, FolderPlus, Star } from "lucide-react";
+import { ArrowRight, FolderPlus, Star, Copy, Check } from "lucide-react";
 import { useFavorites } from "../lib/useFavorites";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import CollectionPicker from "./CollectionPicker";
 
 const providerColors = {
@@ -63,6 +63,8 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
   const { isFavorite, toggleFavorite } = useFavorites();
   const [showCollectionPicker, setShowCollectionPicker] = useState(false);
   const favorited = isFavorite(agent.id);
+  const [copied, setCopied] = useState(false);
+  const copyTimer = useRef(null);
 
   const handleDragStart = (event) => {
     event.dataTransfer.setData('text/plain', agent.id);
@@ -79,6 +81,30 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
     e.preventDefault();
     e.stopPropagation();
     setShowCollectionPicker(true);
+  };
+
+  const handleCopyPrompt = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const text = agent?.systemPrompt || agent?.description || '';
+    if (!text) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard unavailable, no toast to avoid noise
+    }
   };
 
   return (
@@ -122,6 +148,14 @@ const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Pro
           >
             {agent.category}
           </span>
+          <button
+            onClick={handleCopyPrompt}
+            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            aria-label={copied ? "Prompt copied" : "Copy prompt"}
+            title={copied ? "Copied!" : "Copy prompt"}
+          >
+            {copied ? <Check size={15} className="text-green-400" /> : <Copy size={15} />}
+          </button>
           <button
             onClick={handleCollectionPicker}
             className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"

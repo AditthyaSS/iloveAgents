@@ -1,6 +1,6 @@
 import { useState, Suspense, lazy } from 'react'
-import { Routes, Route, Outlet } from 'react-router-dom'
-import { Loader2 } from 'lucide-react'
+import { Routes, Route, Outlet ,Link} from 'react-router-dom'
+import { Loader2 ,MessageSquare} from 'lucide-react'
 import Navbar from './components/Navbar'
 import Sidebar from './components/Sidebar'
 import CustomCursor from './components/CustomCursor'
@@ -24,7 +24,6 @@ const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 const SuitesPage = lazy(() => import('./pages/SuitesPage'))
 const CollectionsPage = lazy(() => import('./pages/CollectionsPage'))
 const CollectionDetailPage = lazy(() => import('./pages/CollectionDetailPage'))
-const SchedulerPage = lazy(() => import('./pages/SchedulerPage'))
 const AutomationsPage = lazy(() => import('./pages/AutomationsPage'))
 const AutomationDetailPage = lazy(() => import('./pages/AutomationDetailPage'))
 const MarketplacePage = lazy(() => import('./pages/MarketplacePage'))
@@ -33,6 +32,7 @@ const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'))
 const AboutPage = lazy(() => import('./pages/AboutPage'))
+const FeedbackPage = lazy(() => import('./pages/FeedbackPage'))
 
 function PageLoader() {
   return (
@@ -49,6 +49,23 @@ function MainLayout({ sidebarOpen, setSidebarOpen, onStartTour, isTourActive, on
       <Navbar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onStartTour={onStartTour} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <CustomCursor />
+      <Link
+        to="/feedback"
+        className="fixed bottom-6 right-6 z-50
+        inline-flex items-center gap-2
+        rounded-full bg-accent px-4 py-3
+        text-sm font-semibold text-white
+        shadow-lg transition-all
+        hover:scale-105 hover:shadow-xl
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-accent
+        focus-visible:ring-offset-2"
+        aria-label="Give feedback"
+      >
+        <MessageSquare size={18} />
+        <span>Feedback</span>
+      </Link>
       <main className="pt-28 lg:pl-60">
         <div className="p-4 sm:p-6 lg:p-8">
           <Outlet />
@@ -85,7 +102,9 @@ export default function App() {
             }>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/feedback" element={<FeedbackPage />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<TermsOfService />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/agent/:id" element={<AgentPage />} />
               <Route path="/suites" element={<SuitesPage />} />

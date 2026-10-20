@@ -1,7 +1,7 @@
 # 🤖 Available Agents
 
 
-129 agents and growing — built by the community. 🚀
+151 agents and growing — built by the community. 🚀
 
 | # | Name | Description | Category |
 |---|---|---|---|
@@ -134,10 +134,40 @@
 | 127 | Web3 Whitepaper Writer | Generate a structured, professional blockchain project whitepaper draft from your project details, tokenomics, and team background. | Web3 |
 | 128 | Win/Loss Analysis Report Generator | Enter details about a closed deal to get a structured win/loss analysis with key factors, alternative approaches, and actionable lessons for your sales team. | Sales |
 | 129 | YouTube Script Writer | Turn any topic into a ready-to-record YouTube script with intro hook, sections, and outro. | Marketing |
-
 | 130 | DSA Progress Analyzer | Analyzes your DSA practice log to find weak topics and suggest what to practice next. | Education |
 | 131 | Terms and Conditions Simplifier | Paste any website's URL — including its homepage — and get its Terms & Conditions explained in plain English, and checked for red flags like hidden fees, auto-renewals, and data-sharing clauses. | Legal |
 | 132 | PCOS Lifestyle Planner | Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits. | Healthcare |
 | 133 | SLO/SLA Designer | Describe a service and its criticality to get practical SLIs, SLO targets, error budgets, and starter alerting rules. | Engineering |
+| 134 | SQL Query Explainer | Explains a SQL query in plain English, clause by clause, for beginners. | Engineering |
+| 135 | Agent Evaluation & Benchmark Assistant | Evaluate an AI agent's response against its prompt for accuracy, completeness, hallucination risk, and clarity, then get concrete suggestions and an improved response. | Productivity |
+| 136 | Coding Assistant | Paste a coding problem or existing code and get an implementation, explanation, or fix. | Developer Tools |
+| 137 | cURL Command Builder | Describe an API request in plain English (or paste an endpoint spec) and get a ready-to-run curl command, with each flag explained. | Developer Tools |
+| 138 | Data Analysis Agent | Paste tabular data or a dataset description and get a structured analysis with key patterns and caveats. | Data Science |
+| 139 | Docstring Generator | Paste a function, class, or module and get idiomatic docstrings/comments added in your language's convention (Google, NumPy, JSDoc, TSDoc, and more) — logic untouched. | Engineering |
+| 140 | Excel/Sheets Formula Generator | Describe what you want to calculate or extract in plain English and get a correct, ready-to-paste Excel or Google Sheets formula with a plain-English explanation of how it works. | Engineering |
+| 141 | Feature Flag Rollout Planner | Describe a feature and its risk tolerance to get a staged rollout plan with percentage ramps, guardrail metrics, kill-switch criteria, rollback steps, and flag-cleanup reminders. | Engineering |
+| 142 | .gitignore Generator | Pick your languages, frameworks, OS, and editors and get a tailored, well-organized .gitignore. | Developer Tools |
+| 143 | GraphQL Schema Generator | Describe your application's domain model and generate a production-ready GraphQL schema with object types, queries, mutations, subscriptions, enums, scalars, and input types. | Engineering |
+| 144 | Interview Preparation Planner Agent | Creates a personalized interview preparation plan based on your target role, experience level, and available time — with a topic-wise study schedule, daily practice tasks, and a mock interview plan. | Education |
+| 145 | Jarvis PA | Your personal AI assistant for planning, task breakdown, scheduling, prioritization, and daily productivity support. | Productivity |
+| 146 | JSON Schema Generator | Paste a JSON sample (or describe the shape) and get a valid JSON Schema you can use for validation and API contracts. | Developer Tools |
+| 147 | Postman Collection & Code Snippet Generator | Parse endpoint descriptions or JSON specs into a copyable Postman Collection (v2.1.0 JSON) with client integration snippets (Fetch, Axios, Python Requests, Go HTTP). | Developer Tools |
+| 148 | Prompt Engineering Coach | Reviews user prompts and provides actionable suggestions to improve clarity, specificity, structure, context, and overall effectiveness. | Productivity |
+| 149 | Regex Decoder | Decodes an existing regex pattern into a plain-English, token-by-token breakdown with examples and edge cases. | Productivity |
+| 150 | Web Scraping Agent | Describe a page's content or paste raw HTML and get clean, structured data extracted from it. | Developer Tools |
+| 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
+| 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
+| 153 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
+| 154 | Research Gap Finder | Paste paper summaries and get unexplored areas, shared limits, and future research directions. | Research |
+| 155 | Helm Chart Generator | Describe your app and get a complete Helm chart with Chart.yaml, values.yaml, and templated manifests ready to install. | DevOps |
+| 156 | Debt Payoff Strategist | Compare debt repayment strategies, estimate payoff timelines, and build a realistic plan for becoming debt-free. | Finance |
+| 157 | Financial Planning Assistant | Create practical financial plans for savings goals, debt payoff, emergency funds, and major spending decisions. | Finance |
+| 158 | Java DSA Interview Prep | Generates Java DSA problems, provides hints, reviews attempts, and simulates coding interviews. | Education |
+| 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | Education |
+| 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
+| 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
+| 162 | Data Visualization Advisor | Recommends suitable data visualizations based on a dataset, its variables, and the user's analytical goal, with an explanation of why each chart is appropriate. | Data Science |
+| 163 | Dependency Impact Analyzer | Analyzes software dependency upgrades or replacements to assess breaking changes, compatibility risks, affected modules, and migration steps. | Engineering |
+| 164 | GitHub Actions Workflow Optimizer | Audits and optimizes GitHub Actions workflow YAML files for execution speed, caching strategies, matrix concurrency, secret security, and token permissions. | DevOps |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.

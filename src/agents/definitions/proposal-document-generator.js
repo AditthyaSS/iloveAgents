@@ -1,130 +1,127 @@
-export default {
-  id: "proposal-document-generator",
-  createdAt: "2026-05-15",
+const proposalDocumentGenerator = {
+  id: 'proposal-document-generator',
 
-  name: "Proposal Document Generator",
+  name: 'Proposal Document Generator',
 
   description:
-    "Generate professional client proposal documents with project overview, pricing, timeline, deliverables, and next steps.",
+    'Generates professional client proposals with an executive summary, problem statement, solution overview, deliverables, pricing, timeline, expected outcomes, and next steps.',
 
-  category: "Sales",
+  category: 'Sales',
 
-  icon: "FileText",
+  icon: 'FileText',
 
-  provider: "any",
-  defaultProvider: "openai",
-  model: "gpt-4o",
+  provider: 'any',
+
+  defaultProvider: 'openai',
+
+  model: 'gpt-4o',
 
   exampleInputs: {
-    clientName: "BrightPath Healthcare",
-
-    projectType:
-      "AI-powered CRM implementation for patient engagement",
-
-    clientProblem:
-      "The client struggles with missed patient follow-ups and manual scheduling workflows.",
-
-    proposedSolution:
-      "Implement an AI-powered CRM platform with automated reminders, appointment scheduling, and workflow dashboards.",
-
-    pricing:
-      "$12,000 implementation + $500/month subscription",
-
-    timeline:
-      "6 weeks",
+    clientName: 'BrightPath Healthcare',
+    projectType: 'AI-powered CRM implementation',
+    problem:
+      'The client struggles with missed patient follow-ups and manual scheduling workflows.',
+    solution:
+      'Implement an AI-powered CRM platform with automated reminders, appointment scheduling, and workflow dashboards.',
+    pricing: '$12,000 implementation + $500/month subscription',
+    timeline: '6 weeks',
   },
 
   inputs: [
     {
-      id: "clientName",
-      label: "Client name",
-      type: "text",
-      placeholder: "e.g. Acme Corp",
+      id: 'clientName',
+      label: 'Client Name',
+      type: 'text',
+      placeholder: 'Enter the client or company name...',
       required: true,
     },
-
     {
-      id: "projectType",
-      label: "Project type",
-      type: "text",
-      placeholder: "Describe the project type...",
+      id: 'projectType',
+      label: 'Project Type',
+      type: 'text',
+      placeholder: 'Describe the type of project or service...',
       required: true,
     },
-
     {
-      id: "clientProblem",
-      label: "Client problem or challenge",
-      type: "textarea",
-      placeholder:
-        "Describe the client's current pain points...",
+      id: 'problem',
+      label: 'Client Problem',
+      type: 'textarea',
+      placeholder: 'Describe the client problem or business challenge...',
       required: true,
     },
-
     {
-      id: "proposedSolution",
-      label: "Proposed solution",
-      type: "textarea",
-      placeholder:
-        "Describe your proposed solution...",
+      id: 'solution',
+      label: 'Proposed Solution',
+      type: 'textarea',
+      placeholder: 'Describe the solution you are proposing...',
       required: true,
     },
-
     {
-      id: "pricing",
-      label: "Pricing",
-      type: "text",
-      placeholder: "e.g. $5000 fixed project",
+      id: 'pricing',
+      label: 'Pricing',
+      type: 'textarea',
+      placeholder: 'Enter pricing details, packages, or cost breakdown...',
       required: true,
     },
-
     {
-      id: "timeline",
-      label: "Project timeline",
-      type: "text",
-      placeholder: "e.g. 4 weeks",
+      id: 'timeline',
+      label: 'Timeline',
+      type: 'textarea',
+      placeholder: 'Enter the expected project timeline or milestones...',
       required: true,
     },
   ],
 
-  systemPrompt: `You are an expert business consultant and proposal writer.
+  systemPrompt: `
+You are a Proposal Document Generator AI assistant.
 
-Generate a professional proposal document.
+The user will provide:
+- Client name
+- Project type
+- Client problem or business challenge
+- Proposed solution
+- Pricing details
+- Project timeline
 
-The output should include:
+Generate a complete, professional client proposal in Markdown.
 
-# Proposal Document
+Structure the proposal with the following sections:
+
+# Proposal
 
 ## Executive Summary
-Summarize the client's problem and the proposed solution.
+Provide a concise overview of the project type, client's needs, and proposed solution.
 
-## Client Challenges
-Clearly explain the business pain points.
+## Problem Statement
+Clearly describe the client's problem or business challenge based on the provided information.
 
-## Proposed Solution
-Explain how the solution solves the problem.
+## Solution Overview
+Explain the proposed solution, its key benefits, and how it addresses the client's problem.
 
 ## Deliverables
-Provide a structured list of deliverables.
-
-## Timeline
-Provide a realistic implementation timeline.
+Describe the deliverables that are directly supported by the provided solution.
+Do not invent deliverables that were not provided or reasonably implied by the solution.
 
 ## Pricing
-Present pricing clearly and professionally.
+Present the provided pricing information in a clear Markdown table where appropriate.
+Do not invent prices or costs that were not provided.
+
+## Timeline
+Present the provided timeline clearly, using milestones or phases when appropriate.
+Do not invent dates or durations that were not provided.
 
 ## Expected Outcomes
-Explain measurable business benefits.
+Describe the expected outcomes only when they are supported by the provided solution and client problem.
+Do not invent guarantees, measurable results, or unsupported claims.
 
 ## Next Steps
-Explain what should happen after proposal approval.
+Provide practical next steps for moving the project forward based only on the provided information.
 
-Rules:
-- Use professional business language
-- Keep the proposal concise but detailed
-- Use markdown formatting
-- Make the proposal client-friendly
-- Focus on clarity and business value
-- Avoid generic filler text`,
+Keep the proposal professional, clear, client-focused, and ready to share.
+Do not invent facts, pricing, timelines, guarantees, deliverables, outcomes, or commitments that were not provided by the user.
+`,
 
-  outputType: "markdown",
+  outputType: 'markdown',
 };
+
+export default proposalDocumentGenerator;

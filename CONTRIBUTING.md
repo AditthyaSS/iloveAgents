@@ -1,5 +1,17 @@
 # Contributing to iloveAgents
 
+## PR title convention
+
+Use a conventional prefix so CI labels your PR correctly:
+
+- `feat:` new feature
+- `fix:` bug fix
+- `docs:` docs only
+- `chore:` tooling or config
+- `test:` tests only
+
+Example: `fix: point accessibility audit at a live model`
+
 ## ⚠️ Before You Submit a PR
 
 **You MUST run this locally before opening a PR:**
@@ -98,7 +110,7 @@ const yourAgentName = {
   id: 'your-agent-id',           // lowercase, kebab-case, URL safe
   name: 'Your Agent Name',
   description: 'One line description of what this agent does.',
-  category: 'Category',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal
+  category: 'Category',          // Productivity | Research | Marketing | Engineering | HR | Business | Education | Design | Product | Legal | Healthcare | DevOps | Data Science | Cybersecurity | Gaming | Web3 | Finance | Real Estate | Sales | Developer Tools
   icon: 'IconName',              // Any icon from lucide.dev/icons
   provider: 'any',               // 'openai' | 'anthropic' | 'gemini' | 'any'
   defaultProvider: 'openai',     // Only needed if provider is 'any'
