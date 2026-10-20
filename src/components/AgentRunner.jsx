@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
@@ -60,14 +60,14 @@ const providerLabels = {
 
 
 const LOADING_MESSAGES = [
-  "⚙️ Agent is grinding for you...",
-  "🧠 Big brain moment loading...",
-  "✨ Cooking something fire...",
-  "🤖 Agent is in its era...",
-  "💀 This might actually go crazy...",
-  "🔥 Almost done, hold tight...",
-  "🚀 Sending it...",
-  "👀 Your agent is locked in...",
+  "âš™ï¸ Agent is grinding for you...",
+  "ðŸ§  Big brain moment loading...",
+  "âœ¨ Cooking something fire...",
+  "ðŸ¤– Agent is in its era...",
+  "ðŸ’€ This might actually go crazy...",
+  "ðŸ”¥ Almost done, hold tight...",
+  "ðŸš€ Sending it...",
+  "ðŸ‘€ Your agent is locked in...",
 ];
 
 const MAX_CHAR_LIMIT = 4000; // Character cap configuration
@@ -116,7 +116,25 @@ export default function AgentRunner({ agent }) {
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
+  // Identifies the current run. streamAgent() resolves (rather than rejects)
+  // when aborted, so a cancelled run's continuation looks identical to a
+  // finished one. Every run captures the id it started with and must discard
+  // its results if the id has since changed (cleared, superseded, unmounted).
+  const runIdRef = useRef(0);
   const textareaRefs = useRef({});
+
+  // Abort the in-flight request AND invalidate the run that owns it.
+  const cancelActiveRun = () => {
+    runIdRef.current += 1;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+  };
+
+  // Leaving the page mid-stream must stop the (billed) request and must not
+  // write history/analytics for a run the user walked away from.
+  useEffect(() => cancelActiveRun, []);
   
 
   useKeyboardShortcuts({
@@ -135,16 +153,14 @@ export default function AgentRunner({ agent }) {
   }, [provider]);
 
   useEffect(() => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
+    cancelActiveRun();
     setLoading(false);
     setOutput(null);
     setStreamingOutput("");
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    setExecutionTrace(null);
     setCustomPrompt(agent.systemPrompt);
     setPlaygroundOpen(false);
     setBatchMode(false);
@@ -211,7 +227,7 @@ export default function AgentRunner({ agent }) {
 
 const getTokenCount = (text) => {
   if (!text) return 0;
-  // A rough but highly accurate standard estimate: 1 token ≈ 4 characters
+  // A rough but highly accurate standard estimate: 1 token â‰ˆ 4 characters
   return Math.ceil(text.length / 4);
 };
 
@@ -278,178 +294,17 @@ const getTokenCount = (text) => {
     setIsStreaming(true);
   }, []);
 
-const handleRun = async () => {
-    setLoading(true);
-    setError(null);
-    setOutput(null);
-    setExecutionTrace(null);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setDuration(null);
-    setMsgIndex(0);
-
-    setVersionHistory((prevHistory) => [
-      {
-        versionNumber: prevHistory.length + 1,
-        timestamp: new Date().toLocaleTimeString(),
-        configSnapshot: { ...inputs },
-      },
-      ...prevHistory,
-    ]);
-
-    setLastRunSystemPrompt(customPrompt);
-    setLastRunUserMessage(buildUserMessage());
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    const userMessage = buildUserMessage();
-
-const trace = debugMode
-  ? createTrace({
-      workflowId: agent.id,
-      workflowTitle: agent.name,
-      agentRunId: `agent_${agent.id}_${Date.now()}`,
-    })
-  : null;
-
-const stepStart = new Date().toISOString();
-const startedAt = Date.now();
-
-if (trace) setExecutionTrace(trace);
-    try {
-      const actualProvider =
-        agent.provider === "any" ? provider : agent.provider;
-      const model = resolveAgentModel(agent, actualProvider, selectedModel);
-
-      const result = await streamAgent({
-        provider: actualProvider,
-        model,
-        apiKey,
-        systemPrompt: customPrompt,
-        userMessage: buildUserMessage(),
-        onChunk: handleChunk,
-        signal: controller.signal,
-      });
-
-      setOutput(result.content);
-      setStreamingOutput("");
-      setIsStreaming(false);
-      setDuration(result.duration);
-      if (trace) {
-  recordStep(trace, {
-    stepName: "Agent execution",
-    stepType: "agent",
-    toolName: `${actualProvider} / ${model}`,
-    input: {
-      systemPrompt: customPrompt,
-      userMessage,
-    },
-    output: result.content,
-    startTime: stepStart,
-    endTime: new Date().toISOString(),
-    durationMs: Date.now() - startedAt,
-    status: "success",
-  });
-
-  finalizeTrace(trace, {
-    status: "success",
-    finalOutput: result.content,
-  });
-
-  setExecutionTrace({ ...trace, steps: [...trace.steps] });
-}
-
-      const inputTokenEstimate = Math.max(
-        1,
-        Math.round((customPrompt.length + buildUserMessage().length) / 4),
-      );
-      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
-
-      addRun({
-        model,
-        inputTokens: inputTokenEstimate,
-        outputTokens: outputTokenEstimate,
-        inputCost: null,
-        outputCost: null,
-      });
-
-      saveRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        inputs: { ...inputs },
-        output: result.content,
-        provider: actualProvider,
-      });
-
-      recordAnalyticsRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        category: agent.category,
-        provider: actualProvider,
-        model,
-        duration: result.duration,
-      });
-   } catch (err) {
-    
-if (trace) {
-  recordStep(trace, {
-    stepName: "Agent execution",
-    stepType: "agent",
-    input: {
-      systemPrompt: customPrompt,
-      userMessage,
-    },
-    output: null,
-    startTime: stepStart,
-    endTime: new Date().toISOString(),
-    durationMs: Date.now() - startedAt,
-    status: err.name === "AbortError" ? "skipped" : "error",
-    errorMessage:
-      err.name === "AbortError" ? "Execution cancelled" : err.message,
-  });
-
-  finalizeTrace(trace, {
-    status: err.name === "AbortError" ? "skipped" : "error",
-    finalOutput: null,
-  });
-
-  setExecutionTrace({ ...trace, steps: [...trace.steps] });
-}
-
-  if (err.name !== "AbortError") {
-    if (err && err.type === "invalid_api_key") {
-      setError(err);
-    } else {
-      setError({ type: "generic", message: err.message });
-    }
-  }
-} finally {
-      setLoading(false);
-      abortControllerRef.current = null;
-    }
-  };
-
-  const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setOutput(streamingOutput);
-    setStreamingOutput("");
-    setIsStreaming(false);
+const handleClear = () => {
+    // Cancel *and invalidate* the in-flight run so its late completion cannot
+    // resurrect the output we are about to discard.
+    cancelActiveRun();
     setLoading(false);
-  };
-
-  const handleClear = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
     setOutput(null);
     setStreamingOutput("");
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    setExecutionTrace(null);
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -463,6 +318,140 @@ if (trace) {
     });
     setInputs(defaults);
   };
+
+
+  const handleRun = async () => {
+    cancelActiveRun();
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const runId = runIdRef.current;
+    const isCurrentRun = () =>
+      runIdRef.current === runId &&
+      abortControllerRef.current === controller;
+
+    setLoading(true);
+    setError(null);
+    setOutput(null);
+    setStreamingOutput("");
+    setIsStreaming(false);
+    setExecutionTrace(null);
+    setDuration(null);
+
+    const userMessage = buildUserMessage();
+    setLastRunSystemPrompt(customPrompt);
+    setLastRunUserMessage(userMessage);
+
+    const trace = debugMode
+      ? createTrace({
+          workflowId: agent.id,
+          workflowTitle: agent.name,
+          agentRunId: `agent_${agent.id}_${Date.now()}`,
+        })
+      : null;
+
+    if (trace) setExecutionTrace({ ...trace });
+
+    const finishTrace = (status, finalOutput = null, errorMessage) => {
+      if (!trace || !isCurrentRun()) return;
+
+      recordStep(trace, {
+        stepName: "Agent execution",
+        status,
+        ...(status === "success"
+          ? { output: finalOutput }
+          : { error: errorMessage || "Execution cancelled" }),
+      });
+
+      finalizeTrace(trace, { status, finalOutput });
+      setExecutionTrace({ ...trace });
+    };
+
+    try {
+      const result = await streamAgent({
+        provider,
+        model: selectedModel,
+        apiKey,
+        systemPrompt: customPrompt,
+        userMessage,
+        signal: controller.signal,
+        onChunk: (chunk) => {
+          if (!isCurrentRun() || controller.signal.aborted) return;
+          setStreamingOutput((previous) => previous + chunk);
+          setIsStreaming(true);
+        },
+      });
+
+      if (!isCurrentRun()) return;
+
+      if (controller.signal.aborted) {
+        finishTrace("skipped");
+        return;
+      }
+
+      setOutput(result.content);
+      setStreamingOutput("");
+      setIsStreaming(false);
+      setDuration(result.duration);
+      finishTrace("success", result.content);
+
+      recordAnalyticsRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        category: agent.category,
+        provider,
+        model: selectedModel,
+        duration: result.duration,
+      });
+
+      saveRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        inputs: { ...inputs },
+        input: userMessage,
+        output: result.content,
+        provider,
+      });
+
+      if (typeof addRun === "function" && result.cost) {
+        addRun(result.cost);
+      }
+    } catch (err) {
+      if (!isCurrentRun()) return;
+
+      if (controller.signal.aborted || err?.name === "AbortError") {
+        finishTrace("skipped");
+        return;
+      }
+
+      finishTrace("error", null, err?.message || "Execution failed");
+
+      if (err?.type === "invalid_api_key") {
+        setError(err);
+      } else {
+        setError(err?.message || "Something went wrong. Please try again.");
+      }
+    } finally {
+      if (isCurrentRun()) {
+        setLoading(false);
+        abortControllerRef.current = null;
+      }
+    }
+  };
+
+  const handleStop = () => {
+    const controller = abortControllerRef.current;
+    if (!controller) return;
+
+    // Keep the controller reference so the cancelled run can record its trace.
+    controller.abort();
+    setOutput(streamingOutput);
+    setStreamingOutput("");
+    setIsStreaming(false);
+    setLoading(false);
+  };
+
 
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
@@ -511,7 +500,7 @@ if (trace) {
           hover:bg-indigo-100 dark:hover:bg-indigo-500/20
           transition-all duration-200"
       >
-        ← All Agents
+        â† All Agents
       </Link>
 
       <div className="mt-2 mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-zinc-900 dark:border-zinc-800 text-gray-900 dark:text-gray-100">
@@ -728,8 +717,8 @@ if (trace) {
                 {/* Dynamic Live Counter Metric Footer Grid */}
                 <div className="flex justify-between items-center px-1 text-[11px] text-gray-400 dark:text-text-muted mt-1.5 w-full">
                   <div className="flex gap-2 font-medium">
-                    <span>📝 Words: {getWordCount(inputs[input.id])}</span>
-                    <span>🪙 Est. Tokens: {getTokenCount(inputs[input.id])}</span>
+                    <span>ðŸ“ Words: {getWordCount(inputs[input.id])}</span>
+                    <span>ðŸª™ Est. Tokens: {getTokenCount(inputs[input.id])}</span>
                   </div>
                   <span className={`self-end ${inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}`}>
                     {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} characters
@@ -799,7 +788,7 @@ if (trace) {
                             : "dark:bg-surface-input dark:text-text-secondary dark:border-border dark:hover:border-accent/30 bg-gray-50 text-gray-500 border-gray-200 hover:border-indigo-300"
                         }`}
                     >
-                      {selected && "✓ "}
+                      {selected && "âœ“ "}
                       {opt}
                     </button>
                   );
@@ -830,7 +819,7 @@ if (trace) {
       transition-all duration-200
     "
   >
-    ✨ Try an example
+    âœ¨ Try an example
   </button>
   <button
     onClick={handleSavePrompt}
@@ -1018,7 +1007,7 @@ if (trace) {
                   onClick={() => setModelRecommendation(null)}
                   className="mt-2 text-[10px] text-accent hover:underline"
                 >
-                  ↺ Re-analyse
+                  â†º Re-analyse
                 </button>
               </div>
             )}
@@ -1264,7 +1253,7 @@ if (trace) {
                 text-accent bg-accent/10 hover:bg-accent/20 transition-all border border-accent/20"
             >
               <GitBranch size={16} />
-              Send output to Workflow Builder →
+              Send output to Workflow Builder â†’
             </button>
           </div>
         </div>
@@ -1322,9 +1311,3 @@ if (trace) {
     </div>
   );
 }
-
-
-
- 
-
-  

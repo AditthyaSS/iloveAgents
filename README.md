@@ -77,7 +77,7 @@ A quick side-by-side look at the platform's core features:
 
 iloveAgents is a clean, open source web platform where you can run AI agents directly in your browser.
 
-No sign-up. No backend. No data collection. Just paste your API key and go.
+No sign-up. Core agent runs happen right in your browser — just paste your API key and go. Optional backend features (workflows, automations, email reports) use Supabase and Resend when configured.
 
 Each agent is a focused tool that does one thing really well — summarize meeting notes, review code, generate SQL, write cold emails, and a lot more. The whole platform is config-driven, which means adding a new agent is as simple as adding one JavaScript object to a single file. No deep React knowledge needed.
 
@@ -115,7 +115,7 @@ The repository contains AI agents for a wide variety of real-world use cases. Th
 | 🔐 Security | Cybersecurity analysis, phishing detection, password reviews, and threat intelligence |
 | 🌐 Specialized Domains | HR, Finance, Legal, Real Estate, Gaming, Product, Web3, and many more |
 
-> **Note:** The repository currently contains **130+ AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
+> **Note:** The repository currently contains **160+ AI agents** spanning Engineering, Education, Marketing, Healthcare, Web3, Cybersecurity, and many other domains. For the complete list of agents and detailed descriptions, see **[AGENTS.md](./AGENTS.md)**.
 
 ---
 
@@ -204,7 +204,7 @@ Scheduled Automations allow you to schedule any agent in the registry to run aut
 
 ### Key Capabilities
 
-- **Automated Scheduling** — Select any agent, configure inputs once, and set a recurring schedule (`hourly`, `daily`, or `weekly`).
+- **Automated Scheduling** — Select any agent, configure inputs once, and set a recurring schedule (`hourly`, `daily`, or `weekly`). The server cron ticks once daily, so `hourly` fidelity needs a browser tab left open on the in-browser heartbeat.
 - **Encrypted Key Storage (`pgsodium`)** — Your provider API key is stored encrypted using Supabase's `pgsodium` encryption with explicit user opt-in consent.
 - **Run History & Logs** — Track execution status (`success`, `running`, `failed`), review complete agent outputs, execution timestamps, and error diagnostics.
 - **Email Notifications** — Receive formatted execution reports and output results in your inbox via Resend.
@@ -258,8 +258,11 @@ Get the project running quickly with the following commands:
 git clone https://github.com/AditthyaSS/iloveAgents.git
 cd iloveAgents
 npm install
+cp .env.example .env.local
 npm run dev
 ```
+
+Copying `.env.example` first means Supabase-backed features (workflows, automations) pick up `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on first run. Provider keys are still entered at runtime.
 
 For complete setup instructions, environment variables, and troubleshooting, see the **Getting Started** section below.
 
@@ -341,7 +344,7 @@ Before opening an issue, verify that:
 
 1. Fork this repository
 2. Import to [Vercel](https://vercel.com/new) or any static host
-3. Deploy — zero configuration needed
+3. Deploy — static hosting needs no extra steps, but set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host env when you want workflows and automations to work
 
 The included `vercel.json` handles SPA routing automatically.
 

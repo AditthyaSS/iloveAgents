@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { FolderPlus, Plus, X } from 'lucide-react'
 import { DEFAULT_COLLECTION_ID, MAX_COLLECTIONS, useCollections } from '../lib/useCollections'
 
@@ -6,6 +6,14 @@ export default function CollectionPicker({ agentId, onClose }) {
   const { collections, createCollection, addAgentToCollection, isAgentInCollection } = useCollections()
   const [name, setName] = useState('')
   const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
 
   const visibleCollections = useMemo(
     () => collections.filter((collection) => collection.id !== DEFAULT_COLLECTION_ID),
@@ -26,7 +34,7 @@ export default function CollectionPicker({ agentId, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto p-4 pt-8 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div role="dialog" aria-modal="true" aria-label="Add to collection" className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto p-4 pt-8 bg-black/50 backdrop-blur-sm">
       <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-border dark:bg-surface-card">
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-5 dark:border-border">
           <div className="flex items-start gap-3"><div className="rounded-lg bg-accent/10 p-2 text-accent"><FolderPlus size={18} /></div><div><h2 className="text-base font-semibold text-gray-900 dark:text-text-primary">Add to Collection</h2><p className="mt-1 text-sm text-gray-500 dark:text-text-secondary">Choose a collection or create a new one.</p></div></div>
@@ -40,7 +48,8 @@ export default function CollectionPicker({ agentId, onClose }) {
             })}
           </div>
           <div className="flex gap-2 border-t border-gray-100 pt-4 dark:border-border">
-            <input value={name} onChange={(event) => setName(event.target.value)} disabled={visibleCollections.length >= MAX_COLLECTIONS} className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60 dark:border-border dark:bg-surface-input dark:text-text-primary" placeholder="New collection name" />
+            <label htmlFor="collection-picker-name" className="sr-only">New collection name</label>
+            <input id="collection-picker-name" value={name} onChange={(event) => setName(event.target.value)} disabled={visibleCollections.length >= MAX_COLLECTIONS} className="min-w-0 flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent disabled:opacity-60 dark:border-border dark:bg-surface-input dark:text-text-primary" placeholder="New collection name" />
             <button type="button" onClick={handleCreate} disabled={visibleCollections.length >= MAX_COLLECTIONS} className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-60"><Plus size={15} />Create</button>
           </div>
           {message && <p className="rounded-lg border border-accent/20 bg-accent/10 px-3 py-2 text-sm text-accent">{message}</p>}

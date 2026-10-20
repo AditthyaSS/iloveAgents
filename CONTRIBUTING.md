@@ -1,5 +1,17 @@
 # Contributing to iloveAgents
 
+## PR title convention
+
+Use a conventional prefix so CI labels your PR correctly:
+
+- `feat:` new feature
+- `fix:` bug fix
+- `docs:` docs only
+- `chore:` tooling or config
+- `test:` tests only
+
+Example: `fix: point accessibility audit at a live model`
+
 ## ⚠️ Before You Submit a PR
 
 **You MUST run this locally before opening a PR:**

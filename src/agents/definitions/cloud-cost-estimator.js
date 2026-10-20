@@ -190,8 +190,8 @@ OUTPUT FORMAT — FOLLOW THIS EXACT STRUCTURE
 | **Cloud Provider** | [provider] |
 | **Region** | [region or "default / us-east-1" if not specified] |
 | **Usage Pattern** | [pattern] |
-| **Estimated Monthly Total** | **$X,XXX.XX** |
-| **Estimated Annual Total** | **$XX,XXX.XX** |
+| **Estimated Monthly Total** | **[monthly total]** |
+| **Estimated Annual Total** | **[annual total]** |
 
 ---
 
@@ -203,16 +203,16 @@ OUTPUT FORMAT — FOLLOW THIS EXACT STRUCTURE
 | 2 | ... | ... | ... | ... | ... | ... |
 
 **Subtotals:**
-- 🖥️ Compute: $X
-- 💾 Storage: $X
-- 🌐 Networking: $X
-- 🗄️ Database: $X
-- 📦 Containers: $X (if applicable)
-- ⚡ Serverless: $X (if applicable)
-- 🔒 Security: $X (if applicable)
-- 📈 Monitoring: $X (if applicable)
-- 🤖 AI/ML: $X (if applicable)
-- ⚙️ Other: $X
+- 🖥️ Compute: [amount]
+- 💾 Storage: [amount]
+- 🌐 Networking: [amount]
+- 🗄️ Database: [amount]
+- 📦 Containers: [amount] (if applicable)
+- ⚡ Serverless: [amount] (if applicable)
+- 🔒 Security: [amount] (if applicable)
+- 📈 Monitoring: [amount] (if applicable)
+- 🤖 AI/ML: [amount] (if applicable)
+- ⚙️ Other: [amount]
 
 ---
 
@@ -232,10 +232,10 @@ Focus on: NAT Gateway data processing, inter-AZ transfer, EBS snapshot accumulat
 
 | Scale | Monthly Cost | Key Scaling Notes |
 |-------|-------------|-------------------|
-| Current (1×) | $X | baseline |
-| 2× scale | $X | [which services scale linearly vs step-function] |
-| 5× scale | $X | [where pricing tiers help or hurt] |
-| 10× scale | $X | [at what point architecture changes are needed] |
+| Current (1×) | [cost] | baseline |
+| 2× scale | [cost] | [which services scale linearly vs step-function] |
+| 5× scale | [cost] | [where pricing tiers help or hurt] |
+| 10× scale | [cost] | [at what point architecture changes are needed] |
 
 ---
 
@@ -245,7 +245,7 @@ Rank by estimated savings (highest first). For each:
 
 ### 1. [Optimization Name]
 - **What to do:** [specific, actionable change]
-- **Estimated savings:** $X/mo (X%)
+- **Estimated savings:** [savings]/mo ([pct]%)
 - **Trade-off:** [what you give up, if anything]
 - **Difficulty:** Easy / Medium / Hard
 - **Priority:** 🔴 Critical / 🟡 High / 🔵 Medium
@@ -265,10 +265,10 @@ Include optimizations from these categories:
 
 | Component | [Selected Provider] | AWS | GCP | Azure |
 |-----------|-------------------|-----|-----|-------|
-| Compute (monthly) | $X | $X | $X | $X |
-| Database (monthly) | $X | $X | $X | $X |
-| Networking (monthly) | $X | $X | $X | $X |
-| **Total Estimated** | **$X** | **$X** | **$X** | **$X** |
+| Compute (monthly) | [cost] | [cost] | [cost] | [cost] |
+| Database (monthly) | [cost] | [cost] | [cost] | [cost] |
+| Networking (monthly) | [cost] | [cost] | [cost] | [cost] |
+| **Total Estimated** | **[total]** | **[total]** | **[total]** | **[total]** |
 
 Skip the column for the provider the user already selected. Note key differences (e.g., GKE free control plane vs EKS $72/mo, Azure free AKS control plane).
 
