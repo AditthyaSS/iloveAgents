@@ -30,6 +30,22 @@ export const MODEL_MAP = {
   openrouter: MODELS.openrouter[0].value,
 }
 
+// Retired ids mapped to the replacement each provider recommends. Saved
+// automations can still hold an old id, so swap it instead of sending a
+// request that is guaranteed to fail.
+export const RETIRED_MODELS = {
+  'claude-3-5-sonnet-20241022': 'claude-sonnet-5-5',
+  'claude-sonnet-4-20250514': 'claude-sonnet-5-5',
+  'claude-3-5-haiku-20241022': 'claude-haiku-4-5-20251001',
+  'claude-3-opus-20240229': 'claude-opus-4-8',
+  'claude-opus-4-20250514': 'claude-opus-4-8',
+  'anthropic/claude-3.5-sonnet': 'anthropic/claude-sonnet-5.5',
+}
+
+export function replaceRetiredModel(model) {
+  return Object.hasOwn(RETIRED_MODELS, model) ? RETIRED_MODELS[model] : model
+}
+
 export function resolveAgentModel(agent, actualProvider, selectedModel) {
   // Check if selectedModel is valid for the current actualProvider
   if (selectedModel && MODELS[actualProvider]?.some(m => m.value === selectedModel)) {

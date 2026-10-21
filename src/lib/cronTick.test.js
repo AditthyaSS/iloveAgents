@@ -151,6 +151,14 @@ describe('buildCronRequest', () => {
     expect(req.body.model).toBe('claude-haiku-4-5-20251001')
   })
 
+  it('swaps a retired model saved on an older automation for its replacement', () => {
+    const anthropicReq = buildCronRequest('anthropic', apiKey, 'claude-3-5-sonnet-20241022', systemPrompt, userMessage)
+    expect(anthropicReq.body.model).toBe('claude-sonnet-5-5')
+
+    const openrouterReq = buildCronRequest('openrouter', apiKey, 'anthropic/claude-3.5-sonnet', systemPrompt, userMessage)
+    expect(openrouterReq.body.model).toBe('anthropic/claude-sonnet-5.5')
+  })
+
   it('builds gemini request with key in header and content parts', () => {
     const req = buildCronRequest('gemini', apiKey, undefined, systemPrompt, userMessage)
     expect(req.url).toBe(
