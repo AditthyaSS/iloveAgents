@@ -44,6 +44,8 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        // Errors after the 200 arrive as a data payload, not an HTTP status.
+        if (json.error) return { content: '', done: true, error: json.error.message || 'The API returned an error mid-stream.' }
         const delta = json.choices?.[0]?.delta?.content || ''
         const finished = json.choices?.[0]?.finish_reason === 'stop'
         return { content: delta, done: finished }
@@ -89,6 +91,8 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        // Errors after the 200 arrive as a data payload, not an HTTP status.
+        if (json.error) return { content: '', done: true, error: json.error.message || 'The API returned an error mid-stream.' }
         const delta = json.choices?.[0]?.delta?.content || ''
         const finished = json.choices?.[0]?.finish_reason === 'stop'
         return { content: delta, done: finished }
@@ -135,6 +139,10 @@ const PROVIDER_CONFIGS = {
         if (json.type === 'message_stop') {
           return { content: '', done: true }
         }
+        // e.g. overloaded_error, sent as an SSE event after the 200 response
+        if (json.type === 'error') {
+          return { content: '', done: true, error: json.error?.message || 'The API returned an error mid-stream.' }
+        }
         // message_start, content_block_start, etc. — skip
         return null
       } catch {
@@ -176,6 +184,7 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) return { content: '', done: true, error: json.error.message || 'The API returned an error mid-stream.' }
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text || ''
         const finished = json.candidates?.[0]?.finishReason === 'STOP'
         return { content: text, done: finished }
@@ -370,6 +379,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 
         const parsed = config.parseStreamChunk(trimmed)
         if (!parsed) continue
+        if (parsed.error) throw new Error(parsed.error)
 
         if (parsed.content) {
           fullContent += parsed.content
@@ -383,6 +393,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     // Process any remaining buffer content
     if (buffer.trim()) {
       const parsed = config.parseStreamChunk(buffer.trim())
+      if (parsed?.error) throw new Error(parsed.error)
       if (parsed?.content) {
         fullContent += parsed.content
         onChunk(parsed.content)
