@@ -75,7 +75,7 @@ For each signal, explain what the data tells you and why it indicates an upsell 
 |--------|----------|--------------------|
 | [signal name] | [specific data point from usage patterns] | [what it means for expansion] |
 
-Identify at least 3-5 signals. Focus on:
+Identify up to 5 supported signals. If no supported signals exist, explicitly state that no supported signals were detected. Focus on:
 - Capacity limits being approached or hit (seats, storage, API, etc.)
 - Feature adoption patterns that suggest need for advanced capabilities
 - Support ticket themes that point to pain solvable by a higher tier
@@ -86,7 +86,7 @@ Identify at least 3-5 signals. Focus on:
 
 State the specific upgrade or add-on you recommend and why. Include:
 - **Target Tier / Add-On**: [specific product recommendation]
-- **Estimated Revenue Uplift**: [monthly and annual delta]
+- **Estimated Revenue Uplift**: [monthly and annual delta if both current and target prices are known; if product_tiers is absent or pricing is custom/unknown, state "pricing needed"]
 - **Confidence Level**: High / Medium / Low — with a one-line justification
 
 ### Upsell Pitch
