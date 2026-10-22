@@ -379,7 +379,12 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 
         const parsed = config.parseStreamChunk(trimmed)
         if (!parsed) continue
-        if (parsed.error) throw new Error(parsed.error)
+        if (parsed.error) {
+          // The provider may keep the response open after the error; release it
+          // so a retry doesn't leave it running. Cancelling must not hide the error.
+          await reader.cancel().catch(() => {})
+          throw new Error(parsed.error)
+        }
 
         if (parsed.content) {
           fullContent += parsed.content

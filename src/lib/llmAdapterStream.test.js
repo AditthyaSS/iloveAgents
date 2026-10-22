@@ -40,15 +40,12 @@ function sseResponse(lines) {
   const encoder = new TextEncoder()
   const chunks = lines.map((line) => encoder.encode(`${line}\n\n`))
   let index = 0
-  return {
-    ok: true,
-    body: {
-      getReader: () => ({
-        read: async () =>
-          index < chunks.length ? { done: false, value: chunks[index++] } : { done: true },
-      }),
-    },
+  const reader = {
+    read: async () =>
+      index < chunks.length ? { done: false, value: chunks[index++] } : { done: true },
+    cancel: vi.fn(async () => {}),
   }
+  return { ok: true, reader, body: { getReader: () => reader } }
 }
 
 describe('streamAgent mid-stream errors', () => {
@@ -75,6 +72,24 @@ describe('streamAgent mid-stream errors', () => {
       'data: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}',
     ])))
     await expect(run('anthropic')).rejects.toThrow('Overloaded')
+  })
+
+  it('cancels the response reader when the stream reports an error', async () => {
+    const response = sseResponse([
+      'data: {"type":"error","error":{"type":"overloaded_error","message":"Overloaded"}}',
+    ])
+    vi.stubGlobal('fetch', vi.fn(async () => response))
+    await expect(run('anthropic')).rejects.toThrow('Overloaded')
+    expect(response.reader.cancel).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the provider error when cancelling the reader fails', async () => {
+    const response = sseResponse([
+      'data: {"error":{"code":503,"message":"The model is overloaded."}}',
+    ])
+    response.reader.cancel.mockRejectedValue(new Error('cancel failed'))
+    vi.stubGlobal('fetch', vi.fn(async () => response))
+    await expect(run('gemini')).rejects.toThrow('The model is overloaded.')
   })
 
   it('rejects when an OpenAI-compatible stream sends an error payload', async () => {
