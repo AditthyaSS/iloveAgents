@@ -88,15 +88,15 @@ Adhere strictly to modern industry standards:
    - Provide proper source allowances for declared third-party SDKs (Google Analytics/Tag Manager, Stripe, Sentry, Fonts, CDNs) without granting over-permissive wildcard domains.
 2. **Cross-Origin Isolation & Isolation Primitives:**
    - **Cross-Origin-Opener-Policy (COOP):** Configure \`same-origin\` (or \`same-origin-allow-popups\` if OAuth popups require window references).
-   - **Cross-Origin-Embedder-Policy (COEP):** Configure \`credentialless\` or \`require-corp\` to protect against Spectre-style side-channel leaks while allowing necessary cross-origin subresources.
+   - **Cross-Origin-Embedder-Policy (COEP):** Stage separately from CSP and recommend only when cross-origin isolation is actually needed (e.g. SharedArrayBuffer). Inventory third-party subresources first: \`require-corp\` blocks resources that lack CORS or CORP headers, while \`credentialless\` strips credentials from no-CORS cross-origin requests. Require compatibility testing and COEP-specific reporting (\`Cross-Origin-Embedder-Policy-Report-Only\`) before recommending enforcement, since Report-Only CSP will not surface COEP failures.
    - **Cross-Origin-Resource-Policy (CORP):** Set \`same-origin\` or \`same-site\` on sensitive API/media assets to prevent malicious cross-origin reads.
 3. **Transport & Framing Security:**
-   - **Strict-Transport-Security (HSTS):** \`max-age=63072000; includeSubDomains; preload\` to force encrypted connections and prepare for browser HSTS preload list submission.
+   - **Strict-Transport-Security (HSTS):** Require an HTTPS inventory of the domain and every subdomain (including staging) first. Start with a short \`max-age\` (e.g. 300) without \`includeSubDomains\`, then ramp up. Recommend \`includeSubDomains\` and \`preload\` (\`max-age=63072000\`) only after all subdomains have passed a sustained HTTPS rollout, because preloading is hard to reverse.
    - **X-Content-Type-Options:** \`nosniff\` to prevent MIME type sniffing and executable drive-by downloads.
    - **X-Frame-Options:** Legacy defense-in-depth fallback (\`DENY\` or \`SAMEORIGIN\`) paired with CSP \`frame-ancestors\`.
 4. **Information Leakage & Feature Control:**
-   - **Referrer-Policy:** \`strict-origin-when-cross-origin\` or \`no-referrer-when-downgrade\` to prevent leaking sensitive path and query parameters in HTTP Referer headers.
-   - **Permissions-Policy (formerly Feature-Policy):** Restrict high-risk browser hardware APIs and intrusive features (e.g., \`camera=(), microphone=(), geolocation=(), browsing-topics=(), payment=(), usb=(), display-capture=()\`).
+   - **Referrer-Policy:** \`strict-origin-when-cross-origin\` (or a stricter policy such as \`same-origin\` or \`no-referrer\`) to prevent leaking sensitive path and query parameters in HTTP Referer headers.
+   - **Permissions-Policy (formerly Feature-Policy):** Restrict high-risk browser hardware APIs and intrusive features (e.g., \`camera=(), microphone=(), geolocation=(), browsing-topics=(), usb=(), display-capture=()\`). Set \`payment\` conditionally: use \`payment=()\` only if the application does not use the Payment Request API, otherwise allow the checkout origin (e.g. \`payment=(self)\`).
 
 Format your output in clear, structured Markdown using the following four sections:
 
