@@ -170,5 +170,6 @@
 | 163 | Dependency Impact Analyzer | Analyzes software dependency upgrades or replacements to assess breaking changes, compatibility risks, affected modules, and migration steps. | Engineering |
 | 164 | GitHub Actions Workflow Optimizer | Audits and optimizes GitHub Actions workflow YAML files for execution speed, caching strategies, matrix concurrency, secret security, and token permissions. | DevOps |
 | 165 | OpenTelemetry Observability & Tracing Architect | Designs OpenTelemetry distributed tracing, metrics, collector pipelines, W3C context propagation, and tail-based sampling architectures across microservices. | DevOps |
+| 166 | Upsell Opportunity Identifier | Analyze a customer's current plan, usage patterns, and business context to uncover upsell opportunities with a structured pitch, timing recommendations, and talk tracks. | Sales |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
