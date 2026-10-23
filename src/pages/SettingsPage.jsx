@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Settings, Eye, EyeOff, Check, X,
-  Trash2, ExternalLink, ShieldCheck, KeyRound,
+  Trash2, ExternalLink, ShieldCheck, KeyRound, Download, Upload,
 } from 'lucide-react'
 import {
   getGlobalKeys,
@@ -66,6 +66,80 @@ export default function SettingsPage() {
   const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [saveMessage, setSaveMessage] = useState('')
   const [confirmClearAll, setConfirmClearAll] = useState(false)
+  const [backupMessage, setBackupMessage] = useState('')
+
+  const BACKUP_KEYS = [
+    'ila_agent_collections',
+    'ila_favorites',
+    'ila_prompt_history',
+    'ila_ratings',
+    'ila_analytics',
+    'ila_execution_traces',
+    'ila_scheduled_jobs',
+    'ila_scheduler_results',
+    'ila_session_spend',
+    'iloveAgents_history',
+    'iloveagents_default_provider',
+  ]
+
+  const handleExportData = () => {
+    const backup = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      data: {},
+    }
+    for (const key of BACKUP_KEYS) {
+      const val = localStorage.getItem(key)
+      if (val !== null) {
+        try {
+          backup.data[key] = JSON.parse(val)
+        } catch {
+          backup.data[key] = val
+        }
+      }
+    }
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {
+      type: 'application/json',
+    })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `iloveagents-backup-${new Date().toISOString().slice(0, 10)}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    setBackupMessage('Backup exported successfully ✅')
+  }
+
+  const handleImportData = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target.result)
+        const payload = parsed.data || parsed
+        let importedCount = 0
+        for (const key of BACKUP_KEYS) {
+          if (payload[key] !== undefined) {
+            const val =
+              typeof payload[key] === 'string'
+                ? payload[key]
+                : JSON.stringify(payload[key])
+            localStorage.setItem(key, val)
+            importedCount++
+          }
+        }
+        setBackupMessage(
+          `Restored ${importedCount} items successfully ✅ (Refresh to apply across all tabs)`
+        )
+      } catch (err) {
+        setBackupMessage('Failed to import backup: Invalid JSON file ❌')
+      }
+    }
+    reader.readAsText(file)
+  }
 
   // ── Load from localStorage on mount
   useEffect(() => {
@@ -332,6 +406,58 @@ export default function SettingsPage() {
               <Trash2 size={15} />
               Clear All Keys
             </button>
+          )}
+        </div>
+      </section>
+
+      {/* ─────────────────────────────────────────── */}
+      {/* SECTION 4 — Backup & Restore               */}
+      {/* ─────────────────────────────────────────── */}
+      <section className="rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200 overflow-hidden">
+        <div className="px-5 py-4 border-b dark:border-border border-gray-100">
+          <h2 className="text-sm font-bold dark:text-text-primary text-gray-900">
+            Backup &amp; Restore
+          </h2>
+        </div>
+
+        <div className="px-5 py-4 flex flex-col gap-4">
+          <p className="text-xs dark:text-text-secondary text-gray-600 leading-relaxed">
+            Export your favorites, prompt history, collections, ratings, and
+            analytics to a JSON file, or restore a previous backup. Sensitive API
+            keys are never included in the export.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={handleExportData}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold
+                dark:bg-surface-hover dark:hover:bg-border dark:text-text-primary
+                bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors"
+            >
+              <Download size={14} />
+              Export Data
+            </button>
+
+            <label
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold cursor-pointer
+              dark:bg-surface-hover dark:hover:bg-border dark:text-text-primary
+              bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors"
+            >
+              <Upload size={14} />
+              Import Data
+              <input
+                type="file"
+                accept=".json,application/json"
+                className="hidden"
+                onChange={handleImportData}
+              />
+            </label>
+          </div>
+
+          {backupMessage && (
+            <p className="text-xs font-medium text-emerald-500 animate-fade-in">
+              {backupMessage}
+            </p>
           )}
         </div>
       </section>
