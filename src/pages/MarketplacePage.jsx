@@ -72,6 +72,18 @@ function PublishModal({ agents, onClose, onPublished }) {
   const selected = agents.find((a) => a.id === agentId)
   const canPublish = agentId && name.trim() && description.trim()
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose?.()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [onClose])
+
   const handlePublish = () => {
     if (!canPublish) return
     const listing = publishAgent({
@@ -335,6 +347,17 @@ export default function MarketplacePage() {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' || e.key === 'Esc') {
+                if (search) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setSearch('')
+                } else {
+                  e.target.blur()
+                }
+              }
+            }}
             placeholder="Search by name or tag..."
             aria-label="Search marketplace"
             className={`${inputClass} w-full pl-9`}
