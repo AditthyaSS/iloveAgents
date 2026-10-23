@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
@@ -39,6 +39,12 @@ import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
 import { streamAgent } from "../lib/llmAdapter";
+import TraceViewer from "./TraceViewer";
+import {
+  createTrace,
+  recordStep,
+  finalizeTrace,
+} from "../lib/executionTrace";
 import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
@@ -54,14 +60,14 @@ const providerLabels = {
 
 
 const LOADING_MESSAGES = [
-  "⚙️ Agent is grinding for you...",
-  "🧠 Big brain moment loading...",
-  "✨ Cooking something fire...",
-  "🤖 Agent is in its era...",
-  "💀 This might actually go crazy...",
-  "🔥 Almost done, hold tight...",
-  "🚀 Sending it...",
-  "👀 Your agent is locked in...",
+  "âš™ï¸ Agent is grinding for you...",
+  "ðŸ§  Big brain moment loading...",
+  "âœ¨ Cooking something fire...",
+  "ðŸ¤– Agent is in its era...",
+  "ðŸ’€ This might actually go crazy...",
+  "ðŸ”¥ Almost done, hold tight...",
+  "ðŸš€ Sending it...",
+  "ðŸ‘€ Your agent is locked in...",
 ];
 
 const MAX_CHAR_LIMIT = 4000; // Character cap configuration
@@ -84,6 +90,8 @@ export default function AgentRunner({ agent }) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+  const [executionTrace, setExecutionTrace] = useState(null);
   const [duration, setDuration] = useState(null);
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
@@ -152,6 +160,7 @@ export default function AgentRunner({ agent }) {
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    setExecutionTrace(null);
     setCustomPrompt(agent.systemPrompt);
     setPlaygroundOpen(false);
     setBatchMode(false);
@@ -218,7 +227,7 @@ export default function AgentRunner({ agent }) {
 
 const getTokenCount = (text) => {
   if (!text) return 0;
-  // A rough but highly accurate standard estimate: 1 token ≈ 4 characters
+  // A rough but highly accurate standard estimate: 1 token â‰ˆ 4 characters
   return Math.ceil(text.length / 4);
 };
 
@@ -285,123 +294,7 @@ const getTokenCount = (text) => {
     setIsStreaming(true);
   }, []);
 
-const handleRun = async () => {
-    setLoading(true);
-    setError(null);
-    setOutput(null);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setDuration(null);
-    setMsgIndex(0);
-
-    setVersionHistory((prevHistory) => [
-      {
-        versionNumber: prevHistory.length + 1,
-        timestamp: new Date().toLocaleTimeString(),
-        configSnapshot: { ...inputs },
-      },
-      ...prevHistory,
-    ]);
-
-    setLastRunSystemPrompt(customPrompt);
-    setLastRunUserMessage(buildUserMessage());
-
-    // Supersede any run still winding down (e.g. one that was just stopped)
-    // and give this run an identity so stale completions can be recognised.
-    cancelActiveRun();
-    const runId = runIdRef.current;
-    const isCurrentRun = () => runIdRef.current === runId;
-
-    const controller = new AbortController();
-    abortControllerRef.current = controller;
-    try {
-      const actualProvider =
-        agent.provider === "any" ? provider : agent.provider;
-      const model = resolveAgentModel(agent, actualProvider, selectedModel);
-
-      const result = await streamAgent({
-        provider: actualProvider,
-        model,
-        apiKey,
-        systemPrompt: customPrompt,
-        userMessage: buildUserMessage(),
-        onChunk: (chunk) => {
-          if (isCurrentRun()) handleChunk(chunk);
-        },
-        signal: controller.signal,
-      });
-
-      // Cleared / superseded / unmounted while streaming: discard everything.
-      // (Stop is different: it doesn't invalidate the run, so its partial
-      // output is committed below exactly as before.)
-      if (!isCurrentRun()) return;
-
-      setOutput(result.content);
-      setStreamingOutput("");
-      setIsStreaming(false);
-      setDuration(result.duration);
-
-      const inputTokenEstimate = Math.max(
-        1,
-        Math.round((customPrompt.length + buildUserMessage().length) / 4),
-      );
-      const outputTokenEstimate = Math.max(1, Math.round(result.content.length / 4));
-
-      addRun({
-        model,
-        inputTokens: inputTokenEstimate,
-        outputTokens: outputTokenEstimate,
-        inputCost: null,
-        outputCost: null,
-      });
-
-      saveRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        inputs: { ...inputs },
-        output: result.content,
-        provider: actualProvider,
-      });
-
-      recordAnalyticsRun({
-        agentId: agent.id,
-        agentName: agent.name,
-        category: agent.category,
-        provider: actualProvider,
-        model,
-        duration: result.duration,
-      });
-   } catch (err) {
-  if (!isCurrentRun()) return;
-  if (err.name !== "AbortError") {
-    if (err && err.type === "invalid_api_key") {
-      setError(err);
-    } else {
-      setError({ type: "generic", message: err.message });
-    }
-  }
-} finally {
-      // Only the owning run may touch shared state; a stale run's late
-      // cleanup must not null the controller / loading flag of a newer run.
-      if (isCurrentRun()) {
-        setLoading(false);
-        abortControllerRef.current = null;
-      }
-    }
-  };
-
-  const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setOutput(streamingOutput);
-    setStreamingOutput("");
-    setIsStreaming(false);
-    setLoading(false);
-  };
-
-  const handleClear = () => {
+const handleClear = () => {
     // Cancel *and invalidate* the in-flight run so its late completion cannot
     // resurrect the output we are about to discard.
     cancelActiveRun();
@@ -411,6 +304,7 @@ const handleRun = async () => {
     setIsStreaming(false);
     setError(null);
     setDuration(null);
+    setExecutionTrace(null);
 
     const defaults = {};
     agent.inputs.forEach((input) => {
@@ -424,6 +318,140 @@ const handleRun = async () => {
     });
     setInputs(defaults);
   };
+
+
+  const handleRun = async () => {
+    cancelActiveRun();
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const runId = runIdRef.current;
+    const isCurrentRun = () =>
+      runIdRef.current === runId &&
+      abortControllerRef.current === controller;
+
+    setLoading(true);
+    setError(null);
+    setOutput(null);
+    setStreamingOutput("");
+    setIsStreaming(false);
+    setExecutionTrace(null);
+    setDuration(null);
+
+    const userMessage = buildUserMessage();
+    setLastRunSystemPrompt(customPrompt);
+    setLastRunUserMessage(userMessage);
+
+    const trace = debugMode
+      ? createTrace({
+          workflowId: agent.id,
+          workflowTitle: agent.name,
+          agentRunId: `agent_${agent.id}_${Date.now()}`,
+        })
+      : null;
+
+    if (trace) setExecutionTrace({ ...trace });
+
+    const finishTrace = (status, finalOutput = null, errorMessage) => {
+      if (!trace || !isCurrentRun()) return;
+
+      recordStep(trace, {
+        stepName: "Agent execution",
+        status,
+        ...(status === "success"
+          ? { output: finalOutput }
+          : { error: errorMessage || "Execution cancelled" }),
+      });
+
+      finalizeTrace(trace, { status, finalOutput });
+      setExecutionTrace({ ...trace });
+    };
+
+    try {
+      const result = await streamAgent({
+        provider,
+        model: selectedModel,
+        apiKey,
+        systemPrompt: customPrompt,
+        userMessage,
+        signal: controller.signal,
+        onChunk: (chunk) => {
+          if (!isCurrentRun() || controller.signal.aborted) return;
+          setStreamingOutput((previous) => previous + chunk);
+          setIsStreaming(true);
+        },
+      });
+
+      if (!isCurrentRun()) return;
+
+      if (controller.signal.aborted) {
+        finishTrace("skipped");
+        return;
+      }
+
+      setOutput(result.content);
+      setStreamingOutput("");
+      setIsStreaming(false);
+      setDuration(result.duration);
+      finishTrace("success", result.content);
+
+      recordAnalyticsRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        category: agent.category,
+        provider,
+        model: selectedModel,
+        duration: result.duration,
+      });
+
+      saveRun({
+        agentId: agent.id,
+        agentName: agent.name,
+        inputs: { ...inputs },
+        input: userMessage,
+        output: result.content,
+        provider,
+      });
+
+      if (typeof addRun === "function" && result.cost) {
+        addRun(result.cost);
+      }
+    } catch (err) {
+      if (!isCurrentRun()) return;
+
+      if (controller.signal.aborted || err?.name === "AbortError") {
+        finishTrace("skipped");
+        return;
+      }
+
+      finishTrace("error", null, err?.message || "Execution failed");
+
+      if (err?.type === "invalid_api_key") {
+        setError(err);
+      } else {
+        setError(err?.message || "Something went wrong. Please try again.");
+      }
+    } finally {
+      if (isCurrentRun()) {
+        setLoading(false);
+        abortControllerRef.current = null;
+      }
+    }
+  };
+
+  const handleStop = () => {
+    const controller = abortControllerRef.current;
+    if (!controller) return;
+
+    // Keep the controller reference so the cancelled run can record its trace.
+    controller.abort();
+    setOutput(streamingOutput);
+    setStreamingOutput("");
+    setIsStreaming(false);
+    setLoading(false);
+  };
+
 
   const handleFillExample = () => {
     if (!agent.exampleInputs) return;
@@ -472,7 +500,7 @@ const handleRun = async () => {
           hover:bg-indigo-100 dark:hover:bg-indigo-500/20
           transition-all duration-200"
       >
-        ← All Agents
+        â† All Agents
       </Link>
 
       <div className="mt-2 mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-zinc-900 dark:border-zinc-800 text-gray-900 dark:text-gray-100">
@@ -689,8 +717,8 @@ const handleRun = async () => {
                 {/* Dynamic Live Counter Metric Footer Grid */}
                 <div className="flex justify-between items-center px-1 text-[11px] text-gray-400 dark:text-text-muted mt-1.5 w-full">
                   <div className="flex gap-2 font-medium">
-                    <span>📝 Words: {getWordCount(inputs[input.id])}</span>
-                    <span>🪙 Est. Tokens: {getTokenCount(inputs[input.id])}</span>
+                    <span>ðŸ“ Words: {getWordCount(inputs[input.id])}</span>
+                    <span>ðŸª™ Est. Tokens: {getTokenCount(inputs[input.id])}</span>
                   </div>
                   <span className={`self-end ${inputs[input.id]?.length >= MAX_CHAR_LIMIT ? "text-red-500 font-semibold" : ""}`}>
                     {inputs[input.id]?.length || 0} / {MAX_CHAR_LIMIT} characters
@@ -760,7 +788,7 @@ const handleRun = async () => {
                             : "dark:bg-surface-input dark:text-text-secondary dark:border-border dark:hover:border-accent/30 bg-gray-50 text-gray-500 border-gray-200 hover:border-indigo-300"
                         }`}
                     >
-                      {selected && "✓ "}
+                      {selected && "âœ“ "}
                       {opt}
                     </button>
                   );
@@ -791,7 +819,7 @@ const handleRun = async () => {
       transition-all duration-200
     "
   >
-    ✨ Try an example
+    âœ¨ Try an example
   </button>
   <button
     onClick={handleSavePrompt}
@@ -979,13 +1007,41 @@ const handleRun = async () => {
                   onClick={() => setModelRecommendation(null)}
                   className="mt-2 text-[10px] text-accent hover:underline"
                 >
-                  ↺ Re-analyse
+                  â†º Re-analyse
                 </button>
               </div>
             )}
           </div>
         )}
       </div>
+
+<div className="flex items-center justify-between gap-3 mb-4 rounded-lg border p-3 dark:border-border border-gray-200">
+  <div>
+    <p className="text-sm font-medium dark:text-text-primary text-gray-900">
+      Debug Mode
+    </p>
+    <p className="text-xs dark:text-text-muted text-gray-500">
+      View agent inputs, outputs and execution timing.
+    </p>
+  </div>
+
+  <button
+    type="button"
+    role="switch"
+    aria-label="Debug Mode"
+    aria-checked={debugMode}
+    onClick={() => setDebugMode((enabled) => !enabled)}
+    className={`relative h-6 w-11 rounded-full transition-colors ${
+      debugMode ? "bg-accent" : "bg-gray-300"
+    }`}
+  >
+    <span
+      className={`absolute top-1 h-4 w-4 rounded-full bg-white transition-transform ${
+        debugMode ? "translate-x-6" : "translate-x-1"
+      }`}
+    />
+  </button>
+</div>
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 mb-6">
@@ -1197,7 +1253,7 @@ const handleRun = async () => {
                 text-accent bg-accent/10 hover:bg-accent/20 transition-all border border-accent/20"
             >
               <GitBranch size={16} />
-              Send output to Workflow Builder →
+              Send output to Workflow Builder â†’
             </button>
           </div>
         </div>
@@ -1205,6 +1261,24 @@ const handleRun = async () => {
 
       </>
       )}
+
+{debugMode && executionTrace && (
+  <div className="mt-5 rounded-xl border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
+    <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-2">
+      Agent Execution Trace
+    </h3>
+
+    <p className="text-xs dark:text-text-muted text-gray-500 mb-1">
+      Run ID: {executionTrace.runId}
+    </p>
+
+    <p className="text-xs dark:text-text-muted text-gray-500 mb-3">
+      Status: {executionTrace.status}
+    </p>
+
+    <TraceViewer trace={executionTrace} />
+  </div>
+)}
 
       {/* Prompt History Panel */}
       <PromptHistoryPanel
@@ -1237,9 +1311,3 @@ const handleRun = async () => {
     </div>
   );
 }
-
-
-
- 
-
-  
