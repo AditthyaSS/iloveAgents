@@ -1,23 +1,22 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-const { mockSupabase, insertedRuns, updatedAutomations, resetMockDb, setMockAutomations } = vi.hoisted(() => {
+const { mockSupabase, insertedRuns, updatedAutomations, resetMockDb, setMockAutomations, setAutomationOverrides } = vi.hoisted(() => {
   const runs = []
   const updates = []
   let customAutomations = null
+  let automationOverrides = {}
 
-  const defaultAutomations = [
-    {
-      id: 'auto-123',
-      name: 'Test Automation',
-      agent_name: 'Test Agent',
-      provider: 'gemini',
-      model: 'gemini-2.5-flash',
-      system_prompt: 'You are a test helper.',
-      inputs: { query: 'test input' },
-      schedule: 'daily',
-    },
-  ]
+  const baseAutomation = {
+    id: 'auto-123',
+    name: 'Test Automation',
+    agent_name: 'Test Agent',
+    provider: 'gemini',
+    model: 'gemini-2.5-flash',
+    system_prompt: 'You are a test helper.',
+    inputs: { query: 'test input' },
+    schedule: 'daily',
+  }
 
   const client = {
     from: (table) => {
@@ -27,7 +26,7 @@ const { mockSupabase, insertedRuns, updatedAutomations, resetMockDb, setMockAuto
             eq: () => ({
               lte: () => ({
                 limit: async () => ({
-                  data: customAutomations || defaultAutomations,
+                  data: customAutomations || [{ ...baseAutomation, ...automationOverrides }],
                   error: null,
                 }),
               }),
@@ -77,6 +76,10 @@ const { mockSupabase, insertedRuns, updatedAutomations, resetMockDb, setMockAuto
       runs.length = 0
       updates.length = 0
       customAutomations = null
+      automationOverrides = {}
+    },
+    setAutomationOverrides: (overrides) => {
+      automationOverrides = overrides
     },
   }
 })
@@ -369,6 +372,31 @@ describe('sendCronEmailNotification', () => {
         output: 'test output',
       })
     ).rejects.toThrow('Resend notification network error: Connection timed out')
+  })
+
+  it('redacts Resend API key from error detail when key straddles the 500-char truncation boundary', async () => {
+    const resendKey = 're_live_secretkey1234567890'
+    const padding = 'x'.repeat(500 - resendKey.length / 2)
+    const longMessage = padding + resendKey + padding
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: async () => JSON.stringify({ message: longMessage }),
+    })
+
+    await expect(
+      sendCronEmailNotification(resendKey, {
+        to: 'user@example.com',
+        name: 'Test Auto',
+        output: 'test output',
+      })
+    ).rejects.toSatisfy((err) => {
+      expect(err.message).not.toContain(resendKey)
+      expect(err.message).not.toMatch(new RegExp(resendKey.slice(0, 10)))
+      expect(err.message).toContain('[REDACTED]')
+      return true
+    })
   })
 })
 
@@ -793,6 +821,246 @@ describe('handler execution with configured Supabase', () => {
     expect(urls).toHaveLength(1)
     expect(urls[0]).not.toContain('resend.com')
     expect(insertedRuns[0].status).toBe('success')
+  })
+})
+
+describe('handler OpenAI provider scenarios', () => {
+  const originalEnv = { ...process.env }
+  const originalFetch = global.fetch
+
+  beforeEach(() => {
+    process.env = { ...originalEnv }
+    process.env.VITE_SUPABASE_URL = 'https://example.supabase.co'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key'
+    delete process.env.CRON_SECRET
+    delete process.env.RESEND_API_KEY
+
+    resetMockDb()
+    setAutomationOverrides({ provider: 'openai', model: 'gpt-4o' })
+  })
+
+  afterEach(() => {
+    process.env = { ...originalEnv }
+    global.fetch = originalFetch
+    resetMockDb()
+  })
+
+  it('executes OpenAI automation and records successful run', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({
+        choices: [{ message: { content: 'OpenAI generated output' } }],
+      }),
+    })
+
+    const req = { headers: {} }
+    let resData = null
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn((d) => { resData = d }),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('success')
+    expect(insertedRuns[0].output).toBe('OpenAI generated output')
+    expect(insertedRuns[0].error).toBeNull()
+    expect(resData.processedCount).toBe(1)
+  })
+
+  it('marks run as failed when OpenAI returns HTTP 401', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => JSON.stringify({ error: { message: 'Incorrect API key provided' } }),
+    })
+
+    const req = { headers: {} }
+    let resData = null
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn((d) => { resData = d }),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).toContain('openai API error 401')
+    expect(insertedRuns[0].error).toContain('Incorrect API key provided')
+    expect(resData.results[0].status).toBe('failed')
+  })
+
+  it('marks run as failed when OpenAI returns HTTP 429', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      text: async () => JSON.stringify({ error: { message: 'Rate limit exceeded. Please retry after 20s.' } }),
+    })
+
+    const req = { headers: {} }
+    let resData = null
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn((d) => { resData = d }),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).toContain('openai API error 429')
+    expect(insertedRuns[0].error).toContain('Rate limit exceeded')
+    expect(resData.results[0].status).toBe('failed')
+  })
+
+  it('handles malformed non-JSON error response from OpenAI', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      text: async () => '<html>Bad Gateway</html>',
+    })
+
+    const req = { headers: {} }
+    let resData = null
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn((d) => { resData = d }),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).toContain('openai API error 502')
+    expect(resData.results[0].status).toBe('failed')
+  })
+
+  it('marks run as failed when provider returns unparseable response body on 200', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => { throw new SyntaxError('Unexpected token') },
+    })
+
+    const req = { headers: {} }
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn(),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).toContain('unparseable response')
+  })
+})
+
+describe('error message sanitization', () => {
+  const originalEnv = { ...process.env }
+  const originalFetch = global.fetch
+
+  beforeEach(() => {
+    process.env = { ...originalEnv }
+    process.env.VITE_SUPABASE_URL = 'https://example.supabase.co'
+    process.env.SUPABASE_SERVICE_ROLE_KEY = 'mock-service-role-key'
+    delete process.env.CRON_SECRET
+    delete process.env.RESEND_API_KEY
+
+    resetMockDb()
+    setAutomationOverrides({ provider: 'openai', model: 'gpt-4o' })
+  })
+
+  afterEach(() => {
+    process.env = { ...originalEnv }
+    global.fetch = originalFetch
+    resetMockDb()
+  })
+
+  it('redacts API key from error messages stored in run history', async () => {
+    const secretKey = 'test-gemini-secret-key'
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () => JSON.stringify({
+        error: { message: `Invalid key: ${secretKey}` },
+      }),
+    })
+
+    const req = { headers: {} }
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn(),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).not.toContain(secretKey)
+    expect(insertedRuns[0].error).toContain('[REDACTED]')
+  })
+
+  it('redacts API key even when it spans the 500-char truncation boundary', async () => {
+    const secretKey = 'test-gemini-secret-key'
+    const padding = 'x'.repeat(500 - secretKey.length / 2)
+    const longMessage = padding + secretKey + padding
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      text: async () => JSON.stringify({
+        error: { message: longMessage },
+      }),
+    })
+
+    const req = { headers: {} }
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn(),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).not.toContain(secretKey)
+    expect(insertedRuns[0].error).not.toMatch(new RegExp(secretKey.slice(0, 10)))
+    expect(insertedRuns[0].error.length).toBeLessThanOrEqual(500)
+  })
+
+  it('redacts and truncates long error from catch block when fetch throws', async () => {
+    const secretKey = 'test-gemini-secret-key'
+    const padding = 'a'.repeat(490)
+    const longError = padding + secretKey + padding
+
+    global.fetch = vi.fn().mockRejectedValue(new Error(longError))
+
+    const req = { headers: {} }
+    const res = {
+      status: vi.fn().mockReturnValue({
+        json: vi.fn(),
+      }),
+    }
+
+    await handler(req, res)
+
+    expect(insertedRuns).toHaveLength(1)
+    expect(insertedRuns[0].status).toBe('failed')
+    expect(insertedRuns[0].error).not.toContain(secretKey)
+    expect(insertedRuns[0].error).toContain('[REDACTED]')
+    expect(insertedRuns[0].error.length).toBeLessThanOrEqual(500)
   })
 })
 
