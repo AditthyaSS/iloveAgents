@@ -3,6 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "bin": {
+    "iloveagents": "./bin/cli.js"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
