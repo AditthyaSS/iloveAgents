@@ -1,0 +1,45 @@
+name: Dependabot Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-dependabot-pr:
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run lint checks
+        run: npm run lint --if-present
+
+      - name: Run unit tests
+        run: npm test --if-present
+
+      - name: Run build verification
+        run: npm run build
+
+      - name: Upload validation logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependabot-validation-logs
+          path: |
+            ~/.npm/_logs/
+            **/*.log
+          retention-days: 7
