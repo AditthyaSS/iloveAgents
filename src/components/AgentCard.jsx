@@ -1,3 +1,4 @@
+```jsx
 /**
  * AgentCard component displays individual agent details with responsive layout constraints,
  * categorized technology indicators, and interactive premium 3D hover micro-animations.
@@ -48,165 +49,296 @@ const providerLabels = {
 
 function isWithinLast7Days(dateStr) {
   if (!dateStr) return false;
+
   const created = new Date(dateStr);
+
   if (Number.isNaN(created.getTime())) return false;
+
   const now = new Date();
   const diffMs = now - created;
   const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+
   return diffMs >= 0 && diffMs <= sevenDaysMs;
 }
 
 export default function AgentCard({ agent }) {
   const IconComponent = Icons[agent?.icon] || Icons.Bot;
-const prov = providerColors[agent?.provider] || providerColors.any;
-const provLabel = providerLabels[agent?.provider] || agent?.provider || "Any Provider";
+
+  const prov =
+    providerColors[agent?.provider] || providerColors.any;
+
+  const provLabel =
+    providerLabels[agent?.provider] ||
+    agent?.provider ||
+    "Any Provider";
+
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [showCollectionPicker, setShowCollectionPicker] = useState(false);
+
+  const [showCollectionPicker, setShowCollectionPicker] =
+    useState(false);
+
   const favorited = isFavorite(agent.id);
+
   const [copied, setCopied] = useState(false);
+
   const copyTimer = useRef(null);
 
   const handleDragStart = (event) => {
-    event.dataTransfer.setData('text/plain', agent.id);
-    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData("text/plain", agent.id);
+    event.dataTransfer.effectAllowed = "move";
   };
 
   const handleFavorite = (e) => {
-    e.preventDefault(); // prevent Link navigation
+    e.preventDefault();
     e.stopPropagation();
+
     toggleFavorite(agent.id);
   };
 
   const handleCollectionPicker = (e) => {
     e.preventDefault();
     e.stopPropagation();
+
     setShowCollectionPicker(true);
   };
 
   const handleCopyPrompt = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const text = agent?.systemPrompt || agent?.description || '';
+
+    const text =
+      agent?.systemPrompt ||
+      agent?.description ||
+      "";
+
     if (!text) return;
+
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(text);
       } else {
-        const ta = document.createElement('textarea');
+        const ta = document.createElement("textarea");
+
         ta.value = text;
+
         document.body.appendChild(ta);
+
         ta.select();
-        document.execCommand('copy');
+
+        document.execCommand("copy");
+
         document.body.removeChild(ta);
       }
+
       setCopied(true);
-      if (copyTimer.current) clearTimeout(copyTimer.current);
-      copyTimer.current = setTimeout(() => setCopied(false), 1500);
+
+      if (copyTimer.current) {
+        clearTimeout(copyTimer.current);
+      }
+
+      copyTimer.current = setTimeout(() => {
+        setCopied(false);
+      }, 1500);
     } catch {
-      // clipboard unavailable, no toast to avoid noise
+      // Clipboard unavailable, no toast to avoid noise
     }
   };
 
   return (
     <>
-    <Link
-      to={`/agent/${agent.id}`}
-      draggable
-      onDragStart={handleDragStart}
-      className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 cursor-grab
-      dark:bg-surface-card dark:border-border
-      transition-all duration-500 
-      hover:[transform:perspective(1000px)_rotateX(6deg)_rotateY(-6deg)_translateY(-8px)] 
-      focus-visible:[transform:perspective(1000px)_rotateX(6deg)_rotateY(-6deg)_translateY(-8px)]
-      hover:border-purple-400 dark:hover:border-accent 
-      focus-visible:border-purple-400 dark:focus-visible:border-accent
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
-    >
-      
-      {/* Top row: icon + badges + star */}
-      <div className="flex items-start justify-between mb-3">
-        <div
-          className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center
-          group-hover:bg-accent/20 group-hover:scale-110 group-hover:rotate-3 
-          group-focus-visible:bg-accent/20 group-focus-visible:scale-110 group-focus-visible:rotate-3 
-          transition-all duration-300"
+      <div
+        draggable
+        onDragStart={handleDragStart}
+        className="premium-hover-card group block rounded-lg border p-4 bg-white border-gray-200 cursor-grab
+        dark:bg-surface-card dark:border-border
+        transition-all duration-500
+        hover:[transform:perspective(1000px)_rotateX(6deg)_rotateY(-6deg)_translateY(-8px)]
+        focus-within:[transform:perspective(1000px)_rotateX(6deg)_rotateY(-6deg)_translateY(-8px)]
+        hover:border-purple-400 dark:hover:border-accent
+        focus-within:border-purple-400 dark:focus-within:border-accent
+        focus-within:outline-none focus-within:ring-2 focus-within:ring-purple-400"
+      >
+        <Link
+          to={`/agent/${agent.id}`}
+          className="block focus-visible:outline-none"
         >
-          <IconComponent size={20} className="text-accent" />
-        </div>
-        <div className="flex items-center gap-1.5">
-          {isWithinLast7Days(agent.createdAt) && (
-            <span
-              className="text-[10px] font-medium px-2 py-0.5 rounded-full
-              bg-green-500/10 text-green-400 border border-green-500/20"
+          {/* Top row: icon + badges */}
+          <div className="flex items-start justify-between mb-3">
+            <div
+              className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center
+              group-hover:bg-accent/20 group-hover:scale-110 group-hover:rotate-3
+              group-focus-within:bg-accent/20 group-focus-within:scale-110 group-focus-within:rotate-3
+              transition-all duration-300"
             >
-              New
-            </span>
-          )}
-          <span
-            className="text-[10px] font-medium px-2 py-0.5 rounded-full dark:bg-surface-input dark:text-text-muted
-            bg-gray-100 text-gray-500 border dark:border-border border-gray-200"
+              <IconComponent
+                size={20}
+                className="text-accent"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5">
+              {isWithinLast7Days(agent.createdAt) && (
+                <span
+                  className="text-[10px] font-medium px-2 py-0.5 rounded-full
+                  bg-green-500/10 text-green-400 border border-green-500/20"
+                >
+                  New
+                </span>
+              )}
+
+              <span
+                className="text-[10px] font-medium px-2 py-0.5 rounded-full
+                dark:bg-surface-input dark:text-text-muted
+                bg-gray-100 text-gray-500 border
+                dark:border-border border-gray-200"
+              >
+                {agent.category}
+              </span>
+            </div>
+          </div>
+
+          {/* Name + description */}
+          <h3
+            className="text-sm font-semibold dark:text-text-primary
+            text-gray-900 mb-1 group-hover:text-accent
+            group-focus-within:text-accent transition-colors"
           >
-            {agent.category}
-          </span>
+            {agent?.name || "Unnamed Agent"}
+          </h3>
+
+          <p
+            className="flex-1 text-xs dark:text-text-secondary
+            text-gray-500 leading-relaxed mb-3 line-clamp-2"
+          >
+            {agent?.description || "No description provided."}
+          </p>
+
+          {/* Bottom: provider badge + run link */}
+          <div className="flex items-center justify-between mt-auto">
+            <span
+              className={`text-[10px] font-medium px-2 py-0.5 rounded-full border
+              ${prov.bg} ${prov.text} ${prov.border}`}
+            >
+              {provLabel}
+            </span>
+
+            <span
+              className="flex items-center gap-1 text-xs font-medium
+              text-accent opacity-0 group-hover:opacity-100
+              group-focus-within:opacity-100 transition-all duration-300
+              transform translate-x-2 group-hover:translate-x-0
+              group-focus-within:translate-x-0"
+            >
+              Run
+
+              <ArrowRight
+                size={12}
+                className="transition-transform duration-300
+                transform group-hover:translate-x-1
+                group-focus-within:translate-x-1"
+              />
+            </span>
+          </div>
+        </Link>
+
+        {/* Action buttons are outside the Link */}
+        <div className="flex items-center justify-end gap-1.5 mt-2">
           <button
+            type="button"
             onClick={handleCopyPrompt}
-            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            className="p-1 rounded-md dark:text-text-muted
+            dark:text-text-secondary text-gray-600
+            hover:text-accent transition-all duration-200"
             aria-label={copied ? "Prompt copied" : "Copy prompt"}
             title={copied ? "Copied!" : "Copy prompt"}
           >
-            {copied ? <Check size={15} className="text-green-400" /> : <Copy size={15} />}
+            {copied ? (
+              <Check
+                size={15}
+                className="text-green-400"
+              />
+            ) : (
+              <Copy size={15} />
+            )}
           </button>
+
           <button
+            type="button"
             onClick={handleCollectionPicker}
-            className="p-1 rounded-md dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-200"
+            className="p-1 rounded-md dark:text-text-muted
+            dark:text-text-secondary text-gray-600
+            hover:text-accent transition-all duration-200"
             aria-label="Add to collection"
             title="Add to collection"
           >
             <FolderPlus size={15} />
           </button>
+
           <button
+            type="button"
             onClick={handleFavorite}
             className={`p-1 rounded-md transition-all duration-200
-              ${favorited
-                ? "text-yellow-400 hover:text-yellow-300 scale-110"
-                : "dark:text-text-muted dark:text-text-secondary text-gray-600 hover:text-yellow-400 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100"
+              ${
+                favorited
+                  ? "text-yellow-400 hover:text-yellow-300 scale-110"
+                  : "dark:text-text-muted dark:text-text-secondary
+                    text-gray-600 hover:text-yellow-400"
               }`}
             aria-label={
-              favorited ? "Remove from favorites" : "Add to favorites"
+              favorited
+                ? "Remove from favorites"
+                : "Add to favorites"
             }
-            title={favorited ? "Remove from favorites" : "Add to favorites"}
+            title={
+              favorited
+                ? "Remove from favorites"
+                : "Add to favorites"
+            }
           >
             <Star
               size={15}
-              className={`transition-transform duration-200 ${favorited ? "fill-yellow-400" : ""}`}
+              className={`transition-transform duration-200
+                ${favorited ? "fill-yellow-400" : ""}`}
             />
           </button>
         </div>
       </div>
 
-      {/* Name + description */}
-      <h3 className="text-sm font-semibold dark:text-text-primary text-gray-900 mb-1 group-hover:text-accent group-focus-visible:text-accent transition-colors">
-        {agent?.name || "Unnamed Agent"}
-      </h3>
-      <p className=" flex-1 text-xs dark:text-text-secondary text-gray-500 leading-relaxed mb-3 line-clamp-2">
-        {agent?.description || "No description provided."}
-      </p>
-
-      {/* Bottom: provider badge + run link */}
-      <div className="flex items-center justify-between mt-auto">
-        <span
-          className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${prov.bg} ${prov.text} ${prov.border}`}
-        >
-          {provLabel}
-        </span>
-        <span className="flex items-center gap-1 text-xs font-medium text-accent opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0 group-focus-visible:translate-x-0">
-          Run <ArrowRight size={12} className="transition-transform duration-300 transform group-hover:translate-x-1 group-focus-visible:translate-x-1" />
-        </span>
-      </div>
-    </Link>
-    {showCollectionPicker && (
-      <CollectionPicker agentId={agent.id} onClose={() => setShowCollectionPicker(false)} />
-    )}
+      {showCollectionPicker && (
+        <CollectionPicker
+          agentId={agent.id}
+          onClose={() => setShowCollectionPicker(false)}
+        />
+      )}
     </>
   );
 }
+```
+
+### What I changed
+
+The important change is this structure:
+
+```text
+<div>
+    <Link>
+        Agent content
+    </Link>
+
+    <button>Copy</button>
+    <button>Collection</button>
+    <button>Favorite</button>
+</div>
+```
+
+instead of:
+
+```text
+<Link>
+    Agent content
+    <button>Copy</button>
+    <button>Collection</button>
+    <button>Favorite</button>
+</Link>
+```
+
