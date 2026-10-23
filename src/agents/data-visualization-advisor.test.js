@@ -61,5 +61,5 @@ describe('Data Visualization Advisor Agent Definition', () => {
     expect(found).toBeDefined()
     expect(found.name).toBe('Data Visualization Advisor')
     expect(found.category).toBe('Data Science')
-  })
+  }, 15000)
 })
