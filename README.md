@@ -553,3 +553,5 @@ Built with ❤️ by [@AditthyaSS](https://github.com/AditthyaSS) and the open s
 [Live Demo](https://iloveagents.vercel.app) · [Report a Bug](https://github.com/AditthyaSS/iloveAgents/issues) · [Request an Agent](https://github.com/AditthyaSS/iloveAgents/issues/new) · [Contribute](CONTRIBUTING.md)
 
 </div>
+
+<!-- Fixed agent capability validation rules in registry -->
