@@ -84,7 +84,8 @@ Adhere strictly to modern industry standards:
 1. **Content-Security-Policy (CSP v3):**
    - Prioritize Strict CSP using cryptographic per-request nonces (\`'nonce-...\'\`) with \`'strict-dynamic'\' and HTTPS/hash fallbacks for older browsers.
    - Enforce explicit isolation on sensitive directives: \`default-src 'self'\`, \`object-src 'none'\`, \`base-uri 'self'\` (or \`'none'\`), \`frame-ancestors 'none'\` (or designated embedding origins), \`form-action 'self'\`.
-   - Never allow unsafe directives (\`'unsafe-inline'\`, \`'unsafe-eval'\`, wildcards \`*\`, \`data:\` in script-src) without strict nonces or explicit justification.
+   - Never allow unsafe directives (\`'unsafe-inline'\`, wildcards \`*\`, \`data:\` in script-src) without strict nonces or explicit justification. Treat \`'unsafe-eval'\` separately: a nonce does not restrict \`eval()\` or \`Function()\`, so allow it only with its own explicit justification (for example a named dependency that needs it), never because a nonce is present.
+   - With \`'strict-dynamic'\`, CSP Level 3 ignores \`'self'\` and host allowlists for scripts. Put the request nonce on every parser-inserted \`<script>\` (first-party and third-party) and describe host entries only as fallbacks for older browsers, not as authorization in CSP Level 3 browsers.
    - Provide proper source allowances for declared third-party SDKs (Google Analytics/Tag Manager, Stripe, Sentry, Fonts, CDNs) without granting over-permissive wildcard domains.
 2. **Cross-Origin Isolation & Isolation Primitives:**
    - **Cross-Origin-Opener-Policy (COOP):** Configure \`same-origin\` (or \`same-origin-allow-popups\` if OAuth popups require window references).
@@ -119,13 +120,14 @@ Provide a clean, comprehensive reference table of every recommended HTTP header,
 
 ## 3. Framework & Server Implementation Snippets
 Provide production-ready, drop-in configuration code specifically tailored to the requested environment:
-- **Primary Framework Implementation:** Provide copy-pasteable configuration (e.g. Next.js middleware with per-request crypto nonce generation and header forwarding, Express.js Helmet setup, NGINX \`add_header\` block, Django \`SecurityMiddleware\` settings, or Cloudflare Transform Rules).
+- **Primary Framework Implementation:** Provide copy-pasteable configuration (e.g. Next.js middleware with per-request crypto nonce generation and header forwarding; state that nonce-bearing HTML must be rendered dynamically, because a statically rendered page cannot receive a per-request nonce, and give a hash-based policy for pages that must stay static; Express.js Helmet setup, NGINX \`add_header\` block, Django \`SecurityMiddleware\` settings, or Cloudflare Transform Rules).
 - **Static Assets vs Dynamic HTML:** Differentiate headers applied to HTML documents versus immutable static assets (JS, CSS, images, fonts).
 
 ## 4. Violation Reporting & Zero-Breakage Staged Migration Plan
 Provide an actionable 3-phase rollout guide:
 1. **Phase 1: Discovery & Telemetry (Report-Only):**
    - Deploy via \`Content-Security-Policy-Report-Only\` using Reporting API (\`Reporting-Endpoints\` and \`report-to\` / \`report-uri\`).
+   - Note that \`frame-ancestors\` is ignored in \`Content-Security-Policy-Report-Only\`: test framing and permitted embedding origins against the enforcing policy (for example on staging) before Phase 3.
    - Sample reporting endpoint integration (Sentry CSP endpoint, Report-URI, or custom lightweight serverless webhook).
 2. **Phase 2: Violation Triage & Allowlist Fine-Tuning:**
    - How to filter noise (browser extensions, legacy bookmarklets, tracking scripts) and address legit third-party dynamic loaders.
