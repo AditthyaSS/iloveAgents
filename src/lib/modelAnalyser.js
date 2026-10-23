@@ -8,9 +8,9 @@ OpenAI Models:
 - o3-mini: Latest OpenAI reasoning model, best for math, code and analytical tasks
 
 Anthropic Models:
-- Claude 3.5 Sonnet: Best Anthropic model, excellent structured markdown output and reasoning
-- Claude 3.5 Haiku: Fast and affordable Anthropic model, good for quick text generation
-- Claude 3 Opus: Most powerful Claude model, best for nuanced complex writing tasks
+- Claude Sonnet 5.5: Balanced Anthropic model, excellent structured markdown output and reasoning
+- Claude Haiku 4.5: Fast and affordable Anthropic model, good for quick text generation
+- Claude Opus 4.8: Most capable of the three, best for nuanced complex writing tasks
 
 Gemini Models:
 - Gemini 1.5 Flash: Fast and affordable, good for simple generation tasks
@@ -56,7 +56,7 @@ Be specific and practical. Consider context window, speed, cost and output quali
 
   const MODEL_DEFAULTS = {
     gemini: "gemini-2.5-flash",
-    anthropic: "claude-3-5-haiku-20241022",
+    anthropic: "claude-haiku-4-5-20251001",
     openai: "gpt-4o-mini",
 
   };
