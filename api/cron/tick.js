@@ -244,7 +244,7 @@ export default async function handler(req, res) {
           .eq('automation_id', auto.id)
           .single()
 
-        const apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
+        let apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
 
         if (!apiKey) {
           throw new Error('API key not found in encrypted secret vault.')
@@ -300,7 +300,12 @@ export default async function handler(req, res) {
         }
       } catch (err) {
         status = 'failed'
-        error = err.message || 'Execution error'
+        const rawMessage = err.message || 'Execution error'
+        error = apiKey ? rawMessage.split(apiKey).join('[REDACTED]') : rawMessage
+      } finally {
+        // Clear the decrypted key from memory as soon as this automation run is done,
+        // and ensure it never leaks into stored run logs or error output.
+        apiKey = null
       }
 
       const autoDuration = Date.now() - autoStart
@@ -339,7 +344,7 @@ export default async function handler(req, res) {
       duration: Date.now() - startTime,
     })
   } catch (error) {
-    console.error('Cron error:', error)
+    console.error('Cron error:', error?.message || 'Cron execution failed')
     return res.status(500).json({ error: error.message || 'Cron execution failed' })
   }
 }
