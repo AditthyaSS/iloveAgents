@@ -512,10 +512,31 @@ export function deleteRun(runId) {
   }
 }
 
+// ── Cross-tab coordination (Web Locks API) ──
+// Every browser tab has its own copy of this module, so in-memory state such as
+// `activeRunningIds` cannot stop two tabs from running the same automation.
+// Web Locks are shared by all tabs of the origin and are released by the browser
+// itself when the owning tab closes or crashes, which makes them a reliable
+// "is this run still alive?" signal.
+const CLAIM_LOCK = 'ila-automation-claim'
+const RUN_LOCK_PREFIX = 'ila-automation-run:'
+const NOT_ACQUIRED = Symbol('lock-not-acquired')
+// Browsers without Web Locks cannot tell a live run from a dead one, so fall
+// back to the age of the 'running' record.
+const STALE_RUN_MS = 15 * 60 * 1000
+const INTERRUPTED_MESSAGE =
+  'Interrupted: the browser tab was closed or reloaded before this run finished. It will run again at its next scheduled time.'
+
+function getLockManager() {
+  return typeof navigator !== 'undefined' && navigator.locks && typeof navigator.locks.request === 'function'
+    ? navigator.locks
+    : null
+}
+
 // ── Run Automation Engine ──
 const activeRunningIds = new Set()
 
-export async function runAutomationNow(automationId, options = {}) {
+async function executeAutomationRun(automationId, options = {}) {
   const automation = getAutomation(automationId)
   if (!automation) throw new Error('Automation not found')
   if (activeRunningIds.has(automationId)) throw new Error('This automation is currently executing')
@@ -633,6 +654,8 @@ export async function runAutomationNow(automationId, options = {}) {
   updateAutomation(automation.id, {
     lastRunAt: completedAt,
     nextRunAt: updatedNextRun,
+  }).catch(() => {
+    // The automation was deleted while it was running; nothing left to update.
   })
 
   // Trigger browser notification if supported
@@ -649,29 +672,119 @@ export async function runAutomationNow(automationId, options = {}) {
   return finishedRunRecord
 }
 
+/**
+ * Run an automation now (manual "Run now" and scheduled runs both go through here).
+ *
+ * The run lock is held for the whole run and is shared by every tab, so the same
+ * automation can never execute twice at once. It is acquired BEFORE the
+ * 'running' record is written, so a 'running' record always has a live owner.
+ */
+export async function runAutomationNow(automationId, options = {}) {
+  const locks = getLockManager()
+  if (!locks) return executeAutomationRun(automationId, options)
+
+  const result = await locks.request(
+    RUN_LOCK_PREFIX + automationId,
+    { ifAvailable: true },
+    async (lock) => (lock ? executeAutomationRun(automationId, options) : NOT_ACQUIRED)
+  )
+  if (result === NOT_ACQUIRED) throw new Error('This automation is currently executing')
+  return result
+}
+
+/**
+ * Claim a due automation for this tab: re-read it (the caller's snapshot may be
+ * stale because another tab may have just run it), check it is still due, and
+ * advance nextRunAt BEFORE running. The check-and-advance happens under a short
+ * global lock, so only one tab can win the claim.
+ */
+async function claimDueAutomation(automationId) {
+  const claim = () => {
+    const fresh = getAutomation(automationId)
+    const now = Date.now()
+    if (!fresh || !fresh.enabled || !fresh.hasKey || !fresh.nextRunAt || now < fresh.nextRunAt) {
+      return false
+    }
+    const preset = SCHEDULE_PRESETS.find(p => p.value === fresh.schedule) || SCHEDULE_PRESETS[1]
+    const list = loadAutomations()
+    const index = list.findIndex(a => a.id === automationId)
+    if (index === -1) return false
+    list[index] = { ...list[index], nextRunAt: now + preset.ms, updatedAt: now }
+    saveAutomations(list)
+    return true
+  }
+
+  const locks = getLockManager()
+  return locks ? locks.request(CLAIM_LOCK, claim) : claim()
+}
+
+/**
+ * Mark runs that can no longer finish (their tab was closed, reloaded or crashed
+ * mid-run) as failed, instead of leaving them 'running' forever.
+ *
+ * With Web Locks this is exact: a 'running' record whose run lock nobody holds
+ * has no live owner. Otherwise we fall back to the record's age.
+ *
+ * @returns {Promise<number>} how many runs were recovered
+ */
+export async function recoverInterruptedRuns() {
+  const running = loadRuns().filter(r => r.status === 'running')
+  if (running.length === 0) return 0
+
+  const now = Date.now()
+  const locks = getLockManager()
+  let isOrphan
+  if (locks && typeof locks.query === 'function') {
+    const { held = [] } = await locks.query()
+    const heldNames = new Set(held.map(l => l.name))
+    isOrphan = (run) => !heldNames.has(RUN_LOCK_PREFIX + run.automationId)
+  } else {
+    isOrphan = (run) => now - run.startedAt > STALE_RUN_MS
+  }
+
+  const orphanIds = new Set(running.filter(isOrphan).map(r => r.id))
+  if (orphanIds.size === 0) return 0
+
+  // Re-read right before writing and only touch records that are still 'running'.
+  let recovered = 0
+  const updated = loadRuns().map(run => {
+    if (run.status !== 'running' || !orphanIds.has(run.id)) return run
+    recovered += 1
+    return { ...run, status: 'failed', completedAt: now, duration: now - run.startedAt, error: INTERRUPTED_MESSAGE }
+  })
+  if (recovered > 0) saveRuns(updated)
+  return recovered
+}
+
+/** One scheduler pass: recover dead runs, then claim and run whatever is due. */
+export async function runDueAutomations() {
+  await recoverInterruptedRuns()
+
+  const now = Date.now()
+  for (const item of loadAutomations()) {
+    if (!item.enabled || !item.hasKey) continue
+    // Cheap pre-filter on this (possibly stale) snapshot; the claim re-checks on fresh data.
+    if (!item.nextRunAt || now < item.nextRunAt) continue
+    try {
+      if (!(await claimDueAutomation(item.id))) continue
+      await runAutomationNow(item.id)
+    } catch (e) {
+      console.error(`Scheduled run for ${item.name} failed:`, e)
+    }
+  }
+}
+
 // ── In-Browser Cron Background Heartbeat ──
 let heartbeatInterval = null
 
 export function initAutomationEngine() {
   if (heartbeatInterval) return
 
-  const checkDue = async () => {
-    const automations = loadAutomations()
-    const now = Date.now()
-    for (const item of automations) {
-      if (!item.enabled || !item.hasKey) continue
-      if (item.nextRunAt && now >= item.nextRunAt) {
-        try {
-          await runAutomationNow(item.id)
-        } catch (e) {
-          console.error(`Scheduled run for ${item.name} failed:`, e)
-        }
-      }
-    }
-  }
+  const tick = () =>
+    runDueAutomations().catch(e => console.error('Automation engine tick failed:', e))
 
   // Check on init
-  checkDue()
+  tick()
   // Check every 60s
-  heartbeatInterval = setInterval(checkDue, 60000)
+  heartbeatInterval = setInterval(tick, 60000)
 }
