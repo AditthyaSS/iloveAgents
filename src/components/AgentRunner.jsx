@@ -38,7 +38,7 @@ import { usePromptHistory } from "../lib/usePromptHistory";
 import ScheduleAgentModal from "./ScheduleAgentModal";
 import { useScheduler } from "../lib/useScheduler";
 import { useApiKey } from "../lib/useApiKey";
-import { streamAgent } from "../lib/llmAdapter";
+import { streamAgent, fetchGeminiModels, fetchGroqModels, fetchOpenAIModels, fetchOpenRouterModels } from "../lib/llmAdapter";
 import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
@@ -49,6 +49,7 @@ const providerLabels = {
   anthropic: "Anthropic",
   gemini: "Gemini",
   openrouter: "OpenRouter",
+  groq: "Groq",
   any: "Any",
 };
 
@@ -88,6 +89,10 @@ export default function AgentRunner({ agent }) {
   const [selectedModel, setSelectedModel] = useState(
     MODEL_MAP[provider] || MODEL_MAP.openai,
   );
+  const [customModelId, setCustomModelId] = useState("");
+  const [temperature, setTemperature] = useState(0.7);
+  const [topP, setTopP] = useState(1.0);
+  const [dynamicModels, setDynamicModels] = useState([]);
   const [versionHistory, setVersionHistory] = useState([]);
   const [playgroundOpen, setPlaygroundOpen] = useState(false);
   const [customPrompt, setCustomPrompt] = useState(agent.systemPrompt);
@@ -143,6 +148,38 @@ export default function AgentRunner({ agent }) {
   useEffect(() => {
     setSelectedModel(MODEL_MAP[provider] || MODEL_MAP.openai);
   }, [provider]);
+
+  useEffect(() => {
+    async function loadModels() {
+      if (!apiKey) {
+        setDynamicModels([]);
+        return;
+      }
+
+      try {
+        let models = [];
+        switch (provider) {
+          case 'gemini':
+            models = await fetchGeminiModels(apiKey);
+            break;
+          case 'groq':
+            models = await fetchGroqModels(apiKey);
+            break;
+          case 'openai':
+            models = await fetchOpenAIModels(apiKey);
+            break;
+          case 'openrouter':
+            models = await fetchOpenRouterModels(apiKey);
+            break;
+        }
+        setDynamicModels(models);
+      } catch (err) {
+        console.error("Failed to fetch dynamic models:", err);
+        setDynamicModels([]);
+      }
+    }
+    loadModels();
+  }, [provider, apiKey]);
 
   useEffect(() => {
     cancelActiveRun();
@@ -317,7 +354,13 @@ const handleRun = async () => {
     try {
       const actualProvider =
         agent.provider === "any" ? provider : agent.provider;
-      const model = resolveAgentModel(agent, actualProvider, selectedModel);
+
+      let model;
+      if (selectedModel === 'custom') {
+        model = customModelId.trim() || resolveAgentModel(agent, actualProvider, 'custom');
+      } else {
+        model = resolveAgentModel(agent, actualProvider, selectedModel);
+      }
 
       const result = await streamAgent({
         provider: actualProvider,
@@ -329,6 +372,9 @@ const handleRun = async () => {
           if (isCurrentRun()) handleChunk(chunk);
         },
         signal: controller.signal,
+      }, {
+        temperature,
+        top_p: topP,
       });
 
       // Cleared / superseded / unmounted while streaming: discard everything.
@@ -594,6 +640,8 @@ const handleRun = async () => {
         agentProvider={agent.provider}
         model={selectedModel}
         setModel={setSelectedModel}
+        customModelId={customModelId}
+        setCustomModelId={setCustomModelId}
       />
 
       {supportsBatchMode && (
@@ -699,7 +747,7 @@ const handleRun = async () => {
 
                 <TokenCounter
                   value={inputs[input.id] || ""}
-                  modelId={selectedModel}
+                  modelId={selectedModel === 'custom' ? customModelId : selectedModel}
                 />
               </div>
             )}
@@ -729,7 +777,7 @@ const handleRun = async () => {
                   />
                   <TokenCounter
                     value={inputs[input.id] || ""}
-                    modelId={selectedModel}
+                    modelId={selectedModel === 'custom' ? customModelId : selectedModel}
                   />
                 </div>
               </div>
@@ -858,14 +906,14 @@ const handleRun = async () => {
 
         {playgroundOpen && (
           <div className="px-4 pb-4 animate-fade-in">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <label className="text-[11px] font-medium dark:text-text-secondary text-gray-500">
                 System Prompt
               </label>
               <div className="flex items-center gap-2">
                 <TokenCounter
                   value={customPrompt}
-                  modelId={selectedModel}
+                  modelId={selectedModel === 'custom' ? customModelId : selectedModel}
                 />
                 <CharCounter
                   value={customPrompt}
@@ -883,6 +931,42 @@ const handleRun = async () => {
                 )}
               </div>
             </div>
+
+            <div className="mb-4 grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-medium dark:text-text-muted text-gray-400">
+                    Temperature: {temperature}
+                  </label>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="2"
+                  step="0.1"
+                  value={temperature}
+                  onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-accent dark:bg-zinc-700"
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-medium dark:text-text-muted text-gray-400">
+                    Top P: {topP}
+                  </label>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={topP}
+                  onChange={(e) => setTopP(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-accent dark:bg-zinc-700"
+                />
+              </div>
+            </div>
+
             <div className="relative">
               <textarea
                 value={customPrompt}
@@ -1054,7 +1138,7 @@ const handleRun = async () => {
         <CostEstimator
           inputText={buildUserMessage()}
           systemPrompt={customPrompt}
-          modelId={selectedModel}
+          modelId={selectedModel === 'custom' ? customModelId : selectedModel}
         />
       </div>
 
@@ -1065,7 +1149,8 @@ const handleRun = async () => {
               {error.provider === "openai" && "Your OpenAI API key is invalid or expired."}
               {error.provider === "anthropic" && "Your Anthropic API key is invalid or expired."}
               {error.provider === "gemini" && "Your Google Gemini API key is invalid or expired."}
-              {!["openai", "anthropic", "gemini"].includes(error.provider) && "Your API key is invalid or expired."}
+              {error.provider === "groq" && "Your Groq API key is invalid or expired."}
+              {!["openai", "anthropic", "gemini", "groq"].includes(error.provider) && "Your API key is invalid or expired."}
             </strong>
             <br />
             Please check and update your API key.<br />
@@ -1167,13 +1252,21 @@ const handleRun = async () => {
         { value: "anthropic", label: "Anthropic" },
         { value: "gemini", label: "Gemini" },
         { value: "openrouter", label: "OpenRouter" },
+        { value: "groq", label: "Groq" },
       ]}
     />
 
     <CustomSelect
       value={selectedModel}
-      onChange={setSelectedModel}
-      options={MODELS[provider] || []}
+      onChange={(val) => {
+        setSelectedModel(val);
+        if (val !== 'custom') setCustomModelId("");
+      }}
+      options={[
+        ...(MODELS[provider] || []),
+        ...dynamicModels,
+        { value: 'custom', label: 'Custom Model ID...' }
+      ]}
     />
 
     <button
