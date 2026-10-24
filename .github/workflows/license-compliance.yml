@@ -1,0 +1,75 @@
+name: License Compliance
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-licenses:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Detect package manager
+        id: detect-package-manager
+        run: |
+          if [ -f "yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "command=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
+          elif [ -f "pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+            echo "command=pnpm install --frozen-lockfile" >> $GITHUB_OUTPUT
+          else
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "command=npm ci" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
+          
+      - name: Install dependencies
+        run: ${{ steps.detect-package-manager.outputs.command }}
+        
+      - name: Generate License Report
+        id: generate-report
+        run: |
+          # Install license-checker-rseidelsohn globally
+          npm install -g license-checker-rseidelsohn
+          
+          # Generate detailed JSON report and summary
+          license-checker-rseidelsohn --json > license-report.json
+          license-checker-rseidelsohn --summary > license-summary.txt
+          
+      - name: Validate Licenses (Fail on disallowed)
+        run: |
+          # Example blocklist: fail on GPL or AGPL licenses
+          license-checker-rseidelsohn --failOn "GPL;AGPL"
+          
+      - name: Add summary to job
+        if: always()
+        run: |
+          echo "### License Compliance Summary 📜" >> $GITHUB_STEP_SUMMARY
+          echo '```text' >> $GITHUB_STEP_SUMMARY
+          cat license-summary.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          
+      - name: Upload license report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: |
+            license-report.json
+            license-summary.txt
+          retention-days: 14
