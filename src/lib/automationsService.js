@@ -155,7 +155,18 @@ export function removeAutomationKey(automationId) {
 }
 
 // ── Email Notification Dispatch (Resend integration / simulation) ──
+function saveEmailLog(logEntry) {
+  try {
+    const existingLogs = JSON.parse(localStorage.getItem(EMAIL_LOGS_KEY) || '[]')
+    localStorage.setItem(EMAIL_LOGS_KEY, JSON.stringify([logEntry, ...existingLogs].slice(0, 50)))
+  } catch {}
+}
+
 export async function sendResendNotification({ to, automationName, agentName, output, status, duration, error }) {
+  if (!to) {
+    throw new Error('Recipient email address is required')
+  }
+
   const logEntry = {
     id: `email_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     to,
@@ -167,17 +178,12 @@ export async function sendResendNotification({ to, automationName, agentName, ou
     preview: output ? output.slice(0, 180) + '...' : error || 'Run finished',
   }
 
-  // Save to local email delivery log
-  try {
-    const existingLogs = JSON.parse(localStorage.getItem(EMAIL_LOGS_KEY) || '[]')
-    localStorage.setItem(EMAIL_LOGS_KEY, JSON.stringify([logEntry, ...existingLogs].slice(0, 50)))
-  } catch {}
-
   // Check if Resend API key is available in environment
-  const resendApiKey = import.meta.env.VITE_RESEND_API_KEY
-  if (resendApiKey && to) {
+  const resendApiKey = import.meta.env?.VITE_RESEND_API_KEY
+  if (resendApiKey) {
+    let resp
     try {
-      await fetch('https://api.resend.com/emails', {
+      resp = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,11 +217,31 @@ export async function sendResendNotification({ to, automationName, agentName, ou
           `,
         }),
       })
-    } catch (e) {
-      console.warn('Resend API dispatch error:', e)
+    } catch (networkErr) {
+      logEntry.status = 'Failed'
+      logEntry.error = networkErr.message
+      saveEmailLog(logEntry)
+      throw new Error(`Resend notification network error: ${networkErr.message}`)
+    }
+
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => '')
+      let detail = text
+      try {
+        const parsed = JSON.parse(text)
+        detail = parsed?.message || parsed?.error?.message || (typeof parsed === 'string' ? parsed : text)
+      } catch {}
+
+      const errorMsg = `Resend notification error ${resp.status}: ${String(detail || resp.statusText || 'Unknown error').slice(0, 500)}`
+      logEntry.status = 'Failed'
+      logEntry.error = errorMsg
+      saveEmailLog(logEntry)
+      throw new Error(errorMsg)
     }
   }
 
+  // Save successful or simulated delivery log
+  saveEmailLog(logEntry)
   return logEntry
 }
 
