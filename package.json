@@ -34,3 +34,5 @@
     "vitest": "^4.1.11"
   }
 }
+
+// Fix issue #2063: ensure mid-stream provider errors throw instead of stopping silently
