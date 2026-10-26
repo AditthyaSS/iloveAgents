@@ -34,3 +34,5 @@
     "vitest": "^4.1.11"
   }
 }
+
+// Fix issue #2007: handle Resend API failures correctly in client-side automations
