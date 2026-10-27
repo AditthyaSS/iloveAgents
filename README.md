@@ -553,3 +553,16 @@ Built with ❤️ by [@AditthyaSS](https://github.com/AditthyaSS) and the open s
 [Live Demo](https://iloveagents.vercel.app) · [Report a Bug](https://github.com/AditthyaSS/iloveAgents/issues) · [Request an Agent](https://github.com/AditthyaSS/iloveAgents/issues/new) · [Contribute](CONTRIBUTING.md)
 
 </div>
+
+ docs/api-provider-troubleshooting
+- [API Troubleshooting Guide](docs/API_TROUBLESHOOTING.md)
+
+<!-- Fixed agent capability validation rules in registry -->
+
+
+fix/cost-estimator-display
+<!-- Resolved misleading token and cost calculation displays in CostEstimator -->
+
+<!-- Fixed agentcapability validation rules in registry -->
+
+

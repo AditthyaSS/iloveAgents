@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useParams, Navigate } from 'react-router-dom'
 import AgentRunner from '../components/AgentRunner'
+import AgentDetailSkeleton from '../components/AgentDetailSkeleton'
 import { useAgents } from '../lib/useAgents'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import { getRecentAgentIds, saveRecentAgentIds } from '../lib/recentAgents'
@@ -26,7 +27,7 @@ export default function AgentPage() {
   }, [agent])
 
   if (isLoading) {
-    return null
+    return <AgentDetailSkeleton />
   }
 
   if (!agent) {
