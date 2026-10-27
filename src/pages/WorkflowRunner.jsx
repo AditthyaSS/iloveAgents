@@ -165,7 +165,7 @@ export default function WorkflowRunner() {
 
     // Rebuild from the workflow definition so branch steps injected by a
     // previous run are dropped before this run starts.
-    const execSteps = buildInitialSteps(workflow, agents)
+    let execSteps = buildInitialSteps(workflow, agents)
     setSteps(execSteps)
 
     // Pipeline context available to condition templates:
@@ -175,7 +175,10 @@ export default function WorkflowRunner() {
     let failed = false
     let i = 0
 
-    const syncSteps = () => setSteps([...execSteps])
+    const syncSteps = (nextSteps) => {
+      execSteps = nextSteps
+      setSteps([...execSteps])
+    }
 
     while (i < execSteps.length) {
       const step = execSteps[i]
@@ -185,7 +188,8 @@ export default function WorkflowRunner() {
         const { conditionValue, branchLabel, branchAgents } = evaluateConditionalStep(step.stepDef, context)
 
         if (!branchLabel) {
-          execSteps[i] = {
+          const nextSteps = [...execSteps]
+          nextSteps[i] = {
             ...step,
             status: 'failed',
             conditionValue,
@@ -193,7 +197,7 @@ export default function WorkflowRunner() {
               problems[0] ??
               `No branch matched "${conditionValue}" and no default branch is defined.`,
           }
-          syncSteps()
+          syncSteps(nextSteps)
           failed = true
           break
         }
@@ -213,22 +217,27 @@ export default function WorkflowRunner() {
             parentConditionalId: step.stepDef.id,
           }
         })
-        execSteps[i] = { ...step, status: 'done', conditionValue, branchLabel }
-        execSteps.splice(i + 1, 0, ...branchSteps)
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...step, status: 'done', conditionValue, branchLabel }
+        nextSteps.splice(i + 1, 0, ...branchSteps)
+        syncSteps(nextSteps)
         i += 1
         continue
       }
 
       if (!step.agent) {
-        execSteps[i] = { ...step, status: 'failed', error: `Agent "${step.agentId}" not found in registry.` }
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...step, status: 'failed', error: `Agent "${step.agentId}" not found in registry.` }
+        syncSteps(nextSteps)
         failed = true
         break
       }
 
-      execSteps[i] = { ...step, status: 'running' }
-      syncSteps()
+      {
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...step, status: 'running' }
+        syncSteps(nextSteps)
+      }
 
       const actualProvider =
         step.agent.provider === 'any'
@@ -240,7 +249,9 @@ export default function WorkflowRunner() {
         : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
 
       if (!keyToUse) {
-        setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...nextSteps[i], status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` }
+        syncSteps(nextSteps)
         failed = true
         break
       }
@@ -255,8 +266,10 @@ export default function WorkflowRunner() {
           systemPrompt: step.agent.systemPrompt,
           userMessage: currentInput,
         })
-        execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...nextSteps[i], status: 'done', output: result.content }
+        syncSteps(nextSteps)
+
         recordAnalyticsRun({
           agentId: step.agent.id,
           agentName: step.agent.name,
@@ -277,8 +290,9 @@ export default function WorkflowRunner() {
           }
         }
       } catch (err) {
-        execSteps[i] = { ...execSteps[i], status: 'failed', error: err?.message || err?.detail || 'Execution failed' }
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...nextSteps[i], status: 'failed', error: err?.message || err?.detail || 'Execution failed' }
+        syncSteps(nextSteps)
         failed = true
         break
       }
