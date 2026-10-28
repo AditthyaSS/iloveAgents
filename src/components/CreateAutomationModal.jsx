@@ -7,6 +7,7 @@ import { SCHEDULE_PRESETS, createAutomation, updateAutomation } from '../lib/aut
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
 import { useAgents } from '../lib/useAgents'
 import { useApiKey } from '../lib/useApiKey'
+import { useOverlayEscape } from '../hooks/useOverlayEscape'
 
 export default function CreateAutomationModal({
   isOpen,
@@ -59,6 +60,8 @@ export default function CreateAutomationModal({
       setSelectedModel(MODEL_MAP[prov] || MODEL_MAP.openai)
     }
   }, [selectedAgentId, selectedAgent])
+
+  useOverlayEscape(isOpen, onClose)
 
   if (!isOpen) return null
 
@@ -147,7 +150,12 @@ export default function CreateAutomationModal({
   const modelsForProvider = MODELS[provider] || MODELS.openai
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={initialData ? 'Edit scheduled automation' : 'Schedule AI agent autopilot'}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+    >
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/70 backdrop-blur-md transition-opacity"
@@ -176,6 +184,7 @@ export default function CreateAutomationModal({
             </div>
             <button
               onClick={onClose}
+              aria-label="Close dialog"
               className="p-2 rounded-xl text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-surface-hover transition-colors"
             >
               <X size={18} />
