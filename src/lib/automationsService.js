@@ -1,4 +1,4 @@
-import { supabase, isSupabaseConfigured } from './supabase'
+﻿import { supabase, isSupabaseConfigured } from './supabase'
 import { runAgent } from './llmAdapter'
 import { recordAnalyticsRun } from './useAnalytics'
 
@@ -13,7 +13,7 @@ export const SCHEDULE_PRESETS = [
   { value: 'weekly', label: 'Every week (Mon 9:00 AM)', cron: '0 9 * * 1', ms: 7 * 24 * 60 * 60 * 1000, description: 'Runs every Monday at 9:00 AM' },
 ]
 
-// ── Encryption Helper (pgsodium-compatible WebCrypto AES-GCM at-rest encryption) ──
+// â”€â”€ Encryption Helper (pgsodium-compatible WebCrypto AES-GCM at-rest encryption) â”€â”€
 const ENCRYPTION_SALT = 'ila-pgsodium-salt-2026'
 
 async function deriveKey() {
@@ -89,7 +89,7 @@ export async function decryptSecret(encryptedBase64) {
   }
 }
 
-// ── Local Vault for Encrypted Provider Keys ──
+// â”€â”€ Local Vault for Encrypted Provider Keys â”€â”€
 function getVault() {
   try {
     return JSON.parse(localStorage.getItem(VAULT_KEY) || '{}')
@@ -154,7 +154,7 @@ export function removeAutomationKey(automationId) {
   }
 }
 
-// ── Email Notification Dispatch (Resend integration / simulation) ──
+// â”€â”€ Email Notification Dispatch (Resend integration / simulation) â”€â”€
 export async function sendResendNotification({ to, automationName, agentName, output, status, duration, error }) {
   const logEntry = {
     id: `email_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -163,7 +163,7 @@ export async function sendResendNotification({ to, automationName, agentName, ou
     agentName,
     status: status === 'failed' ? 'Failed' : 'Delivered',
     sentAt: Date.now(),
-    subject: `[Open Agents Hub] ${status === 'failed' ? '❌ Failed' : '✅ Completed'}: ${automationName}`,
+    subject: `[Open Agents Hub] ${status === 'failed' ? 'âŒ Failed' : 'âœ… Completed'}: ${automationName}`,
     preview: output ? output.slice(0, 180) + '...' : error || 'Run finished',
   }
 
@@ -190,7 +190,7 @@ export async function sendResendNotification({ to, automationName, agentName, ou
           html: `
             <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b;">
               <div style="border-bottom: 2px solid #6366f1; padding-bottom: 12px; margin-bottom: 20px;">
-                <h2 style="margin: 0; color: #4338ca;">⏰ Open Agents Hub Autopilot Report</h2>
+                <h2 style="margin: 0; color: #4338ca;">â° Open Agents Hub Autopilot Report</h2>
                 <p style="margin: 4px 0 0 0; color: #64748b; font-size: 14px;">Automation: <strong>${automationName}</strong> (${agentName})</p>
               </div>
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
@@ -227,7 +227,7 @@ export function getEmailLogs() {
   }
 }
 
-// ── Default Seed Automations if empty ──
+// â”€â”€ Default Seed Automations if empty â”€â”€
 const INITIAL_SEED_AUTOMATIONS = [
   {
     id: 'auto_tech_seo_daily',
@@ -329,7 +329,7 @@ const INITIAL_SEED_RUNS = [
   },
 ]
 
-// ── Local Storage Load & Save Helpers ──
+// â”€â”€ Local Storage Load & Save Helpers â”€â”€
 export function loadAutomations() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -368,7 +368,7 @@ export function saveRuns(runs) {
   } catch {}
 }
 
-// ── Automation CRUD Operations ──
+// â”€â”€ Automation CRUD Operations â”€â”€
 export async function createAutomation(data) {
   const now = Date.now()
   const preset = SCHEDULE_PRESETS.find(p => p.value === data.schedule) || SCHEDULE_PRESETS[1]
@@ -512,7 +512,7 @@ export function deleteRun(runId) {
   }
 }
 
-// ── Run Automation Engine ──
+// â”€â”€ Run Automation Engine â”€â”€
 const activeRunningIds = new Set()
 
 export async function runAutomationNow(automationId, options = {}) {
@@ -638,7 +638,7 @@ export async function runAutomationNow(automationId, options = {}) {
   // Trigger browser notification if supported
   if ('Notification' in window && Notification.permission === 'granted') {
     new Notification(
-      status === 'success' ? `✅ ${automation.name} Finished` : `❌ ${automation.name} Failed`,
+      status === 'success' ? `âœ… ${automation.name} Finished` : `âŒ ${automation.name} Failed`,
       {
         body: status === 'success' ? `Output generated in ${(duration / 1000).toFixed(1)}s` : errorMsg,
         icon: '/favicon.ico',
@@ -649,7 +649,7 @@ export async function runAutomationNow(automationId, options = {}) {
   return finishedRunRecord
 }
 
-// ── In-Browser Cron Background Heartbeat ──
+// â”€â”€ In-Browser Cron Background Heartbeat â”€â”€
 let heartbeatInterval = null
 
 export function initAutomationEngine() {
@@ -675,3 +675,4 @@ export function initAutomationEngine() {
   // Check every 60s
   heartbeatInterval = setInterval(checkDue, 60000)
 }
+
