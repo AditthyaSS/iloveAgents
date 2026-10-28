@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
 import { useAgents } from '../lib/useAgents'
+import { useOverlayEscape } from '../hooks/useOverlayEscape'
 
 const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
 
@@ -54,14 +55,7 @@ export default function Sidebar({ open, onClose }) {
   }, [isSearching])
 
   // The mobile drawer covers the page, so Escape should close it like a modal
-  useEffect(() => {
-    if (!open) return undefined
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  useOverlayEscape(open, onClose)
 
   const { filteredAgents, categories, categoryOrder } = useMemo(() => {
     const filtered = !normalizedQuery

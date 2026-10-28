@@ -43,6 +43,7 @@ import { analyseModels } from "../lib/modelAnalyser";
 import { useHistory } from "../lib/useHistory";
 import { resolveAgentModel, MODEL_MAP, MODELS, } from "../lib/resolveAgentModel";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
+import { hasOpenOverlay } from "../hooks/useOverlayEscape";
 
 const providerLabels = {
   openai: "OpenAI",
@@ -134,9 +135,10 @@ export default function AgentRunner({ agent }) {
     if (batchMode) return;
     if (canRun() && !loading) handleRun();
   },
-    'Escape': () => {
-      // Escape closes the schedule modal; don't also wipe the inputs it is scheduling
-      if (scheduleModalOpen) return;
+    'Escape': (event) => {
+      // An open overlay owns Escape, and a held key must not clear the run the
+      // first press just closed a dialog over
+      if (event?.repeat || hasOpenOverlay()) return;
       handleClear();
       setPlaygroundOpen(false);
     },

@@ -1,15 +1,8 @@
-import { useEffect } from 'react';
+import { useOverlayEscape } from '../hooks/useOverlayEscape';
 import { X, Command, CornerDownLeft, Search, Type, HelpCircle } from 'lucide-react';
 
 export default function KeyboardShortcutsModal({ isOpen, onClose }) {
-  useEffect(() => {
-    if (!isOpen) return undefined;
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [isOpen, onClose]);
+  useOverlayEscape(isOpen, onClose);
 
   if (!isOpen) return null;
 

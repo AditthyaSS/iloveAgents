@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { X, Clock, Zap, AlertCircle, ShieldCheck, Mail, Lock } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
+import { useOverlayEscape } from '../hooks/useOverlayEscape'
 
 /**
  * ScheduleAgentModal
@@ -24,13 +25,7 @@ export default function ScheduleAgentModal({
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  useOverlayEscape(true, onClose)
 
   const missingRequiredInputs = agent.inputs?.filter((input) => {
     if (!input.required) return false

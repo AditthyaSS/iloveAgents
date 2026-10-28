@@ -7,6 +7,7 @@ import { SCHEDULE_PRESETS, createAutomation, updateAutomation } from '../lib/aut
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
 import { useAgents } from '../lib/useAgents'
 import { useApiKey } from '../lib/useApiKey'
+import { useOverlayEscape } from '../hooks/useOverlayEscape'
 
 export default function CreateAutomationModal({
   isOpen,
@@ -60,14 +61,7 @@ export default function CreateAutomationModal({
     }
   }, [selectedAgentId, selectedAgent])
 
-  useEffect(() => {
-    if (!isOpen) return undefined
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose?.()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [isOpen, onClose])
+  useOverlayEscape(isOpen, onClose)
 
   if (!isOpen) return null
 
