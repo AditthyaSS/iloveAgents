@@ -34,5 +34,3 @@
     "vitest": "^4.1.11"
   }
 }
-
-// Fix issue #2058: update Anthropic model picker to latest active models
