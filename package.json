@@ -34,5 +34,3 @@
     "vitest": "^4.1.11"
   }
 }
-
-// Fix issue #2002: record correct error status when OpenAI returns HTTP error in scheduled automations
