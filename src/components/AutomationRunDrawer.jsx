@@ -11,7 +11,7 @@ export default function AutomationRunDrawer({ run, isOpen, onClose }) {
   if (!isOpen || !run) return null
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(run.output || run.error || '')
+    try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(run.output || run.error || ''); setCopied(true); setTimeout(() => setCopied(false), 2000); return; } throw new Error('API unavailable'); } catch (e) { const ta = document.createElement('textarea'); ta.value = run.output || run.error || ''; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch(err) {} document.body.removeChild(ta); }
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
