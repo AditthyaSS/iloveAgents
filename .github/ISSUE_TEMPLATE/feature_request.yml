@@ -1,18 +1,19 @@
 name: Feature Request
-description: Suggest something new or an improvement to the platform
+description: Suggest something new or an improvement to the platform with enhanced clarity
 title: "[Feature]: "
 labels: ["OSIC'26"]
 body:
   - type: markdown
     attributes:
       value: |
-        Got an idea? I would love to hear it.
+        Got an idea? We would love to hear it! Please provide clear details to help us understand and evaluate your suggestion.
         If you want to suggest a new agent, please use the New Agent Proposal template instead.
 
   - type: textarea
     id: problem
     attributes:
       label: What problem does this solve?
+      description: Clearly describe the current pain point, limitation, or friction you are experiencing.
       placeholder: Right now there is no way to copy the output as plain text...
     validations:
       required: true
@@ -21,6 +22,7 @@ body:
     id: solution
     attributes:
       label: What would you like to see?
+      description: Describe the new feature or improvement you propose in detail.
       placeholder: A "Copy as plain text" button next to the existing copy button.
     validations:
       required: true
@@ -29,12 +31,14 @@ body:
     id: alternatives
     attributes:
       label: Any other ideas you considered? (optional)
+      description: List any alternative solutions, workarounds, or features you have thought about.
       placeholder: I also thought about a toggle to switch between rendered and raw output...
 
   - type: dropdown
     id: area
     attributes:
       label: Which part of the app is this about?
+      description: Select the primary module or section of the application affected by this request.
       options:
         - Agent Runner
         - Homepage / Agent Grid
@@ -46,3 +50,12 @@ body:
         - Other
     validations:
       required: true
+
+  - type: input
+    id: other_area
+    attributes:
+      label: If you selected "Other", please specify
+      description: Specify the application area if it wasn't listed above.
+      placeholder: e.g., Authentication, Billing, Settings
+    validations:
+      required: false
