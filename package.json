@@ -34,5 +34,3 @@
     "vitest": "^4.1.11"
   }
 }
-
-// Fix issue #2011: handle unparsed session key JSON and global keys fallback in WorkflowRunner
