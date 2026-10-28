@@ -135,6 +135,8 @@ export default function AgentRunner({ agent }) {
     if (canRun() && !loading) handleRun();
   },
     'Escape': () => {
+      // Escape closes the schedule modal; don't also wipe the inputs it is scheduling
+      if (scheduleModalOpen) return;
       handleClear();
       setPlaygroundOpen(false);
     },

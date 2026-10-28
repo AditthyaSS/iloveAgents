@@ -53,6 +53,16 @@ export default function Sidebar({ open, onClose }) {
     }
   }, [isSearching])
 
+  // The mobile drawer covers the page, so Escape should close it like a modal
+  useEffect(() => {
+    if (!open) return undefined
+    const onKey = (e) => {
+      if (e.key === 'Escape') onClose?.()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
   const { filteredAgents, categories, categoryOrder } = useMemo(() => {
     const filtered = !normalizedQuery
       ? agents
@@ -121,6 +131,7 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside
+        aria-label="Agents sidebar"
         className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
           dark:border-border border-gray-200
           ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
