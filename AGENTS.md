@@ -41,7 +41,7 @@
 | 34 | Disaster Recovery Plan Generator | Generate a complete disaster recovery plan with RTO/RPO targets, backup strategies, failover procedures, recovery workflows, and testing schedules. | DevOps |
 | 35 | Docker Compose Generator | Describe your multi-service application stack and get a production-ready docker-compose.yml with volumes, networks, and health checks. | Engineering |
 | 36 | Docker Container Security & Optimization Audit | Analyze Dockerfiles or Docker Compose configurations to discover security vulnerabilities, size bloat, and optimization opportunities. | DevOps |
-| 37 | DSA Problem Explainer | Explains DSA problems with intuition, optimized approaches, dry runs, interview insights, and complexity analysis. | Education |
+| 37 | DSA Problem Explainer | Breaks down Data Structures & Algorithms problems with intuition, time/space complexity, and clean code examples. | Education |
 | 38 | ELI5 Explainer | Explains complex topics in plain language at your chosen difficulty level — from 5-year-old to expert. | Education |
 | 39 | Email Reply Writer | Paste any email you received and describe how you want to respond. Get a polished reply in seconds. | Productivity |
 | 40 | Employee Onboarding Planner | Generate structured onboarding plans and checklists for new hires based on role, department, seniority, and start date. | HR |
