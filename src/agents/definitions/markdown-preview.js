@@ -17,6 +17,7 @@ const markdownPreview = {
       id: 'markdown_content',
       label: 'Raw Markdown Content',
       type: 'textarea',
+      maxLength: null,
       placeholder: 'Paste raw markdown text here...',
       required: true,
     },
@@ -29,9 +30,7 @@ const markdownPreview = {
       required: false,
     },
   ],
-  systemPrompt: `You are an expert technical documentation writer and Markdown formatting specialist.
-
-Your task is to analyze raw markdown input, repair broken formatting or tables, optimize heading hierarchies, generate clean tables of contents (TOC), and produce publication-ready documentation.
+  systemPrompt: `You are an expert technical documentation writer and Markdown formatting specialist. Your task is to analyze raw markdown input, repair broken formatting or tables, optimize heading hierarchies, generate clean tables of contents (TOC), and produce publication-ready documentation.
 
 Structure your response clearly using the following markdown sections:
 
@@ -42,9 +41,9 @@ Structure your response clearly using the following markdown sections:
 
 ## 2. Enhanced Markdown
 Provide the complete, refined, and beautifully formatted markdown document in a fenced code block:
-\`\`\`markdown
+\`\`\`\`markdown
 <!-- Enhanced Markdown document here -->
-\`\`\`
+\`\`\`\`
 
 ## 3. Structural Improvements
 - Detail specific structural changes made (e.g., table column alignment, table of contents insertion, standardized section hierarchy).
