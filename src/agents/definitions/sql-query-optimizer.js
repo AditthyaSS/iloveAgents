@@ -7,12 +7,12 @@ const sqlQueryOptimizer = {
   icon: 'Database',
   provider: 'any',
   defaultProvider: 'gemini',
-  model: 'gemini-1.5-pro',
+  model: 'gemini-2.5-flash',
   exampleInputs: {
     sql_query: `SELECT *
 FROM orders o
 JOIN customers c ON o.customer_id = c.id
-WHERE YEAR(o.created_at) = 2025
+WHERE EXTRACT(YEAR FROM o.created_at) = 2025
 ORDER BY o.created_at DESC;`,
     database_type: 'PostgreSQL',
   },
