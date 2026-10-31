@@ -177,6 +177,9 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     }
   }
 
+  /**
+   * Cancels the active batch and settles unfinished rows as cancelled.
+   */
   const handleStop = () => {
     const controller = abortControllerRef.current
     if (!controller) return
