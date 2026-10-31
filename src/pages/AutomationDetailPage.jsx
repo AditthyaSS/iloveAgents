@@ -108,7 +108,7 @@ export default function AutomationDetailPage() {
       setTimeout(() => setTestEmailStatus(''), 4000)
       reloadData()
     } catch (e) {
-      setTestEmailStatus('Failed to send test email.')
+      setTestEmailStatus(e.message || 'Failed to send test email.')
     } finally {
       setTestEmailSending(false)
     }
