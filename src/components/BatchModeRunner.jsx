@@ -52,6 +52,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
   const [hasRun, setHasRun] = useState(false)
   const fileInputRef = useRef(null)
   const abortControllerRef = useRef(null)
+  const runGenerationRef = useRef(0)
 
   const otherFields = agent.inputs.filter((i) => i.id !== batchFieldId)
 
@@ -134,6 +135,8 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
   }
 
   const handleRun = async () => {
+    const runGeneration = runGenerationRef.current + 1
+    runGenerationRef.current = runGeneration
     setRunning(true)
     setHasRun(true)
     setResults(items.map((item) => ({ input: item, status: 'waiting' })))
@@ -142,6 +145,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     abortControllerRef.current = controller
 
     const onItemUpdate = (index, patch) => {
+      if (runGenerationRef.current !== runGeneration) return
       setResults((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)))
     }
 
@@ -166,16 +170,29 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         signal: controller.signal,
       })
     } finally {
-      setRunning(false)
-      abortControllerRef.current = null
+      if (runGenerationRef.current === runGeneration) {
+        setRunning(false)
+        abortControllerRef.current = null
+      }
     }
   }
 
   const handleStop = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort()
-      abortControllerRef.current = null
-    }
+    const controller = abortControllerRef.current
+    if (!controller) return
+
+    // Invalidate callbacks from this run so a late response cannot overwrite
+    // the cancelled rows or interfere with a batch started immediately after.
+    runGenerationRef.current += 1
+    controller.abort()
+    abortControllerRef.current = null
+    setResults((prev) =>
+      prev.map((result) =>
+        result.status === 'waiting' || result.status === 'running'
+          ? { ...result, status: 'failed', error: 'Cancelled' }
+          : result
+      )
+    )
     setRunning(false)
   }
 
