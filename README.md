@@ -554,4 +554,15 @@ Built with ❤️ by [@AditthyaSS](https://github.com/AditthyaSS) and the open s
 
 </div>
 
+ docs/api-provider-troubleshooting
+- [API Troubleshooting Guide](docs/API_TROUBLESHOOTING.md)
+
 <!-- Fixed agent capability validation rules in registry -->
+
+
+fix/cost-estimator-display
+<!-- Resolved misleading token and cost calculation displays in CostEstimator -->
+
+<!-- Fixed agentcapability validation rules in registry -->
+
+
