@@ -170,5 +170,7 @@
 | 163 | Dependency Impact Analyzer | Analyzes software dependency upgrades or replacements to assess breaking changes, compatibility risks, affected modules, and migration steps. | Engineering |
 | 164 | GitHub Actions Workflow Optimizer | Audits and optimizes GitHub Actions workflow YAML files for execution speed, caching strategies, matrix concurrency, secret security, and token permissions. | DevOps |
 | 165 | OpenTelemetry Observability & Tracing Architect | Designs OpenTelemetry distributed tracing, metrics, collector pipelines, W3C context propagation, and tail-based sampling architectures across microservices. | DevOps |
+| 166 | OWASP API Security Auditor | Audits REST, GraphQL, and webhook API schemas and endpoints against the OWASP API Security Top 10 to identify BOLA, broken auth, SSRF, and sensitive data leakage, providing an executive risk scorecard and drop-in code fixes. | Cybersecurity |
+| 167 | Event-Driven Architecture & Message Broker Designer | Designs production event-driven topologies, CloudEvents-compliant schemas, partition key strategies, idempotency handling, and dead-letter queue (DLQ) retry backoffs for Kafka, RabbitMQ, and AWS SQS/SNS. | Engineering |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
