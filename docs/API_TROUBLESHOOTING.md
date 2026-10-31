@@ -11,7 +11,7 @@ are blocking requests.
 | --- | --- | --- |
 | **401 Unauthorized** | The API key is missing, invalid, expired, or copied incorrectly. | Re-enter the key from the provider dashboard. Check that it belongs to the selected provider, has no extra spaces, and has not been revoked. |
 | **403 Forbidden** | The account or key is not allowed to use the requested resource. | Check the key's permissions, account status, region restrictions, and access to the selected model in the provider dashboard. |
-| **429 Too Many Requests** | The account has reached a request or token rate limit, or has insufficient quota. | Wait briefly and retry. Check the provider's rate limits, usage, billing, and quota. Reduce parallel requests if several agents are running at once. |
+| **429 Too Many Requests** | A request or token rate limit was reached, or the provider is reporting exhausted quota or billing. Some providers use 429 for either condition. | For rate limits, wait briefly and retry with backoff; reduce parallel requests if needed. For quota or billing errors, check available credits, billing status, and spend limits before retrying. |
 | **500 Internal Server Error** | The provider encountered an unexpected server error. | Check the provider's status page, wait a few minutes, and retry. If it continues, try another available model. |
 | **503 Service Unavailable** | The provider or selected model is temporarily unavailable or overloaded. | Check the provider's status page, wait, then retry or select another model. |
 
@@ -38,7 +38,8 @@ On shared devices, clear the key from the app when you finish.
 - Check the API key and project at [OpenAI API keys](https://platform.openai.com/api-keys).
 - Confirm the project has billing and quota available, and that the selected model
   is available to it.
-- Review usage limits and current incidents in the OpenAI platform.
+- Review usage in the [OpenAI API Platform usage dashboard](https://platform.openai.com/usage) and project limits in [OpenAI API Platform settings](https://platform.openai.com/settings/organization/limits).
+- Check current incidents on the [OpenAI API status page](https://status.openai.com/).
 
 ### Anthropic
 
