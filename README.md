@@ -308,6 +308,9 @@ and are never stored anywhere.
 
 ## Troubleshooting
 
+For AI provider authentication, rate-limit, timeout, and other API errors, see the
+[API Provider Troubleshooting FAQ](./docs/API_TROUBLESHOOTING.md).
+
 ### Missing or Invalid `VITE_SUPABASE_URL`
 
 If you encounter connection errors, verify that the `VITE_SUPABASE_URL` in your `.env.local` file matches your Supabase project URL.
