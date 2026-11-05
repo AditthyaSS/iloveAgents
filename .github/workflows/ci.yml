@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # @supabase/* and jsdom require Node 22+, so older versions are not tested.
+        # @supabase/* requires Node 22+, so older versions are not tested.
         node: [22, 24]
     steps:
       - uses: actions/checkout@v5
