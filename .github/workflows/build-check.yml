@@ -44,7 +44,8 @@ jobs:
         run: npm run build
 
       - name: Comment on failure
-        if: failure()
+        # Only PRs have an issue number to comment on; on push to main this step would error.
+        if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
