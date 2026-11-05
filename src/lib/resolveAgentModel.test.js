@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveAgentModel, MODELS, MODEL_MAP } from './resolveAgentModel'
+import { resolveAgentModel, replaceRetiredModel, MODELS, MODEL_MAP } from './resolveAgentModel'
 
 describe('MODELS', () => {
   it('should have entries for all four providers', () => {
@@ -16,6 +16,21 @@ describe('MODELS', () => {
         expect(m).toHaveProperty('value')
         expect(m).toHaveProperty('label')
       })
+    })
+  })
+
+  it('should not offer retired Anthropic models', () => {
+    const retired = [
+      'claude-3-5-sonnet-20241022',
+      'claude-3-5-haiku-20241022',
+      'claude-3-opus-20240229',
+      'claude-opus-4-20250514',
+      'claude-sonnet-4-20250514',
+      'anthropic/claude-3.5-sonnet',
+    ]
+    const offered = [...MODELS.anthropic, ...MODELS.openrouter]
+    offered.forEach((m) => {
+      expect(retired).not.toContain(m.value)
     })
   })
 })
@@ -49,10 +64,10 @@ describe('resolveAgentModel', () => {
   it('should use agent.models[provider] if available', () => {
     const agent = {
       ...baseAgent,
-      models: { anthropic: 'claude-3-opus-20240229' },
+      models: { anthropic: 'claude-opus-4-8' },
     }
     const result = resolveAgentModel(agent, 'anthropic', null)
-    expect(result).toBe('claude-3-opus-20240229')
+    expect(result).toBe('claude-opus-4-8')
   })
 
   it('should use agent.model if provider matches defaultProvider', () => {
@@ -70,5 +85,27 @@ describe('resolveAgentModel', () => {
     const agent = { provider: 'any' }
     const result = resolveAgentModel(agent, 'unknown-provider', null)
     expect(result).toBe(MODEL_MAP.openai)
+  })
+})
+
+describe('replaceRetiredModel', () => {
+  it('maps retired ids to their replacements', () => {
+    expect(replaceRetiredModel('claude-3-5-sonnet-20241022')).toBe('claude-sonnet-5-5')
+    expect(replaceRetiredModel('claude-3-opus-20240229')).toBe('claude-opus-4-8')
+    expect(replaceRetiredModel('claude-3-5-haiku-20241022')).toBe('claude-haiku-4-5-20251001')
+  })
+
+  it('leaves current ids and empty values alone', () => {
+    expect(replaceRetiredModel('claude-sonnet-5-5')).toBe('claude-sonnet-5-5')
+    expect(replaceRetiredModel('gpt-4o')).toBe('gpt-4o')
+    expect(replaceRetiredModel(undefined)).toBeUndefined()
+    expect(replaceRetiredModel('constructor')).toBe('constructor')
+  })
+
+  it('only maps to models the picker actually offers', () => {
+    const offered = Object.values(MODELS).flat().map((m) => m.value)
+    const replacements = ['claude-3-5-sonnet-20241022', 'claude-3-5-haiku-20241022', 'claude-3-opus-20240229', 'anthropic/claude-3.5-sonnet']
+      .map(replaceRetiredModel)
+    replacements.forEach((id) => expect(offered).toContain(id))
   })
 })
