@@ -1,4 +1,3 @@
-
 /**
  * Vercel Cron Handler: /api/cron/tick
  *
@@ -14,6 +13,177 @@
  * - Schedule the next run
  */
 
+/**
+ * Supported providers for cron execution.
+ */
+export const SUPPORTED_CRON_PROVIDERS = ['openai', 'anthropic', 'gemini', 'openrouter']
+
+/**
+ * Builds HTTP request parameters for the specified LLM provider in cron execution.
+ *
+ * @param {string} [provider='openai'] - Target provider: 'openai', 'anthropic', 'gemini', or 'openrouter'.
+ * @param {string} apiKey - API key used for authenticating with the provider.
+ * @param {string} [model] - Model identifier, falls back to provider default if omitted.
+ * @param {string} [systemPrompt] - System instructions for the prompt.
+ * @param {string} [userMessage] - User prompt payload.
+ * @returns {{ url: string, headers: Record<string, string>, body: object }} Request configuration including url, headers, and body.
+ */
+export function buildCronRequest(provider, apiKey, model, systemPrompt, userMessage) {
+  const sys = systemPrompt || 'You are an AI assistant.'
+  const msg = userMessage || 'Scheduled run'
+  const prov = (provider || 'openai').toLowerCase()
+
+  if (prov === 'anthropic') {
+    return {
+      url: 'https://api.anthropic.com/v1/messages',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+      },
+      body: {
+        model: model || 'claude-3-5-sonnet-20241022',
+        max_tokens: 4096,
+        system: sys,
+        messages: [{ role: 'user', content: msg }],
+      },
+    }
+  }
+
+  if (prov === 'gemini') {
+    const targetModel = model || 'gemini-2.5-flash'
+    return {
+      url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent`,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey,
+      },
+      body: {
+        contents: [
+          {
+            parts: [{ text: `${sys}\n\n${msg}` }],
+          },
+        ],
+      },
+    }
+  }
+
+  if (prov === 'openrouter') {
+    return {
+      url: 'https://openrouter.ai/api/v1/chat/completions',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+        'HTTP-Referer': 'https://iloveagents.ai',
+        'X-Title': 'ILoveAgents',
+      },
+      body: {
+        model: model || 'openai/gpt-4o-mini',
+        messages: [
+          { role: 'system', content: sys },
+          { role: 'user', content: msg },
+        ],
+        max_tokens: 4096,
+      },
+    }
+  }
+
+  return {
+    url: 'https://api.openai.com/v1/chat/completions',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: {
+      model: model || 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: sys },
+        { role: 'user', content: msg },
+      ],
+      max_tokens: 4096,
+    },
+  }
+}
+
+/**
+ * Extracts generated text content from provider API response JSON.
+ *
+ * @param {string} [provider='openai'] - Target provider name.
+ * @param {Record<string, unknown>} json - Parsed JSON response payload from the LLM provider.
+ * @returns {string} Extracted text content or fallback string if unavailable.
+ */
+export function parseCronResponse(provider, json) {
+  if (!json || typeof json !== 'object') {
+    return 'No output generated'
+  }
+
+  const prov = (provider || 'openai').toLowerCase()
+
+  if (prov === 'anthropic') {
+    return json.content?.[0]?.text || 'No output generated'
+  }
+
+  if (prov === 'gemini') {
+    return json.candidates?.[0]?.content?.parts?.[0]?.text || 'No output generated'
+  }
+
+  return json.choices?.[0]?.message?.content || 'No output generated'
+}
+
+/**
+ * Sends an email notification for a completed automation run via Resend.
+ *
+ * @param {string} apiKey - Resend API key.
+ * @param {object} params - Notification parameters.
+ * @param {string} params.to - Recipient email address.
+ * @param {string} params.name - Automation name.
+ * @param {string} params.output - Generated output to include in email.
+ * @returns {Promise<object>} Parsed JSON response from Resend.
+ */
+export async function sendCronEmailNotification(apiKey, { to, name, output }) {
+  let resp
+  try {
+    resp = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: 'Open Agents Hub <automations@openagentshub.dev>',
+        to: [to],
+        subject: `[Open Agents Hub] ✅ Completed: ${name}`,
+        html: `<h2>${escapeHtml(name)} Run Output</h2><pre>${escapeHtml(output)}</pre>`,
+      }),
+    })
+  } catch (netErr) {
+    throw new Error(`Resend notification network error: ${netErr.message || 'Failed to send email'}`)
+  }
+
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '')
+    let detail = text
+    try {
+      const errJson = JSON.parse(text)
+      detail = errJson?.message || errJson?.error?.message || (typeof errJson?.error === 'string' ? errJson.error : null) || text
+    } catch {}
+    throw new Error(`Resend notification error ${resp.status}: ${String(detail).slice(0, 500)}`)
+  }
+
+  return await resp.json().catch(() => ({ success: true }))
+}
+
+/**
+ * Vercel Cron Handler: /api/cron/tick
+ *
+ * Runs automatically on schedule configured in vercel.json cron.
+ * Authenticates using CRON_SECRET authorization header, selects due automations,
+ * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
+ *
+ * @param {object} req - HTTP request object.
+ * @param {object} res - HTTP response object.
+ * @returns {Promise<void>} Resolves when cron execution finishes.
+ */
 export default async function handler(req, res) {
   const startTime = Date.now();
   const results = [];
@@ -39,11 +209,6 @@ export default async function handler(req, res) {
     const supabaseUrl =
       process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 
-    /*
-     * The service-role key should be used on the server.
-     * Do NOT fall back to the anonymous key for privileged database
-     * operations.
-     */
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
@@ -105,14 +270,6 @@ export default async function handler(req, res) {
       let errorMessage = null;
 
       try {
-        /*
-         * Retrieve the stored API key.
-         *
-         * IMPORTANT:
-         * This assumes encrypted_key is already returned in a usable
-         * form by the database layer. Base64 decoding alone is NOT
-         * encryption/decryption.
-         */
         const {
           data: secretData,
           error: secretError,
@@ -167,63 +324,36 @@ export default async function handler(req, res) {
           parts.join("\n\n") || "Scheduled run";
 
         const provider = automation.provider || "openai";
+        const normalizedProvider = provider.toLowerCase();
 
-        /*
-         * Execute the LLM request.
-         */
-        if (provider === "openai") {
-          const response = await fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey}`,
-              },
-              body: JSON.stringify({
-                model: automation.model || "gpt-4o-mini",
-                messages: [
-                  {
-                    role: "system",
-                    content:
-                      automation.system_prompt ||
-                      "You are an AI assistant.",
-                  },
-                  {
-                    role: "user",
-                    content: userMessage,
-                  },
-                ],
-              }),
-            }
+        if (SUPPORTED_CRON_PROVIDERS.includes(normalizedProvider)) {
+          const cronReq = buildCronRequest(
+            normalizedProvider,
+            apiKey,
+            automation.model,
+            automation.system_prompt,
+            userMessage
           );
 
-          const responseText = await response.text();
+          const resp = await fetch(cronReq.url, {
+            method: 'POST',
+            headers: cronReq.headers,
+            body: JSON.stringify(cronReq.body),
+          });
 
-          let json;
-
-          try {
-            json = JSON.parse(responseText);
-          } catch {
-            throw new Error(
-              `OpenAI returned an invalid JSON response (${response.status}).`
-            );
+          if (!resp.ok) {
+            const text = await resp.text().catch(() => '');
+            let detail = text;
+            try {
+              detail = JSON.parse(text)?.error?.message || text;
+            } catch {}
+            throw new Error(`${normalizedProvider} API error ${resp.status}: ${String(detail).slice(0, 500)}`);
           }
 
-          if (!response.ok) {
-            throw new Error(
-              json?.error?.message ||
-                `OpenAI request failed with status ${response.status}.`
-            );
-          }
-
-          output =
-            json?.choices?.[0]?.message?.content ||
-            "No output generated.";
+          const json = await resp.json();
+          output = parseCronResponse(normalizedProvider, json);
         } else {
-          throw new Error(
-            `Unsupported provider: ${provider}`
-          );
+          throw new Error(`Unsupported provider: ${provider}`);
         }
 
         /*
@@ -234,41 +364,11 @@ export default async function handler(req, res) {
           automation.notification_email &&
           process.env.RESEND_API_KEY
         ) {
-          const escapedOutput = escapeHtml(output);
-          const escapedName = escapeHtml(
-            automation.name || "Automation"
-          );
-
-          const emailResponse = await fetch(
-            "https://api.resend.com/emails",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-              },
-              body: JSON.stringify({
-                from:
-                  "Open Agents Hub <automations@openagentshub.dev>",
-                to: [automation.notification_email],
-                subject: `[Open Agents Hub] Completed: ${
-                  automation.name || "Automation"
-                }`,
-                html: `
-                  <h2>${escapedName} Run Output</h2>
-                  <pre>${escapedOutput}</pre>
-                `,
-              }),
-            }
-          );
-
-          if (!emailResponse.ok) {
-            const emailError = await emailResponse.text();
-
-            throw new Error(
-              `Email notification failed: ${emailError}`
-            );
-          }
+          await sendCronEmailNotification(process.env.RESEND_API_KEY, {
+            to: automation.notification_email,
+            name: automation.name || 'Automation',
+            output,
+          });
         }
       } catch (err) {
         status = "failed";
@@ -326,9 +426,6 @@ export default async function handler(req, res) {
 
       /*
        * Update automation schedule.
-       *
-       * The schedule is advanced even after a failed run so that
-       * one failing automation does not execute continuously.
        */
       const { error: updateError } = await supabase
         .from("automations")
