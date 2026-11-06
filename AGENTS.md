@@ -167,3 +167,4 @@
 | 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
 | 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
+| 162 | Interview Preparation | Helps student prepare for technical and HR interviews with common questions, sample answers, and interview tips. | Education |
