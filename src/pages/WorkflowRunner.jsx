@@ -277,7 +277,7 @@ export default function WorkflowRunner() {
           }
         }
       } catch (err) {
-        execSteps[i] = { ...execSteps[i], status: 'failed', error: err.message }
+        execSteps[i] = { ...execSteps[i], status: 'failed', error: err?.message || err?.detail || 'Execution failed' }
         syncSteps()
         failed = true
         break
