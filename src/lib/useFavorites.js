@@ -12,7 +12,12 @@ function loadFavorites() {
 }
 
 function saveFavorites(ids) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids))
+    return true
+  } catch {
+    return false
+  }
 }
 
 // Global listeners so multiple components stay in sync
@@ -45,7 +50,8 @@ export function useFavorites() {
     const next = current.includes(agentId)
       ? current.filter((id) => id !== agentId)
       : [agentId, ...current] // newest favorites first
-    saveFavorites(next)
+    const saved = saveFavorites(next)
+    if (!saved) return
     setFavorites(next)
     notify()
   }, [])

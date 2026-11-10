@@ -457,6 +457,14 @@ export default function Sidebar({ open, onClose }) {
               Contribute →
             </a>
 
+            <Link
+            to="/feedback"
+            onClick={() => onClose?.()}
+            className="text-sm text-gray-500 hover:text-accent transition-colors"
+          >
+            Feedback →
+          </Link>
+
             <span className="block text-[10px] dark:text-text-secondary/70 text-gray-400 font-medium">
               GSSoC 2026
             </span>

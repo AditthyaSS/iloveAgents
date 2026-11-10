@@ -12,7 +12,7 @@ import {
   GitBranch,
 } from 'lucide-react'
 import * as Icons from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { fetchWorkflowById, subscribeToWorkflow } from '../hooks/useWorkflows'
 import { supabase } from '../lib/supabase'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
@@ -60,10 +60,7 @@ export default function WorkflowDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const [agents, setAgents] = useState([])
-  useEffect(() => {
-    loadAllAgents().then(setAgents)
-  }, [])
+  const { agents } = useAgents()
 
   const [workflow, setWorkflow] = useState(null)
   const [loading, setLoading] = useState(true)

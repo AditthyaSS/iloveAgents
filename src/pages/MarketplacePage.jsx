@@ -10,7 +10,7 @@ import {
   ShieldCheck,
   Tag,
 } from 'lucide-react'
-import { loadAllAgents } from '../agents/registry'
+import { useAgents } from '../lib/useAgents'
 import { useDocumentTitle } from '../lib/useDocumentTitle'
 import {
   MARKETPLACE_CATEGORIES,
@@ -215,9 +215,9 @@ function ListingCard({ listing, onImport, onRate, imported }) {
 
       <p className="text-xs dark:text-text-secondary text-gray-600 line-clamp-2">{listing.description}</p>
 
-      {listing.tags.length > 0 && (
+      {(listing.tags || []).length > 0 && (
         <div className="flex flex-wrap gap-1">
-          {listing.tags.map((tag) => (
+          {(listing.tags || []).map((tag) => (
             <span
               key={tag}
               className="flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px]
@@ -253,8 +253,8 @@ function ListingCard({ listing, onImport, onRate, imported }) {
 export default function MarketplacePage() {
   useDocumentTitle('Agent Marketplace')
 
+  const { agents } = useAgents()
   const [listings, setListings] = useState([])
-  const [agents, setAgents] = useState([])
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('')
   const [showPublish, setShowPublish] = useState(false)
@@ -263,7 +263,6 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     setListings(loadListings())
-    loadAllAgents().then(setAgents)
   }, [])
 
   const visible = useMemo(
