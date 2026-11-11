@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAgents } from "../lib/useAgents";
+import AgentCardSkeleton from "../components/AgentCardSkeleton";
 
 // Input validation constants - prevent LLM calls with excessively long inputs
 const INPUT_LIMITS = {
@@ -76,6 +77,15 @@ const API_KEY_FIELDS = [
     bg: "bg-blue-400/10",
     focusBorder: "focus:border-blue-400/60",
   },
+  {
+    id: "openrouter",
+    label: "OpenRouter API Key",
+    placeholder: "sk-or-...",
+    color: "text-teal-400",
+    border: "border-teal-400/30",
+    bg: "bg-teal-400/10",
+    focusBorder: "focus:border-teal-400/60",
+  },
 ];
 
 function InputField({ input, value, onChange }) {
@@ -94,11 +104,17 @@ function InputField({ input, value, onChange }) {
           <select
             value={value ?? input.defaultValue ?? ""}
             onChange={(e) => onChange(input.id, e.target.value)}
-            className={`${baseClass} ${borderClass} appearance-none cursor-pointer`}
-            style={{ background: "rgb(17 24 39 / 0.6)" }}
+            className={`w-full rounded-lg px-3 py-2 pr-9 text-sm border dark:border-gray-700 border-gray-300 dark:bg-gray-800 dark:text-white bg-white text-gray-900 outline-none focus:border-yellow-400/60 appearance-none cursor-pointer transition-colors duration-200 ${
+              !validation.valid ? "border-red-500/50 focus:border-red-500" : ""
+            }`}
           >
             {input.options.map((opt) => (
-              <option key={opt} value={opt} style={{ background: "#111827" }}>
+              <option
+                key={opt}
+                value={opt}
+                className="dark:bg-gray-900 dark:text-white bg-white text-gray-900"
+                style={{ backgroundColor: "#111827", color: "#f3f4f6" }}
+              >
                 {opt}
               </option>
             ))}
@@ -218,11 +234,13 @@ export default function BattleModeSetup() {
     openai: "",
     anthropic: "",
     gemini: "",
+    openrouter: "",
   });
   const [showKeys, setShowKeys] = useState({
     openai: false,
     anthropic: false,
     gemini: false,
+    openrouter: false,
   });
   const [step, setStep] = useState(1); // 1 = pick agent, 2 = fill inputs + keys
 
@@ -254,9 +272,7 @@ export default function BattleModeSetup() {
 
   const canSubmit =
     selectedAgent &&
-    apiKeys.openai.trim() &&
-    apiKeys.anthropic.trim() &&
-    apiKeys.gemini.trim() &&
+    Object.values(apiKeys).some((k) => k.trim()) &&
     selectedAgent.inputs?.every((inp) => {
       const val = inputs[inp.id];
       if (!inp.required) {
@@ -300,7 +316,7 @@ export default function BattleModeSetup() {
           </h1>
           <p className="text-sm dark:text-text-muted dark:text-text-muted text-gray-500">
             {step === 1
-              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, and Gemini Flash"
+              ? "Choose an agent to battle across GPT-4o, Claude Sonnet, Gemini Flash and OpenRouter"
               : `Setting up ${selectedAgent?.name}`}
           </p>
         </div>
@@ -350,8 +366,10 @@ export default function BattleModeSetup() {
             </div>
 
             {agentsLoading ? (
-              <div className="text-center py-16 dark:text-text-muted dark:text-text-muted text-gray-500 text-sm">
-                Loading agents...
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <AgentCardSkeleton key={idx} />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
@@ -424,7 +442,8 @@ export default function BattleModeSetup() {
               </div>
               <p className="text-xs dark:text-text-muted dark:text-text-muted text-gray-500 mb-5 leading-relaxed">
                 Your keys are used directly in the browser and never sent to our
-                servers.
+                servers. Add at least one key. Providers without a key are
+                skipped in the arena.
               </p>
               <div className="space-y-4">
                 {API_KEY_FIELDS.map((field) => (
