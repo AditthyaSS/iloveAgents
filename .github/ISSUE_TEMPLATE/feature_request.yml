@@ -1,19 +1,20 @@
-name: Feature Request
-description: Suggest something new or an improvement to the platform
+﻿name: Feature Request
+description: Suggest a new feature, improvement, or enhancement to the iloveAgents platform
 title: "[Feature]: "
 labels: ["OSIC'26"]
 body:
   - type: markdown
     attributes:
       value: |
-        Got an idea? I would love to hear it.
+        Got an idea to make iloveAgents better? We'd love to hear it!
         If you want to suggest a new agent, please use the New Agent Proposal template instead.
 
   - type: textarea
     id: problem
     attributes:
       label: What problem does this solve?
-      placeholder: Right now there is no way to copy the output as plain text...
+      description: Describe the pain point, friction, or limitation you are currently facing.
+      placeholder: Right now there is no convenient way to copy the output as plain text...
     validations:
       required: true
 
@@ -21,20 +22,23 @@ body:
     id: solution
     attributes:
       label: What would you like to see?
-      placeholder: A "Copy as plain text" button next to the existing copy button.
+      description: Describe your proposed feature or enhancement clearly.
+      placeholder: Add a "Copy as plain text" button next to the existing markdown copy action.
     validations:
       required: true
 
   - type: textarea
     id: alternatives
     attributes:
-      label: Any other ideas you considered? (optional)
-      placeholder: I also thought about a toggle to switch between rendered and raw output...
+      label: Any other solutions or workarounds you considered? (optional)
+      description: Let us know if you thought of alternative ways to solve this problem.
+      placeholder: I also considered adding a global toggle in settings, but an inline button is faster...
 
   - type: dropdown
     id: area
     attributes:
-      label: Which part of the app is this about?
+      label: Which part of the platform is this about?
+      description: Select the primary module or feature area affected.
       options:
         - Agent Runner
         - Homepage / Agent Grid
@@ -46,3 +50,10 @@ body:
         - Other
     validations:
       required: true
+
+  - type: input
+    id: other_area
+    attributes:
+      label: If you selected "Other", please specify the component or area (optional)
+      description: Help us pinpoint the exact part of the application.
+      placeholder: e.g. Batch mode runner, CSV parser, export utilities...
