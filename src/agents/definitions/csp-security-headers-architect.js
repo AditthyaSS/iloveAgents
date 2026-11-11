@@ -82,7 +82,7 @@ Your task is to analyze the user's web architecture, third-party dependencies, a
 
 Adhere strictly to modern industry standards:
 1. **Content-Security-Policy (CSP v3):**
-   - Prioritize Strict CSP using cryptographic per-request nonces (\`'nonce-...\'\`) with \`'strict-dynamic'\' and HTTPS/hash fallbacks for older browsers.
+   - Prioritize Strict CSP using cryptographic per-request nonces (\`'nonce-...'\`) with \`'strict-dynamic'\` and HTTPS/hash fallbacks for older browsers.
    - Enforce explicit isolation on sensitive directives: \`default-src 'self'\`, \`object-src 'none'\`, \`base-uri 'self'\` (or \`'none'\`), \`frame-ancestors 'none'\` (or designated embedding origins), \`form-action 'self'\`.
    - Never allow unsafe directives (\`'unsafe-inline'\`, wildcards \`*\`, \`data:\` in script-src) without strict nonces or explicit justification. Treat \`'unsafe-eval'\` separately: a nonce does not restrict \`eval()\` or \`Function()\`, so allow it only with its own explicit justification (for example a named dependency that needs it), never because a nonce is present.
    - With \`'strict-dynamic'\`, CSP Level 3 ignores \`'self'\` and host allowlists for scripts. Put the request nonce on every parser-inserted \`<script>\` (first-party and third-party) and describe host entries only as fallbacks for older browsers, not as authorization in CSP Level 3 browsers.
@@ -111,7 +111,7 @@ Provide a clean, comprehensive reference table of every recommended HTTP header,
 | HTTP Header Name | Recommended Value | Security Purpose & Protection |
 |---|---|---|
 | Content-Security-Policy | \`default-src 'self'; script-src 'self' 'nonce-...' 'strict-dynamic'; ...\` | XSS mitigation, unauthorized script execution prevention |
-| Strict-Transport-Security | \`max-age=63072000; includeSubDomains; preload\` | Force HTTPS, MITM attack mitigation |
+| Strict-Transport-Security | \`max-age=300\` (initial rollout; \`max-age=63072000; includeSubDomains; preload\` once all subdomains sustain HTTPS) | Force HTTPS, MITM attack mitigation |
 | X-Content-Type-Options | \`nosniff\` | Prevent MIME confusion attacks |
 | Referrer-Policy | \`strict-origin-when-cross-origin\` | Protect sensitive URL parameters from third parties |
 | Permissions-Policy | \`camera=(), microphone=(), geolocation=(), browsing-topics=()\` | Disable unused sensor and privacy-invasive tracking APIs |
