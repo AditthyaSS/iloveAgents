@@ -1,18 +1,24 @@
+
+    
 name: Bug Report
-description: Something is broken or not working right
+description: Report a bug or something that is not working correctly
 title: "[Bug]: "
-labels: ["OSIC'26"]
+labels:
+  - "OSIC'26"
+
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug! Please fill this out so I can understand and fix it quickly.
+        Thanks for reporting a bug!
+        Please provide the details below to help us understand and fix the issue.
 
   - type: textarea
     id: description
     attributes:
       label: What went wrong?
-      placeholder: When I click Run on the Code Reviewer agent, nothing happens...
+      description: Describe the problem you experienced.
+      placeholder: "When I click Run on the Code Reviewer agent, nothing happens."
     validations:
       required: true
 
@@ -20,11 +26,12 @@ body:
     id: steps
     attributes:
       label: How do I reproduce it?
+      description: List the steps to reproduce the issue.
       placeholder: |
-        1. Open the Code Reviewer agent
-        2. Paste some code
-        3. Click Run
-        4. Nothing happens
+        1. Open the Code Reviewer agent.
+        2. Paste some code.
+        3. Click Run.
+        4. Nothing happens.
     validations:
       required: true
 
@@ -32,7 +39,7 @@ body:
     id: expected
     attributes:
       label: What did you expect to happen?
-      placeholder: I expected the output to appear in the output panel.
+      placeholder: "I expected the output to appear in the output panel."
     validations:
       required: true
 
@@ -52,12 +59,15 @@ body:
     id: browser
     attributes:
       label: Browser and OS
-      placeholder: Chrome on Windows 11
+      placeholder: "Chrome on Windows 11"
     validations:
       required: true
 
   - type: textarea
     id: extras
     attributes:
-      label: Screenshots or error messages (optional)
-      description: Paste any errors from the browser console or attach a screenshot.
+      label: Screenshots or error messages
+      description: Add any screenshots or error messages (optional).
+      placeholder: "Paste error messages or describe attached screenshots."
+    validations:
+      required: false
