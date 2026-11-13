@@ -1,63 +1,132 @@
-name: Bug Report
-description: Something is broken or not working right
-title: "[Bug]: "
-labels: ["OSIC'26"]
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+title: "[BUG] "
+labels:
+  - bug
+  - "OSIC'26"
+
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting a bug! Please fill this out so I can understand and fix it quickly.
+        ## 🐞 Bug Report
+
+        Thank you for reporting a bug! Please provide as much detail as possible so we can reproduce and fix the issue quickly.
 
   - type: textarea
     id: description
     attributes:
-      label: What went wrong?
-      placeholder: When I click Run on the Code Reviewer agent, nothing happens...
+      label: Bug Description
+      description: Clearly describe the issue you encountered.
+      placeholder: |
+        Example:
+        Clicking the "Run" button on the Code Reviewer agent does nothing.
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: How do I reproduce it?
+      label: Steps to Reproduce
+      description: Explain how we can reproduce the issue.
       placeholder: |
         1. Open the Code Reviewer agent
-        2. Paste some code
-        3. Click Run
-        4. Nothing happens
+        2. Paste any code snippet
+        3. Click "Run"
+        4. No response appears
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: What did you expect to happen?
-      placeholder: I expected the output to appear in the output panel.
+      label: Expected Behavior
+      description: What should have happened?
+      placeholder: |
+        The code should execute and display the output.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: |
+        Nothing happens after clicking Run.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How serious is this issue?
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
     validations:
       required: true
 
   - type: dropdown
     id: provider
     attributes:
-      label: Which provider were you using?
+      label: AI Provider
+      description: Which provider were you using?
       options:
         - OpenAI
         - Anthropic
         - Google Gemini
-        - Not applicable
+        - Ollama
+        - Azure OpenAI
+        - Other
+        - Not Applicable
     validations:
       required: true
 
   - type: input
     id: browser
     attributes:
-      label: Browser and OS
-      placeholder: Chrome on Windows 11
+      label: Browser
+      placeholder: Chrome 139, Firefox 142, Edge 138...
     validations:
       required: true
 
-  - type: textarea
-    id: extras
+  - type: input
+    id: os
     attributes:
-      label: Screenshots or error messages (optional)
-      description: Paste any errors from the browser console or attach a screenshot.
+      label: Operating System
+      placeholder: Windows 11, Ubuntu 24.04, macOS Sequoia...
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Project Version (Optional)
+      placeholder: v1.2.0
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs / Console Output
+      description: Paste any relevant logs or error messages.
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag and drop screenshots or GIFs here if applicable.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues before creating this report.
+          required: true
+        - label: I have provided enough information to reproduce the issue.
+          required: true
