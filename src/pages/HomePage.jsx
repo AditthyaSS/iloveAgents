@@ -15,6 +15,7 @@ import RecommendationWizardModal from '../components/recommendation/Recommendati
 import { Link } from "react-router-dom";
 import { getGlobalKeys } from '../lib/globalKeys'
 import { getRecentAgentIds } from '../lib/recentAgents'
+import { sortAgents } from '../lib/agentSort'
 
 // Category icons/colors for the filter pills
 const categoryMeta = {
@@ -50,6 +51,7 @@ export default function HomePage() {
   const recommendationWizardReturnFocusRef = useRef(null)
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [selectedProvider, setSelectedProvider] = useState(null)
+  const [sortBy, setSortBy] = useState('relevance')
   const [searchParams, setSearchParams] = useSearchParams()
   const { collections, getAgentCollectionId } = useCollections()
 
@@ -239,6 +241,11 @@ export default function HomePage() {
       return searchableText.includes(q)
     })
   }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider])
+
+  const sortedAgents = useMemo(
+    () => sortAgents(filteredAgents, sortBy),
+    [filteredAgents, sortBy],
+  )
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
@@ -561,9 +568,25 @@ export default function HomePage() {
                 )}
               </span>
             </div>
-            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
-              {filteredAgents.length}{" "}{filteredAgents.length === 1 ? "agent" : "agents"}
-            </span>
+            <div className="flex items-center gap-3 self-end sm:self-auto">
+              <label className="flex items-center gap-2 text-xs font-medium dark:text-text-secondary text-gray-500">
+                <span>Sort by</span>
+                <select
+                  aria-label="Sort agents by"
+                  className="rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-xs text-gray-700 dark:border-border dark:bg-surface-card dark:text-text-primary"
+                  onChange={(event) => setSortBy(event.target.value)}
+                  value={sortBy}
+                >
+                  <option value="relevance">Relevance</option>
+                  <option value="name-asc">A to Z</option>
+                  <option value="name-desc">Z to A</option>
+                  <option value="newest">Newest first</option>
+                </select>
+              </label>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                {filteredAgents.length}{" "}{filteredAgents.length === 1 ? "agent" : "agents"}
+              </span>
+            </div>
           </div>
 
           {agentsLoading ? (
@@ -574,7 +597,7 @@ export default function HomePage() {
             </div>
           ) : filteredAgents.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filteredAgents.map((agent, idx) => (
+              {sortedAgents.map((agent, idx) => (
                 <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
                   <AgentCard agent={agent} />
                 </div>
