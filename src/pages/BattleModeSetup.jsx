@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAgents } from "../lib/useAgents";
+import AgentCardSkeleton from "../components/AgentCardSkeleton";
 
 // Input validation constants - prevent LLM calls with excessively long inputs
 const INPUT_LIMITS = {
@@ -103,11 +104,17 @@ function InputField({ input, value, onChange }) {
           <select
             value={value ?? input.defaultValue ?? ""}
             onChange={(e) => onChange(input.id, e.target.value)}
-            className={`${baseClass} ${borderClass} appearance-none cursor-pointer`}
-            style={{ background: "rgb(17 24 39 / 0.6)" }}
+            className={`w-full rounded-lg px-3 py-2 pr-9 text-sm border dark:border-gray-700 border-gray-300 dark:bg-gray-800 dark:text-white bg-white text-gray-900 outline-none focus:border-yellow-400/60 appearance-none cursor-pointer transition-colors duration-200 ${
+              !validation.valid ? "border-red-500/50 focus:border-red-500" : ""
+            }`}
           >
             {input.options.map((opt) => (
-              <option key={opt} value={opt} style={{ background: "#111827" }}>
+              <option
+                key={opt}
+                value={opt}
+                className="dark:bg-gray-900 dark:text-white bg-white text-gray-900"
+                style={{ backgroundColor: "#111827", color: "#f3f4f6" }}
+              >
                 {opt}
               </option>
             ))}
@@ -359,8 +366,10 @@ export default function BattleModeSetup() {
             </div>
 
             {agentsLoading ? (
-              <div className="text-center py-16 dark:text-text-muted dark:text-text-muted text-gray-500 text-sm">
-                Loading agents...
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+                {Array.from({ length: 6 }).map((_, idx) => (
+                  <AgentCardSkeleton key={idx} />
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
