@@ -172,5 +172,6 @@
 | 165 | OpenTelemetry Observability & Tracing Architect | Designs OpenTelemetry distributed tracing, metrics, collector pipelines, W3C context propagation, and tail-based sampling architectures across microservices. | DevOps |
 | 166 | OWASP API Security Auditor | Audits REST, GraphQL, and webhook API schemas and endpoints against the OWASP API Security Top 10 to identify BOLA, broken auth, SSRF, and sensitive data leakage, providing an executive risk scorecard and drop-in code fixes. | Cybersecurity |
 | 167 | Event-Driven Architecture & Message Broker Designer | Designs production event-driven topologies, CloudEvents-compliant schemas, partition key strategies, idempotency handling, and dead-letter queue (DLQ) retry backoffs for Kafka, RabbitMQ, and AWS SQS/SNS. | Engineering |
+| 168 | CSP & Security Headers Architect | Generates, audits, and hardens Content Security Policy (CSP v3) and modern HTTP security headers (HSTS, COOP, COEP, CORP, Permissions-Policy) tailored to frameworks, reverse proxies, and CDN architectures with zero-breakage rollout plans. | Cybersecurity |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
