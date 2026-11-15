@@ -1,77 +1,120 @@
+
 import { useState, useCallback, useEffect } from 'react'
-import { estimateInputCost, estimateOutputCost, getPricing } from './modelPricing'
+import {
+  estimateInputCost,
+  estimateOutputCost,
+} from './modelPricing'
 
 const STORAGE_KEY = 'ila_session_spend'
 const MAX_RUNS = 200
 
+const EMPTY_SESSION = { runs: [], totalSpend: 0 }
+
 function loadSession() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const data = JSON.parse(raw)
-      if (data && typeof data === 'object' && Array.isArray(data.runs)) {
-        return data
-      }
+    if (!raw) return EMPTY_SESSION
+
+    const data = JSON.parse(raw)
+
+    if (!data || typeof data !== 'object' || !Array.isArray(data.runs)) {
+      return EMPTY_SESSION
     }
-  } catch {}
-  return { runs: [], totalSpend: 0 }
+
+    return data
+  } catch {
+    return EMPTY_SESSION
+  }
 }
 
 function saveSession(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
-  } catch {}
+    return true
+  } catch (error) {
+    console.error('Failed to save session:', error)
+    return false
+  }
 }
 
 export function useSessionSpend() {
-  const [sessionData, setSessionData] = useState(() => loadSession())
+  const [sessionData, setSessionData] = useState(loadSession)
 
   useEffect(() => {
-    const handleStorage = (e) => {
-      if (e.key === STORAGE_KEY) {
+    const handleStorage = (event) => {
+      if (event.key === STORAGE_KEY || event.key === null) {
         setSessionData(loadSession())
       }
     }
+
     window.addEventListener('storage', handleStorage)
-    return () => window.removeEventListener('storage', handleStorage)
+
+    return () => {
+      window.removeEventListener('storage', handleStorage)
+    }
   }, [])
 
-  const addRun = useCallback(({ model, inputTokens, outputTokens, inputCost, outputCost }) => {
-    let inputC = inputCost
-    let outputC = outputCost
+  const addRun = useCallback(
+    ({ model, inputTokens, outputTokens, inputCost, outputCost } = {}) => {
+      const inputC =
+        inputCost ??
+        (inputTokens != null && model
+          ? estimateInputCost(model, inputTokens) || 0
+          : 0)
 
-    if (inputC == null && inputTokens != null && model) {
-      inputC = estimateInputCost(model, inputTokens) || 0
-    }
-    if (outputC == null && outputTokens != null && model) {
-      outputC = estimateOutputCost(model, outputTokens) || 0
-    }
+      const outputC =
+        outputCost ??
+        (outputTokens != null && model
+          ? estimateOutputCost(model, outputTokens) || 0
+          : 0)
 
-    const runCost = (inputC || 0) + (outputC || 0)
-    const run = {
-      model,
-      inputTokens: inputTokens || 0,
-      outputTokens: outputTokens || 0,
-      inputCost: inputC || 0,
-      outputCost: outputC || 0,
-      totalCost: runCost,
-      timestamp: Date.now(),
-    }
+      const safeInputCost = Number.isFinite(inputC) && inputC >= 0
+        ? inputC
+        : 0
 
-    // Merge against the current on-disk value, not stale in-memory state,
-    // so a concurrent write (another tab, or two runs completing close
-    // together) isn't silently discarded by the last write winning.
-    const prev = loadSession()
-    const runs = [run, ...prev.runs].slice(0, MAX_RUNS)
-    const totalSpend = runs.reduce((sum, r) => sum + r.totalCost, 0)
-    const newData = { runs, totalSpend }
-    saveSession(newData)
-    setSessionData(newData)
-  }, [])
+      const safeOutputCost = Number.isFinite(outputC) && outputC >= 0
+        ? outputC
+        : 0
+
+      const run = {
+        model,
+        inputTokens: inputTokens || 0,
+        outputTokens: outputTokens || 0,
+        inputCost: safeInputCost,
+        outputCost: safeOutputCost,
+        totalCost: safeInputCost + safeOutputCost,
+        timestamp: Date.now(),
+      }
+
+      // Read the latest on-disk data instead of stale React state.
+      const previous = loadSession()
+      const runs = [run, ...previous.runs].slice(0, MAX_RUNS)
+
+      const totalSpend = runs.reduce(
+        (sum, item) => sum + (
+          Number.isFinite(item.totalCost) && item.totalCost >= 0
+            ? item.totalCost
+            : 0
+        ),
+        0
+      )
+
+      const newData = { runs, totalSpend }
+
+      saveSession(newData)
+      setSessionData(newData)
+    },
+    []
+  )
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY)
-    setSessionData({ runs: [], totalSpend: 0 })
+    try {
+      localStorage.removeItem(STORAGE_KEY)
+    } catch (error) {
+      console.error('Failed to clear session:', error)
+    }
+
+    setSessionData(EMPTY_SESSION)
   }, [])
 
   return {
