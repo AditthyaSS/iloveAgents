@@ -51,13 +51,16 @@ const TIME_RANGES = [
   { value: '90d', label: 'Last 90 Days' },
 ]
 
-// ── Heatmap intensity ───────────────────────────────────────────────────────
-function getHeatmapIntensity(count) {
-  if (count === 0) return 'bg-gray-100 dark:bg-white/5'
-  if (count <= 2) return 'bg-indigo-200 dark:bg-indigo-500/25'
-  if (count <= 5) return 'bg-indigo-400 dark:bg-indigo-500/50'
-  return 'bg-indigo-600 dark:bg-indigo-400/80'
-}
+// ── Heatmap levels (single source of truth for cells AND legend) ────────────
+const HEATMAP_LEVELS = [
+  { max: 0,        cls: 'bg-gray-100 dark:bg-white/5' },
+  { max: 2,        cls: 'bg-indigo-200 dark:bg-indigo-500/25' },
+  { max: 5,        cls: 'bg-indigo-400 dark:bg-indigo-500/50' },
+  { max: Infinity, cls: 'bg-indigo-600 dark:bg-indigo-400/80' },
+]
+const getHeatmapIntensity = (count) => HEATMAP_LEVELS.find((l) => count <= l.max).cls
+
+const HEATMAP_DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
 // ═════════════════════════════════════════════════════════════════════════════
 // Main Page
@@ -74,147 +77,109 @@ export default function AnalyticsPage() {
     [spendRuns]
   )
 
-  // ── Empty state ───────────────────────────────────────────────────────────
-  if (stats.totalRuns === 0 && timeRange === 'all') {
-    return (
-      <div className="animate-fade-in max-w-4xl mx-auto">
-        <PageHeader onClear={clearAnalytics} hasData={false} timeRange={timeRange} setTimeRange={setTimeRange} />
-        <div className="rounded-2xl border p-12 text-center flex flex-col items-center gap-4
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
-          <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
-            <BarChart3 size={32} className="text-accent" />
-          </div>
-          <h2 className="text-lg font-bold dark:text-text-primary text-gray-900">
-            No analytics yet
-          </h2>
-          <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md leading-relaxed">
-            Run a few agents and your usage stats will automatically appear here — 
-            top agents, provider breakdown, activity streaks, and more.
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
-              bg-accent hover:bg-accent-hover transition-all duration-200 active:scale-[0.97] mt-2"
-          >
-            <Zap size={16} />
-            Run an Agent
-            <ArrowRight size={14} />
-          </button>
-        </div>
-
-        {/* Session spend can exist even with no recorded analytics events
-            (e.g. analytics was cleared but session spend wasn't) */}
-        {spendRuns.length > 0 && (
-          <SectionCard title="Token Usage & Cost (This Session)" icon={<Zap size={16} />} delay={200}>
-            <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
-          </SectionCard>
-        )}
-      </div>
-    )
-  }
-
-  // ── Filtered-empty state (has data but not in this range) ─────────────────
-  if (stats.totalRuns === 0 && timeRange !== 'all') {
-    return (
-      <div className="animate-fade-in max-w-5xl mx-auto">
-        <PageHeader onClear={clearAnalytics} hasData={true} timeRange={timeRange} setTimeRange={setTimeRange} />
-        <div className="rounded-2xl border p-12 text-center flex flex-col items-center gap-4
-          dark:bg-surface-card dark:border-border bg-white border-gray-200">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-            <Filter size={28} className="text-amber-500" />
-          </div>
-          <h2 className="text-lg font-bold dark:text-text-primary text-gray-900">
-            No data in this range
-          </h2>
-          <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md leading-relaxed">
-            No agent runs found in the selected time range. Try selecting a broader range or "All Time".
-          </p>
-          <button
-            onClick={() => setTimeRange('all')}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
-              text-accent border border-accent/30 hover:bg-accent/10 transition-all duration-200 active:scale-[0.97] mt-2"
-          >
-            Show All Time
-          </button>
-        </div>
-
-        {/* Session spend is not filtered by time range, so it can still
-            be shown here even when the selected range has no runs */}
-        {spendRuns.length > 0 && (
-          <SectionCard title="Token Usage & Cost (This Session)" icon={<Zap size={16} />} delay={200}>
-            <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
-          </SectionCard>
-        )}
-      </div>
-    )
-  }
+  const isEmpty = stats.totalRuns === 0
+  const noDataAtAll = isEmpty && timeRange === 'all'
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto">
-      <PageHeader onClear={clearAnalytics} hasData={true} timeRange={timeRange} setTimeRange={setTimeRange} />
+    <div className={`animate-fade-in mx-auto ${noDataAtAll ? 'max-w-4xl' : 'max-w-5xl'}`}>
+      <PageHeader
+        onClear={clearAnalytics}
+        hasData={!noDataAtAll}
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
+      />
 
+      {/* Brand new user: nothing recorded at all */}
+      {noDataAtAll && (
+        <EmptyPanel
+          icon={<BarChart3 size={32} className="text-accent" />}
+          iconBg="w-16 h-16 bg-accent/10"
+          title="No analytics yet"
+          text="Run a few agents and your usage stats will automatically appear here — top agents, provider breakdown, activity streaks, and more."
+          action={
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white
+                bg-accent hover:bg-accent-hover transition-all duration-200 active:scale-[0.97]"
+            >
+              <Zap size={16} />
+              Run an Agent
+              <ArrowRight size={14} />
+            </button>
+          }
+        />
+      )}
+
+      {/* Has data, but none inside the selected range */}
+      {isEmpty && !noDataAtAll && (
+        <EmptyPanel
+          icon={<Filter size={28} className="text-amber-500" />}
+          iconBg="w-14 h-14 bg-amber-500/10"
+          title="No data in this range"
+          text='No agent runs found in the selected time range. Try selecting a broader range or "All Time".'
+          action={
+            <button
+              onClick={() => setTimeRange('all')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold
+                text-accent border border-accent/30 hover:bg-accent/10 transition-all duration-200 active:scale-[0.97]"
+            >
+              Show All Time
+            </button>
+          }
+        />
+      )}
+
+      {!isEmpty && <DashboardBody stats={stats} navigate={navigate} />}
+
+      {/* Session spend isn't filtered by time range, so it shows in every state */}
+      {spendRuns.length > 0 && (
+        <SectionCard
+          title="Token Usage & Cost (This Session)"
+          icon={<Zap size={16} />}
+          delay={isEmpty ? 200 : 760}
+        >
+          <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
+        </SectionCard>
+      )}
+
+      {!isEmpty && <ExportBar stats={stats} />}
+    </div>
+  )
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Sub-components
+// ═════════════════════════════════════════════════════════════════════════════
+
+function DashboardBody({ stats, navigate }) {
+  const primaryStats = [
+    { icon: <Activity size={18} />, label: 'Total Runs',    value: stats.totalRuns,                         color: 'text-accent' },
+    { icon: <Bot size={18} />,      label: 'Unique Agents', value: stats.uniqueAgents,                      color: 'text-emerald-500' },
+    { icon: <Users size={18} />,    label: 'Fav Provider',  value: formatProvider(stats.favoriteProvider),  color: 'text-amber-500' },
+    { icon: <Flame size={18} />,    label: 'Day Streak',    value: `${stats.currentStreak}🔥`,              color: 'text-rose-500' },
+  ]
+
+  const miniStats = [
+    { icon: <Trophy size={14} />,    label: 'Best Streak', value: `${stats.longestStreak} days`,           color: 'text-yellow-500', tint: 'bg-yellow-500/10' },
+    { icon: <Target size={14} />,    label: 'Avg/Day',     value: stats.avgRunsPerDay,                     color: 'text-cyan-500',   tint: 'bg-cyan-500/10' },
+    { icon: <Calendar size={14} />,  label: 'Peak Day',    value: stats.mostProductiveDay || '—',          color: 'text-violet-500', tint: 'bg-violet-500/10' },
+    { icon: <BarChart3 size={14} />, label: 'Categories',  value: stats.categoryDistribution.length,       color: 'text-pink-500',   tint: 'bg-pink-500/10' },
+  ]
+
+  return (
+    <>
       {/* ── Primary Stat Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <StatCard
-          icon={<Activity size={18} />}
-          label="Total Runs"
-          value={stats.totalRuns}
-          color="text-accent"
-          delay={0}
-        />
-        <StatCard
-          icon={<Bot size={18} />}
-          label="Unique Agents"
-          value={stats.uniqueAgents}
-          color="text-emerald-500"
-          delay={60}
-        />
-        <StatCard
-          icon={<Users size={18} />}
-          label="Fav Provider"
-          value={formatProvider(stats.favoriteProvider)}
-          color="text-amber-500"
-          delay={120}
-        />
-        <StatCard
-          icon={<Flame size={18} />}
-          label="Day Streak"
-          value={`${stats.currentStreak}🔥`}
-          color="text-rose-500"
-          delay={180}
-        />
+        {primaryStats.map((s, i) => (
+          <StatCard key={s.label} {...s} delay={i * 60} />
+        ))}
       </div>
 
       {/* ── Secondary Insights Row ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <MiniStatCard
-          icon={<Trophy size={14} />}
-          label="Best Streak"
-          value={`${stats.longestStreak} days`}
-          color="text-yellow-500"
-          delay={240}
-        />
-        <MiniStatCard
-          icon={<Target size={14} />}
-          label="Avg/Day"
-          value={stats.avgRunsPerDay}
-          color="text-cyan-500"
-          delay={280}
-        />
-        <MiniStatCard
-          icon={<Calendar size={14} />}
-          label="Peak Day"
-          value={stats.mostProductiveDay || '—'}
-          color="text-violet-500"
-          delay={320}
-        />
-        <MiniStatCard
-          icon={<BarChart3 size={14} />}
-          label="Categories"
-          value={stats.categoryDistribution.length}
-          color="text-pink-500"
-          delay={360}
-        />
+        {miniStats.map((s, i) => (
+          <MiniStatCard key={s.label} {...s} delay={240 + i * 40} />
+        ))}
       </div>
 
       {/* ── Activity Heatmap ── */}
@@ -250,23 +215,23 @@ export default function AnalyticsPage() {
       <SectionCard title="Recent Activity" icon={<Clock size={16} />} delay={700}>
         <RecentTimeline runs={stats.recentRuns} navigate={navigate} />
       </SectionCard>
-
-      {/* ── Token Usage & Cost (current session) ── */}
-        {spendRuns.length > 0 && (
-          <SectionCard title="Token Usage & Cost (This Session)" icon={<Zap size={16} />} delay={760}>
-            <TokenUsageSection runs={spendRuns} totalTokens={totalTokens} totalSpend={totalSpend} />
-          </SectionCard>
-        )}
-
-        {/* ── Export Bar ── */}
-        <ExportBar stats={stats} />
-    </div>
+    </>
   )
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
-// Sub-components
-// ═════════════════════════════════════════════════════════════════════════════
+function EmptyPanel({ icon, iconBg, title, text, action }) {
+  return (
+    <div
+      className="rounded-2xl border p-12 text-center flex flex-col items-center gap-4
+        dark:bg-surface-card dark:border-border bg-white border-gray-200"
+    >
+      <div className={`rounded-2xl flex items-center justify-center ${iconBg}`}>{icon}</div>
+      <h2 className="text-lg font-bold dark:text-text-primary text-gray-900">{title}</h2>
+      <p className="text-sm dark:text-text-secondary text-gray-500 max-w-md leading-relaxed">{text}</p>
+      <div className="mt-2">{action}</div>
+    </div>
+  )
+}
 
 function PageHeader({ onClear, hasData, timeRange, setTimeRange }) {
   return (
@@ -335,7 +300,7 @@ function StatCard({ icon, label, value, color, delay }) {
   )
 }
 
-function MiniStatCard({ icon, label, value, color, delay }) {
+function MiniStatCard({ icon, label, value, color, tint, delay }) {
   return (
     <div
       className="flex items-center gap-3 p-3 rounded-xl border
@@ -343,7 +308,7 @@ function MiniStatCard({ icon, label, value, color, delay }) {
         animate-fade-in transition-all duration-200 hover:shadow-md"
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className={`p-2 rounded-lg bg-current/10 ${color}`}>
+      <div className={`p-2 rounded-lg ${tint} ${color}`}>
         {icon}
       </div>
       <div className="min-w-0">
@@ -380,29 +345,28 @@ function SectionCard({ title, icon, delay, children }) {
 // ── Activity Heatmap ────────────────────────────────────────────────────────
 
 function ActivityHeatmap({ data }) {
-  // Group by weeks (columns)
+  // Build columns of 7 (Sun..Sat). Leading nulls push the first day into the
+  // correct weekday row, trailing nulls fill the last column.
   const weeks = useMemo(() => {
+    if (!data || data.length === 0) return []
+    const lead = new Date(`${data[0].date}T00:00:00`).getDay() // 0 = Sunday
+    const cells = [...Array(lead).fill(null), ...data]
+    while (cells.length % 7 !== 0) cells.push(null)
     const w = []
-    let currentWeek = []
-    data.forEach((day, i) => {
-      currentWeek.push(day)
-      if (currentWeek.length === 7 || i === data.length - 1) {
-        w.push(currentWeek)
-        currentWeek = []
-      }
-    })
+    for (let i = 0; i < cells.length; i += 7) w.push(cells.slice(i, i + 7))
     return w
   }, [data])
-
-  const dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 
   return (
     <div>
       <div className="flex gap-0.5 overflow-x-auto pb-2">
         {/* Day labels */}
         <div className="flex flex-col gap-0.5 mr-1 shrink-0">
-          {dayLabels.map((label, i) => (
-            <div key={i} className="h-[14px] w-4 flex items-center justify-center text-[8px] dark:text-text-muted text-gray-400 font-medium">
+          {HEATMAP_DAY_LABELS.map((label, i) => (
+            <div
+              key={i}
+              className="h-[14px] w-4 flex items-center justify-center text-[8px] dark:text-text-muted text-gray-400 font-medium"
+            >
               {i % 2 === 1 ? label : ''}
             </div>
           ))}
@@ -410,17 +374,17 @@ function ActivityHeatmap({ data }) {
         {/* Week columns */}
         {weeks.map((week, wi) => (
           <div key={wi} className="flex flex-col gap-0.5">
-            {week.map((day) => (
-              <div
-                key={day.date}
-                className={`h-[14px] w-[14px] rounded-[3px] transition-all duration-300 ${getHeatmapIntensity(day.count)}`}
-                title={`${day.date}: ${day.count} run${day.count !== 1 ? 's' : ''}`}
-              />
-            ))}
-            {/* Pad short weeks */}
-            {week.length < 7 && Array.from({ length: 7 - week.length }).map((_, i) => (
-              <div key={`pad-${i}`} className="h-[14px] w-[14px]" />
-            ))}
+            {week.map((day, di) =>
+              day ? (
+                <div
+                  key={day.date}
+                  className={`h-[14px] w-[14px] rounded-[3px] ${getHeatmapIntensity(day.count)}`}
+                  title={`${day.date}: ${day.count} run${day.count !== 1 ? 's' : ''}`}
+                />
+              ) : (
+                <div key={`blank-${di}`} className="h-[14px] w-[14px]" />
+              )
+            )}
           </div>
         ))}
       </div>
@@ -428,8 +392,8 @@ function ActivityHeatmap({ data }) {
       <div className="flex items-center gap-2 mt-2">
         <span className="text-[10px] dark:text-text-muted text-gray-400">Less</span>
         <div className="flex gap-0.5">
-          {['bg-gray-100 dark:bg-white/5', 'bg-indigo-200 dark:bg-indigo-500/25', 'bg-indigo-400 dark:bg-indigo-500/50', 'bg-indigo-600 dark:bg-indigo-400/80'].map((cls, i) => (
-            <div key={i} className={`h-[10px] w-[10px] rounded-[2px] ${cls}`} />
+          {HEATMAP_LEVELS.map((l, i) => (
+            <div key={i} className={`h-[10px] w-[10px] rounded-[2px] ${l.cls}`} />
           ))}
         </div>
         <span className="text-[10px] dark:text-text-muted text-gray-400">More</span>
@@ -447,7 +411,7 @@ function TopAgentsChart({ agents, navigate }) {
 
   return (
     <div className="space-y-2.5">
-      {agents.map((agent, i) => {
+      {agents.map((agent) => {
         const pct = Math.max(5, (agent.count / maxCount) * 100)
         return (
           <div
@@ -466,12 +430,9 @@ function TopAgentsChart({ agents, navigate }) {
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-accent to-indigo-400 transition-all duration-700 ease-out
+                className="h-full rounded-full bg-gradient-to-r from-accent to-indigo-400
                   group-hover:from-accent group-hover:to-cyan-400"
-                style={{
-                  width: `${pct}%`,
-                  animationDelay: `${i * 80}ms`,
-                }}
+                style={{ width: `${pct}%` }}
               />
             </div>
           </div>
@@ -483,49 +444,60 @@ function TopAgentsChart({ agents, navigate }) {
 
 // ── Provider Donut (SVG) ────────────────────────────────────────────────────
 
+const DONUT_SIZE = 140
+const DONUT_STROKE = 22
+const DONUT_RADIUS = (DONUT_SIZE - DONUT_STROKE) / 2
+const DONUT_CIRCUMFERENCE = 2 * Math.PI * DONUT_RADIUS
+
 function ProviderDonut({ data, total }) {
-  if (data.length === 0) return <EmptyMini text="No provider data" />
+  // Hook runs before the early return so hook order never changes
+  const segments = useMemo(() => {
+    if (!data.length || !total) return []
+    let cumulativeOffset = 0
+    return data.map((item) => {
+      const frac = item.count / total
+      const dash = frac * DONUT_CIRCUMFERENCE
+      const offset = cumulativeOffset
+      cumulativeOffset += dash
+      const info = PROVIDER_COLORS[item.name] || PROVIDER_COLORS.unknown
+      return {
+        ...item,
+        dash,
+        offset,
+        color: info.color,
+        label: info.label,
+        pct: Math.round(frac * 100),
+      }
+    })
+  }, [data, total])
 
-  const size = 140
-  const strokeWidth = 22
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
+  if (segments.length === 0) return <EmptyMini text="No provider data" />
 
-  let cumulativeOffset = 0
-  const segments = data.map((item) => {
-    const pct = item.count / total
-    const dash = pct * circumference
-    const offset = cumulativeOffset
-    cumulativeOffset += dash
-    const providerInfo = PROVIDER_COLORS[item.name] || PROVIDER_COLORS.unknown
-    return { ...item, dash, offset, color: providerInfo.color, label: providerInfo.label }
-  })
+  const c = DONUT_SIZE / 2
 
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="relative">
-        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+        <svg width={DONUT_SIZE} height={DONUT_SIZE} viewBox={`0 0 ${DONUT_SIZE} ${DONUT_SIZE}`} className="-rotate-90">
           {/* Background ring */}
           <circle
-            cx={size / 2} cy={size / 2} r={radius}
+            cx={c} cy={c} r={DONUT_RADIUS}
             fill="none"
             stroke="currentColor"
-            strokeWidth={strokeWidth}
+            strokeWidth={DONUT_STROKE}
             className="text-gray-100 dark:text-white/5"
           />
           {/* Segments */}
-          {segments.map((seg, i) => (
+          {segments.map((seg) => (
             <circle
               key={seg.name}
-              cx={size / 2} cy={size / 2} r={radius}
+              cx={c} cy={c} r={DONUT_RADIUS}
               fill="none"
               stroke={seg.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={`${seg.dash} ${circumference - seg.dash}`}
+              strokeWidth={DONUT_STROKE}
+              strokeDasharray={`${seg.dash} ${DONUT_CIRCUMFERENCE - seg.dash}`}
               strokeDashoffset={-seg.offset}
               strokeLinecap="round"
-              className="transition-all duration-700 ease-out"
-              style={{ animationDelay: `${i * 100}ms` }}
             />
           ))}
         </svg>
@@ -559,7 +531,7 @@ function CategoryBars({ data }) {
 
   return (
     <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1 custom-scrollbar">
-      {data.map((cat, i) => {
+      {data.map((cat) => {
         const pct = Math.max(5, (cat.count / maxCount) * 100)
         const gradient = CATEGORY_COLORS[cat.name] || DEFAULT_CATEGORY_COLOR
         return (
@@ -574,8 +546,8 @@ function CategoryBars({ data }) {
             </div>
             <div className="h-2 rounded-full bg-gray-100 dark:bg-white/5 overflow-hidden">
               <div
-                className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-700 ease-out`}
-                style={{ width: `${pct}%`, animationDelay: `${i * 60}ms` }}
+                className={`h-full rounded-full bg-gradient-to-r ${gradient}`}
+                style={{ width: `${pct}%` }}
               />
             </div>
           </div>
@@ -606,8 +578,8 @@ function Sparkline({ data }) {
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-28" preserveAspectRatio="none">
-        {/* Gradient fill */}
+      {/* No preserveAspectRatio="none" so dots stay round and the stroke stays even */}
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
         <defs>
           <linearGradient id="sparkline-gradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="rgb(99, 102, 241)" stopOpacity="0.3" />
@@ -619,13 +591,8 @@ function Sparkline({ data }) {
         {/* Line */}
         <path d={linePath} fill="none" stroke="rgb(99, 102, 241)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         {/* Dots for days with runs */}
-        {points.filter((p) => p.count > 0).map((p, i) => (
-          <circle
-            key={i}
-            cx={p.x} cy={p.y} r="3"
-            fill="rgb(99, 102, 241)"
-            className="transition-all duration-300"
-          >
+        {points.filter((p) => p.count > 0).map((p) => (
+          <circle key={p.date} cx={p.x} cy={p.y} r="3" fill="rgb(99, 102, 241)">
             <title>{`${p.date}: ${p.count} run${p.count !== 1 ? 's' : ''}`}</title>
           </circle>
         ))}
@@ -663,7 +630,8 @@ function RecentTimeline({ runs, navigate }) {
               animate-fade-in"
             style={{ animationDelay: `${i * 40}ms` }}
             onClick={() => {
-              const agentId = run.id?.split('_')[0]
+              // Prefer a stored agentId; the split fallback only works if ids have no underscore
+              const agentId = run.agentId || run.id?.split('_')[0]
               if (agentId) navigate(`/agent/${agentId}`)
             }}
           >
