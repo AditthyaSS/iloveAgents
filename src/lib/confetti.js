@@ -36,7 +36,13 @@ export function launchConfetti({ duration = 3200, particleCount = 80 } = {}) {
   canvas.style.zIndex = '9999'
   document.body.appendChild(canvas)
 
-  const ctx = canvas.getContext('2d')
+  let ctx = null
+  try {
+    ctx = canvas.getContext('2d')
+  } catch {
+    ctx = null
+  }
+
   if (!ctx) {
     if (canvas.isConnected) document.body.removeChild(canvas)
     return () => {}
