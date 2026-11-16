@@ -1,30 +1,56 @@
+
 /**
  * Vercel Cron Handler: /api/cron/tick
  *
- * Runs automatically on schedule configured in vercel.json cron.
- * Authenticates using CRON_SECRET authorization header, selects due automations,
- * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
+ * Responsibilities:
+ * 1. Authenticate scheduled cron requests.
+ * 2. Connect securely to Supabase.
+ * 3. Fetch enabled automations that are due.
+ * 4. Retrieve decrypted API keys securely.
+ * 5. Execute AI requests using supported providers.
+ * 6. Save automation execution history.
+ * 7. Send email notifications through Resend.
  */
 
-/**
- * Supported providers for cron execution.
- */
-export const SUPPORTED_CRON_PROVIDERS = ['openai', 'anthropic', 'gemini', 'openrouter']
+import { createClient } from '@supabase/supabase-js';
 
-/**
- * Builds HTTP request parameters for the specified LLM provider in cron execution.
- *
- * @param {string} [provider='openai'] - Target provider: 'openai', 'anthropic', 'gemini', or 'openrouter'.
- * @param {string} apiKey - API key used for authenticating with the provider.
- * @param {string} [model] - Model identifier, falls back to provider default if omitted.
- * @param {string} [systemPrompt] - System instructions for the prompt.
- * @param {string} [userMessage] - User prompt payload.
- * @returns {{ url: string, headers: Record<string, string>, body: object }} Request configuration including url, headers, and body.
- */
-export function buildCronRequest(provider, apiKey, model, systemPrompt, userMessage) {
-  const sys = systemPrompt || 'You are an AI assistant.'
-  const msg = userMessage || 'Scheduled run'
-  const prov = (provider || 'openai').toLowerCase()
+export const SUPPORTED_CRON_PROVIDERS = [
+  'openai',
+  'anthropic',
+  'gemini',
+  'openrouter',
+];
+
+// Escape HTML before inserting generated content into an email.
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  })[char]);
+}
+
+// Build an AI provider request.
+export function buildCronRequest(
+  provider,
+  apiKey,
+  model,
+  systemPrompt,
+  userMessage
+) {
+  const sys = systemPrompt || 'You are an AI assistant.';
+  const msg = userMessage || 'Scheduled run';
+  const prov = (provider || 'openai').toLowerCase();
+
+  if (!SUPPORTED_CRON_PROVIDERS.includes(prov)) {
+    throw new Error(`Unsupported AI provider: ${prov}`);
+  }
+
+  if (!apiKey) {
+    throw new Error('Missing provider API key.');
+  }
 
   if (prov === 'anthropic') {
     return {
@@ -40,11 +66,12 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
         system: sys,
         messages: [{ role: 'user', content: msg }],
       },
-    }
+    };
   }
 
   if (prov === 'gemini') {
-    const targetModel = model || 'gemini-2.5-flash'
+    const targetModel = model || 'gemini-2.5-flash';
+
     return {
       url: `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(targetModel)}:generateContent`,
       headers: {
@@ -52,13 +79,11 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
         'x-goog-api-key': apiKey,
       },
       body: {
-        contents: [
-          {
-            parts: [{ text: `${sys}\n\n${msg}` }],
-          },
-        ],
+        contents: [{
+          parts: [{ text: `${sys}\n\n${msg}` }],
+        }],
       },
-    }
+    };
   }
 
   if (prov === 'openrouter') {
@@ -78,7 +103,7 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
         ],
         max_tokens: 4096,
       },
-    }
+    };
   }
 
   return {
@@ -95,241 +120,288 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
       ],
       max_tokens: 4096,
     },
-  }
+  };
 }
 
-/**
- * Extracts generated text content from provider API response JSON.
- *
- * @param {string} [provider='openai'] - Target provider name.
- * @param {Record<string, unknown>} json - Parsed JSON response payload from the LLM provider.
- * @returns {string} Extracted text content or fallback string if unavailable.
- */
+// Extract AI response text.
 export function parseCronResponse(provider, json) {
   if (!json || typeof json !== 'object') {
-    return 'No output generated'
+    return 'No output generated';
   }
 
-  const prov = (provider || 'openai').toLowerCase()
+  const prov = (provider || 'openai').toLowerCase();
 
   if (prov === 'anthropic') {
-    return json.content?.[0]?.text || 'No output generated'
+    return json.content?.[0]?.text || 'No output generated';
   }
 
   if (prov === 'gemini') {
-    return json.candidates?.[0]?.content?.parts?.[0]?.text || 'No output generated'
+    return json.candidates?.[0]?.content?.parts?.[0]?.text
+      || 'No output generated';
   }
 
-  return json.choices?.[0]?.message?.content || 'No output generated'
+  return json.choices?.[0]?.message?.content
+    || 'No output generated';
 }
 
-/**
- * Sends an email notification for a completed automation run via Resend.
- *
- * @param {string} apiKey - Resend API key.
- * @param {object} params - Notification parameters.
- * @param {string} params.to - Recipient email address.
- * @param {string} params.name - Automation name.
- * @param {string} params.output - Generated output to include in email.
- * @returns {Promise<object>} Parsed JSON response from Resend.
- */
-export async function sendCronEmailNotification(apiKey, { to, name, output }) {
-  let resp
+// Execute an AI request with a timeout.
+async function executeAIRequest(request) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
+
   try {
-    resp = await fetch('https://api.resend.com/emails', {
+    const response = await fetch(request.url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: 'Open Agents Hub <automations@openagentshub.dev>',
-        to: [to],
-        subject: `[Open Agents Hub] ✅ Completed: ${name}`,
-        html: `<h2>${name} Run Output</h2><pre>${output}</pre>`,
-      }),
-    })
-  } catch (netErr) {
-    throw new Error(`Resend notification network error: ${netErr.message || 'Failed to send email'}`)
-  }
+      headers: request.headers,
+      body: JSON.stringify(request.body),
+      signal: controller.signal,
+    });
 
-  if (!resp.ok) {
-    const text = await resp.text().catch(() => '')
-    let detail = text
-    try {
-      const errJson = JSON.parse(text)
-      detail = errJson?.message || errJson?.error?.message || (typeof errJson?.error === 'string' ? errJson.error : null) || text
-    } catch {}
-    throw new Error(`Resend notification error ${resp.status}: ${String(detail).slice(0, 500)}`)
-  }
-
-  return await resp.json().catch(() => ({ success: true }))
-}
-
-/**
- * Vercel Cron Handler: /api/cron/tick
- *
- * Runs automatically on schedule configured in vercel.json cron.
- * Authenticates using CRON_SECRET authorization header, selects due automations,
- * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
- *
- * @param {object} req - HTTP request object.
- * @param {object} res - HTTP response object.
- * @returns {Promise<void>} Resolves when cron execution finishes.
- */
-export default async function handler(req, res) {
-  // Verify Cron Secret if configured
-  const authHeader = req.headers.authorization || req.headers['authorization']
-  const cronSecret = process.env.CRON_SECRET
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return res.status(401).json({ error: 'Unauthorized: Invalid Cron Secret' })
-  }
-
-  const startTime = Date.now()
-  const results = []
-
-  try {
-    // In serverless environment, connect to Supabase
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseServiceKey) {
-      return res.status(200).json({
-        message: 'Open Agents Hub Cron Tick executed (Serverless simulated mode)',
-        processedCount: 0,
-        timestamp: new Date().toISOString(),
-        duration: Date.now() - startTime,
-      })
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `AI provider error ${response.status}: ${errorText.slice(0, 500)}`
+      );
     }
 
-    // Dynamic import to avoid missing packaging errors if standard client is used
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    return await response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
-    const nowIso = new Date().toISOString()
+// Send completion notification using Resend.
+export async function sendCronEmailNotification(
+  apiKey,
+  { to, name, output }
+) {
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      from: 'ILoveAgents <automations@iloveagents.ai>',
+      to: [to],
+      subject: `[ILoveAgents] Completed: ${name}`,
+      html: `
+        <h2>${escapeHtml(name)} - Run Output</h2>
+        <pre>${escapeHtml(output)}</pre>
+      `,
+    }),
+  });
 
-    // Fetch due automations
-    const { data: dueAutomations, error: fetchError } = await supabase
+  if (!response.ok) {
+    throw new Error(
+      `Resend error ${response.status}: ${(await response.text()).slice(0, 500)}`
+    );
+  }
+
+  return response.json();
+}
+
+/**
+ * IMPORTANT:
+ * This RPC must be implemented in your Supabase database.
+ * It must securely decrypt the stored pgsodium secret and
+ * return the decrypted API key only to the authorized server.
+ *
+ * Expected RPC contract:
+ * Function: decrypt_automation_api_key
+ * Argument: p_automation_id
+ * Return: api_key
+ *
+ * Adjust this function to match your actual SQL implementation.
+ */
+async function getDecryptedApiKey(supabase, automationId) {
+  const { data, error } = await supabase.rpc(
+    'decrypt_automation_api_key',
+    { p_automation_id: automationId }
+  );
+
+  if (error) {
+    throw new Error(`Secret decryption failed: ${error.message}`);
+  }
+
+  const apiKey = data?.api_key;
+
+  if (!apiKey) {
+    throw new Error('Decrypted API key not found.');
+  }
+
+  return apiKey;
+}
+
+// Main Vercel Cron handler.
+export default async function handler(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Require cron authentication.
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (
+    !cronSecret ||
+    req.headers.authorization !== `Bearer ${cronSecret}`
+  ) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const startTime = Date.now();
+  const results = [];
+
+  try {
+    // Server-side Supabase credentials only.
+    const supabaseUrl = process.env.SUPABASE_URL
+      || process.env.VITE_SUPABASE_URL;
+
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !serviceRoleKey) {
+      throw new Error('Supabase server configuration is missing.');
+    }
+
+    const supabase = createClient(
+      supabaseUrl,
+      serviceRoleKey,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      }
+    );
+
+    // Fetch due automations.
+    const { data: automations, error: fetchError } = await supabase
       .from('automations')
       .select('*')
       .eq('enabled', true)
-      .lte('next_run_at', nowIso)
-      .limit(10)
+      .lte('next_run_at', new Date().toISOString())
+      .order('next_run_at', { ascending: true })
+      .limit(10);
 
-    if (fetchError) {
-      throw fetchError
-    }
+    if (fetchError) throw fetchError;
 
-    if (!dueAutomations || dueAutomations.length === 0) {
+    if (!automations?.length) {
       return res.status(200).json({
-        message: 'No automations currently due',
+        success: true,
+        message: 'No automations currently due.',
         processedCount: 0,
         duration: Date.now() - startTime,
-      })
+      });
     }
 
-    for (const auto of dueAutomations) {
-      const runId = `run_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
-      const autoStart = Date.now()
-      let status = 'success'
-      let output = ''
-      let error = null
+    for (const auto of automations) {
+      const autoStart = Date.now();
+      let status = 'success';
+      let output = '';
+      let errorMessage = null;
 
       try {
-        // Fetch encrypted key from user_secrets (decrypted via pgsodium RPC or server key)
-        const { data: secretData } = await supabase
-          .from('user_secrets')
-          .select('encrypted_key')
-          .eq('automation_id', auto.id)
-          .single()
+        // Get securely decrypted provider API key.
+        const apiKey = await getDecryptedApiKey(
+          supabase,
+          auto.id
+        );
 
-        const apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
+        const provider = (auto.provider || 'openai').toLowerCase();
 
-        if (!apiKey) {
-          throw new Error('API key not found in encrypted secret vault.')
+        const parts = Object.entries(auto.inputs || {})
+          .filter(([, value]) => value !== null && value !== undefined)
+          .map(([key, value]) =>
+            `${key}: ${Array.isArray(value) ? value.join(', ') : value}`
+          );
+
+        const userMessage = parts.join('\n\n') || 'Scheduled run';
+
+        const request = buildCronRequest(
+          provider,
+          apiKey,
+          auto.model,
+          auto.system_prompt,
+          userMessage
+        );
+
+        const responseJson = await executeAIRequest(request);
+
+        output = parseCronResponse(provider, responseJson);
+
+        // Send optional email notification.
+        if (
+          auto.email_notification &&
+          auto.notification_email &&
+          process.env.RESEND_API_KEY
+        ) {
+          await sendCronEmailNotification(
+            process.env.RESEND_API_KEY,
+            {
+              to: auto.notification_email,
+              name: auto.name || 'Automation',
+              output,
+            }
+          );
         }
 
-        // Prepare LLM request
-        const parts = []
-        if (auto.inputs) {
-          Object.entries(auto.inputs).forEach(([k, v]) => {
-            if (v) parts.push(`${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
-          })
-        }
-        const userMessage = parts.join('\n\n') || 'Scheduled run'
-
-        // Call provider endpoint (openai, anthropic, gemini, openrouter)
-        const provider = auto.provider || 'openai'
-        const normalizedProvider = provider.toLowerCase()
-
-        if (SUPPORTED_CRON_PROVIDERS.includes(normalizedProvider)) {
-          const cronReq = buildCronRequest(
-            normalizedProvider,
-            apiKey,
-            auto.model,
-            auto.system_prompt,
-            userMessage
-          )
-          const resp = await fetch(cronReq.url, {
-            method: 'POST',
-            headers: cronReq.headers,
-            body: JSON.stringify(cronReq.body),
-          })
-          if (!resp.ok) {
-            const text = await resp.text().catch(() => '')
-            let detail = text
-            try {
-              detail = JSON.parse(text)?.error?.message || text
-            } catch {}
-            throw new Error(`${normalizedProvider} API error ${resp.status}: ${String(detail).slice(0, 500)}`)
-          }
-          const json = await resp.json()
-          output = parseCronResponse(normalizedProvider, json)
-        } else {
-          output = `Executed ${auto.agent_name} via ${auto.provider} successfully.`
-        }
-
-        // Email Notification via Resend
-        if (auto.email_notification && auto.notification_email && process.env.RESEND_API_KEY) {
-          await sendCronEmailNotification(process.env.RESEND_API_KEY, {
-            to: auto.notification_email,
-            name: auto.name,
-            output,
-          })
-        }
       } catch (err) {
-        status = 'failed'
-        error = err.message || 'Execution error'
+        status = 'failed';
+        errorMessage = err.message || 'Automation execution failed';
       }
 
-      const autoDuration = Date.now() - autoStart
+      const duration = Date.now() - autoStart;
+      const completedAt = new Date();
 
-      // Record run
-      await supabase.from('automation_runs').insert({
-        id: runId,
-        automation_id: auto.id,
-        automation_name: auto.name,
-        agent_name: auto.agent_name,
-        status,
-        duration: autoDuration,
-        output,
-        error,
-        started_at: new Date(autoStart).toISOString(),
-        completed_at: new Date().toISOString(),
-      })
+      // Save execution history.
+      const { error: insertError } = await supabase
+        .from('automation_runs')
+        .insert({
+          automation_id: auto.id,
+          automation_name: auto.name,
+          agent_name: auto.agent_name,
+          status,
+          duration,
+          output,
+          error: errorMessage,
+          started_at: new Date(autoStart).toISOString(),
+          completed_at: completedAt.toISOString(),
+        });
 
-      // Update next_run_at (e.g. + 24 hours for daily)
-      const intervalMs = auto.schedule === 'hourly' ? 3600000 : auto.schedule === 'weekly' ? 604800000 : 86400000
-      await supabase
+      if (insertError) {
+        throw insertError;
+      }
+
+      // Calculate next execution time.
+      const intervals = {
+        hourly: 60 * 60 * 1000,
+        daily: 24 * 60 * 60 * 1000,
+        weekly: 7 * 24 * 60 * 60 * 1000,
+      };
+
+      const interval = intervals[auto.schedule] || intervals.daily;
+
+      const { error: updateError } = await supabase
         .from('automations')
         .update({
-          last_run_at: new Date().toISOString(),
-          next_run_at: new Date(Date.now() + intervalMs).toISOString(),
+          last_run_at: completedAt.toISOString(),
+          next_run_at: new Date(
+            completedAt.getTime() + interval
+          ).toISOString(),
         })
-        .eq('id', auto.id)
+        .eq('id', auto.id);
 
-      results.push({ id: auto.id, name: auto.name, status, duration: autoDuration })
+      if (updateError) {
+        throw updateError;
+      }
+
+      results.push({
+        id: auto.id,
+        name: auto.name,
+        status,
+        duration,
+        error: errorMessage,
+      });
     }
 
     return res.status(200).json({
@@ -337,9 +409,16 @@ export default async function handler(req, res) {
       processedCount: results.length,
       results,
       duration: Date.now() - startTime,
-    })
-  } catch (error) {
-    console.error('Cron error:', error)
-    return res.status(500).json({ error: error.message || 'Cron execution failed' })
+    });
+
+  } catch (err) {
+    console.error('Cron execution error:', err.message);
+
+    return res.status(500).json({
+      success: false,
+      error: 'Cron execution failed.',
+      duration: Date.now() - startTime,
+    });
   }
 }
+
