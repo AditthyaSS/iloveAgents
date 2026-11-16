@@ -16,6 +16,7 @@ function stripMarkdown(text) {
   if (!text) return ''
 
   return text
+    .replace(/^[-*+]\s+\[[ xX]\]\s+/gm, '')
     .replace(/#{1,6}\s+/g, '')
     .replace(/~~(.*?)~~/g, '$1')
     .replace(/__(.*?)__/g, '$1')
@@ -28,7 +29,6 @@ function stripMarkdown(text) {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .replace(/^[-*+]\s+/gm, '')
     .replace(/^\d+\.\s+/gm, '')
-    .replace(/^[-*]\s+\[[ x]\]\s+/gm, '')
     .replace(/^>\s+/gm, '')
     .replace(/^---+$/gm, '')
     .replace(/\n{3,}/g, '\n\n')
