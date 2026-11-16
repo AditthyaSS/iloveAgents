@@ -1,27 +1,53 @@
+
 name: Welcome New Issue Author
 
-# Trigger: fires whenever a new issue is opened
+# Trigger when a new issue is opened
 on:
   issues:
     types: [opened]
 
+permissions:
+  issues: write
+
 jobs:
   welcome:
+    name: Welcome New Contributor
     runs-on: ubuntu-latest
 
     steps:
-      # Post a welcome comment tagging the issue author
-      - name: Post welcome comment
+      - name: Post Welcome Comment
         uses: actions/github-script@v7
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const author = context.payload.issue.user.login;
-            const issueNumber = context.payload.issue.number;
+            const issueNumber = context.issue.number;
+            const issueAuthor = context.payload.issue.user.login;
+
+            const message = `
+            👋 Hey @${issueAuthor}!
+
+            Welcome to **ILoveAgents**! 🚀
+
+            Thank you for opening issue #${issueNumber}.
+
+            We appreciate your interest in improving our project.
+
+            Our team will review your issue and get back to you as soon as possible.
+
+            Before contributing, please:
+            - Check whether a similar issue already exists.
+            - Provide clear details and steps to reproduce bugs.
+            - Share relevant screenshots or error messages if possible.
+            - Follow our contribution guidelines.
+
+            Thank you for being part of the ILoveAgents community! ❤️
+
+            Happy contributing! 🎉
+            `;
 
             await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `👋 Hey @${author}! Thanks for opening this issue.\n\nOur maintainer will review it shortly and get back to you.\n\nWhile you wait:\n- 📖 Check our [Contributing Guide](https://github.com/AditthyaSS/iloveAgents/blob/main/CONTRIBUTING.md)\n- 💬 Feel free to add more details to help us understand better\n\nAlso — this project is completely free and community-driven. If iloveAgents has been useful to you in any way, the single best thing you can do to support it is [⭐ star the repo](https://github.com/AditthyaSS/iloveAgents). It helps others discover the project and keeps the community growing. Every star genuinely matters. 🙏\n\n— [@AditthyaSS](https://github.com/AditthyaSS)`
+              body: message
             });
+
