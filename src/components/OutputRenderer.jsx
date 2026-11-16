@@ -18,15 +18,33 @@ import VoiceOutput from './VoiceOutput'
 
 function stripMarkdown(text) {
   if (!text) return ''
-  return text
-    .replace(/^[-*+]\s+\[[ xX]\]\s+/gm, '')
+
+  const codeBlocks = []
+
+  const codeBlockPattern =
+    /(^[ \t]*(```|~~~)[^\n]*\n)([\s\S]*?)(^[ \t]*\2[ \t]*$)/gm
+
+  let plainText = text.replace(
+    codeBlockPattern,
+    (_match, _opening, _fence, code) => {
+      const token = `\u0000CODE_BLOCK_${codeBlocks.length}\u0000`
+      codeBlocks.push(code)
+      return token
+    }
+  )
+
+  plainText = plainText
+    .replace(
+      /^([ \t]*)[-*+][ \t]+\[([ xX])\][ \t]+/gm,
+      (_match, indent, checked) =>
+        `${indent}${checked.toLowerCase() === 'x' ? '☑' : '☐'} `
+    )
     .replace(/#{1,6}\s+/g, '')
     .replace(/~~(.*?)~~/g, '$1')
     .replace(/__(.*?)__/g, '$1')
     .replace(/_(.*?)_/g, '$1')
     .replace(/\*\*(.*?)\*\*/g, '$1')
     .replace(/\*(.*?)\*/g, '$1')
-    .replace(/`{3}[a-z]*\n?([\s\S]*?)`{3}/g, '$1')
     .replace(/`([^`]+)`/g, '$1')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '$1')
     .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
@@ -36,6 +54,11 @@ function stripMarkdown(text) {
     .replace(/---+/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
+
+  return plainText.replace(
+    /\u0000CODE_BLOCK_(\d+)\u0000/g,
+    (_match, index) => codeBlocks[Number(index)]
+  )
 }
 
 function CopyButton({ text, label, icon: Icon = Copy }) {
