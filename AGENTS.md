@@ -1,177 +1,42 @@
+
 # 🤖 Available Agents
 
+Explore 151+ AI agents built by the community. 🚀
 
-151 agents and growing — built by the community. 🚀
+Discover AI-powered tools for engineering, education,
+productivity, cybersecurity, business, design, and more.
+
+Each agent helps you complete specific tasks using
+AI-powered assistance.
+
+## Agent Directory
 
 | # | Name | Description | Category |
-|---|---|---|---|
-| 1 | Accessibility Audit Generator | Paste your HTML or component code and get a detailed WCAG accessibility audit with issues, severity ratings, and corrected code snippets. | Engineering |
-| 2 | AI Project Architecture Agent | Analyzes software or AI project ideas and recommends the most suitable frontend, backend, database, AI tools, and deployment stack. | Engineering |
-| 3 | AI Quiz Generator | Generate customized quizzes from any topic, text, or subject area. Choose question type, difficulty, and number of questions. Includes answer key and score guidelines. | Education |
-| 4 | AI Study Planner | Creates personalized study schedules, revision plans, and smart learning recommendations based on exams, subjects, and study goals. | Productivity |
-| 5 | API Doc Generator | Paste your code and get clean, professional API documentation with examples and type signatures. | Engineering |
-| 6 | API Error Message Writer | Transforms technical, raw, or cryptic backend error codes and system logs into tailored, user-friendly notifications and precise diagnostic debugging steps. | Engineering |
-| 7 | API Rate Limiter Designer | Takes an API description and produces a complete rate limiting strategy- choosing the right algorithm, limits, and headers. | Engineering |
-| 8 | Architecture Decision Record Generator | Turn a rough technical decision into a structured ADR document that captures what was decided, why, and what alternatives were considered. | Engineering |
-| 9 | B2B Lead Qualification Agent | Analyzes company and lead information to qualify B2B prospects, detect agencies, identify buying signals, and generate personalized outreach messages. | Sales |
-| 10 | Blog Post SEO Optimizer | Paste a blog draft and target keywords to get an optimized version with better titles, meta description, header structure, keyword placement, and internal linking suggestions. | Marketing |
-| 11 | Bug Report Generator | Describe a bug in plain English and get a complete, structured bug report ready to paste into GitHub Issues, Jira, Linear, or Notion. | Engineering |
-| 12 | Case Study Writer | Turn raw notes about a client project or business win into a polished case study for a website, proposal, or sales deck. | Marketing |
-| 13 | Changelog Generator | Paste your git commits or PR titles and get a clean, user-facing changelog in Keep a Changelog format. | Engineering |
-| 14 | CI/CD Pipeline Generator | Describe your stack and deployment target to get a ready-to-use CI/CD pipeline YAML with step-by-step comments. | DevOps |
-| 15 | Cloud Cost Estimator | Describe your cloud infrastructure and get a realistic monthly cost estimate with line-by-line breakdown, hidden cost warnings, tier comparisons, and actionable optimization tips. | DevOps |
-| 16 | Code Complexity Analyzer | Analyzes functions or classes for cyclomatic complexity, maintainability issues, and refactoring opportunities. | Engineering |
-| 17 | Code Migration Guide Generator | Generate a step-by-step checklist, identify common pitfalls, and highlight breaking changes for tech stack migrations. | Engineering |
-| 18 | Code Reviewer | Get a senior-level code review with actionable feedback. | Engineering |
-| 19 | Codebase Entry Guide Agent | Understand a new codebase quickly with key files, entry points, and architecture overview. | Engineering |
-| 20 | Cold Email Writer | Generate highly personalized B2B cold emails that convert. | Marketing |
-| 21 | Color Palette Generator | Describe a mood, brand, or use case and get a complete color palette with hex codes, CSS variables, and accessibility contrast ratios. | Design |
-| 22 | Competitive Analysis Generator | Name your product and competitors to get a structured competitive analysis with feature comparisons, positioning, and strategic recommendations. | Business |
-| 23 | Cover Letter Writer | Paste a job description and your background. Get a tailored cover letter that doesn't sound like every other cover letter. | HR |
-| 24 | Crammo: Cheatsheet Generator | Paste study material and get revision friendly cheatsheets for on the go study. | Education |
-| 25 | Crammo: Mindmap Generator | Paste study material and get mindmaps to remember difficult concepts. | Education |
-| 26 | Crammo: Mnemonic Generator | Paste study material and get revision friendly mnemonics. | Education |
-| 27 | Cron Expression Builder | Describe when you want a job to run in plain English and get a correct cron expression with a human-readable explanation. | Engineering |
-| 28 | Customer Success Check-in Generator | Generates professional customer success follow-up emails based on customer activity and milestones. | Marketing |
-| 29 | Data Cleaning Plan Generator | Describe your dataset and its known problems to get a step-by-step cleaning plan with specific techniques for handling nulls, outliers, duplicates, and inconsistent formats. | Data Science |
-| 30 | Data Dictionary Generator | Paste your database schema, CSV headers, or table descriptions and get a complete data dictionary with field definitions, types, relationships, and usage notes. | Engineering |
-| 31 | Database Migration Script Generator | Writing safe database migration scripts is tedious and error-prone. This agent takes a schema change description and generates a production-safe migration script with rollback. | Engineering |
-| 32 | Database Query Optimizer | This agent takes a SQL query and optional schema context as input and returns an optimized version with an explanation of what changed, what indexes to add, and why the original was slow. | Engineering |
-| 33 | Dataset Description Generator | Paste column names, data types, and sample values to generate complete dataset documentation with field definitions, value ranges, null handling notes, and suggested use cases. | Data Science |
-| 34 | Disaster Recovery Plan Generator | Generate a complete disaster recovery plan with RTO/RPO targets, backup strategies, failover procedures, recovery workflows, and testing schedules. | DevOps |
-| 35 | Docker Compose Generator | Describe your multi-service application stack and get a production-ready docker-compose.yml with volumes, networks, and health checks. | Engineering |
-| 36 | Docker Container Security & Optimization Audit | Analyze Dockerfiles or Docker Compose configurations to discover security vulnerabilities, size bloat, and optimization opportunities. | DevOps |
-| 37 | DSA Problem Explainer | Explains DSA problems with intuition, optimized approaches, dry runs, interview insights, and complexity analysis. | Education |
-| 38 | ELI5 Explainer | Explains complex topics in plain language at your chosen difficulty level — from 5-year-old to expert. | Education |
-| 39 | Email Reply Writer | Paste any email you received and describe how you want to respond. Get a polished reply in seconds. | Productivity |
-| 40 | Employee Onboarding Planner | Generate structured onboarding plans and checklists for new hires based on role, department, seniority, and start date. | HR |
-| 41 | Env Doc Generator | Generate clean markdown documentation tables from .env.example files with descriptions, defaults, and usage examples. | Engineering |
-| 42 | Error Message Writer | Paste a raw stack trace or error log and get a plain English explanation plus actionable fix suggestions. | Engineering |
-| 43 | ETL Pipeline Troubleshooter | Paste your ETL error message and get instant root cause analysis, step-by-step fix, and prevention tips. | Engineering |
-| 44 | Feature Engineering Advisor | Analyzes datasets and machine learning objectives to recommend feature engineering strategies, transformations, encodings, and feature selection techniques. | Engineering |
-| 45 | Flashcard Generator | Paste any study material, notes, or topic and get ready-to-use flashcards in Q&A format. Export for Anki or Quizlet. | Education |
-| 46 | Follow-Up Email Sequence Writer | Generate a strategic 5-email follow-up sequence spaced over 2 weeks with varied psychological angles based on your product and prospect context. | Sales |
-| 47 | Font Pairing Agent | The agent takes in mood and industry as input and generates 3 font pairings for design. | Design |
-| 48 | Future Self Letter Agent | Based on your current habits and goals, writes a brutally honest letter from your future self. | Productivity |
-| 49 | Game Design Document Generator | Generates a comprehensive Game Design Document (GDD) based on your game concept. | Design |
-| 50 | Game System Compatibility Analyser | The agent takes in the game you would like to install along with specifications of your system and provides a verdict with explanation regarding whether the game can be run or not. | Gaming |
-| 51 | Game World Lore Generator | Turn a world name, genre, and core conflict into a consistent lore document for game writing and quest design. | Gaming |
-| 52 | Git Branch Naming Generator | Generate 3-5 clean, consistent branch name options from a ticket number, title, and branch type following common conventions like feature/ILA-123-add-login-page. | Engineering |
-| 53 | Git Commit & Conventional Commits Formatter Agent | Parses messy developer notes or raw git diffs and outputs perfectly formatted Conventional Commits messages and a PR summary. | Productivity |
-| 54 | Git Error Decoder | Translates confusing Git/terminal errors into plain English and provides safe fix commands. | Engineering |
-| 55 | Github Issue Claim Comment Generator | Paste the github issue description and your approach to solve it and any additional notes and get the issue claim comment generated in seconds! | Productivity |
-| 56 | Grant Proposal Writer | Describe your project or research and get a structured grant proposal with problem statement, objectives, methodology, and impact. | Education |
-| 57 | Health & Wellness Plan Generator | Generates a personalized 4-week wellness plan with diet, exercise, and sleep guidance based on your goals. | Healthcare |
-| 58 | Home Buying Checklist Generator | Generates a complete property viewing checklist based on property type, building age, and location. | Business |
-| 59 | Incident Post-Mortem Writer | Turn rough incident notes into a blameless post-mortem with timeline, root cause analysis, and action items. | Engineering |
-| 60 | Incident Runbook Generator | Enter a service name, common failure modes, and infrastructure details to generate a production-grade incident runbook with detection, diagnosis, resolution steps, escalation paths, and communication templates. | Engineering |
-| 61 | InterviewAI | Simulates real software engineering interviews and provides comprehensive performance feedback. | Engineering |
-| 62 | Invoice Description Generator | Turn rough notes about work you did into polished invoice line items and a professional project summary. | Business |
-| 63 | Kubernetes Manifest Generator | Generates a complete Kubernetes Deployment, Service, and ConfigMap manifest from a few app inputs. | DevOps |
-| 64 | Kubernetes Manifest Security Audit & Optimizer Agent | Audit Kubernetes YAML configurations for security vulnerabilities, container misconfigurations, and performance bottlenecks, and generate optimized manifests. | DevOps |
-| 65 | LinkedIn Outreach Message Writer | Paste a prospect's profile summary and your product details to generate personalized connection requests and follow-up messages that feel genuine, not spammy. | Sales |
-| 66 | LinkedIn Post Writer | Generate ready-to-post LinkedIn content with a strong hook and hashtags. | Marketing |
-| 67 | Load Testing Plan Generator | Describe your app or API and get a complete load testing plan with ready-to-run scripts for k6, JMeter, Locust, or Artillery. | Engineering |
-| 68 | Log Analysis Summarizer | Paste raw log output and get a structured summary of errors, warnings, patterns, timeline of events, and likely root cause — so you find the 5 lines that matter in 500 lines of noise. | DevOps |
-| 69 | Master Image Prompt Generator | Turn a basic idea into a highly detailed, professional prompt for Midjourney, DALL-E 3 or other AI image generation tools. | Design |
-| 70 | Meal Planner Agent | Creates personalized meal plans based on dietary preferences, health goals, budget, available ingredients, and nutritional requirements. | Productivity |
-| 71 | Medical Research Summarizer | Summarizes medical research papers and abstracts into plain English with key findings, methodology, limitations, and clinical implications. | Research |
-| 72 | Medication Interaction Explainer | Understand possible medication interactions, side effects, and safety concerns in plain English. | Healthcare |
-| 73 | Meeting Agenda Builder | Generates a structured, time-boxed meeting agenda based on meeting type, attendees, goals, and time available. | Productivity |
-| 74 | Meeting Notes Summarizer | Turns raw meeting notes or transcripts into a clean summary with decisions, action items, and owners. | Productivity |
-| 75 | Memory Card Builder | Transforms study notes into active recall cards with prompts, hints, answers, and self-test questions for better memory retention. | Education |
-| 76 | ML Experiment Report Generator | Enter your model type, hyperparameters, training metrics, and evaluation results to get a structured experiment report ready to share with your team or include in a paper. | Engineering |
-| 77 | Mock Data Generator | Describe a data schema and get realistic mock data in JSON format instantly — names, emails, addresses, dates, and more. | Engineering |
-| 78 | Model Meltdown Detective | Diagnose failed or underperforming ML experiments using model details, dataset context, metrics, hyperparameters, and code snippets. | Engineering |
-| 79 | NFT Project Description Writer | Writes engaging and compelling descriptions for NFT collections. | Marketing |
-| 80 | NPC Dialogue & Lore Generator | Describe a game character and scenario to get fully voiced NPC dialogue trees, personality-consistent responses, ambient lore snippets, and journal entries — ready to drop into any game engine. | Gaming |
-| 81 | OpenAPI Spec Generator | Describe your API in plain English and get a complete, valid OpenAPI 3.0 YAML specification with paths, parameters, and schemas. | Engineering |
-| 82 | Password Strength Reviewer | Reviews whether a password is strong enough with detailed analysis and suggestions. | Cybersecurity |
-| 83 | PathPilot | Predicts possible outcomes, risks, and emotional impact for different life or career choices. | Education |
-| 84 | Patient Discharge Summary Writer | Turn diagnosis, treatment, medications, and follow-up instructions into a clear patient-friendly discharge summary. | Healthcare |
-| 85 | Patient Pre-Consultation Note | Turn symptom descriptions into a structured pre-consultation summary patients can share with doctors. Includes symptom timeline, relevant history prompts, and helpful questions for the doctor. This tool does not provide medical diagnoses. | Healthcare |
-| 86 | PDF Summarizer | Upload a PDF and get a structured summary with key points. | Productivity |
-| 87 | Performance Review Writer | Turn bullet notes about an employee into a structured, fair, and specific performance review. | HR |
-| 88 | Persona Generator | Describe your product or service and get detailed, realistic user personas with demographics, goals, frustrations, and behavioral patterns. | Product |
-| 89 | Personal Budget Analyzer | Analyze your monthly income and expenses to get a clear breakdown, savings rate, and actionable financial recommendations. | Finance |
-| 90 | Phishing Email Detector | Analyze emails for phishing indicators, risk scoring, and safety recommendations. | Cybersecurity |
-| 91 | Playlist Curator | Describe your vibe and get a personalised playlist with YouTube links, curated across genres, eras, and moods. | Design |
-| 92 | PR Diff Reviewer | Review a raw git/PR diff and get structured feedback on the changed lines only. | Developer Tools |
-| 93 | PRD Generator | Generates detailed Product Requirements Documents. | Product |
-| 94 | Privacy Policy Generator | Describe your app or website and get a comprehensive privacy policy draft covering data collection, usage, storage, and user rights. | Legal |
-| 95 | Project Architecture Planner | Analyzes a project idea and recommends a practical technology stack, architecture, authentication strategy, AI components, deployment approach, and development roadmap. | Engineering |
-| 96 | Property Description Writer | Enter your property specs and get a compelling, SEO-optimized listing description, a social media caption, and a set of headline options — tailored to your target buyer and tone. | Real Estate |
-| 97 | Proposal Document Generator | Generate professional client proposal documents with project overview, pricing, timeline, deliverables, and next steps. | Sales |
-| 98 | Pull Request Description Generator | Turn a diff summary or bullet points of changes into a full, structured PR description with summary, changes list, testing instructions, and a screenshots section. | Engineering |
-| 99 | PYQ Paper Analyser | Analyzes previous year question papers, identifies recurring concepts, ranks topic importance, and generates a model question paper. | Education |
-| 100 | Python Method Finder | Master Python methods and improve your coding skills with method discovery and explanations. | Engineering |
-| 101 | README Generator | Paste your repo details and get a clean, developer-friendly README.md covering setup, usage, tech stack, and more. | Engineering |
-| 102 | Real Estate Listing Generator | Generates compelling real estate listing descriptions for property portals and marketplaces. | Real Estate |
-| 103 | Regex Generator | Describe what you want to match in plain English and get a tested regex pattern with explanation. | Engineering |
-| 104 | Research Agent | Get comprehensive research on any topic with configurable depth. | Research |
-| 105 | Resume Screener | Evaluate candidates against job descriptions with scoring. | HR |
-| 106 | Salary Negotiation Script Generator | Generate personalized salary negotiation scripts with opening statements, pushback responses, and professional closing strategies. | Finance |
-| 107 | Sales Discovery Call Script Generator | Create professional sales discovery call scripts with qualification questions, pain-point exploration, objection handling, and actionable next steps. | Sales |
-| 108 | Sales Objection Handler | Generates empathetic, direct, and data-driven responses to customer objections. | Sales |
-| 109 | SEO Keyword Strategy Planner | Helps marketers generate a comprehensive SEO keyword strategy by identifying high-value keywords and content opportunities. | Marketing |
-| 110 | Skill Gap Roadmap Agent | Paste the job description for your future role and your current background. Get a week-by-week learning roadmap, project ideas, and milestone checks. | Education |
-| 111 | Smart Contract Auditor | Paste your smart contract code and get a structured security audit with vulnerability detection, severity ratings, gas optimization tips, and fix recommendations. | Web3 |
-| 112 | Smart Contract Explainer | Paste a smart contract and get a plain-English explanation of what it does, what each function does, what permissions and roles exist, and any potential red flags. | Web3 |
-| 113 | Social Media Thread Writer | Turn any topic or idea into a compelling X/Twitter thread with hooks, engagement tactics, and a strong call to action. | Marketing |
-| 114 | Solidity Code Reviewer | Review Solidity smart contract code for security, gas efficiency, and best practices. | Web3 |
-| 115 | SQL Query Generator | Converts plain English questions into clean SQL queries. Paste your schema and describe what you want. | Engineering |
-| 116 | SQL Query Optimizer | Analyzes SQL queries and suggests performance optimizations, indexing strategies, and cleaner alternatives. | Engineering |
-| 117 | Startup Idea Validator | Describe a startup idea and get a structured analysis with market potential, risks, competition, and a viability score. | Business |
-| 118 | Syllabus-to-Project Planner | Turns academic syllabus topics into practical, resume-worthy coding project ideas. | Education |
-| 119 | Technical Debt Report Generator | Generate structured technical debt reports with business impact, estimated effort to fix, risk if ignored and prioritized recommendations. | Engineering |
-| 120 | Terraform Config Generator Agent | Turns a plain-English infrastructure description into ready-to-use Terraform configuration for your chosen cloud provider. | Engineering |
-| 121 | Test Case Generator | Turn a feature description into QA-ready manual test cases with steps, expected results, priorities, and edge cases. | Engineering |
-| 122 | Threat Intelligence Summariser | Converts threat intelligence reports, CVEs, and security advisories into concise, structured summaries. | Cybersecurity |
-| 123 | Tone Rewriter | Paste any text and select a target tone. Get your message rewritten to match — from formal to casual, harsh to diplomatic, or verbose to concise. | Productivity |
-| 124 | Typography Pairer | Describe your project mood, brand, or use case and get 3-5 font pairings with heading, body, and accent fonts, live CSS snippets, and Tailwind config. | Design |
-| 125 | Unit Test Generator | Paste any function or module and get complete unit tests with edge cases, happy paths, and failure scenarios. | Engineering |
-| 126 | User Story Writer | Describe a feature in plain language and get a well-structured user story with acceptance criteria, edge cases, and technical notes. | Product |
-| 127 | Web3 Whitepaper Writer | Generate a structured, professional blockchain project whitepaper draft from your project details, tokenomics, and team background. | Web3 |
-| 128 | Win/Loss Analysis Report Generator | Enter details about a closed deal to get a structured win/loss analysis with key factors, alternative approaches, and actionable lessons for your sales team. | Sales |
-| 129 | YouTube Script Writer | Turn any topic into a ready-to-record YouTube script with intro hook, sections, and outro. | Marketing |
-| 130 | DSA Progress Analyzer | Analyzes your DSA practice log to find weak topics and suggest what to practice next. | Education |
-| 131 | Terms and Conditions Simplifier | Paste any website's URL — including its homepage — and get its Terms & Conditions explained in plain English, and checked for red flags like hidden fees, auto-renewals, and data-sharing clauses. | Legal |
-| 132 | PCOS Lifestyle Planner | Creates a personalized 4-week lifestyle plan for managing PCOS with nutrition, exercise, sleep, and healthy habits. | Healthcare |
-| 133 | SLO/SLA Designer | Describe a service and its criticality to get practical SLIs, SLO targets, error budgets, and starter alerting rules. | Engineering |
-| 134 | SQL Query Explainer | Explains a SQL query in plain English, clause by clause, for beginners. | Engineering |
-| 135 | Agent Evaluation & Benchmark Assistant | Evaluate an AI agent's response against its prompt for accuracy, completeness, hallucination risk, and clarity, then get concrete suggestions and an improved response. | Productivity |
-| 136 | Coding Assistant | Paste a coding problem or existing code and get an implementation, explanation, or fix. | Developer Tools |
-| 137 | cURL Command Builder | Describe an API request in plain English (or paste an endpoint spec) and get a ready-to-run curl command, with each flag explained. | Developer Tools |
-| 138 | Data Analysis Agent | Paste tabular data or a dataset description and get a structured analysis with key patterns and caveats. | Data Science |
-| 139 | Docstring Generator | Paste a function, class, or module and get idiomatic docstrings/comments added in your language's convention (Google, NumPy, JSDoc, TSDoc, and more) — logic untouched. | Engineering |
-| 140 | Excel/Sheets Formula Generator | Describe what you want to calculate or extract in plain English and get a correct, ready-to-paste Excel or Google Sheets formula with a plain-English explanation of how it works. | Engineering |
-| 141 | Feature Flag Rollout Planner | Describe a feature and its risk tolerance to get a staged rollout plan with percentage ramps, guardrail metrics, kill-switch criteria, rollback steps, and flag-cleanup reminders. | Engineering |
-| 142 | .gitignore Generator | Pick your languages, frameworks, OS, and editors and get a tailored, well-organized .gitignore. | Developer Tools |
-| 143 | GraphQL Schema Generator | Describe your application's domain model and generate a production-ready GraphQL schema with object types, queries, mutations, subscriptions, enums, scalars, and input types. | Engineering |
-| 144 | Interview Preparation Planner Agent | Creates a personalized interview preparation plan based on your target role, experience level, and available time — with a topic-wise study schedule, daily practice tasks, and a mock interview plan. | Education |
-| 145 | Jarvis PA | Your personal AI assistant for planning, task breakdown, scheduling, prioritization, and daily productivity support. | Productivity |
-| 146 | JSON Schema Generator | Paste a JSON sample (or describe the shape) and get a valid JSON Schema you can use for validation and API contracts. | Developer Tools |
-| 147 | Postman Collection & Code Snippet Generator | Parse endpoint descriptions or JSON specs into a copyable Postman Collection (v2.1.0 JSON) with client integration snippets (Fetch, Axios, Python Requests, Go HTTP). | Developer Tools |
-| 148 | Prompt Engineering Coach | Reviews user prompts and provides actionable suggestions to improve clarity, specificity, structure, context, and overall effectiveness. | Productivity |
-| 149 | Regex Decoder | Decodes an existing regex pattern into a plain-English, token-by-token breakdown with examples and edge cases. | Productivity |
-| 150 | Web Scraping Agent | Describe a page's content or paste raw HTML and get clean, structured data extracted from it. | Developer Tools |
-| 151 | Emergency Fund Planner | Helps users plan an emergency fund based on their essential expenses, current savings, monthly contribution, and target coverage period. | Finance |
-| 152 | n8n Workflow Planner | Describe an automation in plain English and get a step-by-step n8n workflow plan with nodes, settings, data mapping, and pitfalls to avoid. | Engineering |
-| 153 | Resume Bullet Point Improver | Polishes a rough resume bullet into one concise line while keeping your original facts. | HR |
-| 154 | Research Gap Finder | Paste paper summaries and get unexplored areas, shared limits, and future research directions. | Research |
-| 155 | Helm Chart Generator | Describe your app and get a complete Helm chart with Chart.yaml, values.yaml, and templated manifests ready to install. | DevOps |
-| 156 | Debt Payoff Strategist | Compare debt repayment strategies, estimate payoff timelines, and build a realistic plan for becoming debt-free. | Finance |
-| 157 | Financial Planning Assistant | Create practical financial plans for savings goals, debt payoff, emergency funds, and major spending decisions. | Finance |
-| 158 | Java DSA Interview Prep | Generates Java DSA problems, provides hints, reviews attempts, and simulates coding interviews. | Education |
-| 159 | Resume Bullet Point Rewriter | Paste a weak resume bullet point and get it rewritten to be metric-driven, impact-focused, and ATS-friendly. | Education |
-| 160 | Terraform Plan Diff Explainer | Paste raw `terraform plan` output and get a plain-English breakdown of every create, update, destroy, and replace action — with downtime and data-loss risks called out clearly before you apply. | DevOps |
-| 161 | RTI Application Writer | Drafts a ready-to-file RTI application with a filing checklist and appeal timelines. | Legal |
-| 162 | Data Visualization Advisor | Recommends suitable data visualizations based on a dataset, its variables, and the user's analytical goal, with an explanation of why each chart is appropriate. | Data Science |
-| 163 | Dependency Impact Analyzer | Analyzes software dependency upgrades or replacements to assess breaking changes, compatibility risks, affected modules, and migration steps. | Engineering |
-| 164 | GitHub Actions Workflow Optimizer | Audits and optimizes GitHub Actions workflow YAML files for execution speed, caching strategies, matrix concurrency, secret security, and token permissions. | DevOps |
-| 165 | OpenTelemetry Observability & Tracing Architect | Designs OpenTelemetry distributed tracing, metrics, collector pipelines, W3C context propagation, and tail-based sampling architectures across microservices. | DevOps |
-| 166 | OWASP API Security Auditor | Audits REST, GraphQL, and webhook API schemas and endpoints against the OWASP API Security Top 10 to identify BOLA, broken auth, SSRF, and sensitive data leakage, providing an executive risk scorecard and drop-in code fixes. | Cybersecurity |
-| 167 | Event-Driven Architecture & Message Broker Designer | Designs production event-driven topologies, CloudEvents-compliant schemas, partition key strategies, idempotency handling, and dead-letter queue (DLQ) retry backoffs for Kafka, RabbitMQ, and AWS SQS/SNS. | Engineering |
-| 168 | Interview Preparation | Helps student prepare for technical and HR interviews with common questions, sample answers, and interview tips. | Education |
+|---|------|-------------|----------|
+| 1 | Accessibility Audit Generator | Paste HTML or component code to receive a WCAG accessibility audit with issues, severity ratings, and corrected code suggestions. | Engineering |
+| 2 | AI Project Architecture Agent | Analyzes project ideas and recommends frontend, backend, database, AI tools, and deployment technologies. | Engineering |
+| 3 | AI Quiz Generator | Generates customized quizzes with questions, answers, and difficulty levels. | Education |
 
-> Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
+<!--
+Keep the remaining existing agent entries here.
+Do not remove or rename existing agents.
+-->
+
+## Contributing
+
+Want to add your own AI agent?
+
+We welcome community contributions!
+
+1. Explore the existing agents.
+2. Choose a useful AI agent idea.
+3. Follow the project's contribution guidelines.
+4. Submit a pull request.
+
+It takes approximately 5 minutes to add your own agent.
+
+## Community
+
+Thank you to everyone contributing to the
+I Love Agents open-source community! ❤️
+
