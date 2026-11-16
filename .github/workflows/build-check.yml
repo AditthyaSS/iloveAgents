@@ -1,56 +1,77 @@
+
 name: Build Check
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
   build:
+    name: Install, Validate and Build
     runs-on: ubuntu-latest
-    env:
-      NODE_VERSION: 22
 
     steps:
-      - uses: actions/checkout@v4
+      # Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: 22
+          cache: npm
 
-      - name: Cache Node Modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-node-${{ env.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ env.NODE_VERSION }}-
-
-      - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+      # Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Check for broken registry imports
+      # Check for broken registry imports
+      - name: Check Registry Imports
         run: |
-          if grep -r "import agents from" src/; then
-            echo "❌ Found broken default import of registry!"
-            echo "Replace with: const { agents } = useAgents()"
+          if grep -rnE "import agents from ['\"].*agents/registry" src/; then
+            echo "Broken default import of registry detected!"
+            echo "Use the correct useAgents() hook instead."
             exit 1
           fi
 
-      - name: Run build
+          echo "Registry import check passed."
+
+      # Run production build
+      - name: Build Project
         run: npm run build
 
-      - name: Comment on failure
-        if: failure()
+      # Report failure on pull requests
+      - name: Comment on Build Failure
+        if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: `❌ **Build failed on this PR.**\n\nPlease fix before merging:\n1. Run \`npm run build\` locally\n2. Fix any errors shown\n3. Push your fix — the check will re-run automatically\n\nMost common issue: broken registry import.\nReplace \`import agents from '../agents/registry'\` with \`const { agents } = useAgents()\`\n\nSee CONTRIBUTING.md for help. 🙏`
+              body: `❌ **Build failed on this PR.**
+
+              Please fix the errors before merging:
+
+              1. Run \`npm ci\` locally.
+              2. Run \`npm run build\`.
+              3. Fix any errors.
+              4. Push your changes.
+
+              The GitHub Actions check will run automatically again.
+
+              See CONTRIBUTING.md for help.`
             })
+
