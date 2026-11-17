@@ -1,13 +1,13 @@
+
 // ============================================================
 // I LOVE AGENTS — Agent Categories
 // ============================================================
 //
-// All unique category values used across agent definitions.
-// Auto-extracted from agent configs.
-//
+// Centralized list of unique agent categories.
+// Categories are validated, deduplicated, and sorted.
 // ============================================================
 
-export const CATEGORIES = [
+const RAW_CATEGORIES = [
   "Business",
   "Content Writing",
   "Cybersecurity",
@@ -31,3 +31,17 @@ export const CATEGORIES = [
   "Gaming",
   "Real Estate",
 ];
+
+// Remove invalid entries, trim whitespace,
+// eliminate duplicates, and sort alphabetically.
+export const CATEGORIES = Object.freeze(
+  [...new Set(
+    RAW_CATEGORIES
+      .filter(
+        (category) =>
+          typeof category === "string" &&
+          category.trim().length > 0
+      )
+      .map((category) => category.trim())
+  )].sort((a, b) => a.localeCompare(b))
+);
