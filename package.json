@@ -10,16 +10,6 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {
-    "@supabase/supabase-js": "^2.115.0",
-    "lucide-react": "^0.577.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-markdown": "^9.0.1",
-    "react-router-dom": "^6.30.6",
-    "react-syntax-highlighter": "^15.6.1",
-    "remark-gfm": "^4.0.0"
-  },
   "devDependencies": {
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -33,5 +23,15 @@
     "tailwindcss": "^3.4.15",
     "vite": "^6.4.3",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.115.0",
+    "lucide-react": "^0.577.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.30.6",
+    "react-syntax-highlighter": "^15.6.1",
+    "remark-gfm": "^4.0.0"
   }
 }
