@@ -17,6 +17,7 @@
  *   iloveagents_anthropic_key
  *   iloveagents_gemini_key
  *   iloveagents_openrouter_key
+ *   iloveagents_groq_key
  * Preference name (localStorage):
  *   iloveagents_default_provider
  */
@@ -26,6 +27,7 @@ const KEYS = {
   anthropic:  'iloveagents_anthropic_key',
   gemini:     'iloveagents_gemini_key',
   openrouter: 'iloveagents_openrouter_key',
+  groq:       'iloveagents_groq_key',
 }
 const DEFAULT_PROVIDER_KEY = 'iloveagents_default_provider'
 const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours, matching useApiKey.js
@@ -70,37 +72,26 @@ function writeSecret(storageKey, value) {
   }))
 }
 
-/**
- * Read all globally saved keys.
- * @returns {{ openai: string, anthropic: string, gemini: string, openrouter: string, defaultProvider: string }}
- */
 export function getGlobalKeys() {
   return {
     openai:          readSecret(KEYS.openai),
     anthropic:       readSecret(KEYS.anthropic),
     gemini:          readSecret(KEYS.gemini),
     openrouter:      readSecret(KEYS.openrouter),
+    groq:            readSecret(KEYS.groq),
     defaultProvider: localStorage.getItem(DEFAULT_PROVIDER_KEY) || '',
   }
 }
 
-/**
- * Save keys. Only saves non-empty values — passing an empty string does NOT
- * overwrite an existing saved key. To explicitly clear a key use clearGlobalKey(provider).
- * @param {{ openai?: string, anthropic?: string, gemini?: string, openrouter?: string, defaultProvider?: string }} keys
- */
-export function saveGlobalKeys({ openai, anthropic, gemini, openrouter, defaultProvider } = {}) {
+export function saveGlobalKeys({ openai, anthropic, gemini, openrouter, groq, defaultProvider } = {}) {
   if (openai          !== undefined && openai.trim()          !== '') writeSecret(KEYS.openai,          openai.trim())
   if (anthropic       !== undefined && anthropic.trim()       !== '') writeSecret(KEYS.anthropic,       anthropic.trim())
   if (gemini          !== undefined && gemini.trim()          !== '') writeSecret(KEYS.gemini,          gemini.trim())
   if (openrouter      !== undefined && openrouter.trim()      !== '') writeSecret(KEYS.openrouter,      openrouter.trim())
+  if (groq            !== undefined && groq.trim()            !== '') writeSecret(KEYS.groq,            groq.trim())
   if (defaultProvider !== undefined && defaultProvider.trim() !== '') localStorage.setItem(DEFAULT_PROVIDER_KEY, defaultProvider.trim())
 }
 
-/**
- * Remove a single provider's saved key.
- * @param {'openai' | 'anthropic' | 'gemini' | 'openrouter'} provider
- */
 export function clearGlobalKey(provider) {
   const storageKey = KEYS[provider]
   if (storageKey) {
@@ -109,9 +100,6 @@ export function clearGlobalKey(provider) {
   }
 }
 
-/**
- * Remove all key entries managed by this module (both current and legacy).
- */
 export function clearAllGlobalKeys() {
   Object.values(KEYS).forEach((k) => {
     sessionStorage.removeItem(k)
@@ -120,16 +108,13 @@ export function clearAllGlobalKeys() {
   localStorage.removeItem(DEFAULT_PROVIDER_KEY)
 }
 
-/**
- * Return an array of provider objects only for providers that have a saved key.
- * @returns {Array<{ id: string, label: string }>}
- */
 export function getAvailableProviders() {
   const PROVIDER_LABELS = {
-    openai:    'OpenAI',
-    anthropic: 'Anthropic',
-    gemini:    'Google Gemini',
+    openai:     'OpenAI',
+    anthropic:  'Anthropic',
+    gemini:     'Google Gemini',
     openrouter: 'OpenRouter',
+    groq:       'Groq',
   }
 
   const keys = getGlobalKeys()
