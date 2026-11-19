@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { recordAnalyticsRun } from "../lib/useAnalytics";
 import { useNavigate, Link } from "react-router-dom";
 import * as Icons from "lucide-react";
+import { tokenEstimate } from "../lib/useTokenCounter";
 import CustomSelect from "./CustomSelect";
 import {
   Loader2,
@@ -102,9 +103,11 @@ export default function AgentRunner({ agent }) {
   const [showModelSwitcher, setShowModelSwitcher] = useState(false);
   const [historyPanelOpen, setHistoryPanelOpen] = useState(false);
   const [viewMode, setViewMode] = useState("code");
+  const [tps, setTps] = useState(0);
   const { savePrompt } = usePromptHistory();
   const { addJob } = useScheduler({ autoRun: false });
   const { addRun } = useSessionSpend();
+
 
   const isPromptModified = customPrompt !== agent.systemPrompt;
   const abortControllerRef = useRef(null);
@@ -114,6 +117,9 @@ export default function AgentRunner({ agent }) {
   // its results if the id has since changed (cleared, superseded, unmounted).
   const runIdRef = useRef(0);
   const textareaRefs = useRef({});
+  const startTimeRef = useRef(null);
+  const tokenCountRef = useRef(0);
+
 
   // Abort the in-flight request AND invalidate the run that owns it.
   const cancelActiveRun = () => {
@@ -281,9 +287,24 @@ const getTokenCount = (text) => {
   };
 
   const handleChunk = useCallback((chunk) => {
+    const now = performance.now();
+    if (!startTimeRef.current) {
+      startTimeRef.current = now;
+    }
+
+    const chunkTokens = tokenEstimate(chunk);
+    tokenCountRef.current += chunkTokens;
+
+    const elapsedSeconds = (now - startTimeRef.current) / 1000;
+    if (elapsedSeconds > 0) {
+      const rawTps = tokenCountRef.current / elapsedSeconds;
+      setTps((prevTps) => (prevTps === 0 ? rawTps : 0.2 * rawTps + 0.8 * prevTps));
+    }
+
     setStreamingOutput((prev) => prev + chunk);
     setIsStreaming(true);
   }, []);
+
 
 const handleRun = async () => {
     setLoading(true);
@@ -293,6 +314,10 @@ const handleRun = async () => {
     setIsStreaming(false);
     setDuration(null);
     setMsgIndex(0);
+    setTps(0);
+    startTimeRef.current = null;
+    tokenCountRef.current = 0;
+
 
     setVersionHistory((prevHistory) => [
       {
@@ -336,7 +361,11 @@ const handleRun = async () => {
       // output is committed below exactly as before.)
       if (!isCurrentRun()) return;
 
+      const finalTps = tokenCountRef.current / (result.duration / 1000);
+      setTps(finalTps);
+
       setOutput(result.content);
+
       setStreamingOutput("");
       setIsStreaming(false);
       setDuration(result.duration);
@@ -1119,7 +1148,7 @@ const handleRun = async () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
-              Streaming....
+              Streaming... {tps > 0 ? `${tps.toFixed(1)} t/s` : ''}
             </span>
           </div>
           <div className="rounded-lg border p-4 dark:bg-surface-card dark:border-border bg-white border-gray-200">
