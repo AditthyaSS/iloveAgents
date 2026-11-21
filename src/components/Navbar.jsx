@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
   Sun,
@@ -29,6 +29,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showSpendPopup, setShowSpendPopup] = useState(false)
+  const mobileMenuToggleRef = useRef(null)
+  const mobileNavigationRef = useRef(null)
   const { totalSpend, runs, clearSession } = useSessionSpend()
 
   useKeyboardShortcuts({
@@ -45,6 +47,26 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
       document.documentElement.classList.add('dark')
     }
   }, [])
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        const activeElement = document.activeElement
+        if (
+          activeElement !== mobileMenuToggleRef.current &&
+          mobileNavigationRef.current?.contains(activeElement)
+        ) {
+          mobileMenuToggleRef.current?.focus()
+        }
+        setMobileMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [mobileMenuOpen])
 
   const toggleTheme = () => {
     const next = !darkMode
@@ -298,6 +320,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
           </Link>
 
           <button
+            ref={mobileMenuToggleRef}
             onClick={() => setMobileMenuOpen((open) => !open)}
             className="
               md:hidden p-2.5 rounded-full
@@ -308,18 +331,19 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
             "
             aria-label="Toggle navigation menu"
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
         </div>
 
+        {mobileMenuOpen && (
         <div
-          role="menu"
-          aria-hidden={ !mobileMenuOpen }
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-out ${
-            mobileMenuOpen ? 'max-h-80 opacity-100 pt-3' : 'max-h-0 opacity-0 pt-0'
-          }`}
+          ref={mobileNavigationRef}
+          id="mobile-navigation"
+          aria-label="Mobile navigation"
+          className="md:hidden overflow-hidden pt-3 transition-all duration-300 ease-out"
         >
           <div className="rounded-[1.5rem] border border-white/50 bg-white/70 p-2 shadow-inner shadow-white/50 dark:border-white/10 dark:bg-black/25 dark:shadow-black/20">
             <div className="grid gap-1">
@@ -375,6 +399,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
             </div>
           </div>
         </div>
+        )}
       </nav>
 
       <KeyboardShortcutsModal
