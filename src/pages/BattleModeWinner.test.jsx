@@ -48,6 +48,17 @@ describe('BattleModeWinner', () => {
     expect(screen.getByText('Back to Agents')).toBeInTheDocument()
   })
 
+  it('does not throw when canvas context is unavailable', () => {
+    const originalGetContext = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = vi.fn(() => {
+      throw new Error('Not implemented: HTMLCanvasElement.prototype.getContext')
+    })
+
+    expect(() => setup({ color: 'yellow', label: 'GPT-4o' })).not.toThrow()
+
+    HTMLCanvasElement.prototype.getContext = originalGetContext
+  })
+
   it('copies share text when Share Result is clicked', async () => {
     const writeText = vi.fn().mockResolvedValue()
     Object.assign(navigator, {
