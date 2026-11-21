@@ -262,7 +262,10 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Copying `.env.example` first means Supabase-backed features (workflows, automations) pick up `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on first run. Provider keys are still entered at runtime.
+Copying `.env.example` first means Supabase-backed features (workflows, automations) pick up
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` on first run. Provider keys are still entered
+at runtime. Automation email notifications additionally need the server-only `RESEND_API_KEY`
+configured in the Vercel project environment; never prefix it with `VITE_`.
 
 For complete setup instructions, environment variables, and troubleshooting, see the **Getting Started** section below.
 
@@ -306,6 +309,10 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 Note: AI provider API keys are still entered at runtime 
 and are never stored anywhere.
 
+For automation email notifications, configure `RESEND_API_KEY` in the server environment used by
+the Vercel function. You can optionally set `RESEND_FROM_EMAIL` to a sender address verified with
+Resend. These values must not use the `VITE_` prefix, which would expose them to browser code.
+
 ## Troubleshooting
 
 For AI provider authentication, rate-limit, timeout, and other API errors, see the
@@ -340,14 +347,14 @@ npm run dev
 Before opening an issue, verify that:
 
 - `.env.local` is in the project root.
-- Variable names start with `VITE_`.
+- Supabase client variable names start with `VITE_`; keep `RESEND_API_KEY` server-only without that prefix.
 - The values are copied correctly from your Supabase dashboard.
 
 ### Deploy Your Own
 
 1. Fork this repository
 2. Import to [Vercel](https://vercel.com/new) or any static host
-3. Deploy — static hosting needs no extra steps, but set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host env when you want workflows and automations to work
+3. Deploy — set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the host env when you want workflows and automations to work. On Vercel, also set the server-only `RESEND_API_KEY` to enable automation email notifications.
 
 The included `vercel.json` handles SPA routing automatically.
 
