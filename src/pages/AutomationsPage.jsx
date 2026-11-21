@@ -255,6 +255,17 @@ export default function AutomationsPage() {
             placeholder="Search automations or agents..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' || e.key === 'Esc') {
+                if (searchQuery) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  setSearchQuery('')
+                } else {
+                  e.target.blur()
+                }
+              }
+            }}
             className="w-full h-9 pl-9 pr-4 rounded-xl text-xs dark:bg-surface-input dark:border-border bg-gray-50 border border-gray-200 outline-none focus:ring-1 focus:ring-accent"
           />
         </div>

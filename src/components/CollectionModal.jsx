@@ -1,8 +1,28 @@
+import { useEffect } from 'react'
 import { FolderPlus, X } from 'lucide-react'
 
 export default function CollectionModal({ title, description, value, onChange, error, onClose, onSubmit, submitLabel = 'Save', destructive = false, children }) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose?.()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [onClose])
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" role="dialog" aria-modal="true">
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose?.()
+      }}
+    >
       <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-border dark:bg-surface-card">
         <div className="flex items-start justify-between gap-4 border-b border-gray-100 p-5 dark:border-border">
           <div className="flex items-start gap-3">
