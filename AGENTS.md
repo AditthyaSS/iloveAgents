@@ -1,7 +1,7 @@
 # 🤖 Available Agents
 
 
-151 agents and growing — built by the community. 🚀
+170 agents and growing — built by the community. 🚀
 
 | # | Name | Description | Category |
 |---|---|---|---|
@@ -174,5 +174,6 @@
 | 167 | Event-Driven Architecture & Message Broker Designer | Designs production event-driven topologies, CloudEvents-compliant schemas, partition key strategies, idempotency handling, and dead-letter queue (DLQ) retry backoffs for Kafka, RabbitMQ, and AWS SQS/SNS. | Engineering |
 | 168 | Interview Preparation | Helps student prepare for technical and HR interviews with common questions, sample answers, and interview tips. | Education |
 | 169 | ML Project Debugging Assistant | Diagnoses machine learning errors from tracebacks and code, explains likely causes, and suggests practical fixes across common frameworks. | Engineering |
+| 170 | CI Failure Triage Agent | Diagnoses failed CI, build, and test logs, separates evidence from hypotheses, and recommends prioritized fixes and verification steps. | DevOps |
 
 > Want to add your own? It takes about 5 minutes. See [Contributing](#contributing) below.
