@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import {
   Sun,
@@ -29,6 +29,8 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [showSpendPopup, setShowSpendPopup] = useState(false)
+  const mobileMenuToggleRef = useRef(null)
+  const mobileNavigationRef = useRef(null)
   const { totalSpend, runs, clearSession } = useSessionSpend()
 
   useKeyboardShortcuts({
@@ -51,6 +53,13 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
 
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
+        const activeElement = document.activeElement
+        if (
+          activeElement !== mobileMenuToggleRef.current &&
+          mobileNavigationRef.current?.contains(activeElement)
+        ) {
+          mobileMenuToggleRef.current?.focus()
+        }
         setMobileMenuOpen(false)
       }
     }
@@ -311,6 +320,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
           </Link>
 
           <button
+            ref={mobileMenuToggleRef}
             onClick={() => setMobileMenuOpen((open) => !open)}
             className="
               md:hidden p-2.5 rounded-full
@@ -330,6 +340,7 @@ export default function Navbar({ sidebarOpen, setSidebarOpen, onStartTour }) {
 
         {mobileMenuOpen && (
         <div
+          ref={mobileNavigationRef}
           id="mobile-navigation"
           aria-label="Mobile navigation"
           className="md:hidden overflow-hidden pt-3 transition-all duration-300 ease-out"

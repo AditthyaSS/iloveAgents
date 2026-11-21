@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
 
@@ -42,5 +42,25 @@ describe('Navbar mobile navigation', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
 
     expect(screen.queryByLabelText('Mobile navigation')).not.toBeInTheDocument()
+  })
+
+  it('returns focus to the menu toggle when Escape closes it from a mobile link', () => {
+    render(
+      <MemoryRouter>
+        <Navbar sidebarOpen={false} setSidebarOpen={vi.fn()} />
+      </MemoryRouter>
+    )
+
+    const toggle = screen.getByRole('button', { name: 'Toggle navigation menu' })
+    fireEvent.click(toggle)
+
+    const agentsLink = within(screen.getByLabelText('Mobile navigation')).getByRole('link', {
+      name: 'Agents',
+    })
+    agentsLink.focus()
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByLabelText('Mobile navigation')).not.toBeInTheDocument()
+    expect(toggle).toHaveFocus()
   })
 })
