@@ -1,23 +1,47 @@
+
+# CodeRabbit Configuration
+# Documentation: https://docs.coderabbit.ai/
+
 language: "en-US"
 
 reviews:
+  # Review style: chill, assertive, or default
   profile: "chill"
+
+  # Allow CodeRabbit to request changes
   request_changes_workflow: true
+
+  # Generate a high-level pull request summary
   high_level_summary: true
+
+  # Disable poem in review summaries
   poem: false
+
+  # Show review status
   review_status: true
+
+  # Keep walkthrough comments expanded
   collapse_walkthrough: false
+
+  # Automatically review pull requests
   auto_review:
     enabled: true
     drafts: false
-    base_branches:
-      - main
-  path_filters:
-    - "!package-lock.json"
-    - "!*.md"
 
+    # Review pull requests targeting the main branch
+    base_branches:
+      - "main"
+
+  # Exclude unnecessary files from code reviews
+  path_filters:
+    - "!**/package-lock.json"
+    - "!**/*.md"
+
+# Enable automatic replies in CodeRabbit chat
 chat:
   auto_reply: true
 
+# Disable automatic issue assignment
 issues:
   auto_assign: false
+
