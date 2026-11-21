@@ -49,10 +49,10 @@ describe('resolveAgentModel', () => {
   it('should use agent.models[provider] if available', () => {
     const agent = {
       ...baseAgent,
-      models: { anthropic: 'claude-3-opus-20240229' },
+      models: { anthropic: 'claude-opus-4-20250514' },
     }
     const result = resolveAgentModel(agent, 'anthropic', null)
-    expect(result).toBe('claude-3-opus-20240229')
+    expect(result).toBe('claude-opus-4-20250514')
   })
 
   it('should use agent.model if provider matches defaultProvider', () => {

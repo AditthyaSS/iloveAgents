@@ -138,7 +138,7 @@ describe('buildCronRequest', () => {
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     })
-    expect(req.body.model).toBe('claude-3-5-sonnet-20241022')
+    expect(req.body.model).toBe('claude-sonnet-4-20250514')
     expect(req.body.max_tokens).toBe(4096)
     expect(req.body.system).toBe(systemPrompt)
     expect(req.body.messages).toEqual([
@@ -147,8 +147,8 @@ describe('buildCronRequest', () => {
   })
 
   it('builds anthropic request with custom model', () => {
-    const req = buildCronRequest('anthropic', apiKey, 'claude-3-5-haiku-20241022', systemPrompt, userMessage)
-    expect(req.body.model).toBe('claude-3-5-haiku-20241022')
+    const req = buildCronRequest('anthropic', apiKey, 'claude-haiku-4-20250514', systemPrompt, userMessage)
+    expect(req.body.model).toBe('claude-haiku-4-20250514')
   })
 
   it('builds gemini request with key in header and content parts', () => {
@@ -195,8 +195,8 @@ describe('buildCronRequest', () => {
   })
 
   it('builds openrouter request with custom model', () => {
-    const req = buildCronRequest('openrouter', apiKey, 'anthropic/claude-3.5-sonnet', systemPrompt, userMessage)
-    expect(req.body.model).toBe('anthropic/claude-3.5-sonnet')
+    const req = buildCronRequest('openrouter', apiKey, 'anthropic/claude-sonnet-4', systemPrompt, userMessage)
+    expect(req.body.model).toBe('anthropic/claude-sonnet-4')
   })
 
   it('handles case-insensitivity in provider names', () => {
