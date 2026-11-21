@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+﻿import { useState, useRef, useMemo } from 'react'
 import {
   Loader2,
   CheckCircle2,
@@ -62,7 +62,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
   // Resolve a fixed field's effective value: explicit user input, else the
   // field's defaultValue, else a sensible empty value. This matters because
   // shared fields show their defaultValue in the UI even before the user
-  // touches them — canRun() and the run payload must agree with what's shown.
+  // touches them â€” canRun() and the run payload must agree with what's shown.
   const resolveFixedValue = (input) => {
     const current = fixedInputs[input.id]
     if (current !== undefined) return current
@@ -177,6 +177,13 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
       abortControllerRef.current = null
     }
     setRunning(false)
+    setResults((prev) =>
+      prev.map((r) =>
+        r.status === 'waiting' || r.status === 'running'
+          ? { ...r, status: 'failed', error: 'Cancelled' }
+          : r
+      )
+    )
   }
 
   const completedCount = results.filter((r) => r.status === 'done' || r.status === 'failed').length
@@ -244,7 +251,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
                               : 'dark:bg-surface-input dark:text-text-secondary dark:border-border bg-white text-gray-500 border-gray-200'
                           }`}
                       >
-                        {selected && '✓ '}
+                        {selected && 'âœ“ '}
                         {opt}
                       </button>
                     )
@@ -283,7 +290,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
       {/* Batch input: paste or upload */}
       <div>
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
-          Batch items — one per line, or upload a .csv / .txt file
+          Batch items â€” one per line, or upload a .csv / .txt file
         </label>
         <textarea
           value={rawPaste}
@@ -446,3 +453,4 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     </div>
   )
 }
+
