@@ -64,7 +64,7 @@ export default function Sidebar({ open, onClose }) {
 
     const cats = filtered.reduce((acc, agent) => {
       if (!acc[agent.category]) acc[agent.category] = []
-      acc[agent.category].push(agent)
+      cats[agent.category].push(agent)
       return acc
     }, {})
 
@@ -126,7 +126,7 @@ export default function Sidebar({ open, onClose }) {
           ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
       >
         <div className="absolute inset-0 -z-10 bg-white/75 dark:bg-[#101014]/75 backdrop-blur-2xl" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
+       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-cyan-400/20 via-indigo-400/20 to-rose-400/20 dark:from-cyan-500/10 dark:via-indigo-500/10 dark:to-rose-500/10 opacity-90" />
 
         <div className="px-4 py-3 flex items-center justify-between" data-tour="sidebar-agents">
           <span className="text-xs font-bold uppercase tracking-wider dark:text-text-primary text-gray-800">
@@ -284,6 +284,17 @@ export default function Sidebar({ open, onClose }) {
             <Icons.Clock size={15} className="flex-shrink-0" />
             <span className="truncate">Automations</span>
           </NavLink>
+
+          {/* Favorites */}
+          <Link
+            to="/#favorites"
+            onClick={onClose}
+            className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-[13px] font-medium transition-colors mb-0.5
+              dark:text-text-secondary dark:hover:text-text-primary dark:hover:bg-surface-hover text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+          >
+            <Icons.Star size={15} className="flex-shrink-0" />
+            <span className="truncate">Favorites</span>
+          </Link>
 
           <NavLink
             to="/analytics"
