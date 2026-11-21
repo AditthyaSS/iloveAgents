@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
 
-const STORAGE_KEY = 'iloveAgents_history';
-const MAX_HISTORY = 10;
+export const STORAGE_KEY = 'iloveAgents_history';
+export const MAX_HISTORY = 10;
 
-function loadHistory() {
+export function loadHistory() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     return saved ? JSON.parse(saved) : [];
@@ -13,16 +13,29 @@ function loadHistory() {
   }
 }
 
-function saveHistory(history) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-  } catch (error) {
-    if (error.name === 'QuotaExceededError') {
-      console.error('LocalStorage quota exceeded. History might be truncated.');
-    } else {
-      console.error('Error saving history to localStorage:', error);
+export function saveHistory(history) {
+  let current = Array.isArray(history) ? [...history] : [];
+  while (current.length > 0) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+      return current;
+    } catch (error) {
+      const isQuotaExceeded =
+        error?.name === 'QuotaExceededError' ||
+        error?.name === 'NS_ERROR_DOM_QUOTA_REACHED' ||
+        error?.code === 22 ||
+        error?.code === 1014;
+
+      if (isQuotaExceeded && current.length > 1) {
+        console.warn('LocalStorage quota exceeded. Pruning oldest history entry to recover space.');
+        current.pop();
+      } else {
+        console.error('Error saving history to localStorage:', error);
+        return current;
+      }
     }
   }
+  return current;
 }
 
 /**
@@ -67,8 +80,8 @@ export const useHistory = () => {
     // so a concurrent write (another tab, or a near-simultaneous call)
     // isn't silently discarded.
     const updatedHistory = [newRun, ...loadHistory()].slice(0, MAX_HISTORY);
-    saveHistory(updatedHistory);
-    setHistory(updatedHistory);
+    const saved = saveHistory(updatedHistory);
+    setHistory(saved);
   }, []);
 
   /**
@@ -77,8 +90,8 @@ export const useHistory = () => {
    */
   const deleteRun = useCallback((runId) => {
     const updatedHistory = loadHistory().filter((run) => run.id !== runId);
-    saveHistory(updatedHistory);
-    setHistory(updatedHistory);
+    const saved = saveHistory(updatedHistory);
+    setHistory(saved);
   }, []);
 
   /**
