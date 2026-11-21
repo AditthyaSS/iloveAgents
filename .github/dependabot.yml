@@ -7,16 +7,24 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "09:00"
+      timezone: "Asia/Kolkata"
+
     open-pull-requests-limit: 5
+
     reviewers:
       - "AditthyaSS"
+
     labels:
       - "dependencies"
       - "automated"
+
     commit-message:
       prefix: "chore"
+
     cooldown:
       default-days: 7
+
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+        update-types:
+          - "version-update:semver-major"
