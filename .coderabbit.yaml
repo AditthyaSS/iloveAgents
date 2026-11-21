@@ -1,23 +1,118 @@
+
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/
+
+# Language and review style
 language: "en-US"
 
+tone_instructions: >
+  Keep reviews friendly, chill, clear, and practical.
+  Explain technical issues in simple language.
+  Focus on important bugs, security vulnerabilities,
+  performance problems, maintainability, and reliability.
+  Provide actionable fixes and examples where useful.
+  Avoid unnecessary nitpicking and duplicate comments.
+
+early_access: false
+
 reviews:
+  # Balanced code review
   profile: "chill"
+
+  # Request changes when important issues are found
   request_changes_workflow: true
+
+  # Summarize every pull request
   high_level_summary: true
-  poem: false
+  high_level_summary_in_walkthrough: false
+
+  # Review status and walkthrough
   review_status: true
+  commit_status: true
+  fail_commit_status: false
   collapse_walkthrough: false
+
+  # Additional review insights
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+
+  # Suggestions only, no automatic assignment
+  suggested_labels: true
+  auto_apply_labels: false
+  suggested_reviewers: true
+  auto_assign_reviewers: false
+
+  poem: false
+
+  # Ignore unnecessary files
+  path_filters:
+    - "!**/package-lock.json"
+    - "!**/*.md"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/*.min.js"
+    - "!**/coverage/**"
+
+  # Automatic pull request reviews
   auto_review:
     enabled: true
+    auto_incremental_review: true
     drafts: false
-    base_branches:
-      - main
-  path_filters:
-    - "!package-lock.json"
-    - "!*.md"
 
+    # Review PRs targeting main
+    base_branches:
+      - "main"
+
+    # Skip unnecessary reviews
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT REVIEW"
+
+  # Additional review instructions
+  path_instructions:
+    - path: "**/*"
+      instructions: >
+        Review code for correctness, security, reliability,
+        performance, and maintainability.
+        Identify potential bugs, edge cases, race conditions,
+        unsafe input handling, and error-handling problems.
+        Suggest simple and practical fixes.
+        Do not report formatting or style issues unless
+        they affect readability or correctness.
+
+    - path: "**/*.{js,jsx,ts,tsx}"
+      instructions: >
+        Check for JavaScript and TypeScript errors,
+        asynchronous issues, memory leaks, unsafe data handling,
+        input validation, API failures, and inefficient code.
+        Check frontend and backend security where applicable.
+
+    - path: "**/*.{sql,prisma}"
+      instructions: >
+        Check database queries, SQL injection risks,
+        data integrity, database constraints, migrations,
+        indexing, and access control.
+
+    - path: "**/.github/workflows/**"
+      instructions: >
+        Check GitHub Actions permissions, exposed secrets,
+        unsafe workflow triggers, and deployment security.
+
+    - path: "**/*.env*"
+      instructions: >
+        Check for accidentally committed credentials,
+        API keys, tokens, and sensitive configuration.
+        Never reproduce secret values in review comments.
+
+# Chat automation
 chat:
   auto_reply: true
 
+# Issue management
 issues:
   auto_assign: false
