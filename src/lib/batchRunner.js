@@ -1,5 +1,5 @@
-/**
- * Batch Runner — core logic for running an agent across many inputs.
+﻿/**
+ * Batch Runner â€” core logic for running an agent across many inputs.
  * No UI here. Used by BatchModeRunner.jsx.
  */
 
@@ -18,7 +18,7 @@ export function parsePastedLines(raw) {
 }
 
 /**
- * Minimal CSV parser — no external dependency.
+ * Minimal CSV parser â€” no external dependency.
  * Handles quoted fields, escaped quotes (""), and commas inside quotes.
  * Returns { headers: string[]|null, rows: string[][] }
  */
@@ -86,7 +86,7 @@ export function parseCSV(text) {
  * from a genuine header row using any content heuristic, and guessing wrong
  * silently drops the first real item. Instead, the UI always shows the user
  * the parsed first row and lets them confirm whether to treat it as a
- * header — see the "First row is a header" toggle in BatchModeRunner.
+ * header â€” see the "First row is a header" toggle in BatchModeRunner.
  */
 
 /**
@@ -182,3 +182,4 @@ export async function runBatch({
   const workerCount = Math.min(concurrency, items.length)
   await Promise.all(Array.from({ length: workerCount }, () => worker()))
 }
+
