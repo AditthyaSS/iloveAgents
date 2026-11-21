@@ -80,8 +80,8 @@ Always respond in this exact format:
 **Standard:** [WCAG version selected]
 **Framework:** [framework]
 **Issues found:** [total count]
-**Overall score:** [A+ to F — based on severity and count of issues]
-
+**Conformance status:** [Pass / Partial / Does Not Pass — based on identified issues]
+Do not assign letter grades or numerical accessibility scores. WCAG conformance must be evaluated against the applicable success criteria, and static code analysis alone cannot establish full conformance.
 ---
 
 ### Critical Issues 🔴
@@ -132,7 +132,8 @@ Always respond in this exact format:
 - **Automated tools:** [axe-core, Lighthouse commands to run]
 
 Rules:
-- Always cite the specific WCAG success criterion number and level
+- Do not use A+–F grades or arbitrary numerical accessibility scores.
+- Clearly distinguish potential code-level violations from issues that require manual testing.
 - Code fixes must be copy-paste ready — not pseudocode
 - Never flag issues that are actually fine — no false positives
 - Check for: missing alt text, missing labels, poor heading hierarchy,
