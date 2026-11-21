@@ -1,37 +1,108 @@
-import { useEffect } from 'react';
+
+import { useEffect, useRef } from "react";
 
 /**
- * A hook to handle keyboard shortcuts globally or within a component.
- * @param {Object} shortcuts - An object where keys are shortcut descriptions (e.g., 'Control+Enter') 
- *                             and values are callback functions.
+ * Custom React hook for handling keyboard shortcuts.
+ *
+ * @param {Object} shortcuts - Keyboard shortcuts and callbacks.
+ * @param {Object} options - Configuration options.
+ *
+ * Example:
+ * useKeyboardShortcuts({
+ *   "Control+Enter": handleSubmit,
+ *   "Escape": handleClose,
+ *   "/": handleSearch
+ * });
  */
-export const useKeyboardShortcuts = (shortcuts) => {
+
+const normalizeKey = (key) => {
+  const aliases = {
+    " ": "Space",
+    "Esc": "Escape",
+    "Del": "Delete",
+    "Left": "ArrowLeft",
+    "Right": "ArrowRight",
+    "Up": "ArrowUp",
+    "Down": "ArrowDown"
+  };
+
+  return aliases[key] || key;
+};
+
+const isTypingElement = (target) => {
+  if (!target) return false;
+
+  return (
+    target.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+  );
+};
+
+const getShortcutString = (event) => {
+  const keys = [];
+
+  if (event.ctrlKey || event.metaKey) keys.push("Control");
+  if (event.altKey) keys.push("Alt");
+  if (event.shiftKey) keys.push("Shift");
+
+  const key = normalizeKey(event.key);
+
+  if (!["Control", "Alt", "Shift", "Meta"].includes(key)) {
+    keys.push(key);
+  }
+
+  return keys.join("+");
+};
+
+export const useKeyboardShortcuts = (
+  shortcuts,
+  {
+    enabled = true,
+    preventDefault = true,
+    enableInInputs = false
+  } = {}
+) => {
+  const shortcutsRef = useRef(shortcuts);
+
+  // Keep callbacks updated without re-registering listeners.
   useEffect(() => {
+    shortcutsRef.current = shortcuts;
+  }, [shortcuts]);
+
+  useEffect(() => {
+    if (!enabled) return;
+
     const handleKeyDown = (event) => {
-      const keys = [];
-      if (event.ctrlKey || event.metaKey) keys.push('Control');
-      if (event.altKey) keys.push('Alt');
-      if (event.shiftKey) keys.push('Shift');
-      
-      // Don't add if it's just a modifier key
-      if (!['Control', 'Alt', 'Shift', 'Meta'].includes(event.key)) {
-        keys.push(event.key === ' ' ? 'Space' : event.key);
+      const shortcutMap = shortcutsRef.current || {};
+
+      const shortcut = getShortcutString(event);
+      const singleKey = normalizeKey(event.key);
+
+      const isTyping = isTypingElement(event.target);
+
+      let callback = shortcutMap[shortcut];
+
+      // Single-key shortcuts are ignored while typing by default.
+      if (
+        !callback &&
+        (!isTyping || enableInInputs)
+      ) {
+        callback = shortcutMap[singleKey];
       }
 
-      const shortcutStr = keys.join('+');
-      
-      // Also support single keys like '/' or '?'
-      const singleKey = event.key;
+      if (typeof callback !== "function") return;
 
-      if (shortcuts[shortcutStr]) {
-        shortcuts[shortcutStr](event);
-      } else if (shortcuts[singleKey] && !['INPUT', 'TEXTAREA'].includes(event.target.tagName)) {
-        // For single keys like '/' or '?', we usually don't want them to fire if we are typing in an input
-        shortcuts[singleKey](event);
+      if (preventDefault) {
+        event.preventDefault();
       }
+
+      callback(event);
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [shortcuts]);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [enabled, preventDefault, enableInInputs]);
 };
