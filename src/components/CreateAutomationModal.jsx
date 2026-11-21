@@ -4,7 +4,7 @@ import {
   ChevronDown, Sparkles, Key, Lock, ArrowRight, Layers
 } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation, updateAutomation } from '../lib/automationsService'
-import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
+import { MODEL_MAP, MODELS, replaceRetiredModel } from '../lib/resolveAgentModel'
 import { useAgents } from '../lib/useAgents'
 import { useApiKey } from '../lib/useApiKey'
 
@@ -23,7 +23,7 @@ export default function CreateAutomationModal({
   const [name, setName] = useState(initialData?.name || '')
   const [schedule, setSchedule] = useState(initialData?.schedule || 'daily')
   const [provider, setProvider] = useState(initialData?.provider || 'openai')
-  const [selectedModel, setSelectedModel] = useState(initialData?.model || 'gpt-4o')
+  const [selectedModel, setSelectedModel] = useState(replaceRetiredModel(initialData?.model) || 'gpt-4o')
   const [apiKey, setApiKey] = useState(initialData?.apiKey || globalKey || '')
   const [inputs, setInputs] = useState(initialData?.inputs || {})
   const [emailNotification, setEmailNotification] = useState(initialData?.emailNotification ?? true)
@@ -368,7 +368,7 @@ export default function CreateAutomationModal({
                 className="w-full h-10 px-3 rounded-xl text-xs font-medium dark:bg-surface-input dark:border-border bg-gray-50 border border-gray-200 outline-none"
               >
                 <option value="openai">OpenAI (GPT-4o, o3-mini)</option>
-                <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+                <option value="anthropic">Anthropic (Claude Sonnet 5.5)</option>
                 <option value="gemini">Google Gemini (Gemini 1.5 Pro / Flash)</option>
                 <option value="openrouter">OpenRouter (DeepSeek / Llama 3)</option>
               </select>

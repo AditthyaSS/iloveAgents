@@ -7,7 +7,7 @@ export default {
   icon: "ShieldCheck", // optional, follow existing icon naming
   provider: "any",
   defaultProvider: "anthropic",
-  model: "claude-opus-4-20250514",
+  model: "claude-opus-4-8",
   exampleInputs: {
     code: `pragma solidity ^0.8.0;
 

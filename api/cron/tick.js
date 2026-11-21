@@ -6,6 +6,8 @@
  * executes LLM run with pgsodium encrypted key, logs run history, and sends email via Resend.
  */
 
+import { replaceRetiredModel } from '../../src/lib/resolveAgentModel.js'
+
 /**
  * Supported providers for cron execution.
  */
@@ -25,6 +27,8 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
   const sys = systemPrompt || 'You are an AI assistant.'
   const msg = userMessage || 'Scheduled run'
   const prov = (provider || 'openai').toLowerCase()
+  // Automations saved before a model was retired still carry its id.
+  model = replaceRetiredModel(model)
 
   if (prov === 'anthropic') {
     return {
@@ -35,7 +39,7 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
         'anthropic-version': '2023-06-01',
       },
       body: {
-        model: model || 'claude-3-5-sonnet-20241022',
+        model: model || 'claude-sonnet-5-5',
         max_tokens: 4096,
         system: sys,
         messages: [{ role: 'user', content: msg }],
