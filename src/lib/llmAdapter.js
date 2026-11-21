@@ -1,5 +1,5 @@
-/**
- * LLM Adapter — unified interface for calling OpenAI, Anthropic, and Gemini APIs
+﻿/**
+ * LLM Adapter â€” unified interface for calling OpenAI, Anthropic, and Gemini APIs
  * directly from the browser. No backend required.
  *
  * Supports both one-shot (`runAgent`) and streaming (`streamAgent`) modes.
@@ -135,7 +135,7 @@ const PROVIDER_CONFIGS = {
         if (json.type === 'message_stop') {
           return { content: '', done: true }
         }
-        // message_start, content_block_start, etc. — skip
+        // message_start, content_block_start, etc. â€” skip
         return null
       } catch {
         return null
@@ -191,7 +191,7 @@ const ERROR_MESSAGES = {
   403: 'Access forbidden. Your API key may not have the required permissions.',
   429: 'Rate limit hit. Wait a moment and try again.',
   500: 'The API server encountered an error. Try again shortly.',
-  502: 'Bad gateway — the API is temporarily unavailable.',
+  502: 'Bad gateway â€” the API is temporarily unavailable.',
   503: 'The API service is temporarily unavailable. Try again in a minute.',
 };
 
@@ -302,8 +302,8 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
  * @param {string} params.apiKey
  * @param {string} params.systemPrompt
  * @param {string} params.userMessage
- * @param {(text: string) => void} params.onChunk — called with each token/chunk
- * @param {AbortSignal} [params.signal] — optional AbortSignal to cancel streaming
+ * @param {(text: string) => void} params.onChunk â€” called with each token/chunk
+ * @param {AbortSignal} [params.signal] â€” optional AbortSignal to cancel streaming
  * @returns {Promise<{content: string, duration: number}>}
  */
 export async function streamAgent({ provider, model, apiKey, systemPrompt, userMessage, onChunk, signal }) {
@@ -429,3 +429,4 @@ export async function fetchGeminiModels(apiKey) {
       label: m.displayName || m.name.replace('models/', ''),
     }))
 }
+
