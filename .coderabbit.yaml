@@ -1,3 +1,4 @@
+
 language: "en-US"
 
 reviews:
@@ -7,11 +8,13 @@ reviews:
   poem: false
   review_status: true
   collapse_walkthrough: false
+
   auto_review:
     enabled: true
     drafts: false
     base_branches:
-      - main
+      - "main"
+
   path_filters:
     - "!package-lock.json"
     - "!*.md"
