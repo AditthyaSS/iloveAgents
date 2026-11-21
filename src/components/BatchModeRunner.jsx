@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react'
+﻿import { useState, useRef, useMemo } from 'react'
 import {
   Loader2,
   CheckCircle2,
@@ -9,6 +9,7 @@ import {
   StopCircle,
   Zap,
   FileText,
+  Ban,
 } from 'lucide-react'
 import CustomSelect from './CustomSelect'
 import { runBatch, parsePastedLines, parseCSV } from '../lib/batchRunner'
@@ -21,6 +22,7 @@ const STATUS_COLORS = {
   running: 'text-accent',
   done: 'text-emerald-400',
   failed: 'text-red-400',
+  cancelled: 'text-amber-400',
 }
 
 function StatusIcon({ status }) {
@@ -28,10 +30,10 @@ function StatusIcon({ status }) {
   if (status === 'running') return <Loader2 size={13} className="text-accent animate-spin" />
   if (status === 'done') return <CheckCircle2 size={13} className={STATUS_COLORS.done} />
   if (status === 'failed') return <XCircle size={13} className={STATUS_COLORS.failed} />
+  if (status === 'cancelled') return <Ban size={13} className={STATUS_COLORS.cancelled} />
   return null
 }
 
-// Field types that can sensibly hold one "row" of batch data
 const BATCHABLE_TYPES = ['text', 'textarea', 'code']
 
 export default function BatchModeRunner({ agent, provider, apiKey, selectedModel, systemPrompt }) {
@@ -43,11 +45,11 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
   const [batchFieldId, setBatchFieldId] = useState(batchableFields[0]?.id || '')
   const [fixedInputs, setFixedInputs] = useState({})
   const [rawPaste, setRawPaste] = useState('')
-  const [items, setItems] = useState([]) // string[]
-  const [csvRawRows, setCsvRawRows] = useState(null) // string[][] from parseCSV, before header decision
+  const [items, setItems] = useState([])
+  const [csvRawRows, setCsvRawRows] = useState(null)
   const [csvHasHeader, setCsvHasHeader] = useState(false)
   const [csvColumnIndex, setCsvColumnIndex] = useState(0)
-  const [results, setResults] = useState([]) // [{input, status, output, error}]
+  const [results, setResults] = useState([])
   const [running, setRunning] = useState(false)
   const [hasRun, setHasRun] = useState(false)
   const fileInputRef = useRef(null)
@@ -59,10 +61,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     setFixedInputs((prev) => ({ ...prev, [id]: value }))
   }
 
-  // Resolve a fixed field's effective value: explicit user input, else the
-  // field's defaultValue, else a sensible empty value. This matters because
-  // shared fields show their defaultValue in the UI even before the user
-  // touches them — canRun() and the run payload must agree with what's shown.
   const resolveFixedValue = (input) => {
     const current = fixedInputs[input.id]
     if (current !== undefined) return current
@@ -70,7 +68,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     return input.type === 'multiselect' ? [] : ''
   }
 
-  // Derived view of the CSV: which row is the header (if any), and the data rows
   const csvHeaders = csvHasHeader ? csvRawRows?.[0] : null
   const csvDataRows = csvHasHeader ? csvRawRows?.slice(1) : csvRawRows
 
@@ -89,7 +86,7 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
       if (file.name.toLowerCase().endsWith('.csv')) {
         const parsed = parseCSV(text)
         setCsvRawRows(parsed.rows)
-        setCsvHasHeader(false) // safe default: never assume a header, never drop the first row
+        setCsvHasHeader(false)
         setCsvColumnIndex(0)
         setItems(parsed.rows.map((r) => r[0]).filter(Boolean))
       } else {
@@ -141,12 +138,16 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     const controller = new AbortController()
     abortControllerRef.current = controller
 
-    const onItemUpdate = (index, patch) => {
-      setResults((prev) => prev.map((r, i) => (i === index ? { ...r, ...patch } : r)))
+    const onItemUpdate = (index, patchOrFn) => {
+      setResults((prev) =>
+        prev.map((r, i) => {
+          if (i !== index) return r
+          const patch = typeof patchOrFn === 'function' ? patchOrFn(r) : patchOrFn
+          return { ...r, ...patch }
+        })
+      )
     }
 
-    // Include resolved defaults for any fixed field the user never touched,
-    // so the run payload matches what's actually shown in the UI.
     const mergedFixedInputs = Object.fromEntries(
       otherFields.map((input) => [input.id, resolveFixedValue(input)])
     )
@@ -166,6 +167,14 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         signal: controller.signal,
       })
     } finally {
+      // Ensure any remaining waiting/running items are marked as cancelled if stopped
+      if (controller.signal.aborted) {
+        setResults((prev) =>
+          prev.map((r) =>
+            r.status === 'waiting' || r.status === 'running' ? { ...r, status: 'cancelled' } : r
+          )
+        )
+      }
       setRunning(false)
       abortControllerRef.current = null
     }
@@ -179,12 +188,13 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
     setRunning(false)
   }
 
-  const completedCount = results.filter((r) => r.status === 'done' || r.status === 'failed').length
+  const completedCount = results.filter(
+    (r) => r.status === 'done' || r.status === 'failed' || r.status === 'cancelled'
+  ).length
   const allDone = hasRun && !running && completedCount === results.length && results.length > 0
 
   return (
     <div className="space-y-4">
-      {/* Batch field selector (only shown if there's a choice to make) */}
       {batchableFields.length > 1 && (
         <div>
           <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
@@ -200,7 +210,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         </div>
       )}
 
-      {/* Fixed/shared fields, reused for every item */}
       {otherFields.length > 0 && (
         <div className="space-y-3 p-3 rounded-lg border dark:border-border dark:bg-surface-input/30 border-gray-200 bg-gray-50">
           <p className="text-[11px] font-medium dark:text-text-muted text-gray-400">
@@ -280,7 +289,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         </div>
       )}
 
-      {/* Batch input: paste or upload */}
       <div>
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Batch items — one per line, or upload a .csv / .txt file
@@ -323,7 +331,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
           )}
         </div>
 
-        {/* Header confirmation (always shown for CSVs) + column picker (multi-column only) */}
         {csvRawRows && csvRawRows.length > 0 && (
           <div className="mt-2 space-y-2">
             <label className="flex items-center gap-2 text-[11px] dark:text-text-secondary text-gray-500 cursor-pointer">
@@ -357,7 +364,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         )}
       </div>
 
-      {/* Run / Stop / Progress */}
       <div className="flex items-center gap-2">
         {running ? (
           <button
@@ -411,7 +417,6 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
         )}
       </div>
 
-      {/* Results list */}
       {hasRun && (
         <div className="space-y-2">
           {results.map((r, i) => (

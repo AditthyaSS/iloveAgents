@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Batch Runner — core logic for running an agent across many inputs.
  * No UI here. Used by BatchModeRunner.jsx.
  */
@@ -6,10 +6,6 @@
 import { runAgent } from './llmAdapter'
 import { recordAnalyticsRun } from './useAnalytics'
 
-/**
- * Parse pasted multi-line text into batch items.
- * One non-empty line = one item.
- */
 export function parsePastedLines(raw) {
   return raw
     .split('\n')
@@ -17,11 +13,6 @@ export function parsePastedLines(raw) {
     .filter((line) => line.length > 0)
 }
 
-/**
- * Minimal CSV parser — no external dependency.
- * Handles quoted fields, escaped quotes (""), and commas inside quotes.
- * Returns { headers: string[]|null, rows: string[][] }
- */
 export function parseCSV(text) {
   const rows = []
   let row = []
@@ -57,7 +48,7 @@ export function parseCSV(text) {
       } else if (char === ',') {
         pushField()
       } else if (char === '\r') {
-        // skip, \n will trigger row end
+        // skip
       } else if (char === '\n') {
         pushRow()
       } else {
@@ -74,26 +65,6 @@ export function parseCSV(text) {
   return { rows: nonEmptyRows }
 }
 
-/**
- * Detect whether a parsed CSV's first row looks like a header
- * (heuristic: no purely numeric-looking cells, reasonably short).
- */
-
-/**
- * NOTE: We deliberately do NOT try to auto-detect whether a CSV's first
- * row is a header by inspecting its content. Free-text items (e.g. a
- * resume snippet like "Doe, Jane - Software Engineer") are indistinguishable
- * from a genuine header row using any content heuristic, and guessing wrong
- * silently drops the first real item. Instead, the UI always shows the user
- * the parsed first row and lets them confirm whether to treat it as a
- * header — see the "First row is a header" toggle in BatchModeRunner.
- */
-
-/**
- * Build the full user message for one batch item, substituting the
- * batch field value into the fixed inputs and formatting the same way
- * AgentRunner's buildUserMessage does.
- */
 export function buildBatchUserMessage(agent, fixedInputs, batchFieldId, itemValue) {
   const parts = []
   agent.inputs.forEach((input) => {
@@ -113,23 +84,6 @@ export function buildBatchUserMessage(agent, fixedInputs, batchFieldId, itemValu
   return parts.join('\n\n').trim().replace(/\n{3,}/g, '\n\n')
 }
 
-/**
- * Run a batch of items against an agent with limited concurrency.
- *
- * @param {Object} params
- * @param {string[]} params.items - the per-row values for the batch field
- * @param {Object} params.agent
- * @param {Object} params.fixedInputs - values for all non-batch fields
- * @param {string} params.batchFieldId
- * @param {string} params.provider
- * @param {string} params.model
- * @param {string} params.apiKey
- * @param {string} params.systemPrompt
- * @param {number} [params.concurrency=3]
- * @param {(index: number, patch: object) => void} params.onItemUpdate
- * @param {AbortSignal} [params.signal]
- * @returns {Promise<void>}
- */
 export async function runBatch({
   items,
   agent,
@@ -181,4 +135,16 @@ export async function runBatch({
 
   const workerCount = Math.min(concurrency, items.length)
   await Promise.all(Array.from({ length: workerCount }, () => worker()))
+
+  // Mark any remaining waiting or running items as cancelled if aborted/stopped
+  if (signal?.aborted) {
+    for (let i = 0; i < items.length; i++) {
+      onItemUpdate(i, (current) => {
+        if (!current || current.status === 'waiting' || current.status === 'running') {
+          return { status: 'cancelled' }
+        }
+        return current
+      })
+    }
+  }
 }
