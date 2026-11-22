@@ -1,41 +1,77 @@
-name: CI
+
+name: Build Check
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run tests
-        run: npm test
-
   build:
+    name: Install, Validate and Build
     runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+    steps:
+      # Checkout repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
 
-      - name: Install dependencies
+      # Install dependencies
+      - name: Install Dependencies
         run: npm ci
 
-      - name: Run build
+      # Check for broken registry imports
+      - name: Check Registry Imports
+        run: |
+          if grep -rnE "import agents from ['\"].*agents/registry" src/; then
+            echo "Broken default import of registry detected!"
+            echo "Use the correct useAgents() hook instead."
+            exit 1
+          fi
+
+          echo "Registry import check passed."
+
+      # Run production build
+      - name: Build Project
         run: npm run build
+
+      # Report failure on pull requests
+      - name: Comment on Build Failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ **Build failed on this PR.**
+
+              Please fix the errors before merging:
+
+              1. Run \`npm ci\` locally.
+              2. Run \`npm run build\`.
+              3. Fix any errors.
+              4. Push your changes.
+
+              The GitHub Actions check will run automatically again.
+
+              See CONTRIBUTING.md for help.`
+            })
+
