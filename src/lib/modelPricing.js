@@ -23,19 +23,19 @@ export const MODEL_PRICING = {
     outputCostPer1M: 4.40,
     contextWindow: 200000,
   },
-  'claude-3-5-sonnet-20241022': {
+  'claude-sonnet-5-5': {
     provider: 'anthropic',
     inputCostPer1M: 3.00,
     outputCostPer1M: 15.00,
     contextWindow: 200000,
   },
-  'claude-3-5-haiku-20241022': {
+  'claude-haiku-4-5-20251001': {
     provider: 'anthropic',
     inputCostPer1M: 0.80,
     outputCostPer1M: 4.00,
     contextWindow: 200000,
   },
-  'claude-3-opus-20240229': {
+  'claude-opus-4-8': {
     provider: 'anthropic',
     inputCostPer1M: 15.00,
     outputCostPer1M: 75.00,
@@ -65,7 +65,7 @@ export const MODEL_PRICING = {
     outputCostPer1M: 0.60,
     contextWindow: 128000,
   },
-  'anthropic/claude-3.5-sonnet': {
+  'anthropic/claude-sonnet-4.5': {
     provider: 'openrouter',
     inputCostPer1M: 3.00,
     outputCostPer1M: 15.00,
