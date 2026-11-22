@@ -23,5 +23,5 @@ export function exportWorkflowAsMarkdown(workflowTitle, steps) {
   a.href = url
   a.download = filename
   a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  setTimeout(() => setTimeout(() => URL.revokeObjectURL(url), 1000), 1000)
 }
