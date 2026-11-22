@@ -1,4 +1,4 @@
-/**
+﻿/**
  * LLM Adapter — unified interface for calling OpenAI, Anthropic, and Gemini APIs
  * directly from the browser. No backend required.
  *
@@ -35,20 +35,20 @@ const PROVIDER_CONFIGS = {
         (data.usage?.prompt_tokens || 0) +
         (data.usage?.completion_tokens || 0),
     }),
-    /**
-     * Parse an SSE line from OpenAI streaming.
-     * Returns { content, done } or null if the line should be skipped.
-     */
     parseStreamChunk: (line) => {
       if (line === 'data: [DONE]') return { content: '', done: true }
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) {
+          throw new Error(json.error.message || JSON.stringify(json.error))
+        }
         const delta = json.choices?.[0]?.delta?.content || ''
         const finished = json.choices?.[0]?.finish_reason === 'stop'
         return { content: delta, done: finished }
-      } catch {
-        return null
+      } catch (err) {
+        if (err instanceof SyntaxError) return null
+        throw err
       }
     },
   },
@@ -89,11 +89,15 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) {
+          throw new Error(json.error.message || JSON.stringify(json.error))
+        }
         const delta = json.choices?.[0]?.delta?.content || ''
         const finished = json.choices?.[0]?.finish_reason === 'stop'
         return { content: delta, done: finished }
-      } catch {
-        return null
+      } catch (err) {
+        if (err instanceof SyntaxError) return null
+        throw err
       }
     },
   },
@@ -129,16 +133,20 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.type === 'error') {
+          const errMsg = json.error?.message || json.error?.type || 'Anthropic stream error'
+          throw new Error(errMsg)
+        }
         if (json.type === 'content_block_delta') {
           return { content: json.delta?.text || '', done: false }
         }
         if (json.type === 'message_stop') {
           return { content: '', done: true }
         }
-        // message_start, content_block_start, etc. — skip
         return null
-      } catch {
-        return null
+      } catch (err) {
+        if (err instanceof SyntaxError) return null
+        throw err
       }
     },
   },
@@ -176,18 +184,22 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) {
+          throw new Error(json.error.message || JSON.stringify(json.error))
+        }
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text || ''
         const finished = json.candidates?.[0]?.finishReason === 'STOP'
         return { content: text, done: finished }
-      } catch {
-        return null
+      } catch (err) {
+        if (err instanceof SyntaxError) return null
+        throw err
       }
     },
   },
 }
 
 const ERROR_MESSAGES = {
-  401: 'invalid_api_key', // We'll use a key to help downstream logic
+  401: 'invalid_api_key',
   403: 'Access forbidden. Your API key may not have the required permissions.',
   429: 'Rate limit hit. Wait a moment and try again.',
   500: 'The API server encountered an error. Try again shortly.',
@@ -195,9 +207,6 @@ const ERROR_MESSAGES = {
   503: 'The API service is temporarily unavailable. Try again in a minute.',
 };
 
-/**
- * Handle non-OK HTTP responses consistently.
- */
 async function handleErrorResponse(response, provider = "unknown") {
   const errorKey = ERROR_MESSAGES[response.status] || null;
   let detail = '';
@@ -228,17 +237,7 @@ async function handleErrorResponse(response, provider = "unknown") {
     detail ? `${friendlyMessage}\n\nDetails: ${detail}` : friendlyMessage
   );
 }
-/**
- * Run an agent against the specified LLM provider (one-shot, non-streaming).
- *
- * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
- * @param {string} params.model
- * @param {string} params.apiKey
- * @param {string} params.systemPrompt
- * @param {string} params.userMessage
- * @returns {Promise<{content: string, tokens: number, duration: number}>}
- */
+
 export async function runAgent({ provider, model, apiKey, systemPrompt, userMessage }, options = {})  {
   const config = PROVIDER_CONFIGS[provider]
   const { signal } = options || {};
@@ -292,20 +291,6 @@ export async function runAgent({ provider, model, apiKey, systemPrompt, userMess
   }
 }
 
-/**
- * Run an agent with streaming output. Calls `onChunk` with each piece of text
- * as it arrives so the UI can render progressively.
- *
- * @param {Object} params
- * @param {'openai'|'anthropic'|'gemini'|'openrouter'} params.provider
- * @param {string} params.model
- * @param {string} params.apiKey
- * @param {string} params.systemPrompt
- * @param {string} params.userMessage
- * @param {(text: string) => void} params.onChunk — called with each token/chunk
- * @param {AbortSignal} [params.signal] — optional AbortSignal to cancel streaming
- * @returns {Promise<{content: string, duration: number}>}
- */
 export async function streamAgent({ provider, model, apiKey, systemPrompt, userMessage, onChunk, signal }) {
   const config = PROVIDER_CONFIGS[provider]
 
@@ -317,7 +302,6 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
     throw new Error('Please provide an API key to run this agent.')
   }
 
-  // Determine the streaming URL
   let url
   if (provider === 'gemini') {
     url = config.streamUrl(model, apiKey)
@@ -359,9 +343,7 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
 
       buffer += decoder.decode(value, { stream: true })
 
-      // Process complete lines from the buffer
       const lines = buffer.split('\n')
-      // Keep the last (potentially incomplete) line in the buffer
       buffer = lines.pop() || ''
 
       for (const line of lines) {
@@ -380,7 +362,6 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
       }
     }
 
-    // Process any remaining buffer content
     if (buffer.trim()) {
       const parsed = config.parseStreamChunk(buffer.trim())
       if (parsed?.content) {
@@ -409,13 +390,6 @@ export async function streamAgent({ provider, model, apiKey, systemPrompt, userM
   }
 }
 
-/**
- * Fetch supported Gemini models dynamically from the Google API.
- * Returns models that support generateContent (i.e. usable for chat/generation).
- *
- * @param {string} apiKey
- * @returns {Promise<Array<{value: string, label: string}>>}
- */
 export async function fetchGeminiModels(apiKey) {
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`
