@@ -6,14 +6,21 @@ body:
   - type: markdown
     attributes:
       value: |
-        Got an idea? I would love to hear it.
-        If you want to suggest a new agent, please use the New Agent Proposal template instead.
+        💡 Got an idea? We would love to hear it!
+        If you want to suggest a new agent, please use the [New Agent Proposal](https://github.com/AditthyaSS/iloveAgents/issues/new?template=new_agent.yml) template instead.
 
   - type: textarea
     id: problem
     attributes:
       label: What problem does this solve?
-      placeholder: Right now there is no way to copy the output as plain text...
+      description: >
+        Describe the pain point or gap you have noticed. A clear problem statement
+        helps maintainers understand why this matters. Include any relevant context
+        such as how often you run into this or how it affects your workflow.
+      placeholder: |
+        Right now there is no way to copy the output as plain text.
+        Every time I want to paste agent output into a document, I have to
+        manually strip the formatting, which is tedious and error-prone.
     validations:
       required: true
 
@@ -21,7 +28,13 @@ body:
     id: solution
     attributes:
       label: What would you like to see?
-      placeholder: A "Copy as plain text" button next to the existing copy button.
+      description: >
+        Describe your ideal solution in as much detail as possible. Feel free to
+        include mock-ups, screenshots, or pseudo-code to illustrate your idea.
+      placeholder: |
+        A "Copy as plain text" button next to the existing copy button in the
+        output panel. Clicking it should copy the raw text without any markdown
+        or HTML formatting.
     validations:
       required: true
 
@@ -29,20 +42,65 @@ body:
     id: alternatives
     attributes:
       label: Any other ideas you considered? (optional)
-      placeholder: I also thought about a toggle to switch between rendered and raw output...
+      description: >
+        List any alternative solutions or workarounds you thought about and
+        explain why they might not be as effective.
+      placeholder: |
+        I also thought about a toggle to switch between rendered and raw output,
+        but a copy button feels more intuitive since users usually want to keep
+        the rendered view while copying plain text.
 
   - type: dropdown
     id: area
     attributes:
       label: Which part of the app is this about?
+      description: >
+        Select the area most closely related to your feature request.
+        If none of the options fit, choose "Other" and describe the area below.
       options:
         - Agent Runner
         - Homepage / Agent Grid
         - API Key / Provider Bar
         - Output Panel
         - Sidebar / Navigation
+        - Workflow Builder
+        - Battle Mode
+        - Batch Mode
         - Mobile Experience
         - Performance
+        - Accessibility
+        - Documentation
         - Other
     validations:
       required: true
+
+  - type: input
+    id: other_area
+    attributes:
+      label: Other area (if you selected "Other" above)
+      description: Specify which part of the app your request is about.
+      placeholder: e.g. Settings page, Export functionality, Notifications
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      description: >
+        This helps maintainers prioritize feature requests. Be honest — every
+        level is valid!
+      options:
+        - Nice to have — would be a welcome improvement
+        - Important — I work around this regularly
+        - Critical — this blocks my workflow
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched existing issues and this feature has not been requested yet
+          required: true
+        - label: This request is about one specific feature, not multiple unrelated ideas
+          required: true
