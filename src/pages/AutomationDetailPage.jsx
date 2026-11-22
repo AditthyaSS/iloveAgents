@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import {
   Clock, Play, Trash2, ToggleLeft, ToggleRight, ArrowLeft,
@@ -129,7 +129,7 @@ export default function AutomationDetailPage() {
     : '0.00'
 
   const formatDate = (ts) => {
-    if (!ts) return '—'
+    if (!ts) return 'â€”'
     return new Date(ts).toLocaleString(undefined, {
       month: 'short',
       day: 'numeric',
@@ -177,9 +177,9 @@ export default function AutomationDetailPage() {
                 <Link to={`/agent/${automation.agentId}`} className="font-semibold text-accent hover:underline">
                   {automation.agentName}
                 </Link>
-                <span>•</span>
+                <span>â€¢</span>
                 <span className="font-mono text-[11px]">{automation.provider} ({automation.model})</span>
-                <span>•</span>
+                <span>â€¢</span>
                 <span>Created {new Date(automation.createdAt).toLocaleDateString()}</span>
               </div>
             </div>
@@ -349,7 +349,7 @@ export default function AutomationDetailPage() {
                           {(run.duration / 1000).toFixed(2)}s
                         </td>
                         <td className="px-5 py-3.5 font-mono text-gray-600 dark:text-gray-400">
-                          {run.tokens || '—'}
+                          {run.tokens || 'â€”'}
                         </td>
                         <td className="px-5 py-3.5 text-gray-500">
                           {run.emailSent ? (
@@ -357,7 +357,7 @@ export default function AutomationDetailPage() {
                               <Mail size={12} /> Sent
                             </span>
                           ) : (
-                            <span className="text-gray-400">—</span>
+                            <span className="text-gray-400">â€”</span>
                           )}
                         </td>
                         <td className="px-5 py-3.5 text-right">
@@ -462,7 +462,7 @@ export default function AutomationDetailPage() {
                     <div key={log.id} className="p-3 rounded-xl dark:bg-surface-hover/50 bg-gray-50 border dark:border-border/40 border-gray-200 flex items-center justify-between gap-2 text-xs">
                       <div>
                         <p className="font-semibold dark:text-gray-200 text-gray-800">{log.subject}</p>
-                        <p className="text-[11px] text-gray-400">To: {log.to} • {formatDate(log.sentAt)}</p>
+                        <p className="text-[11px] text-gray-400">To: {log.to} â€¢ {formatDate(log.sentAt)}</p>
                       </div>
                       <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500">
                         {log.status}
@@ -493,3 +493,4 @@ export default function AutomationDetailPage() {
     </div>
   )
 }
+
