@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import * as Icons from 'lucide-react'
 import { DEFAULT_COLLECTION_ID, useCollections } from '../lib/useCollections'
 import { useAgents } from '../lib/useAgents'
+import { useOverlayEscape } from '../hooks/useOverlayEscape'
 
 const SIDEBAR_CATEGORY_STORAGE_KEY = 'sidebar-category-collapsed-state'
 
@@ -52,6 +53,9 @@ export default function Sidebar({ open, onClose }) {
       setSearchExpandedCategories({})
     }
   }, [isSearching])
+
+  // The mobile drawer covers the page, so Escape should close it like a modal
+  useOverlayEscape(open, onClose)
 
   const { filteredAgents, categories, categoryOrder } = useMemo(() => {
     const filtered = !normalizedQuery
@@ -121,6 +125,7 @@ export default function Sidebar({ open, onClose }) {
       )}
 
       <aside
+        aria-label="Agents sidebar"
         className={`fixed top-14 left-0 bottom-0 z-40 w-60 flex flex-col border-r transition-all duration-200
           dark:border-border border-gray-200
           ${open ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
