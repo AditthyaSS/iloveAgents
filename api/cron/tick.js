@@ -35,7 +35,7 @@ export function buildCronRequest(provider, apiKey, model, systemPrompt, userMess
         'anthropic-version': '2023-06-01',
       },
       body: {
-        model: model || 'claude-3-5-sonnet-20241022',
+        model: model || 'claude-sonnet-5-5',
         max_tokens: 4096,
         system: sys,
         messages: [{ role: 'user', content: msg }],
