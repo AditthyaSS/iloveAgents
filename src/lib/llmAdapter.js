@@ -44,10 +44,14 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) {
+          throw new ProviderStreamError(getProviderErrorDetail(json), 'openai')
+        }
         const delta = json.choices?.[0]?.delta?.content || ''
         const finished = json.choices?.[0]?.finish_reason === 'stop'
         return { content: delta, done: finished }
-      } catch {
+      } catch (error) {
+        if (error instanceof ProviderStreamError) throw error
         return null
       }
     },
@@ -89,10 +93,14 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) {
+          throw new ProviderStreamError(getProviderErrorDetail(json), 'openrouter')
+        }
         const delta = json.choices?.[0]?.delta?.content || ''
         const finished = json.choices?.[0]?.finish_reason === 'stop'
         return { content: delta, done: finished }
-      } catch {
+      } catch (error) {
+        if (error instanceof ProviderStreamError) throw error
         return null
       }
     },
@@ -129,6 +137,9 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.type === 'error') {
+          throw new ProviderStreamError(getProviderErrorDetail(json), 'anthropic')
+        }
         if (json.type === 'content_block_delta') {
           return { content: json.delta?.text || '', done: false }
         }
@@ -137,7 +148,8 @@ const PROVIDER_CONFIGS = {
         }
         // message_start, content_block_start, etc. — skip
         return null
-      } catch {
+      } catch (error) {
+        if (error instanceof ProviderStreamError) throw error
         return null
       }
     },
@@ -176,10 +188,14 @@ const PROVIDER_CONFIGS = {
       if (!line.startsWith('data: ')) return null
       try {
         const json = JSON.parse(line.slice(6))
+        if (json.error) {
+          throw new ProviderStreamError(getProviderErrorDetail(json), 'gemini')
+        }
         const text = json.candidates?.[0]?.content?.parts?.[0]?.text || ''
         const finished = json.candidates?.[0]?.finishReason === 'STOP'
         return { content: text, done: finished }
-      } catch {
+      } catch (error) {
+        if (error instanceof ProviderStreamError) throw error
         return null
       }
     },
@@ -428,4 +444,19 @@ export async function fetchGeminiModels(apiKey) {
       value: m.name.replace('models/', ''),
       label: m.displayName || m.name.replace('models/', ''),
     }))
+}
+
+class ProviderStreamError extends Error {
+  constructor(detail, provider) {
+    super(detail ? `Provider ${provider} stream error: ${detail}` : `Provider ${provider} stream returned an error`)
+    this.name = 'ProviderStreamError'
+    this.provider = provider
+    this.detail = detail
+  }
+}
+
+const getProviderErrorDetail = (json) => {
+  const error = json?.error
+  if (typeof error === 'string') return error
+  return error?.message || error?.detail || json?.message || ''
 }
