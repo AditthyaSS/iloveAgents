@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -19,7 +19,8 @@ import { useAgents } from '../lib/useAgents'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
-import { useApiKey } from '../lib/useApiKey'
+import { useApiKey, getSafeApiKey } from '../lib/useApiKey'
+import { getGlobalKeys } from '../lib/globalKeys'
 import { recordAnalyticsRun } from '../lib/useAnalytics'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
@@ -379,7 +380,7 @@ export default function WorkflowRunner() {
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Your Input <span className="text-red-400">*</span>
           <span className="ml-1 dark:text-text-muted text-gray-400 font-normal">
-            — passed to the first agent, then chained through each step
+            â€” passed to the first agent, then chained through each step
           </span>
         </label>
         <textarea
@@ -542,7 +543,7 @@ export default function WorkflowRunner() {
                             <div className="font-medium">{label === 'default' ? 'Default' : label}</div>
                             <div className="text-[10px] opacity-75 mt-1">
                               {Array.isArray(agents) && agents.length > 0
-                                ? agents.join(' → ')
+                                ? agents.join(' â†’ ')
                                 : 'No agents'}
                             </div>
                           </div>
