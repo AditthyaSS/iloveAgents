@@ -45,6 +45,21 @@ describe('loadAllAgents', () => {
     })
   })
 
+  it('no agent should pin a retired Anthropic model', async () => {
+    const retired = [
+      'claude-3-5-sonnet-20241022',
+      'claude-3-5-haiku-20241022',
+      'claude-3-opus-20240229',
+      'claude-opus-4-20250514',
+      'claude-sonnet-4-20250514',
+    ]
+    const agents = await loadAllAgents()
+    agents.forEach((agent) => {
+      expect(retired).not.toContain(agent.model)
+      expect(retired).not.toContain(agent.models?.anthropic)
+    })
+  })
+
   it('should return the same cached result on subsequent calls', async () => {
     const first = await loadAllAgents()
     const second = await loadAllAgents()

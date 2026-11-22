@@ -10,11 +10,11 @@ const mlExperimentAutopsy = {
   defaultProvider: 'anthropic',
   defaultModels: {
     openai: 'gpt-4o',
-    anthropic: 'claude-sonnet-4-20250514',
+    anthropic: 'claude-sonnet-5-5',
     google: 'gemini-1.5-pro',
     mistral: 'mistral-large-latest',
   },
-  model: 'claude-sonnet-4-20250514',
+  model: 'claude-sonnet-5-5',
 
   exampleInputs: {
     model_type: 'CNN (Convolutional Neural Network)',
