@@ -8,7 +8,7 @@ const EXPIRY_MS = 8 * 60 * 60 * 1000 // 8 hours
  * Keys are wrapped with expiry timestamps to prevent indefinite persistence
  * even if storage backend is changed to localStorage.
  */
-function getSafeApiKey(provider) {
+export function getSafeApiKey(provider) {
   const raw = sessionStorage.getItem(STORAGE_PREFIX + provider)
   if (!raw) return null
   try {
@@ -22,6 +22,22 @@ function getSafeApiKey(provider) {
     // Migrate legacy plaintext keys (no expiry)
     return raw
   }
+}
+
+/**
+ * Get effective API key for a provider: checks session key first (with expiry check),
+ * then falls back to global keys configured in Settings.
+ */
+export function getApiKeyForProvider(provider) {
+  if (!provider) return ''
+  const sessionKey = getSafeApiKey(provider)
+  if (sessionKey) return sessionKey
+
+  const globalKeys = getGlobalKeys()
+  const savedGlobalKey = globalKeys[provider]
+  if (savedGlobalKey) return savedGlobalKey
+
+  return ''
 }
 
 /**
