@@ -21,6 +21,7 @@ const STATUS_COLORS = {
   running: 'text-accent',
   done: 'text-emerald-400',
   failed: 'text-red-400',
+  cancelled: 'text-gray-400',
 }
 
 function StatusIcon({ status }) {
@@ -28,6 +29,7 @@ function StatusIcon({ status }) {
   if (status === 'running') return <Loader2 size={13} className="text-accent animate-spin" />
   if (status === 'done') return <CheckCircle2 size={13} className={STATUS_COLORS.done} />
   if (status === 'failed') return <XCircle size={13} className={STATUS_COLORS.failed} />
+  if (status === 'cancelled') return <XCircle size={13} className={STATUS_COLORS.cancelled} />
   return null
 }
 
@@ -176,10 +178,17 @@ export default function BatchModeRunner({ agent, provider, apiKey, selectedModel
       abortControllerRef.current.abort()
       abortControllerRef.current = null
     }
+    setResults((prev) => prev.map((result) =>
+      result.status === 'waiting' || result.status === 'running'
+        ? { ...result, status: 'cancelled', error: undefined }
+        : result
+    ))
     setRunning(false)
   }
 
-  const completedCount = results.filter((r) => r.status === 'done' || r.status === 'failed').length
+  const completedCount = results.filter((r) =>
+    r.status === 'done' || r.status === 'failed' || r.status === 'cancelled'
+  ).length
   const allDone = hasRun && !running && completedCount === results.length && results.length > 0
 
   return (

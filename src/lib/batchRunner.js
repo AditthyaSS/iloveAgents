@@ -144,22 +144,27 @@ export async function runBatch({
   signal,
 }) {
   let cursor = 0
+  const itemStatuses = new Array(items.length).fill('waiting')
 
   async function worker() {
     while (cursor < items.length) {
-      if (signal?.aborted) return
+      if (signal?.aborted) break
       const index = cursor++
-      const itemValue = items[index]
-
+      itemStatuses[index] = 'running'
       onItemUpdate(index, { status: 'running' })
 
       try {
+        const itemValue = items[index]
         const userMessage = buildBatchUserMessage(agent, fixedInputs, batchFieldId, itemValue)
         const result = await runAgent(
           { provider, model, apiKey, systemPrompt, userMessage },
           { signal }
         )
-        if (signal?.aborted) return
+        if (signal?.aborted) {
+          itemStatuses[index] = 'cancelled'
+          onItemUpdate(index, { status: 'cancelled', error: undefined })
+          continue
+        }
         recordAnalyticsRun({
           agentId: agent.id,
           agentName: agent.name,
@@ -168,17 +173,32 @@ export async function runBatch({
           model,
           duration: result.duration,
         })
+        itemStatuses[index] = 'done'
         onItemUpdate(index, { status: 'done', output: result.content })
       } catch (err) {
-        if (signal?.aborted) return
-        onItemUpdate(index, {
-          status: 'failed',
-          error: err?.message || err?.detail || 'Failed to process this item.',
-        })
+        if (signal?.aborted) {
+          itemStatuses[index] = 'cancelled'
+          onItemUpdate(index, { status: 'cancelled', error: undefined })
+        } else {
+          itemStatuses[index] = 'failed'
+          onItemUpdate(index, {
+            status: 'failed',
+            error: err?.message || err?.detail || 'Failed to process this item.',
+          })
+        }
       }
     }
   }
 
   const workerCount = Math.min(concurrency, items.length)
   await Promise.all(Array.from({ length: workerCount }, () => worker()))
+
+  if (signal?.aborted) {
+    for (let index = 0; index < items.length; index++) {
+      if (itemStatuses[index] !== 'done' && itemStatuses[index] !== 'failed') {
+        itemStatuses[index] = 'cancelled'
+        onItemUpdate(index, { status: 'cancelled', error: undefined })
+      }
+    }
+  }
 }
