@@ -1,25 +1,43 @@
-# Maintainers
+# Main# Maintainers
 
-## Who Maintains This Project
+## Who Maintains This Project?
 
-Right now, iloveAgents is maintained by one person:
+Currently, **iloveAgents** is maintained by:
 
 | Name | GitHub | Role |
-|------|--------|------|
+|---|---|---|
 | Aditthya SS Varma | [@AditthyaSS](https://github.com/AditthyaSS) | Creator & Maintainer |
 
-## What I Do as Maintainer
+## Responsibilities
 
-- Review and merge pull requests
-- Label and respond to issues
-- Decide the direction of the project
-- Keep the codebase clean and consistent
+As the project maintainer, the responsibilities include:
 
-## Want to Help Maintain?
+- Reviewing and merging pull requests.
+- Managing, labeling, and responding to GitHub issues.
+- Guiding the project's direction and future development.
+- Maintaining code quality, consistency, and project standards.
+- Supporting contributors and reviewing community feedback.
+- Ensuring the project remains stable and welcoming to new contributors.
 
-If you have made several good contributions and want to take on more responsibility,
-start a conversation in GitHub Discussions. I am open to it as the project grows.
+## Want to Become a Maintainer?
+
+Have you made several meaningful contributions to **iloveAgents**?
+
+Are you interested in taking on more responsibility and helping guide the project?
+
+We welcome contributors who demonstrate:
+
+- Consistent and meaningful contributions.
+- Good understanding of the project's architecture.
+- Responsible communication and collaboration.
+- Commitment to open-source values and community growth.
+
+If you're interested, start a conversation in [GitHub Discussions](https://github.com/AditthyaSS/iloveAgents/discussions).
+
+Maintainer opportunities may grow as the project and community expand.
 
 ---
 
-*Want to contribute? See [CONTRIBUTING.md](./CONTRIBUTING.md).*
+**Want to contribute?** Start with our [CONTRIBUTING.md](./CONTRIBUTING.md) guide.
+
+**Together, we build better open source.** ❤️
