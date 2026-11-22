@@ -31,6 +31,15 @@ html:not(.dark) body {
   color: #18181b;
 }
 
+/* ===== Smooth Theme Transition ===== */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, fill 200ms ease, stroke 200ms ease !important;
+  transition-delay: 0s !important;
+}
+
 /* ===== Scrollbar ===== */
 ::-webkit-scrollbar {
   width: 6px;
