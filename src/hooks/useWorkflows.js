@@ -1,28 +1,138 @@
-import { supabase } from '../lib/supabase'
 
-/**
- * Get the currently authenticated user's ID.
- * Returns null if no user is logged in or Supabase auth is unavailable.
- * @returns {Promise<string|null>}
- */
+import { isSupabaseConfigured, supabase } from '../lib/supabase'
+
+const WORKFLOWS_TABLE = 'workflows'
+const MAX_WORKFLOW_AGENTS = 5
+
+function configurationError() {
+  return {
+    message:
+      'Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env.local.',
+  }
+}
+
+function authenticationError() {
+  return {
+    message: 'Authentication required. Please sign in to continue.',
+  }
+}
+
+function notFoundError() {
+  return {
+    message: 'Workflow not found.',
+  }
+}
+
+function permissionError() {
+  return {
+    message: 'Permission denied. You do not own this workflow.',
+  }
+}
+
+function validateWorkflow(workflow) {
+  if (!workflow || typeof workflow !== 'object') {
+    return 'A workflow is required.'
+  }
+
+  if (
+    typeof workflow.title !== 'string' ||
+    !workflow.title.trim()
+  ) {
+    return 'Workflow title is required.'
+  }
+
+  if (
+    !Array.isArray(workflow.agents) ||
+    workflow.agents.length < 1
+  ) {
+    return 'Add at least one agent to the workflow.'
+  }
+
+  if (workflow.agents.length > MAX_WORKFLOW_AGENTS) {
+    return `A workflow can contain no more than ${MAX_WORKFLOW_AGENTS} agents.`
+  }
+
+  if (
+    workflow.agents.some(
+      (agentId) =>
+        typeof agentId !== 'string' || !agentId.trim()
+    )
+  ) {
+    return 'Every workflow step must contain a valid agent ID.'
+  }
+
+  if (new Set(workflow.agents).size !== workflow.agents.length) {
+    return 'An agent can only appear once in a workflow.'
+  }
+
+  return null
+}
+
+// Get the currently authenticated Supabase user.
 async function getCurrentUserId() {
+  if (!isSupabaseConfigured) {
+    return null
+  }
+
   try {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    if (error || !user) return null
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error || !user) {
+      return null
+    }
+
     return user.id
-  } catch (err) {
-    console.warn('Failed to get current user:', err)
+  } catch (error) {
+    console.error('Authentication verification failed:', error)
     return null
   }
 }
 
+// Verify that the current user owns the requested workflow.
+async function verifyWorkflowOwnership(workflowId, userId) {
+  const { data, error } = await supabase
+    .from(WORKFLOWS_TABLE)
+    .select('id, user_id')
+    .eq('id', workflowId)
+    .maybeSingle()
+
+  if (error) {
+    return { authorized: false, error }
+  }
+
+  if (!data) {
+    return {
+      authorized: false,
+      error: notFoundError(),
+    }
+  }
+
+  if (data.user_id !== userId) {
+    return {
+      authorized: false,
+      error: permissionError(),
+    }
+  }
+
+  return {
+    authorized: true,
+    error: null,
+  }
+}
+
 /**
- * Fetch all public workflows from Supabase, ordered by newest first.
- * @returns {Promise<{ data: Array, error: object|null }>}
+ * Fetch public workflows.
  */
 export async function fetchWorkflows() {
+  if (!isSupabaseConfigured) {
+    return { data: [], error: configurationError() }
+  }
+
   const { data, error } = await supabase
-    .from('workflows')
+    .from(WORKFLOWS_TABLE)
     .select('*')
     .eq('is_public', true)
     .order('created_at', { ascending: false })
@@ -31,254 +141,299 @@ export async function fetchWorkflows() {
 }
 
 /**
- * Fetch a single workflow by its ID.
- * @param {string} id
- * @returns {Promise<{ data: object|null, error: object|null }>}
+ * Fetch one public workflow.
  */
 export async function fetchWorkflowById(id) {
+  if (!isSupabaseConfigured) {
+    return { data: null, error: configurationError() }
+  }
+
+  if (!id || typeof id !== 'string') {
+    return {
+      data: null,
+      error: { message: 'A valid workflow ID is required.' },
+    }
+  }
+
   const { data, error } = await supabase
-    .from('workflows')
+    .from(WORKFLOWS_TABLE)
     .select('*')
     .eq('id', id)
-    .single()
+    .eq('is_public', true)
+    .maybeSingle()
 
   return { data: data ?? null, error }
 }
 
 /**
- * Save a new workflow to Supabase with user ownership verification.
- * Ensures the current authenticated user is recorded as the workflow owner.
- * @param {{ title: string, description: string, agents: string[] }} workflow
- * @returns {Promise<{ data: object|null, error: object|null }>}
+ * Save a workflow.
+ * Authentication is mandatory.
  */
 export async function saveWorkflow(workflow) {
+  const validationError = validateWorkflow(workflow)
+
+  if (validationError) {
+    return {
+      data: null,
+      error: { message: validationError },
+    }
+  }
+
+  if (!isSupabaseConfigured) {
+    return { data: null, error: configurationError() }
+  }
+
   const userId = await getCurrentUserId()
 
-  // Require user authentication to prevent unauthorized writes
   if (!userId) {
     return {
       data: null,
-      error: {
-        message: 'User must be authenticated to save workflows. Please log in first.',
-      },
+      error: authenticationError(),
     }
   }
 
   const { data, error } = await supabase
-    .from('workflows')
-    .insert([
-      {
-        user_id: userId,
-        title: workflow.title,
-        description: workflow.description || '',
-        agents: workflow.agents,
-        is_public: true,
-        usage_count: 0,
-      },
-    ])
-    .select()
+    .from(WORKFLOWS_TABLE)
+    .insert({
+      user_id: userId,
+      title: workflow.title.trim(),
+      description:
+        typeof workflow.description === 'string'
+          ? workflow.description.trim()
+          : '',
+      agents: workflow.agents,
+      is_public: true,
+      usage_count: 0,
+    })
+    .select('*')
     .single()
 
-  return { data: data ?? null, error }
+  return {
+    data: data ?? null,
+    error,
+  }
 }
 
 /**
- * Update an existing workflow with user ownership verification.
- * Only allows updates if the current user is the workflow owner.
- * @param {string} id - Workflow ID
- * @param {{ title?: string, description?: string, agents?: string[], is_public?: boolean }} updates
- * @returns {Promise<{ data: object|null, error: object|null }>}
+ * Update a workflow.
+ * Verify ownership before updating and include user_id
+ * in the final database query as an additional safeguard.
  */
 export async function updateWorkflow(id, updates) {
+  if (!isSupabaseConfigured) {
+    return { data: null, error: configurationError() }
+  }
+
+  if (!id || typeof id !== 'string') {
+    return {
+      data: null,
+      error: { message: 'A valid workflow ID is required.' },
+    }
+  }
+
   const userId = await getCurrentUserId()
 
   if (!userId) {
     return {
       data: null,
+      error: authenticationError(),
+    }
+  }
+
+  const ownership = await verifyWorkflowOwnership(id, userId)
+
+  if (!ownership.authorized) {
+    return {
+      data: null,
+      error: ownership.error,
+    }
+  }
+
+  const allowedUpdates = {}
+
+  if (typeof updates?.title === 'string') {
+    if (!updates.title.trim()) {
+      return {
+        data: null,
+        error: { message: 'Workflow title cannot be empty.' },
+      }
+    }
+
+    allowedUpdates.title = updates.title.trim()
+  }
+
+  if (typeof updates?.description === 'string') {
+    allowedUpdates.description = updates.description.trim()
+  }
+
+  if (Array.isArray(updates?.agents)) {
+    const validationError = validateWorkflow({
+      title: updates.title ?? 'Workflow',
+      agents: updates.agents,
+    })
+
+    if (validationError) {
+      return {
+        data: null,
+        error: { message: validationError },
+      }
+    }
+
+    allowedUpdates.agents = updates.agents
+  }
+
+  if (typeof updates?.is_public === 'boolean') {
+    allowedUpdates.is_public = updates.is_public
+  }
+
+  if (Object.keys(allowedUpdates).length === 0) {
+    return {
+      data: null,
       error: {
-        message: 'User must be authenticated to update workflows.',
+        message: 'No valid workflow changes were provided.',
       },
     }
   }
 
-  // Verify ownership: fetch workflow and check user_id matches
-  const { data: workflow, error: fetchError } = await supabase
-    .from('workflows')
-    .select('user_id')
-    .eq('id', id)
-    .single()
-
-  if (fetchError || !workflow) {
-    return {
-      data: null,
-      error: fetchError || { message: 'Workflow not found.' },
-    }
-  }
-
-  if (workflow.user_id !== userId) {
-    return {
-      data: null,
-      error: {
-        message: 'You do not have permission to update this workflow. Only the owner can make changes.',
-      },
-    }
-  }
-
-  // Proceed with update (ownership verified)
   const { data, error } = await supabase
-    .from('workflows')
-    .update(updates)
+    .from(WORKFLOWS_TABLE)
+    .update(allowedUpdates)
     .eq('id', id)
     .eq('user_id', userId)
-    .select()
-    .single()
+    .select('*')
+    .maybeSingle()
 
-  return { data: data ?? null, error }
+  if (error) {
+    return { data: null, error }
+  }
+
+  if (!data) {
+    return {
+      data: null,
+      error: permissionError(),
+    }
+  }
+
+  return { data, error: null }
 }
 
 /**
- * Delete a workflow with user ownership verification.
- * Only allows deletion if the current user is the workflow owner.
- * @param {string} id - Workflow ID
- * @returns {Promise<{ error: object|null }>}
+ * Delete a workflow.
+ * Verify ownership before deleting.
  */
 export async function deleteWorkflow(id) {
+  if (!isSupabaseConfigured) {
+    return { error: configurationError() }
+  }
+
+  if (!id || typeof id !== 'string') {
+    return {
+      error: { message: 'A valid workflow ID is required.' },
+    }
+  }
+
   const userId = await getCurrentUserId()
 
   if (!userId) {
-    return {
-      error: {
-        message: 'User must be authenticated to delete workflows.',
-      },
-    }
+    return { error: authenticationError() }
   }
 
-  // Verify ownership: fetch workflow and check user_id matches
-  const { data: workflow, error: fetchError } = await supabase
-    .from('workflows')
-    .select('user_id')
-    .eq('id', id)
-    .single()
+  const ownership = await verifyWorkflowOwnership(id, userId)
 
-  if (fetchError || !workflow) {
-    return {
-      error: fetchError || { message: 'Workflow not found.' },
-    }
+  if (!ownership.authorized) {
+    return { error: ownership.error }
   }
 
-  if (workflow.user_id !== userId) {
-    return {
-      error: {
-        message: 'You do not have permission to delete this workflow. Only the owner can delete it.',
-      },
-    }
-  }
-
-  // Proceed with deletion (ownership verified)
-  const { error } = await supabase
-    .from('workflows')
+  const { data, error } = await supabase
+    .from(WORKFLOWS_TABLE)
     .delete()
     .eq('id', id)
     .eq('user_id', userId)
+    .select('id')
 
-  return { error }
+  if (error) {
+    return { error }
+  }
+
+  if (!data || data.length === 0) {
+    return { error: permissionError() }
+  }
+
+  return { error: null }
 }
 
 /**
- * Increment the usage_count for a workflow by 1.
- * Uses a raw RPC-style update to safely increment without race conditions.
- * @param {string} id
- * @returns {Promise<{ error: object|null }>}
- */
-/**
- * Increment the usage_count for a workflow by 1.
- * Uses a raw RPC-style update to safely increment without race conditions.
- * @param {string} id
- * @returns {Promise<{ error: object|null }>}
+ * Increment workflow usage atomically.
  */
 export async function incrementUsage(id) {
-  const { error: rpcError } = await supabase.rpc('increment_workflow_usage', { workflow_id: id })
-
-  // 1. If the RPC works perfectly, exit immediately with no error.
-  if (!rpcError) {
-    return { error: null }
+  if (!isSupabaseConfigured) {
+    return { data: null, error: configurationError() }
   }
 
-  // 2. If we reach this point, the RPC failed. Attempt client-side fallback.
-  console.warn('RPC failed, executing client-side fallback:', rpcError.message)
-
-  const { data: current } = await supabase
-    .from('workflows')
-    .select('usage_count')
-    .eq('id', id)
-    .single()
-
-  if (current) {
-    const { error: updateError } = await supabase
-      .from('workflows')
-      .update({ usage_count: (current.usage_count ?? 0) + 1 })
-      .eq('id', id)
-    
-    return { error: updateError }
+  if (!id) {
+    return {
+      data: null,
+      error: { message: 'A workflow ID is required.' },
+    }
   }
 
-  // 3. THE FIX: If 'current' is null (row not found), return a clear contextual error
-  // instead of letting it slip through to return the old rpcError.
-  return { 
-    error: { 
-      message: `Failed to increment usage. Workflow with ID ${id} could not be found during fallback.` 
-    } 
-  }
+  const { data, error } = await supabase.rpc(
+    'increment_workflow_usage',
+    { workflow_id: id }
+  )
+
+  return { data, error }
 }
 
 /**
- * Subscribe to realtime updates for a specific workflow's usage_count.
- * Returns the channel object — call supabase.removeChannel(channel) to unsubscribe.
- * @param {string} workflowId
- * @param {(payload: object) => void} callback
- * @returns {RealtimeChannel}
+ * Subscribe to one workflow's updates.
  */
 export function subscribeToWorkflow(workflowId, callback) {
-  const channel = supabase
-    .channel(`workflow-usage-${workflowId}`)
+  if (
+    !isSupabaseConfigured ||
+    !workflowId ||
+    typeof callback !== 'function'
+  ) {
+    return null
+  }
+
+  return supabase
+    .channel(`workflow-${workflowId}`)
     .on(
       'postgres_changes',
       {
         event: 'UPDATE',
         schema: 'public',
-        table: 'workflows',
+        table: WORKFLOWS_TABLE,
         filter: `id=eq.${workflowId}`,
       },
-      (payload) => {
-        callback(payload)
-      }
+      callback
     )
     .subscribe()
-
-  return channel
 }
 
 /**
- * Subscribe to realtime updates for ALL public workflows (for library page).
- * Returns the channel object — call supabase.removeChannel(channel) to unsubscribe.
- * @param {(payload: object) => void} callback
- * @returns {RealtimeChannel}
+ * Subscribe to public workflow updates.
  */
 export function subscribeToAllWorkflows(callback) {
-  const channel = supabase
-    .channel('workflow-usage-all')
+  if (
+    !isSupabaseConfigured ||
+    typeof callback !== 'function'
+  ) {
+    return null
+  }
+
+  return supabase
+    .channel('public-workflows-updates')
     .on(
       'postgres_changes',
       {
         event: 'UPDATE',
         schema: 'public',
-        table: 'workflows',
+        table: WORKFLOWS_TABLE,
+        filter: 'is_public=eq.true',
       },
-      (payload) => {
-        callback(payload)
-      }
+      callback
     )
     .subscribe()
-
-  return channel
 }
