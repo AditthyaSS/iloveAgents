@@ -150,7 +150,9 @@ export async function sendCronEmailNotification(apiKey, { to, name, output }) {
       }),
     })
   } catch (netErr) {
-    throw new Error(`Resend notification network error: ${netErr.message || 'Failed to send email'}`)
+    const rawMsg = netErr.message || 'Failed to send email'
+    const safeMsg = apiKey ? rawMsg.replaceAll(apiKey, '[REDACTED]') : rawMsg
+    throw new Error(`Resend notification network error: ${safeMsg}`)
   }
 
   if (!resp.ok) {
@@ -160,7 +162,8 @@ export async function sendCronEmailNotification(apiKey, { to, name, output }) {
       const errJson = JSON.parse(text)
       detail = errJson?.message || errJson?.error?.message || (typeof errJson?.error === 'string' ? errJson.error : null) || text
     } catch {}
-    throw new Error(`Resend notification error ${resp.status}: ${String(detail).slice(0, 500)}`)
+    const safeDetail = apiKey ? String(detail).replaceAll(apiKey, '[REDACTED]') : String(detail)
+    throw new Error(`Resend notification error ${resp.status}: ${safeDetail.slice(0, 500)}`)
   }
 
   return await resp.json().catch(() => ({ success: true }))
@@ -236,6 +239,8 @@ export default async function handler(req, res) {
       let output = ''
       let error = null
 
+      let apiKey = null
+
       try {
         // Fetch encrypted key from user_secrets (decrypted via pgsodium RPC or server key)
         const { data: secretData } = await supabase
@@ -244,7 +249,7 @@ export default async function handler(req, res) {
           .eq('automation_id', auto.id)
           .single()
 
-        const apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
+        apiKey = secretData?.encrypted_key ? Buffer.from(secretData.encrypted_key, 'base64').toString('utf-8') : null
 
         if (!apiKey) {
           throw new Error('API key not found in encrypted secret vault.')
@@ -282,9 +287,15 @@ export default async function handler(req, res) {
             try {
               detail = JSON.parse(text)?.error?.message || text
             } catch {}
-            throw new Error(`${normalizedProvider} API error ${resp.status}: ${String(detail).slice(0, 500)}`)
+            const safeDetail = apiKey ? String(detail).replaceAll(apiKey, '[REDACTED]') : String(detail)
+            throw new Error(`${normalizedProvider} API error ${resp.status}: ${safeDetail.slice(0, 500)}`)
           }
-          const json = await resp.json()
+          let json
+          try {
+            json = await resp.json()
+          } catch {
+            throw new Error(`${normalizedProvider} returned an unparseable response (HTTP ${resp.status})`)
+          }
           output = parseCronResponse(normalizedProvider, json)
         } else {
           output = `Executed ${auto.agent_name} via ${auto.provider} successfully.`
@@ -300,7 +311,9 @@ export default async function handler(req, res) {
         }
       } catch (err) {
         status = 'failed'
-        error = err.message || 'Execution error'
+        const rawMessage = err.message || 'Execution error'
+        const redacted = apiKey ? rawMessage.replaceAll(apiKey, '[REDACTED]') : rawMessage
+        error = redacted.slice(0, 500)
       }
 
       const autoDuration = Date.now() - autoStart
