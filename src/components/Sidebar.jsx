@@ -53,6 +53,19 @@ export default function Sidebar({ open, onClose }) {
     }
   }, [isSearching])
 
+  useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose?.()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [open, onClose])
+
   const { filteredAgents, categories, categoryOrder } = useMemo(() => {
     const filtered = !normalizedQuery
       ? agents
@@ -151,6 +164,17 @@ export default function Sidebar({ open, onClose }) {
               aria-label="Search agents"
               value={sidebarSearchQuery}
               onChange={(e) => setSidebarSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape' || e.key === 'Esc') {
+                  if (sidebarSearchQuery) {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setSidebarSearchQuery('')
+                  } else {
+                    e.target.blur()
+                  }
+                }
+              }}
               className="w-full pl-8 pr-8 py-1.5 text-[12px] rounded-md border transition-all
                 dark:bg-surface-hover/80 dark:border-border dark:text-text-primary dark:focus:border-accent/40
                 bg-gray-50 border-gray-200 text-gray-900 focus:border-accent/40 focus:ring-1 focus:ring-accent/10 outline-none"

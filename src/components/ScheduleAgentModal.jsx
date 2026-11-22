@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, Clock, Zap, AlertCircle, ShieldCheck, Mail, Lock } from 'lucide-react'
 import { SCHEDULE_PRESETS, createAutomation } from '../lib/automationsService'
 import { MODEL_MAP, MODELS } from '../lib/resolveAgentModel'
@@ -23,6 +23,18 @@ export default function ScheduleAgentModal({
   const [optInConsent, setOptInConsent] = useState(true)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose?.()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [onClose])
 
   const missingRequiredInputs = agent.inputs?.filter((input) => {
     if (!input.required) return false

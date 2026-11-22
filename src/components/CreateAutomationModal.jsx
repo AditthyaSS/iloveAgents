@@ -60,6 +60,19 @@ export default function CreateAutomationModal({
     }
   }, [selectedAgentId, selectedAgent])
 
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose?.()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [isOpen, onClose])
+
   if (!isOpen) return null
 
   const handleInputChange = (id, val) => {
