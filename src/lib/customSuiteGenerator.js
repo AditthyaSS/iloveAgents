@@ -4,7 +4,7 @@ import { suites } from "../suites/suitesData";
 
 const MODEL_DEFAULTS = {
   gemini: "gemini-2.5-flash",
-  anthropic: "claude-3-5-haiku-20241022",
+  anthropic: "claude-haiku-4-20250514",
   openai: "gpt-4o-mini",
 };
 
