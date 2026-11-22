@@ -1,146 +1,157 @@
-export default {
-  id: "accessibility-audit-generator",
-  createdAt: "2025-05-06",
-  name: "Accessibility Audit Generator",
-  description:
-    "Paste your HTML or component code and get a detailed WCAG accessibility audit with issues, severity ratings, and corrected code snippets.",
-  category: "Engineering",
-  icon: "Accessibility",
-  provider: "any",
-  defaultProvider: "anthropic",
-  model: "claude-sonnet-4-6",
-  exampleInputs: {
-    code: "<button onClick={() => setIsOpen(!isOpen)}>\n  <img src='/icons/menu.svg' />\n</button>\n<div style={{ color: '#DDD', backgroundColor: '#FFF' }}>\n  Click here to see more options\n</div>",
-    standard: "WCAG 2.1 AA (recommended)",
-    framework: "React / JSX",
-    focusAreas: ["All"],
-  },
-  inputs: [
-    {
-      id: "code",
-      label: "HTML or component code",
-      type: "code",
-      placeholder:
-        "Paste your HTML, JSX, Vue template, or any UI component code here...",
-      required: true,
-    },
-    {
-      id: "standard",
-      label: "WCAG standard",
-      type: "select",
-      options: [
-        "WCAG 2.1 AA (recommended)",
-        "WCAG 2.1 AAA (strict)",
-        "WCAG 2.2 AA",
-        "Section 508",
-      ],
-      defaultValue: "WCAG 2.1 AA (recommended)",
-      required: true,
-    },
-    {
-      id: "framework",
-      label: "Framework",
-      type: "select",
-      options: [
-        "Plain HTML",
-        "React / JSX",
-        "Vue",
-        "Angular",
-        "Svelte",
-        "Other",
-      ],
-      defaultValue: "React / JSX",
-      required: true,
-    },
-    {
-      id: "focusAreas",
-      label: "Focus areas",
-      type: "multiselect",
-      options: [
-        "Keyboard navigation",
-        "Screen reader support",
-        "Color contrast",
-        "Form labels",
-        "ARIA attributes",
-        "Focus management",
-        "All",
-      ],
-      defaultValue: ["All"],
-      required: true,
-    },
-  ],
-  systemPrompt: `You are a senior accessibility engineer and WCAG expert who
-conducts thorough a11y audits. You catch issues that automated
-tools miss and provide production-ready fixes.
 
-Always respond in this exact format:
+import re
+import os
+import shutil
 
-## Accessibility Audit Report
+pages = {
+    "dashboard.ejs": "dashboard.css",
+    "analytics-dashboard.ejs": "analytics.css",
+    "creator-crm.ejs": "crm.css",
+    "dm-automation.ejs": "dm-automation.css"
+}
 
-**Standard:** [WCAG version selected]
-**Framework:** [framework]
-**Issues found:** [total count]
-**Overall score:** [A+ to F — based on severity and count of issues]
+VIEW_DIR = "view"
+CSS_DIR = os.path.join("public", "css")
 
----
+os.makedirs(CSS_DIR, exist_ok=True)
 
-### Critical Issues 🔴
-(These MUST be fixed — they block users from accessing content)
 
-#### Issue [N]: [descriptive title]
-- **WCAG Criterion:** [e.g. 1.1.1 Non-text Content (Level A)]
-- **Impact:** [who is affected and how]
-- **Location:** [which element/line in the code]
-- **Problem:**
-\`\`\`[language]
-[the problematic code snippet]
-\`\`\`
-- **Fix:**
-\`\`\`[language]
-[the corrected code snippet]
-\`\`\`
-- **Why:** [one sentence explaining the fix]
+def extract_body_attributes(content):
+    match = re.search(r"<body\b([^>]*)>", content, re.IGNORECASE)
 
----
+    if not match:
+        return "", ""
 
-### Major Issues 🟠
-(Should be fixed — significantly degrades experience for some users)
-[same format as Critical]
+    attrs = match.group(1).strip()
 
-### Minor Issues 🟡
-(Nice to fix — improves experience but not blocking)
-[same format as Critical]
+    class_match = re.search(
+        r'\bclass\s*=\s*(["\'])(.*?)\1',
+        attrs
+    )
 
-### Passed Checks ✅
-- [list things the code already does well — encourages good practices]
+    body_class = class_match.group(2) if class_match else ""
 
----
+    if class_match:
+        attrs = attrs.replace(class_match.group(0), "", 1)
 
-### Summary Table
-| # | Issue | Severity | WCAG | Effort |
-|---|-------|----------|------|--------|
-| 1 | [title] | Critical/Major/Minor | [criterion] | Low/Med/High |
+    return body_class, attrs.strip()
 
-### Recommended Fix Order
-1. [fix this first — explain why]
-2. [fix this second]
-3. [continue...]
 
-### Testing Recommendations
-- **Screen reader test:** [specific things to test with NVDA/VoiceOver]
-- **Keyboard test:** [tab order, focus traps to check]
-- **Automated tools:** [axe-core, Lighthouse commands to run]
+def process_page(page, css_file):
+    filepath = os.path.join(VIEW_DIR, page)
 
-Rules:
-- Always cite the specific WCAG success criterion number and level
-- Code fixes must be copy-paste ready — not pseudocode
-- Never flag issues that are actually fine — no false positives
-- Check for: missing alt text, missing labels, poor heading hierarchy,
-  color contrast, keyboard traps, missing ARIA roles, missing
-  focus indicators, missing skip links, and form accessibility
-- If the code uses ARIA, verify it's used correctly — bad ARIA
-  is worse than no ARIA
-- Include the severity in every issue — don't make the developer guess
-- Effort estimate helps teams prioritize: Low = 5 min, Med = 30 min, High = 2+ hours`,
-  outputType: "markdown",
-};
+    if not os.path.isfile(filepath):
+        print(f"Skipping missing file: {filepath}")
+        return
+
+    with open(filepath, "r", encoding="utf-8") as file:
+        content = file.read()
+
+    # 1. Extract inline CSS
+    style_match = re.search(
+        r"<style\b[^>]*>(.*?)</style>",
+        content,
+        re.IGNORECASE | re.DOTALL
+    )
+
+    if style_match:
+        css_content = style_match.group(1).strip()
+
+        css_path = os.path.join(CSS_DIR, css_file)
+
+        with open(css_path, "w", encoding="utf-8") as file:
+            file.write(css_content + "\n")
+
+        content = content[:style_match.start()] + content[style_match.end():]
+
+    # 2. Extract body attributes
+    body_class, body_attributes = extract_body_attributes(content)
+
+    # 3. Extract page title
+    title_match = re.search(
+        r"title\s*:\s*['\"]([^'\"]+)['\"]",
+        content
+    )
+
+    title = title_match.group(1) if title_match else "CreatorOS"
+
+    # 4. Determine active navigation
+    active_nav = page.replace(".ejs", "").replace("-dashboard", "")
+
+    # 5. Generate shared header
+    header_data = [
+        f"activeNav: '{active_nav}'",
+        f"title: '{title}'"
+    ]
+
+    if body_class:
+        header_data.append(f"bodyClass: '{body_class}'")
+
+    if body_attributes:
+        header_data.append(f"bodyAttributes: '{body_attributes}'")
+
+    header_data.append(
+        f'''extraHead: '<link rel="stylesheet" href="/css/{css_file}">' '''
+    )
+
+    header_str = (
+        "<%- include('partials/layout/header', {"
+        + ", ".join(header_data)
+        + "}) %>\n"
+    )
+
+    # 6. Locate topbar
+    topbar_match = re.search(
+        r"<%-\s*include\(['\"](?:\./)?partials/(?:layout/)?_?topbar[^)]*\)\s*%>",
+        content
+    )
+
+    if topbar_match:
+        start_idx = topbar_match.end()
+    else:
+        main_match = re.search(r"<main\b[^>]*>", content, re.IGNORECASE)
+
+        if not main_match:
+            print(f"Skipping {page}: main/topbar not found")
+            return
+
+        start_idx = main_match.start()
+
+    tail = content[start_idx:]
+
+    # 7. Remove closing layout tags
+    tail = re.sub(r"</main\s*>", "", tail, flags=re.IGNORECASE)
+
+    # Remove scripts partial
+    tail = re.sub(
+        r"<%-\s*include\(['\"](?:\./)?partials/(?:layout/)?_?scripts[^)]*\)\s*%>",
+        "",
+        tail
+    )
+
+    # Remove closing body and html tags
+    tail = re.sub(
+        r"</body\s*>\s*</html\s*>",
+        "",
+        tail,
+        flags=re.IGNORECASE
+    )
+
+    # 8. Add shared footer
+    tail = tail.rstrip() + "\n<%- include('partials/layout/footer') %>\n"
+
+    final_content = header_str + tail
+
+    # 9. Create backup before modifying original
+    shutil.copy2(filepath, filepath + ".bak")
+
+    with open(filepath, "w", encoding="utf-8") as file:
+        file.write(final_content)
+
+    print(f"Successfully processed: {page}")
+
+
+for page, css_file in pages.items():
+    process_page(page, css_file)
+
+print("Processing complete.")
