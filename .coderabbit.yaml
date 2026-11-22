@@ -18,6 +18,3 @@ reviews:
 
 chat:
   auto_reply: true
-
-issues:
-  auto_assign: false
