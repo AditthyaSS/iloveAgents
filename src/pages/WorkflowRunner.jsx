@@ -165,7 +165,7 @@ export default function WorkflowRunner() {
 
     // Rebuild from the workflow definition so branch steps injected by a
     // previous run are dropped before this run starts.
-    const execSteps = buildInitialSteps(workflow, agents)
+    let execSteps = buildInitialSteps(workflow, agents)
     setSteps(execSteps)
 
     // Pipeline context available to condition templates:
@@ -175,7 +175,10 @@ export default function WorkflowRunner() {
     let failed = false
     let i = 0
 
-    const syncSteps = () => setSteps([...execSteps])
+    const syncSteps = (nextSteps) => {
+      execSteps = nextSteps
+      setSteps([...execSteps])
+    }
 
     while (i < execSteps.length) {
       const step = execSteps[i]
@@ -185,7 +188,8 @@ export default function WorkflowRunner() {
         const { conditionValue, branchLabel, branchAgents } = evaluateConditionalStep(step.stepDef, context)
 
         if (!branchLabel) {
-          execSteps[i] = {
+          const nextSteps = [...execSteps]
+          nextSteps[i] = {
             ...step,
             status: 'failed',
             conditionValue,
@@ -193,7 +197,7 @@ export default function WorkflowRunner() {
               problems[0] ??
               `No branch matched "${conditionValue}" and no default branch is defined.`,
           }
-          syncSteps()
+          syncSteps(nextSteps)
           failed = true
           break
         }
@@ -213,22 +217,27 @@ export default function WorkflowRunner() {
             parentConditionalId: step.stepDef.id,
           }
         })
-        execSteps[i] = { ...step, status: 'done', conditionValue, branchLabel }
-        execSteps.splice(i + 1, 0, ...branchSteps)
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...step, status: 'done', conditionValue, branchLabel }
+        nextSteps.splice(i + 1, 0, ...branchSteps)
+        syncSteps(nextSteps)
         i += 1
         continue
       }
 
       if (!step.agent) {
-        execSteps[i] = { ...step, status: 'failed', error: `Agent "${step.agentId}" not found in registry.` }
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...step, status: 'failed', error: `Agent "${step.agentId}" not found in registry.` }
+        syncSteps(nextSteps)
         failed = true
         break
       }
 
-      execSteps[i] = { ...step, status: 'running' }
-      syncSteps()
+      {
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...step, status: 'running' }
+        syncSteps(nextSteps)
+      }
 
       const actualProvider =
         step.agent.provider === 'any'
@@ -240,7 +249,9 @@ export default function WorkflowRunner() {
         : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
 
       if (!keyToUse) {
-        setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...nextSteps[i], status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` }
+        syncSteps(nextSteps)
         failed = true
         break
       }
@@ -255,8 +266,10 @@ export default function WorkflowRunner() {
           systemPrompt: step.agent.systemPrompt,
           userMessage: currentInput,
         })
-        execSteps[i] = { ...execSteps[i], status: 'done', output: result.content }
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...nextSteps[i], status: 'done', output: result.content }
+        syncSteps(nextSteps)
+
         recordAnalyticsRun({
           agentId: step.agent.id,
           agentName: step.agent.name,
@@ -277,8 +290,9 @@ export default function WorkflowRunner() {
           }
         }
       } catch (err) {
-        execSteps[i] = { ...execSteps[i], status: 'failed', error: err?.message || err?.detail || 'Execution failed' }
-        syncSteps()
+        const nextSteps = [...execSteps]
+        nextSteps[i] = { ...nextSteps[i], status: 'failed', error: err?.message || err?.detail || 'Execution failed' }
+        syncSteps(nextSteps)
         failed = true
         break
       }
@@ -302,6 +316,20 @@ export default function WorkflowRunner() {
     setHasRun(false)
     // Rebuild from the definition so previously injected branch steps are removed
     setSteps(buildInitialSteps(workflow, agents))
+  }
+
+  // Handle keyboard shortcut: Ctrl+Enter or Cmd+Enter to run workflow
+  const handleKeyDown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault()
+      if (userInput.trim() && apiKey && !running) {
+        if (hasRun && (allDone || hasFailed)) {
+          handleRunAgain()
+        } else {
+          handleRun()
+        }
+      }
+    }
   }
 
   // Loading workflow from Supabase
@@ -379,13 +407,14 @@ export default function WorkflowRunner() {
         <label className="block text-xs font-medium dark:text-text-secondary text-gray-600 mb-1.5">
           Your Input <span className="text-red-400">*</span>
           <span className="ml-1 dark:text-text-muted text-gray-400 font-normal">
-            — passed to the first agent, then chained through each step
+            — passed to the first agent, then chained through each step (Tip: Press <kbd className="px-1 py-0.5 text-[10px] font-mono rounded bg-gray-100 dark:bg-surface-hover border dark:border-border border-gray-200">Ctrl</kbd> + <kbd className="px-1 py-0.5 text-[10px] font-mono rounded bg-gray-100 dark:bg-surface-hover border dark:border-border border-gray-200">Enter</kbd> to run!)
           </span>
         </label>
         <textarea
           id="workflow-input"
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Paste your main input here. The first agent will process this, and each subsequent agent receives the previous output."
           rows={4}
           disabled={running}
@@ -560,7 +589,6 @@ export default function WorkflowRunner() {
                       agentName={step.agentName}
                     />
                     <RunRating agentId={step.agent?.id} /> 
-
                   </div>
                 )}
 
