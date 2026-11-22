@@ -19,7 +19,8 @@ import { useAgents } from '../lib/useAgents'
 import OutputRenderer from '../components/OutputRenderer'
 import ApiKeyBar from '../components/ApiKeyBar'
 import RunRating from '../components/RunRating'
-import { useApiKey } from '../lib/useApiKey'
+import { useApiKey, getSafeApiKey } from '../lib/useApiKey'
+import { getGlobalKeys } from '../lib/globalKeys'
 import { recordAnalyticsRun } from '../lib/useAnalytics'
 import { runAgent } from '../lib/llmAdapter'
 import { resolveAgentModel, MODEL_MAP } from '../lib/resolveAgentModel'
@@ -81,6 +82,22 @@ function CopyAllButton({ steps }) {
       {copied ? 'Copied!' : 'Copy All Outputs'}
     </button>
   )
+}
+
+/**
+ * Resolve the API key for a workflow step's provider.
+ *
+ * Steps whose agent is pinned to a specific provider may need a different key
+ * than the one currently shown in the API key bar. Keys are never stored as
+ * bare strings: useApiKey.js wraps them as `{ key, expiresAt }` in
+ * sessionStorage, and Settings stores them via globalKeys.js. Both readers
+ * honor the expiry, so use them rather than reading sessionStorage directly.
+ *
+ * @returns {string} the key, or '' when none is configured / it has expired
+ */
+function resolveProviderKey(targetProvider, selectedProvider, selectedKey) {
+  if (targetProvider === selectedProvider) return selectedKey
+  return getSafeApiKey(targetProvider) || getGlobalKeys()[targetProvider] || ''
 }
 
 export default function WorkflowRunner() {
@@ -235,12 +252,15 @@ export default function WorkflowRunner() {
           ? provider
           : step.agent.provider
 
-      const keyToUse = actualProvider === provider
-        ? apiKey
-        : (sessionStorage.getItem(`ila_apikey_${actualProvider}`) || '')
+      const keyToUse = resolveProviderKey(actualProvider, provider, apiKey)
 
       if (!keyToUse) {
-        setStepField(i, { status: 'failed', error: `API key for provider "${actualProvider}" is not configured.` })
+        execSteps[i] = {
+          ...execSteps[i],
+          status: 'failed',
+          error: `API key for provider "${actualProvider}" is not configured.`,
+        }
+        syncSteps()
         failed = true
         break
       }
@@ -371,7 +391,7 @@ export default function WorkflowRunner() {
         setSaveForSession={setSaveForSession}
         agentProvider="any"
         model={MODEL_MAP[provider] || MODEL_MAP.openai}
-        setModel={() => {}}
+        setModel={() => { }}
       />
 
       {/* Input */}
@@ -442,7 +462,7 @@ export default function WorkflowRunner() {
         )}
 
         {allDone && (
-           <>
+          <>
             <CopyAllButton steps={steps} />
             <button
               onClick={() => exportWorkflowAsMarkdown(workflow?.title ?? 'workflow', steps)}
@@ -529,11 +549,10 @@ export default function WorkflowRunner() {
                       {Object.entries(step.branches).map(([label, agents]) => (
                         <div
                           key={label}
-                          className={`p-3 rounded-md text-xs transition-colors flex items-start gap-2 ${
-                            label === step.branchLabel && step.status === 'done'
+                          className={`p-3 rounded-md text-xs transition-colors flex items-start gap-2 ${label === step.branchLabel && step.status === 'done'
                               ? 'bg-accent/15 border border-accent/40 text-accent'
                               : 'bg-gray-50 dark:bg-surface-secondary border border-gray-200 dark:border-border text-gray-700 dark:text-text-secondary'
-                          }`}
+                            }`}
                         >
                           <div className="flex-shrink-0 mt-0.5">
                             <div className="w-2 h-2 rounded-full bg-current" />
@@ -559,7 +578,7 @@ export default function WorkflowRunner() {
                       outputType={step.agent?.outputType ?? 'text'}
                       agentName={step.agentName}
                     />
-                    <RunRating agentId={step.agent?.id} /> 
+                    <RunRating agentId={step.agent?.id} />
 
                   </div>
                 )}
