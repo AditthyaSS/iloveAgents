@@ -1,3 +1,4 @@
+
 language: "en-US"
 
 reviews:
@@ -7,14 +8,55 @@ reviews:
   poem: false
   review_status: true
   collapse_walkthrough: false
+
   auto_review:
     enabled: true
     drafts: false
     base_branches:
-      - main
+      - "main"
+
   path_filters:
     - "!package-lock.json"
     - "!*.md"
+
+  path_instructions:
+    - path: "src/agents/definitions/**"
+      instructions: |
+        Review agent definitions for:
+        - Valid and unique agent IDs.
+        - Clear descriptions and appropriate categories.
+        - Correct provider and model configuration.
+        - Properly structured inputs and output types.
+        - Focused, specific, and useful system prompts.
+        - No hardcoded API keys, secrets, or credentials.
+        - Consistency with existing agent definitions.
+
+    - path: "src/components/**"
+      instructions: |
+        Review components for:
+        - Reusable React functional components.
+        - Consistent Tailwind CSS styling.
+        - Responsive layouts and accessibility.
+        - Proper state management and error handling.
+        - Avoiding unnecessary re-renders.
+
+    - path: "src/pages/**"
+      instructions: |
+        Review pages for:
+        - Consistent UI and UX.
+        - Responsive design.
+        - Correct navigation and application flows.
+        - Loading, empty, and error states.
+        - Accessibility and maintainability.
+
+    - path: "src/lib/**"
+      instructions: |
+        Review utility and library code for:
+        - Correct application logic.
+        - Proper React hooks usage.
+        - Clean imports and exports.
+        - Error handling and performance.
+        - Compatibility with existing application architecture.
 
 chat:
   auto_reply: true
