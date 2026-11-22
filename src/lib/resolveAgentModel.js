@@ -1,4 +1,4 @@
-// Verified stable API model endpoints - removed deprecated/future placeholders
+﻿// Verified stable API model endpoints - updated to active non-retired models
 export const MODELS = {
   openai: [
     { value: 'gpt-4o', label: 'GPT-4o' },
@@ -7,9 +7,9 @@ export const MODELS = {
     { value: 'o3-mini', label: 'o3-mini' },
   ],
   anthropic: [
-    { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
-    { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku' },
-    { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus' },
+    { value: 'claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
+    { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
+    { value: 'claude-opus-4-8', label: 'Claude Opus 4.8' },
   ],
   gemini: [
     { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
@@ -18,7 +18,7 @@ export const MODELS = {
   ],
   openrouter: [
     { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
-    { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
+    { value: 'anthropic/claude-sonnet-5-5', label: 'Claude Sonnet 5.5' },
     { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
   ],
 }
