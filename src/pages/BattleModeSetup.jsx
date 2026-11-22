@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Search,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
 import { useDocumentTitle } from "../lib/useDocumentTitle";
 import { useAgents } from "../lib/useAgents";
@@ -58,6 +59,7 @@ const API_KEY_FIELDS = [
     border: "border-yellow-400/30",
     bg: "bg-yellow-400/10",
     focusBorder: "focus:border-yellow-400/60",
+    helpUrl: "https://platform.openai.com/api-keys",
   },
   {
     id: "anthropic",
@@ -67,6 +69,7 @@ const API_KEY_FIELDS = [
     border: "border-violet-400/30",
     bg: "bg-violet-400/10",
     focusBorder: "focus:border-violet-400/60",
+    helpUrl: "https://console.anthropic.com/settings/keys",
   },
   {
     id: "gemini",
@@ -76,6 +79,7 @@ const API_KEY_FIELDS = [
     border: "border-blue-400/30",
     bg: "bg-blue-400/10",
     focusBorder: "focus:border-blue-400/60",
+    helpUrl: "https://aistudio.google.com/app/apikey",
   },
   {
     id: "openrouter",
@@ -85,6 +89,7 @@ const API_KEY_FIELDS = [
     border: "border-teal-400/30",
     bg: "bg-teal-400/10",
     focusBorder: "focus:border-teal-400/60",
+    helpUrl: "https://openrouter.ai/keys",
   },
 ];
 
@@ -448,12 +453,24 @@ export default function BattleModeSetup() {
               <div className="space-y-4">
                 {API_KEY_FIELDS.map((field) => (
                   <div key={field.id}>
-                    <label
-                      className={`block text-xs font-semibold mb-1.5 uppercase tracking-wide ${field.color}`}
-                    >
-                      {field.label}
-                      <span className="text-yellow-400 ml-1">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label
+                        className={`block text-xs font-semibold uppercase tracking-wide ${field.color}`}
+                      >
+                        {field.label}
+                        <span className="text-yellow-400 ml-1">*</span>
+                      </label>
+                      <a
+                        href={field.helpUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-white transition-colors"
+                        title={`Get ${field.label} from provider`}
+                      >
+                        Get key
+                        <ExternalLink size={11} />
+                      </a>
+                    </div>
                     <div className="relative">
                       <input
                         type={showKeys[field.id] ? "text" : "password"}
