@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Settings, Eye, EyeOff, Check, X,
-  Trash2, ExternalLink, ShieldCheck, KeyRound,
+  Trash2, ExternalLink, ShieldCheck, KeyRound, AlertCircle,
 } from 'lucide-react'
 import {
   getGlobalKeys,
@@ -65,6 +65,7 @@ export default function SettingsPage() {
   const [showKey, setShowKey] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [savedStatus, setSavedStatus] = useState({ openai: false, anthropic: false, gemini: false, openrouter: false })
   const [saveMessage, setSaveMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
   const [confirmClearAll, setConfirmClearAll] = useState(false)
 
   // ── Load from localStorage on mount
@@ -88,6 +89,19 @@ export default function SettingsPage() {
   const availableForDefault = getAvailableProviders()
 
   const handleSave = () => {
+    // Clear previous feedback
+    setSaveMessage('')
+    setErrorMessage('')
+
+    // Check if at least one API key is non-empty
+    const hasAtLeastOneKey = Object.values(keys).some((val) => val.trim().length > 0)
+
+    if (!hasAtLeastOneKey) {
+      setErrorMessage('Please enter at least one valid API key.')
+      setTimeout(() => setErrorMessage(''), 3000)
+      return
+    }
+
     saveGlobalKeys({ ...keys, defaultProvider })
     // Refresh saved status
     const stored = getGlobalKeys()
@@ -226,7 +240,12 @@ export default function SettingsPage() {
 
         {/* Save button */}
         <div className="px-5 py-4 border-t dark:border-border border-gray-100 flex items-center justify-between">
-          {saveMessage ? (
+          {errorMessage ? (
+            <span className="text-xs font-medium text-red-500 flex items-center gap-1.5">
+              <AlertCircle size={13} />
+              {errorMessage}
+            </span>
+          ) : saveMessage ? (
             <span className="text-xs font-medium text-emerald-500 flex items-center gap-1.5">
               <Check size={13} />
               {saveMessage}
