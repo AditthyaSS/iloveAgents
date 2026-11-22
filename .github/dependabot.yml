@@ -1,3 +1,4 @@
+
 version: 2
 
 updates:
@@ -8,15 +9,21 @@ updates:
       day: "monday"
       time: "09:00"
     open-pull-requests-limit: 5
+
     reviewers:
       - "AditthyaSS"
+
     labels:
       - "dependencies"
       - "automated"
+
     commit-message:
       prefix: "chore"
+
     cooldown:
       default-days: 7
+
     ignore:
       - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+        update-types:
+          - "version-update:semver-major"
