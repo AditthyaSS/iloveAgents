@@ -1,9 +1,9 @@
-# Everything goes to @AditthyaSS by default
+# Default code owner for all files
 * @AditthyaSS
 
-# Agent registry — I review every change here personally
-src/agents/registry.js @AditthyaSS
+# Agent registry
+/src/agents/registry.js @AditthyaSS
 
-# These files handle API keys — extra care needed
-src/lib/llmAdapter.js @AditthyaSS
-src/lib/useApiKey.js @AditthyaSS
+# Files handling API keys
+/src/lib/llmAdapter.js @AditthyaSS
+/src/lib/useApiKey.js @AditthyaSS
