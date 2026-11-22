@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown, Lightbulb } from 'lucide-react'
+import { Bot, Users, Code2, ArrowRight, Github, Search, X, SlidersHorizontal, Star, Heart, Swords, GitBranch, ChevronDown, ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react'
 import AgentCardSkeleton from '../components/AgentCardSkeleton'
 import AgentCard from '../components/AgentCard'
 import { useFavorites } from '../lib/useFavorites'
@@ -239,6 +239,20 @@ export default function HomePage() {
       return searchableText.includes(q)
     })
   }, [activeCollectionId, agents, getAgentCollectionId, searchQuery, selectedCategory, selectedProvider])
+
+  const AGENTS_PER_PAGE = 12;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reset to page 1 whenever filters or search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedProvider, activeCollectionId]);
+
+  const totalPages = Math.ceil(filteredAgents.length / AGENTS_PER_PAGE) || 1;
+  const paginatedAgents = useMemo(() => {
+    const startIndex = (currentPage - 1) * AGENTS_PER_PAGE;
+    return filteredAgents.slice(startIndex, startIndex + AGENTS_PER_PAGE);
+  }, [filteredAgents, currentPage]);
 
   const handleOpenRecommendationWizard = (event) => {
     event?.preventDefault()
@@ -573,12 +587,72 @@ export default function HomePage() {
               ))}
             </div>
           ) : filteredAgents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
-              {filteredAgents.map((agent, idx) => (
-                <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
-                  <AgentCard agent={agent} />
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3">
+                {paginatedAgents.map((agent, idx) => (
+                  <div key={agent.id} className="animate-fade-in" style={{ animationDelay: `${idx * 30}ms` }}>
+                    <AgentCard agent={agent} />
+                  </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t dark:border-border border-gray-200">
+                  <span className="text-xs text-gray-500 dark:text-text-muted">
+                    Showing {(currentPage - 1) * AGENTS_PER_PAGE + 1}–{Math.min(currentPage * AGENTS_PER_PAGE, filteredAgents.length)} of {filteredAgents.length} agents
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentPage((p) => Math.max(1, p - 1));
+                      }}
+                      disabled={currentPage === 1}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border
+                        disabled:opacity-40 disabled:cursor-not-allowed transition-colors
+                        dark:border-border dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary
+                        border-gray-200 bg-white text-gray-600 hover:text-gray-900"
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeft size={14} /> Previous
+                    </button>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                        const isCurrent = pageNum === currentPage;
+                        return (
+                          <button
+                            key={pageNum}
+                            type="button"
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`w-7 h-7 rounded-lg text-xs font-semibold border transition-colors
+                              ${isCurrent
+                                ? 'bg-accent border-accent text-white shadow-sm'
+                                : 'dark:border-border dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary border-gray-200 bg-white text-gray-600 hover:text-gray-900'
+                              }`}
+                            aria-current={isCurrent ? 'page' : undefined}
+                          >
+                            {pageNum}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentPage((p) => Math.min(totalPages, p + 1));
+                      }}
+                      disabled={currentPage === totalPages}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border
+                        disabled:opacity-40 disabled:cursor-not-allowed transition-colors
+                        dark:border-border dark:bg-surface-card dark:text-text-secondary dark:hover:text-text-primary
+                        border-gray-200 bg-white text-gray-600 hover:text-gray-900"
+                      aria-label="Next page"
+                    >
+                      Next <ChevronRight size={14} />
+                    </button>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           ) : (
             <div className="text-center py-16 rounded-xl border dark:bg-surface-card dark:border-border bg-white border-gray-200">
