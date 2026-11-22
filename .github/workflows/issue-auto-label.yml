@@ -39,12 +39,12 @@ jobs:
               }
             }
 
-            // Set the issue labels to only OSIC'26
-            await github.rest.issues.setLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber,
-              labels: [targetLabel],
-            });
+          // Add OSIC'26 without removing existing issue labels
+          await github.rest.issues.addLabels({
+          owner: context.repo.owner,
+          repo: context.repo.repo,
+          issue_number: issueNumber,
+          labels: [targetLabel],
+});
 
-            console.log(`Successfully assigned only "${targetLabel}" to issue #${issueNumber}`);
+console.log(`Successfully added "${targetLabel}" to issue #${issueNumber}`);
